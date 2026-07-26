@@ -1,0 +1,9 @@
+/agent-config
+/build/
+/coverage.out
+/.DS_Store
+*.tmp
+*.bak
+.env
+.env.*
+!.env.example

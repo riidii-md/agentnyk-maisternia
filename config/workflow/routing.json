@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "phases": {
+    "brief": {"strategy": "current_or_fast", "authority": "read_only"},
+    "scout": {"strategy": "current_or_fast", "authority": "read_only"},
+    "analyze": {"strategy": "strong_reasoning", "authority": "read_only"},
+    "research": {"strategy": "strong_reasoning", "authority": "read_only"},
+    "decide": {"strategy": "strong_reasoning", "authority": "read_only"},
+    "ready": {"strategy": "independent_balanced", "authority": "read_only"},
+    "plan": {"strategy": "strong_reasoning", "authority": "read_only"},
+    "prove": {"strategy": "strong_reasoning", "authority": "read_only"},
+    "handoff": {"strategy": "strong_reasoning", "authority": "artifact_write"},
+    "run": {"strategy": "coding", "authority": "workspace_write"},
+    "verify": {"strategy": "deterministic_first", "authority": "controlled"},
+    "review": {"strategy": "different_from_builder", "authority": "read_only"},
+    "pr": {"strategy": "provider_aware", "authority": "explicit_approval"}
+  }
+}

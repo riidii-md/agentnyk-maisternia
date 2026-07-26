@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "resources": [
+    {
+      "id": "work-conductor",
+      "source": "config/workflow/phases/work.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work.md"},
+        {"agent": "claude", "path": ".claude/commands/work.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work.md"}
+      ]
+    },
+    {
+      "id": "work-brief",
+      "source": "config/workflow/phases/brief.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-brief.md"},
+        {"agent": "claude", "path": ".claude/commands/work-brief.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-brief.md"}
+      ]
+    },
+    {
+      "id": "work-scout",
+      "source": "config/workflow/phases/scout.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-scout.md"},
+        {"agent": "claude", "path": ".claude/commands/work-scout.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-scout.md"}
+      ]
+    },
+    {
+      "id": "work-analyze",
+      "source": "config/workflow/phases/analyze.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-analyze.md"},
+        {"agent": "claude", "path": ".claude/commands/work-analyze.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-analyze.md"}
+      ]
+    },
+    {
+      "id": "work-research",
+      "source": "config/workflow/phases/research.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-research.md"},
+        {"agent": "claude", "path": ".claude/commands/work-research.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-research.md"}
+      ]
+    },
+    {
+      "id": "work-decide",
+      "source": "config/workflow/phases/decide.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-decide.md"},
+        {"agent": "claude", "path": ".claude/commands/work-decide.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-decide.md"}
+      ]
+    },
+    {
+      "id": "work-ready",
+      "source": "config/workflow/phases/ready.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-ready.md"},
+        {"agent": "claude", "path": ".claude/commands/work-ready.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-ready.md"}
+      ]
+    },
+    {
+      "id": "work-plan",
+      "source": "config/workflow/phases/plan.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-plan.md"},
+        {"agent": "claude", "path": ".claude/commands/work-plan.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-plan.md"}
+      ]
+    },
+    {
+      "id": "work-prove",
+      "source": "config/workflow/phases/prove.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-prove.md"},
+        {"agent": "claude", "path": ".claude/commands/work-prove.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-prove.md"}
+      ]
+    },
+    {
+      "id": "work-handoff",
+      "source": "config/workflow/phases/handoff.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-handoff.md"},
+        {"agent": "claude", "path": ".claude/commands/work-handoff.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-handoff.md"}
+      ]
+    },
+    {
+      "id": "work-run",
+      "source": "config/workflow/phases/run.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-run.md"},
+        {"agent": "claude", "path": ".claude/commands/work-run.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-run.md"}
+      ]
+    },
+    {
+      "id": "work-verify",
+      "source": "config/workflow/phases/verify.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-verify.md"},
+        {"agent": "claude", "path": ".claude/commands/work-verify.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-verify.md"}
+      ]
+    },
+    {
+      "id": "work-review",
+      "source": "config/workflow/phases/review.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-review.md"},
+        {"agent": "claude", "path": ".claude/commands/work-review.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-review.md"}
+      ]
+    },
+    {
+      "id": "work-pr",
+      "source": "config/workflow/phases/pr.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-pr.md"},
+        {"agent": "claude", "path": ".claude/commands/work-pr.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-pr.md"}
+      ]
+    },
+    {
+      "id": "work-showcase",
+      "source": "config/workflow/phases/showcase.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-showcase.md"},
+        {"agent": "claude", "path": ".claude/commands/work-showcase.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-showcase.md"}
+      ]
+    },
+    {
+      "id": "work-cleanup",
+      "source": "config/workflow/phases/cleanup.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-cleanup.md"},
+        {"agent": "claude", "path": ".claude/commands/work-cleanup.md"},
+        {"agent": "agy", "path": ".config/agy/prompts/work-cleanup.md"}
+      ]
+    },
+    {
+      "id": "codex-brief-codex",
+      "source": "config/workflow/phases/brief.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-brief.md"}
+      ]
+    },
+    {
+      "id": "codex-brief-claude",
+      "source": "config/adapters/claude/codex-brief.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-brief.md"}
+      ]
+    },
+    {
+      "id": "codex-research-codex",
+      "source": "config/workflow/phases/research.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-research.md"}
+      ]
+    },
+    {
+      "id": "codex-research-claude",
+      "source": "config/adapters/claude/codex-research.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-research.md"}
+      ]
+    },
+    {
+      "id": "codex-plan-codex",
+      "source": "config/workflow/phases/plan.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-plan.md"}
+      ]
+    },
+    {
+      "id": "codex-plan-claude",
+      "source": "config/adapters/claude/codex-plan.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-plan.md"}
+      ]
+    },
+    {
+      "id": "codex-work-loop-codex",
+      "source": "config/workflow/phases/run.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-work-loop.md"}
+      ]
+    },
+    {
+      "id": "codex-work-loop-claude",
+      "source": "config/adapters/claude/codex-work-loop.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-work-loop.md"}
+      ]
+    },
+    {
+      "id": "codex-review-codex",
+      "source": "config/workflow/phases/review.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-review.md"}
+      ]
+    },
+    {
+      "id": "codex-review-claude",
+      "source": "config/adapters/claude/codex-review.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-review.md"}
+      ]
+    },
+    {
+      "id": "codex-showcase-codex",
+      "source": "config/workflow/phases/showcase.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-showcase.md"}
+      ]
+    },
+    {
+      "id": "codex-showcase-claude",
+      "source": "config/adapters/claude/codex-showcase.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-showcase.md"}
+      ]
+    }
+  ]
+}
