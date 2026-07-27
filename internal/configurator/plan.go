@@ -117,6 +117,10 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 }
 
 func StatePath(home string) string {
+	return filepath.Join(home, ".config", "agentctl", "install-state.json")
+}
+
+func legacyStatePath(home string) string {
 	return filepath.Join(home, ".config", "cli-agent-configurator", "install-state.json")
 }
 
@@ -125,7 +129,11 @@ func loadState(home string) (installState, error) {
 		SchemaVersion: StateSchemaVersion,
 		Resources:     make(map[string]installedResource),
 	}
-	file, err := os.Open(StatePath(home))
+	path, err := stateReadPath(home)
+	if err != nil {
+		return installState{}, fmt.Errorf("open install state: %w", err)
+	}
+	file, err := os.Open(path)
 	if errors.Is(err, os.ErrNotExist) {
 		return state, nil
 	}
@@ -146,6 +154,28 @@ func loadState(home string) (installState, error) {
 		state.Resources = make(map[string]installedResource)
 	}
 	return state, nil
+}
+
+func stateReadPath(home string) (string, error) {
+	for _, path := range []string{StatePath(home), legacyStatePath(home)} {
+		info, err := os.Lstat(path)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return "", fmt.Errorf("inspect install state: %w", err)
+		}
+		if !info.Mode().IsRegular() {
+			return "", fmt.Errorf("install state is not a regular file")
+		}
+		if symlinkPath, found, err := firstSymlink(home, path); err != nil {
+			return "", fmt.Errorf("inspect install state path: %w", err)
+		} else if found {
+			return "", fmt.Errorf("install state path traverses symlink %s", symlinkPath)
+		}
+		return path, nil
+	}
+	return StatePath(home), nil
 }
 
 func fileChecksum(path string) (string, error) {

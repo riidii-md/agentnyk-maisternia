@@ -8,17 +8,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/cli-agent-configurator/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/configurator"
 )
 
-const usage = `agent-config manages declarative configuration for CLI agents.
+const usage = `agentctl manages declarative configuration and workflows for CLI agents.
 
 Usage:
-  agent-config doctor [options]
-  agent-config inventory [options]
-  agent-config plan [options]
-  agent-config render [options] --output <dir>
-  agent-config apply [options] --yes
+  agentctl doctor [options]
+  agentctl inventory [options]
+  agentctl plan [options]
+  agentctl render [options] --output <dir>
+  agentctl apply [options] --yes
 
 Common options:
   --repo <dir>       Configuration repository root (default: current directory)

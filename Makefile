@@ -1,10 +1,10 @@
 .PHONY: build doctor format test verify
 
 build:
-	go build ./cmd/agent-config
+	go build ./cmd/agentctl
 
 doctor:
-	go run ./cmd/agent-config doctor
+	go run ./cmd/agentctl doctor
 
 format:
 	gofmt -w cmd internal
@@ -18,4 +18,4 @@ verify:
 	go test ./...
 	go test -race ./...
 	go test -coverprofile=coverage.out ./...
-	go build ./cmd/agent-config
+	go build ./cmd/agentctl

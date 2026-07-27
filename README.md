@@ -1,7 +1,7 @@
-# CLI Agent Configurator
+# agentctl
 
-`cli-agent-configurator` is a provider-neutral configuration manager and work
-conductor for command-line coding agents.
+`agentctl` is a provider-neutral workflow and configuration manager for
+command-line coding agents.
 
 It provides one version-controlled source of truth for:
 
@@ -36,7 +36,7 @@ runner dispatch, and configuration import are planned next.
 ## Build
 
 ```bash
-go build ./cmd/agent-config
+go build ./cmd/agentctl
 ```
 
 ## Test
@@ -50,21 +50,21 @@ go test ./...
 Validate the repository:
 
 ```bash
-go run ./cmd/agent-config doctor
+go run ./cmd/agentctl doctor
 ```
 
 Inspect what would happen without writing:
 
 ```bash
-go run ./cmd/agent-config plan --target codex
-go run ./cmd/agent-config plan --target claude
-go run ./cmd/agent-config plan --target agy
+go run ./cmd/agentctl plan --target codex
+go run ./cmd/agentctl plan --target claude
+go run ./cmd/agentctl plan --target agy
 ```
 
 Render a staging tree:
 
 ```bash
-go run ./cmd/agent-config render \
+go run ./cmd/agentctl render \
   --target all \
   --output ./build/rendered
 ```
@@ -72,7 +72,7 @@ go run ./cmd/agent-config render \
 `apply` refuses unmanaged conflicts and requires explicit confirmation:
 
 ```bash
-go run ./cmd/agent-config apply --target codex --yes
+go run ./cmd/agentctl apply --target codex --yes
 ```
 
 Do not run `apply` against a real home directory until the displayed plan has
@@ -82,6 +82,8 @@ been reviewed.
 
 - [Improved workflow](docs/WORKFLOW.md)
 - [Configurator architecture](docs/CONFIGURATOR.md)
+- [Mdmaid human-in-the-loop integration](docs/MDMAID-HUMAN-IN-THE-LOOP.md)
+- [Mdmaid project boundaries and naming](docs/MDMAID-PROJECT-BOUNDARIES.md)
 - [Security](SECURITY.md)
 - [Contributing](CONTRIBUTING.md)
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kagi-labs/cli-agent-configurator/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/configurator"
 )
 
 func TestRunDoctorAndPlan(t *testing.T) {

@@ -1,4 +1,5 @@
 /agent-config
+/agentctl
 /build/
 /coverage.out
 /.DS_Store

@@ -24,4 +24,4 @@ jobs:
       - name: Test
         run: go test -race -cover ./...
       - name: Build
-        run: go build ./cmd/agent-config
+        run: go build ./cmd/agentctl

@@ -30,7 +30,7 @@ flowchart LR
 ### Doctor
 
 ```bash
-agent-config doctor
+agentctl doctor
 ```
 
 Validates:
@@ -47,8 +47,8 @@ Validates:
 ### Inventory and Plan
 
 ```bash
-agent-config inventory --target all
-agent-config plan --target codex
+agentctl inventory --target all
+agentctl plan --target codex
 ```
 
 Actions:
@@ -61,7 +61,7 @@ Actions:
 ### Render
 
 ```bash
-agent-config render --target all --output ./build/rendered
+agentctl render --target all --output ./build/rendered
 ```
 
 Renders provider files into an isolated staging directory.
@@ -69,7 +69,7 @@ Renders provider files into an isolated staging directory.
 ### Apply
 
 ```bash
-agent-config apply --target codex --yes
+agentctl apply --target codex --yes
 ```
 
 Apply:
@@ -84,14 +84,19 @@ Apply:
 Install state:
 
 ```text
-~/.config/cli-agent-configurator/install-state.json
+~/.config/agentctl/install-state.json
 ```
 
 Backups:
 
 ```text
-~/.config/cli-agent-configurator/backups/<timestamp>/
+~/.config/agentctl/backups/<timestamp>/
 ```
+
+For rename compatibility, `agentctl` reads the legacy
+`~/.config/cli-agent-configurator/install-state.json` when the new state file
+does not exist. The next successful apply writes the state under
+`~/.config/agentctl/`; the legacy file is left untouched.
 
 ## Provider Roots
 

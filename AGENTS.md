@@ -3,7 +3,7 @@
 ## Scope
 
 This repository owns the provider-neutral workflow definitions and the
-`agent-config` installer.
+`agentctl` installer.
 
 ## Development
 
@@ -25,14 +25,14 @@ go vet ./...
 go test ./...
 go test -race ./...
 go test -coverprofile=coverage.out ./...
-go build ./cmd/agent-config
+go build ./cmd/agentctl
 ```
 
 Also run:
 
 ```bash
-go run ./cmd/agent-config doctor
-go run ./cmd/agent-config render --target all --output ./build/rendered
+go run ./cmd/agentctl doctor
+go run ./cmd/agentctl render --target all --output ./build/rendered
 ```
 
 ## Safety

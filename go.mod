@@ -1,3 +1,3 @@
-module github.com/kagi-labs/cli-agent-configurator
+module github.com/kagi-labs/agentctl
 
 go 1.25

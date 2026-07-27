@@ -2,7 +2,7 @@
 
 ## Status
 
-This document defines the target workflow for the CLI Agent Configurator.
+This document defines the target workflow for `agentctl`.
 
 The current implementation provides the configuration manifest, safe rendering
 and apply foundation, canonical phase prompts, and initial provider aliases.

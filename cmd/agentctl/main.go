@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/kagi-labs/cli-agent-configurator/internal/app"
+	"github.com/kagi-labs/agentctl/internal/app"
 )
 
 func main() {

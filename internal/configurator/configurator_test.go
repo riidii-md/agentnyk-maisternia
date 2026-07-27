@@ -194,7 +194,7 @@ func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 	backup := filepath.Join(
 		home,
 		".config",
-		"cli-agent-configurator",
+		"agentctl",
 		"backups",
 		"20260726T120000Z",
 		".codex",
@@ -214,6 +214,88 @@ func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 		t.Fatalf("Apply(conflict) error = %v, want ErrConflicts", err)
 	}
 	assertFileContents(t, destination, "local edit")
+}
+
+func TestStatePathUsesAgentctlAndLoadsLegacyState(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	source := filepath.Join(repo, "config", "work-plan.md")
+	destination := filepath.Join(home, ".codex", "commands", "work-plan.md")
+	writeFile(t, source, "version two")
+	writeFile(t, destination, "version one")
+
+	wantStatePath := filepath.Join(home, ".config", "agentctl", "install-state.json")
+	if got := StatePath(home); got != wantStatePath {
+		t.Fatalf("StatePath() = %q, want %q", got, wantStatePath)
+	}
+
+	checksum, err := fileChecksum(destination)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyState := installState{
+		SchemaVersion: StateSchemaVersion,
+		Resources: map[string]installedResource{
+			stateKey("codex", ".codex/commands/work-plan.md"): {
+				Checksum:  checksum,
+				Source:    source,
+				Installed: time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+	data, err := json.Marshal(legacyState)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(
+		t,
+		filepath.Join(home, ".config", "cli-agent-configurator", "install-state.json"),
+		string(data),
+	)
+
+	manifest := validManifest("config/work-plan.md", "codex", ".codex/commands/work-plan.md")
+	plan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatalf("BuildPlan() error = %v", err)
+	}
+	assertOnlyAction(t, plan, ActionUpdate)
+
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatalf("Apply() error = %v", err)
+	}
+	if _, err := os.Stat(wantStatePath); err != nil {
+		t.Fatalf("migrated state missing: %v", err)
+	}
+}
+
+func TestBuildPlanRejectsSymlinkedLegacyInstallState(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "work-plan.md"), "plan")
+	manifest := validManifest("config/work-plan.md", "codex", ".codex/commands/work-plan.md")
+
+	outsideState := filepath.Join(t.TempDir(), "install-state.json")
+	writeFile(t, outsideState, `{"schema_version":1,"resources":{}}`)
+	legacyPath := filepath.Join(
+		home,
+		".config",
+		"cli-agent-configurator",
+		"install-state.json",
+	)
+	if err := os.MkdirAll(filepath.Dir(legacyPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outsideState, legacyPath); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := BuildPlan(repo, home, manifest, "codex"); err == nil {
+		t.Fatal("BuildPlan() error = nil, want symlink rejection")
+	}
 }
 
 func TestBuildPlanRejectsSymlinkDestinations(t *testing.T) {
@@ -514,7 +596,7 @@ func TestApplyRejectsStaleSourceAndTarget(t *testing.T) {
 		if err := Apply(plan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrPlanStale) {
 			t.Fatalf("Apply() error = %v, want ErrPlanStale", err)
 		}
-		if _, err := os.Stat(filepath.Join(outside, "cli-agent-configurator")); !errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(filepath.Join(outside, "agentctl")); !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("apply wrote state through symlink, stat error = %v", err)
 		}
 	})

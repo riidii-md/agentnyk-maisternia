@@ -117,7 +117,7 @@ func backupTarget(home string, action Action, timestamp time.Time) error {
 	backupPath := filepath.Join(
 		home,
 		".config",
-		"cli-agent-configurator",
+		"agentctl",
 		"backups",
 		timestamp.Format("20060102T150405Z"),
 		filepath.FromSlash(action.TargetPath),
@@ -146,7 +146,7 @@ func atomicCopy(source, destination string) error {
 	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
 		return err
 	}
-	temp, err := os.CreateTemp(filepath.Dir(destination), ".agent-config-*")
+	temp, err := os.CreateTemp(filepath.Dir(destination), ".agentctl-*")
 	if err != nil {
 		return err
 	}
