@@ -12,8 +12,9 @@
   "properties": {
     "schema_version": {"const": 1},
     "task_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,127}$"},
+    "pipeline": {"type": "string"},
     "phase": {"type": "string"},
-    "status": {"enum": ["ready", "waiting_for_approval", "blocked"]},
+    "status": {"enum": ["ready", "waiting_for_approval", "blocked", "completed"]},
     "trigger": {"$ref": "#/$defs/trigger"},
     "workspace": {"$ref": "#/$defs/workspace"},
     "artifacts": {"$ref": "#/$defs/artifacts"},

@@ -82,9 +82,21 @@ VERIFY failed   -> ANALYZE
 REVIEW changes  -> RUN
 ```
 
-Only the current phase is marked as active. Earlier phases are not marked
-complete because the current task schema does not yet record phase completion
-history. Loops describe policy topology; they are not automatically executed.
+For `shape` tasks, the same view switches to the idea-shaping topology and adds
+source inbox and grill summaries:
+
+```text
+DISCOVERY  INTAKE -> RESEARCH -> GRILL -> BRAINSTORM
+CONVERGE   CHALLENGE -> DECIDE -> PLAN -> FINAL -> HUMAN FINALIZE
+
+SOURCE INBOX  4 total  1 unread  1 material
+GRILL STATE   3 total  2 open    1 critical
+```
+
+Shape loops are guarded by recorded outcomes and a pass budget. Other pipeline
+loops still describe policy topology and are not automatically executed. Only
+the current phase is marked active because completed-phase history is not yet
+projected into the TUI.
 
 ### Tasks
 
@@ -131,7 +143,7 @@ The TUI is an observational admin surface. Controlled automation still
 requires additional runtime work:
 
 - concrete runner capability resolution;
-- durable phase outcomes and transition history;
+- generalized durable outcomes beyond the shape transition history;
 - explicit approval records;
 - bounded read-only dispatch;
 - write-phase leases, budgets, and cancellation;

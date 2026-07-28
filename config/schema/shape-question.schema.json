@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/shape-question.schema.json",
+  "title": "agentctl shape grill question snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "question_id", "task_id", "category", "prompt", "why",
+    "critical", "status", "asked_by", "asked_at", "updated_at"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "question_id": {"type": "string", "pattern": "^q-[a-f0-9]{16}$"},
+    "task_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,127}$"},
+    "category": {"type": "string", "maxLength": 64},
+    "prompt": {"type": "string", "maxLength": 16384},
+    "why": {"type": "string", "maxLength": 16384},
+    "critical": {"type": "boolean"},
+    "status": {
+      "enum": [
+        "open", "answered", "deferred", "unknown", "research_requested",
+        "rejected"
+      ]
+    },
+    "answer": {"type": "string", "maxLength": 16384},
+    "asked_by": {"type": "string", "maxLength": 128},
+    "asked_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

@@ -482,6 +482,138 @@ func TestRunEventTaskAndWorkCommands(t *testing.T) {
 	}
 }
 
+func TestRunShapeSourceAndGrillCommands(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"pipeline", "start", "shape",
+		"--home", home,
+		"--task-id", "shape-cli-test",
+		"--title", "Improve idea development",
+		"--repository", "kagi-labs/agentctl",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("pipeline start code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "task: shape-cli-test") ||
+		!strings.Contains(stdout.String(), "pipeline: shape") {
+		t.Fatalf("pipeline start output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"pipeline", "transition",
+		"--home", home,
+		"shape-cli-test",
+		"research",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("pipeline transition code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "phase: research") {
+		t.Fatalf("pipeline transition output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"source", "add",
+		"--home", home,
+		"shape-cli-test",
+		"https://example.com/evidence",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("source add code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "source: src-") {
+		t.Fatalf("source add output = %q", stdout.String())
+	}
+
+	store, err := workflow.NewStore(home, workflow.StoreOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sources, err := store.ListSources("shape-cli-test")
+	if err != nil || len(sources) != 1 {
+		t.Fatalf("sources = %#v, error = %v", sources, err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"source", "classify",
+		"--home", home,
+		"shape-cli-test",
+		sources[0].SourceID,
+		"requirement-changing",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("source classify code = %d, stderr = %s", code, stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"grill", "ask",
+		"--home", home,
+		"--category", "constraints",
+		"--why", "It changes which options are viable.",
+		"--critical",
+		"shape-cli-test",
+		"What cannot change?",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("grill ask code = %d, stderr = %s", code, stderr.String())
+	}
+
+	questions, err := store.ListQuestions("shape-cli-test")
+	if err != nil || len(questions) != 1 {
+		t.Fatalf("questions = %#v, error = %v", questions, err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"grill", "next",
+		"--home", home,
+		"shape-cli-test",
+	}, &stdout, &stderr)
+	if code != 0 || !strings.Contains(stdout.String(), "What cannot change?") {
+		t.Fatalf("grill next code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"grill", "answer",
+		"--home", home,
+		"--action", "answer",
+		"--text", "The existing aliases.",
+		"shape-cli-test",
+		questions[0].QuestionID,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("grill answer code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "status: answered") {
+		t.Fatalf("grill answer output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"source", "list",
+		"--home", home,
+		"shape-cli-test",
+	}, &stdout, &stderr)
+	if code != 0 || !strings.Contains(stdout.String(), "requirement-changing") {
+		t.Fatalf("source list code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestRunProviderCommandsAndAlias(t *testing.T) {
 	t.Parallel()
 

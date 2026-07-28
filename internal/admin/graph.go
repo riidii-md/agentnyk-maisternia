@@ -57,6 +57,34 @@ func DefaultPipeline() PipelineGraph {
 	}
 }
 
+func ShapePipeline() PipelineGraph {
+	return PipelineGraph{
+		Nodes: []PhaseNode{
+			{ID: "intake", Label: "INTAKE", Authority: "read_only"},
+			{ID: "research", Label: "RESEARCH", Authority: "read_only"},
+			{ID: "grill", Label: "GRILL", Authority: "read_only"},
+			{ID: "brainstorm", Label: "BRAINSTORM", Authority: "artifact_write"},
+			{ID: "challenge", Label: "CHALLENGE", Authority: "read_only"},
+			{ID: "decide", Label: "DECIDE", Authority: "artifact_write"},
+			{ID: "plan", Label: "PLAN", Authority: "artifact_write"},
+			{ID: "final", Label: "FINAL", Authority: "artifact_write"},
+		},
+		Edges: []PipelineEdge{
+			{From: "intake", To: "research"},
+			{From: "research", To: "grill"},
+			{From: "grill", To: "brainstorm"},
+			{From: "brainstorm", To: "challenge"},
+			{From: "challenge", To: "decide"},
+			{From: "decide", To: "plan"},
+			{From: "plan", To: "final", Condition: "human finalization"},
+			{From: "grill", To: "research", Condition: "evidence gap", Loop: true},
+			{From: "challenge", To: "brainstorm", Condition: "weak options", Loop: true},
+			{From: "challenge", To: "grill", Condition: "missing constraint", Loop: true},
+		},
+		GateAt: "final",
+	}
+}
+
 func (g PipelineGraph) Node(id string) (PhaseNode, bool) {
 	for _, node := range g.Nodes {
 		if node.ID == id {

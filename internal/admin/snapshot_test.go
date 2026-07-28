@@ -8,6 +8,7 @@ import (
 
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/settings"
+	"github.com/kagi-labs/agentctl/internal/workflow"
 )
 
 func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
@@ -120,6 +121,52 @@ func TestDefaultPipelineIncludesApprovalAndLoops(t *testing.T) {
 		if loops[from] != to {
 			t.Fatalf("loop %s = %q, want %q", from, loops[from], to)
 		}
+	}
+}
+
+func TestLoaderSummarizesShapeTask(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	store, err := workflow.NewStore(home, workflow.StoreOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := store.StartShape(workflow.ShapeTaskInput{
+		TaskID: "shape-admin-test",
+		Title:  "Shape an idea",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.AddSource(result.State.TaskID, workflow.SourceInput{
+		Kind:     "url",
+		Location: "https://example.com/evidence",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.AskQuestion(result.State.TaskID, workflow.QuestionInput{
+		Prompt:   "What is the non-goal?",
+		Why:      "The scope is not bounded.",
+		Critical: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	snapshot := (Loader{
+		Home: home,
+		Cwd:  t.TempDir(),
+		Getenv: func(string) string {
+			return ""
+		},
+	}).Load()
+	summary, exists := snapshot.Shape[result.State.TaskID]
+	if !exists {
+		t.Fatalf("shape summary missing: %#v", snapshot.Shape)
+	}
+	if summary.SourcesTotal != 1 || summary.OpenQuestions != 1 ||
+		summary.CriticalQuestions != 1 {
+		t.Fatalf("shape summary = %#v", summary)
 	}
 }
 

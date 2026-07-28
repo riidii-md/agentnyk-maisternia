@@ -107,6 +107,48 @@ func TestPipelineLoopsAreVisibleAtCommonTerminalSize(t *testing.T) {
 	}
 }
 
+func TestShapePipelineShowsSourcesAndGrillState(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Tasks[0].Pipeline = "shape"
+	fixture.Tasks[0].Phase = "grill"
+	fixture.Tasks[0].Status = "blocked"
+	fixture.Shape = map[string]workflow.ShapeSummary{
+		fixture.Tasks[0].TaskID: {
+			SourcesTotal:      4,
+			UnreadSources:     1,
+			MaterialSources:   1,
+			QuestionsTotal:    3,
+			OpenQuestions:     2,
+			CriticalQuestions: 1,
+		},
+	}
+
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 100, Height: 32})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"SHAPE PIPELINE",
+		"SOURCE INBOX",
+		"4 total",
+		"1 material",
+		"GRILL STATE",
+		"2 open",
+		"1 critical",
+		"weak options",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("shape pipeline missing %q:\n%s", expected, view)
+		}
+	}
+}
+
 func TestTruncateHandlesWideRunes(t *testing.T) {
 	t.Parallel()
 

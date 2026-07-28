@@ -147,6 +147,7 @@ func (s *Store) Ingest(event TriggerEvent, policy Policy) (IngestResult, error) 
 		Repository:    event.Repository.ID,
 		SubjectKind:   event.Subject.Kind,
 		SubjectID:     event.Subject.ID,
+		Pipeline:      "delivery",
 		Phase:         trigger.InitialPhase,
 		Status:        status,
 		NextAction:    nextAction(trigger.InitialPhase, approval),
@@ -159,6 +160,7 @@ func (s *Store) Ingest(event TriggerEvent, policy Policy) (IngestResult, error) 
 	context := ContextEnvelope{
 		SchemaVersion: SchemaVersion,
 		TaskID:        taskID,
+		Pipeline:      "delivery",
 		Phase:         trigger.InitialPhase,
 		Status:        status,
 		Trigger:       reference,

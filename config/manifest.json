@@ -11,6 +11,60 @@
       ]
     },
     {
+      "id": "work-shape",
+      "source": "config/workflow/phases/shape.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-shape.md"},
+        {"agent": "claude", "path": ".claude/commands/work-shape.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-shape.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-shape/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-source",
+      "source": "config/workflow/phases/source.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-source.md"},
+        {"agent": "claude", "path": ".claude/commands/work-source.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-source.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-source/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-grill",
+      "source": "config/workflow/phases/grill.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-grill.md"},
+        {"agent": "claude", "path": ".claude/commands/work-grill.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-grill.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-grill/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-brainstorm",
+      "source": "config/workflow/phases/brainstorm.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-brainstorm.md"},
+        {"agent": "claude", "path": ".claude/commands/work-brainstorm.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-brainstorm.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-brainstorm/SKILL.md"}
+      ]
+    },
+    {
+      "id": "codex-shape-codex",
+      "source": "config/workflow/phases/shape.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-shape.md"}
+      ]
+    },
+    {
+      "id": "codex-shape-claude",
+      "source": "config/adapters/claude/codex-shape.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-shape.md"}
+      ]
+    },
+    {
       "id": "work-brief",
       "source": "config/workflow/phases/brief.md",
       "targets": [

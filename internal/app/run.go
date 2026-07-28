@@ -26,6 +26,9 @@ Usage:
   agentctl apply [options] --yes
   agentctl event validate [options] <event.json>
   agentctl event ingest [options] <event.json>
+  agentctl pipeline start shape [options]
+  agentctl source <command> [options]
+  agentctl grill <command> [options]
   agentctl provider list [options]
   agentctl provider inspect [options] <provider>
   agentctl provider doctor [options] [provider|all]
@@ -76,6 +79,12 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runConfigCommand(args[1:], stdout, stderr)
 	case "event":
 		return runEventCommand(args[1:], stdout, stderr)
+	case "pipeline":
+		return runPipelineCommand(args[1:], stdout, stderr)
+	case "source":
+		return runSourceCommand(args[1:], stdin, stdout, stderr)
+	case "grill":
+		return runGrillCommand(args[1:], stdin, stdout, stderr)
 	case "provider":
 		return runProviderCommand(args[1:], stdout, stderr)
 	case "task":

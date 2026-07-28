@@ -6,9 +6,11 @@ This document defines the target workflow for `agentctl`.
 
 The current implementation provides the configuration manifest, safe rendering
 and apply foundation, canonical phase prompts, provider aliases, strict event
-validation, idempotent manual ingestion, and durable initial task state.
-Concrete runner capability resolution and controlled dispatch are the next
-major milestones.
+validation, idempotent manual ingestion, durable initial task state, and the
+first usable `shape` pipeline slice. Shape tasks support continuous source
+intake, focused grill questions, guarded phase transitions, bounded discovery
+loops, explicit finalization, and admin TUI summaries. Concrete runner
+capability resolution and controlled dispatch remain future milestones.
 
 ## Purpose
 
@@ -41,6 +43,10 @@ Canonical commands use the `/work` namespace:
 
 ```text
 /work
+/work-shape
+/work-source
+/work-grill
+/work-brainstorm
 /work-brief
 /work-scout
 /work-analyze
@@ -67,6 +73,7 @@ Provider-prefixed commands are useful when the user wants an explicit runner:
 
 ```text
 /codex-brief
+/codex-shape
 /codex-scout
 /codex-analyze
 /codex-research
@@ -191,6 +198,30 @@ It should:
 
 The conductor does not perform every phase itself. It coordinates specialized
 phase prompts and preserves lifecycle rules.
+
+## Idea Shaping
+
+`/work-shape` is the entry point when the task is not ready for the linear
+delivery workflow.
+
+```text
+SOURCE INBOX (always open)
+        |
+        v
+INTAKE -> RESEARCH <-> GRILL -> BRAINSTORM <-> CHALLENGE -> DECIDE -> PLAN -> FINAL
+```
+
+The runtime stores sources and grill questions as append-only records under the
+private task directory. Legal transitions are enforced by `agentctl`; critical
+open questions block brainstorming, loop outcomes consume a configurable pass
+budget, and finalization requires an explicit human action.
+
+Canonical supporting commands are `/work-source`, `/work-grill`, and
+`/work-brainstorm`. They install for Codex, Claude, Antigravity, and Hermes.
+Hermes receives them as native skills under `~/.hermes/skills/`.
+
+See [Idea-Shaping Pipeline](IDEA-SHAPING-PIPELINE.md) for the phase contracts,
+state model, and remaining delivery increments.
 
 ## Phase Contracts
 

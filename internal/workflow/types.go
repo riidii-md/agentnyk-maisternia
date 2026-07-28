@@ -96,7 +96,9 @@ type TaskState struct {
 	Repository    string         `json:"repository"`
 	SubjectKind   string         `json:"subject_kind"`
 	SubjectID     string         `json:"subject_id"`
+	Pipeline      string         `json:"pipeline,omitempty"`
 	Phase         string         `json:"phase"`
+	Cycle         int            `json:"cycle,omitempty"`
 	Status        string         `json:"status"`
 	NextAction    string         `json:"next_action"`
 	Authority     string         `json:"authority"`
@@ -109,6 +111,7 @@ type TaskState struct {
 type ContextEnvelope struct {
 	SchemaVersion  int                `json:"schema_version"`
 	TaskID         string             `json:"task_id"`
+	Pipeline       string             `json:"pipeline,omitempty"`
 	Phase          string             `json:"phase"`
 	Status         string             `json:"status"`
 	Trigger        EventReference     `json:"trigger"`

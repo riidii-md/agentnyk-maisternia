@@ -183,9 +183,45 @@ go run ./cmd/agentctl work next <task-id>
 All initial triggers are read-only. Ingestion does not dispatch an agent or
 grant implementation, commit, push, PR, or external-write authority.
 
+## Shape Workflow
+
+Start a durable idea-shaping task:
+
+```bash
+agentctl pipeline start shape \
+  --title "Improve agent workflow" \
+  --repository kagi-labs/agentctl
+```
+
+Add sources and record focused human questions:
+
+```bash
+agentctl source add <task-id> https://example.com/source
+agentctl source list <task-id>
+agentctl grill ask --why "This determines the viable options." \
+  --critical <task-id> "What cannot change?"
+agentctl grill next <task-id>
+```
+
+Move through guarded phases:
+
+```bash
+agentctl pipeline transition <task-id> research
+agentctl pipeline transition <task-id> grill
+agentctl pipeline transition <task-id> brainstorm
+agentctl pipeline transition --outcome weak-options <task-id> brainstorm
+agentctl pipeline transition --finalize <task-id> final
+```
+
+The shape pipeline keeps target-project access read-only. Generated workflow
+artifacts may be written under private agentctl task state. Critical grill
+questions, invalid edges, exhausted loop budgets, and implicit finalization are
+rejected.
+
 ## Documentation
 
 - [Improved workflow](docs/WORKFLOW.md)
+- [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)
 - [Configurator architecture](docs/CONFIGURATOR.md)
@@ -203,6 +239,10 @@ Neutral commands describe the work:
 
 ```text
 /work
+/work-shape
+/work-source
+/work-grill
+/work-brainstorm
 /work-plan
 /work-research
 /work-run
@@ -213,6 +253,7 @@ Provider aliases force a runner:
 
 ```text
 /codex-scout
+/codex-shape
 /codex-analyze
 /codex-plan
 /codex-research

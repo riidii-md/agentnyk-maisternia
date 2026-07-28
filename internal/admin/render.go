@@ -252,22 +252,61 @@ func (m Model) renderPipelines(width int) string {
 		currentPhase = selected.Phase
 		waiting = selected.Status == "waiting_for_approval"
 	}
+	graph := m.snapshot.Pipeline
+	pipelineTitle := "PIPELINE"
+	if selected != nil && selected.Pipeline == "shape" {
+		graph = ShapePipeline()
+		pipelineTitle = "SHAPE PIPELINE"
+		summary := m.snapshot.Shape[selected.TaskID]
+		sections = append(sections, section(
+			"SOURCE INBOX",
+			[]string{
+				fmt.Sprintf(
+					"%d total  %d unread  %d material",
+					summary.SourcesTotal,
+					summary.UnreadSources,
+					summary.MaterialSources,
+				),
+				mutedStyle.Render("Source intake remains open until a revision is finalized."),
+			},
+			width,
+		))
+		sections = append(sections, section(
+			"GRILL STATE",
+			[]string{
+				fmt.Sprintf(
+					"%d total  %d open  %d critical",
+					summary.QuestionsTotal,
+					summary.OpenQuestions,
+					summary.CriticalQuestions,
+				),
+				mutedStyle.Render("Critical open questions block convergence."),
+			},
+			width,
+		))
+	}
 	sections = append(sections, section(
-		"PIPELINE",
-		renderPipelineGraph(m.snapshot.Pipeline, currentPhase, waiting, width),
+		pipelineTitle,
+		renderPipelineGraph(graph, currentPhase, waiting, width),
 		width,
 	))
 
-	sections = append(sections, section(
-		"BRANCHES AND LOOPS",
-		[]string{
-			warningStyle.Render("↺") + " READY not ready → RESEARCH",
-			warningStyle.Render("↺") + " VERIFY failed → ANALYZE",
-			warningStyle.Render("↺") + " REVIEW changes → RUN",
-			mutedStyle.Render("Entry phases come from trigger policy; loops require recorded outcomes."),
-		},
-		width,
-	))
+	branches := []string{
+		warningStyle.Render("↺") + " READY not ready → RESEARCH",
+		warningStyle.Render("↺") + " VERIFY failed → ANALYZE",
+		warningStyle.Render("↺") + " REVIEW changes → RUN",
+		mutedStyle.Render("Entry phases come from trigger policy; loops require recorded outcomes."),
+	}
+	if selected != nil && selected.Pipeline == "shape" {
+		branches = []string{
+			warningStyle.Render("↺") + " GRILL evidence gap → RESEARCH",
+			warningStyle.Render("↺") + " CHALLENGE weak options → BRAINSTORM",
+			warningStyle.Render("↺") + " CHALLENGE missing constraint → GRILL",
+			warningStyle.Render("↺") + " MATERIAL SOURCE → RESEARCH",
+			mutedStyle.Render("Loops are bounded; finalization remains an explicit human action."),
+		}
+	}
+	sections = append(sections, section("BRANCHES AND LOOPS", branches, width))
 
 	var triggers []string
 	for event, trigger := range m.snapshot.Policy.Triggers.Triggers {
@@ -290,6 +329,9 @@ func renderPipelineGraph(
 	waiting bool,
 	width int,
 ) []string {
+	if _, shape := graph.Node("intake"); shape {
+		return renderShapePipelineGraph(graph, currentPhase, width)
+	}
 	if width < 72 {
 		groups := []struct {
 			label string
@@ -361,6 +403,37 @@ func renderPipelineGraph(
 			line += " → " + gate
 		}
 		lines = append(lines, line)
+	}
+	return lines
+}
+
+func renderShapePipelineGraph(
+	graph PipelineGraph,
+	currentPhase string,
+	width int,
+) []string {
+	lanes := [][]string{
+		{"intake", "research", "grill", "brainstorm"},
+		{"challenge", "decide", "plan", "final"},
+	}
+	names := []string{"DISCOVERY", "CONVERGE"}
+	var lines []string
+	for index, lane := range lanes {
+		var nodes []string
+		for _, id := range lane {
+			node, _ := graph.Node(id)
+			nodes = append(nodes, renderPhaseNode(node, currentPhase))
+		}
+		line := strings.Join(nodes, " → ")
+		if width >= 88 {
+			line = fmt.Sprintf("%-10s %s", names[index], line)
+		} else {
+			lines = append(lines, mutedStyle.Render(names[index]))
+		}
+		if index == 1 {
+			line += " → " + warningStyle.Render("HUMAN FINALIZE")
+		}
+		lines = append(lines, truncate(line, width))
 	}
 	return lines
 }
