@@ -273,6 +273,23 @@ func TestRunRejectsInvalidCommandsAndOptions(t *testing.T) {
 	}
 }
 
+func TestRunRejectsUnknownCommandBeforeLoadingManifest(t *testing.T) {
+	t.Parallel()
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"admin"}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("Run(admin) code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr.String(), `unknown command "admin"`) {
+		t.Fatalf("Run(admin) stderr = %q, want unknown command", stderr.String())
+	}
+	if strings.Contains(stderr.String(), "inspect manifest") ||
+		strings.Contains(stderr.String(), "lstat") {
+		t.Fatalf("Run(admin) stderr = %q, must not load manifest", stderr.String())
+	}
+}
+
 func TestRunReportsConflicts(t *testing.T) {
 	t.Parallel()
 

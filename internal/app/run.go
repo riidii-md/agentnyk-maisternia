@@ -72,6 +72,11 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return runTaskCommand(args[1:], stdout, stderr)
 	case "work":
 		return runWorkCommand(args[1:], stdout, stderr)
+	case "doctor", "inventory", "plan", "render", "apply":
+		// These commands use the shared manifest-backed path below.
+	default:
+		fmt.Fprintf(stderr, "unknown command %q\n\n%s", args[0], usage)
+		return 2
 	}
 
 	command := args[0]
