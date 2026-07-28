@@ -1,6 +1,7 @@
 /agent-config
 /agentctl
 /build/
+/dist/
 /coverage.out
 /.DS_Store
 *.tmp

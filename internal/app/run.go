@@ -8,23 +8,36 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kagi-labs/agentctl/internal/buildinfo"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/workflow"
 )
 
 const usage = `agentctl manages declarative configuration and workflows for CLI agents.
 
 Usage:
+  agentctl version
   agentctl doctor [options]
   agentctl inventory [options]
   agentctl plan [options]
   agentctl render [options] --output <dir>
   agentctl apply [options] --yes
+  agentctl event validate [options] <event.json>
+  agentctl event ingest [options] <event.json>
+  agentctl provider list [options]
+  agentctl provider inspect [options] <provider>
+  agentctl provider doctor [options] [provider|all]
+  agentctl provider capabilities [options] <provider>
+  agentctl task list [options]
+  agentctl task show [options] <task-id>
+  agentctl task context [options] <task-id>
+  agentctl work next [options] <task-id>
 
 Common options:
   --repo <dir>       Configuration repository root (default: current directory)
   --manifest <path>  Manifest path relative to repository (default: config/manifest.json)
   --home <dir>       Target home directory (default: current user home)
-  --target <agent>   all, codex, claude, agy, or hermes (default: all)
+  --target <agent>   all, codex, claude, antigravity (agy), or hermes (default: all)
 `
 
 type commandOptions struct {
@@ -41,9 +54,24 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprint(stderr, usage)
 		return 2
 	}
+	if len(args) == 1 &&
+		(args[0] == "version" || args[0] == "--version" || args[0] == "-v") {
+		fmt.Fprintln(stdout, buildinfo.Current().String())
+		return 0
+	}
 	if args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
 		fmt.Fprint(stdout, usage)
 		return 0
+	}
+	switch args[0] {
+	case "event":
+		return runEventCommand(args[1:], stdout, stderr)
+	case "provider":
+		return runProviderCommand(args[1:], stdout, stderr)
+	case "task":
+		return runTaskCommand(args[1:], stdout, stderr)
+	case "work":
+		return runWorkCommand(args[1:], stdout, stderr)
 	}
 
 	command := args[0]
@@ -60,6 +88,24 @@ func Run(args []string, stdout, stderr io.Writer) int {
 
 	switch command {
 	case "doctor":
+		present, err := workflow.PolicyPresent(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: inspect workflow policy: %v\n", err)
+			return 1
+		}
+		if present {
+			policy, err := workflow.LoadPolicy(options.repo)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			fmt.Fprintf(
+				stdout,
+				"workflow policy valid: %d triggers, %d phase profiles\n",
+				len(policy.Triggers.Triggers),
+				len(policy.Capabilities.Phases),
+			)
+		}
 		targets := 0
 		for _, resource := range manifest.Resources {
 			targets += len(resource.Targets)

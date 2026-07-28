@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/kagi-labs/agentctl/internal/providers"
 )
 
 func Apply(plan Plan, options ApplyOptions) error {
@@ -35,11 +37,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 
 	for _, action := range plan.Actions {
 		if action.State == ActionUnchanged {
-			state.Resources[stateKey(action.Agent, filepath.FromSlash(action.TargetPath))] = installedResource{
-				Checksum:  action.SourceChecksum,
-				Source:    action.SourcePath,
-				Installed: appliedAt,
-			}
+			recordInstalledResource(state, action, appliedAt)
 			continue
 		}
 		if action.State != ActionCreate && action.State != ActionUpdate {
@@ -56,17 +54,25 @@ func Apply(plan Plan, options ApplyOptions) error {
 		if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
 			return fmt.Errorf("install %s: %w", action.TargetPath, err)
 		}
-		state.Resources[stateKey(action.Agent, filepath.FromSlash(action.TargetPath))] = installedResource{
-			Checksum:  action.SourceChecksum,
-			Source:    action.SourcePath,
-			Installed: appliedAt,
-		}
+		recordInstalledResource(state, action, appliedAt)
 	}
 
 	if err := writeState(plan.Home, state); err != nil {
 		return err
 	}
 	return nil
+}
+
+func recordInstalledResource(state installState, action Action, installedAt time.Time) {
+	targetRelative := filepath.FromSlash(action.TargetPath)
+	state.Resources[stateKey(action.Agent, targetRelative)] = installedResource{
+		Checksum:  action.SourceChecksum,
+		Source:    action.SourcePath,
+		Installed: installedAt,
+	}
+	for _, alias := range providers.LegacyAliases(action.Agent) {
+		delete(state.Resources, stateKey(alias, targetRelative))
+	}
 }
 
 func verifyActionStillValid(home string, action Action) error {

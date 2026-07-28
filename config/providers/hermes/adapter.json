@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "hermes",
+  "display_name": "Hermes Agent",
+  "aliases": [],
+  "renderer": {
+    "config_roots": [
+      {
+        "path": ".hermes",
+        "purpose": "User settings, instructions, skills, hooks, plugins, profiles, and runtime data",
+        "ownership": "mixed",
+        "required": false
+      }
+    ],
+    "resource_kinds": [
+      "hooks",
+      "instructions",
+      "mcp",
+      "plugins",
+      "profiles",
+      "settings",
+      "skills"
+    ]
+  },
+  "inspector": {
+    "executables": [
+      {
+        "name": "hermes",
+        "version_args": ["--version"],
+        "version_pattern": "^Hermes Agent v[0-9]"
+      }
+    ],
+    "native_doctor": {
+      "args": ["doctor"],
+      "safe": false,
+      "note": "May perform dependency and integration checks; agentctl reports availability but does not run it automatically."
+    }
+  },
+  "runner": {
+    "supported": true,
+    "headless": true,
+    "safe_headless": false,
+    "authorities": [],
+    "output_formats": [
+      "text"
+    ]
+  },
+  "parser": {
+    "formats": [
+      "text"
+    ],
+    "structured_output": false
+  },
+  "capabilities": [
+    "config.hooks",
+    "config.instructions",
+    "config.mcp",
+    "config.plugins",
+    "config.profiles",
+    "config.settings",
+    "config.skills",
+    "runner.headless",
+    "session.resume",
+    "usage.reporting",
+    "worktree.isolation"
+  ]
+}

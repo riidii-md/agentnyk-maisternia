@@ -31,7 +31,15 @@ Current controls:
 - source and target revalidation before apply;
 - backups before update;
 - atomic writes;
-- install-state permissions.
+- install-state permissions;
+- strict event parsing with unknown-field rejection and size limits;
+- unsupported-trigger, unsafe-path, credential-pattern, and URL-userinfo
+  rejection;
+- read-only trigger authority enforcement;
+- source-event separation from generated runner context;
+- event idempotency checksums;
+- private task-state permissions, atomic replacement, and append-only logs;
+- per-event and per-task writer leases with stale-process recovery on Unix.
 
 ## Secret Handling
 
@@ -60,4 +68,7 @@ Changes to these areas require focused security review:
 - structured settings merge;
 - plugin installation;
 - runner subprocess execution;
-- permission routing.
+- permission routing;
+- normalized event validation and idempotency;
+- durable task state, indexes, and leases;
+- runner capability resolution and dispatch.

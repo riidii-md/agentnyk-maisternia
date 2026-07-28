@@ -25,3 +25,11 @@ jobs:
         run: go test -race -cover ./...
       - name: Build
         run: go build ./cmd/agentctl
+      - name: Set up GoReleaser
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          install-only: true
+      - name: Validate release configuration
+        run: goreleaser check

@@ -19,7 +19,7 @@ Mdmaid should provide the durable presentation layer for these artifacts:
 - the browser opens when human attention is required;
 - approval remains a separate explicit workflow action.
 
-The design must work across Codex, Claude, `agy`, Hermes, editors, terminals,
+The design must work across Codex, Claude, Antigravity, Hermes, editors, terminals,
 and multiple concurrent sessions.
 
 ## Core Principle
@@ -115,7 +115,7 @@ Use one user-level mdmaid daemon with multiple workspaces.
 flowchart LR
     C[Codex] --> E[Artifact event]
     CL[Claude] --> E
-    A[agy] --> E
+    A[Antigravity] --> E
     H[Hermes] --> E
     N[Neovim] --> M
     E --> P[Presentation adapter]
@@ -443,7 +443,7 @@ into mdmaid behavior.
 | Run | `progress.yaml` and events | No Markdown required | Never |
 | Verify | `reports/verification.md` | Automatic | Open on failure |
 | Review | `review.md` | Automatic | Open on findings or completion |
-| PR | `reports/pr-readiness.md` | Automatic | Open before PR action |
+| PR | `reports/pull-request.md` | Automatic | Open before PR action |
 | Showcase | timestamped report | Automatic | Always open |
 | Cleanup | cleanup proposal | Automatic | Open only when action is requested |
 

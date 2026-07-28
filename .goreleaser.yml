@@ -1,0 +1,127 @@
+version: 2
+
+project_name: agentctl
+
+before:
+  hooks:
+    - go mod verify
+
+builds:
+  - id: agentctl
+    main: ./cmd/agentctl
+    binary: agentctl
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    ldflags:
+      - >-
+        -s -w
+        -X github.com/kagi-labs/agentctl/internal/buildinfo.Version={{ .Version }}
+        -X github.com/kagi-labs/agentctl/internal/buildinfo.Commit={{ .Commit }}
+        -X github.com/kagi-labs/agentctl/internal/buildinfo.Date={{ .CommitDate }}
+
+archives:
+  - id: release
+    ids:
+      - agentctl
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    files:
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "0.0.0-devel-{{ .ShortCommit }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  prerelease: auto
+
+homebrew_casks:
+  - name: agentctl
+    ids:
+      - release
+    binaries:
+      - agentctl
+    repository:
+      owner: kagi-labs
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Casks
+    homepage: https://github.com/kagi-labs/agentctl
+    description: Provider-neutral workflow and safe configuration manager for CLI coding agents
+    skip_upload: '{{ if eq .Env.HOMEBREW_TAP_TOKEN "" }}true{{ else }}auto{{ end }}'
+    custom_block: |
+      require "download_strategy"
+
+      class AgentctlGitHubPrivateRepositoryReleaseDownloadStrategy < CurlDownloadStrategy
+        def initialize(url, name, version, **meta)
+          @url = url
+          parse_url_pattern
+          set_github_token
+          meta[:headers] ||= []
+          meta[:headers] << "Accept: application/octet-stream"
+          meta[:headers] << "Authorization: Bearer #{@github_token}"
+          ghurl = "https://api.github.com/repos/#{@owner}/#{@repo}/releases/assets/#{asset_id}"
+          super(ghurl, name, version, **meta)
+        end
+
+        def download_url
+          "https://#{@github_token}@api.github.com/repos/#{@owner}/#{@repo}/releases/assets/#{asset_id}"
+        end
+
+        private
+
+        def parse_url_pattern
+          pattern = %r{https://github.com/([^/]+)/([^/]+)/releases/download/([^/]+)/(\S+)}
+          raise CurlDownloadStrategyError, "Invalid URL pattern" unless @url =~ pattern
+
+          _, @owner, @repo, @tag, @filename = *@url.match(pattern)
+        end
+
+        def set_github_token
+          @github_token = ENV["HOMEBREW_GITHUB_API_TOKEN"]
+          unless @github_token
+            raise CurlDownloadStrategyError, "HOMEBREW_GITHUB_API_TOKEN is required"
+          end
+          GitHub.repository(@owner, @repo)
+        end
+
+        def asset_id
+          @asset_id ||= GitHub.get_release(@owner, @repo, @tag)["assets"]
+                              .find { |asset| asset["name"] == @filename }
+                              .fetch("id") { raise CurlDownloadStrategyError, "Asset not found" }
+        end
+      end
+    url:
+      template: "https://github.com/kagi-labs/agentctl/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      using: AgentctlGitHubPrivateRepositoryReleaseDownloadStrategy
+      verified: github.com/kagi-labs/agentctl/

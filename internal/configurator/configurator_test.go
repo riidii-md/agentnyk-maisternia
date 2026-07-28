@@ -144,6 +144,67 @@ func TestBuildPlanClassifiesCreateUnchangedAndConflict(t *testing.T) {
 	}
 }
 
+func TestAntigravityAliasProducesCanonicalPlanAndMigratesState(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	source := filepath.Join(repo, "config", "work-plan.md")
+	destination := filepath.Join(home, ".config", "agy", "prompts", "work-plan.md")
+	writeFile(t, source, "version two")
+	writeFile(t, destination, "version one")
+
+	checksum, err := fileChecksum(destination)
+	if err != nil {
+		t.Fatal(err)
+	}
+	state := installState{
+		SchemaVersion: StateSchemaVersion,
+		Resources: map[string]installedResource{
+			stateKey("agy", ".config/agy/prompts/work-plan.md"): {
+				Checksum:  checksum,
+				Source:    source,
+				Installed: time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+	data, err := json.Marshal(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, StatePath(home), string(data))
+
+	manifest := validManifest(
+		"config/work-plan.md",
+		"antigravity",
+		".config/agy/prompts/work-plan.md",
+	)
+	plan, err := BuildPlan(repo, home, manifest, "agy")
+	if err != nil {
+		t.Fatalf("BuildPlan() error = %v", err)
+	}
+	assertOnlyAction(t, plan, ActionUpdate)
+	if plan.Actions[0].Agent != "antigravity" {
+		t.Fatalf("action agent = %q, want antigravity", plan.Actions[0].Agent)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatalf("Apply() error = %v", err)
+	}
+
+	migrated, err := loadState(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	canonicalKey := stateKey("antigravity", ".config/agy/prompts/work-plan.md")
+	if _, exists := migrated.Resources[canonicalKey]; !exists {
+		t.Fatalf("canonical state key %q is missing", canonicalKey)
+	}
+	legacyKey := stateKey("agy", ".config/agy/prompts/work-plan.md")
+	if _, exists := migrated.Resources[legacyKey]; exists {
+		t.Fatalf("legacy state key %q was not removed", legacyKey)
+	}
+}
+
 func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 	t.Parallel()
 

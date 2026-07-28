@@ -5,8 +5,10 @@
 This document defines the target workflow for `agentctl`.
 
 The current implementation provides the configuration manifest, safe rendering
-and apply foundation, canonical phase prompts, and initial provider aliases.
-Durable task state and dynamic runner dispatch are the next major milestones.
+and apply foundation, canonical phase prompts, provider aliases, strict event
+validation, idempotent manual ingestion, and durable initial task state.
+Concrete runner capability resolution and controlled dispatch are the next
+major milestones.
 
 ## Purpose
 
@@ -64,17 +66,27 @@ it.
 Provider-prefixed commands are useful when the user wants an explicit runner:
 
 ```text
-/codex-plan
+/codex-brief
+/codex-scout
+/codex-analyze
 /codex-research
+/codex-decision
+/codex-ready
+/codex-plan
 /codex-work-loop
 /codex-review
-/codex-brief
+/codex-pr-check
+/codex-showcase
+/codex-cleanup
 ```
 
 These are permanent aliases. They force Codex while preserving the same
 canonical phase semantics.
 
-Optional aliases such as `/claude-plan` or `/agy-research` can be added when
+`/codex-deep-research` and `/codex-fleet` are Claude orchestration commands,
+not direct Codex aliases. They coordinate multiple independent runs.
+
+Optional aliases such as `/claude-plan` or `/antigravity-research` can be added when
 there is a recurring need. The repository should not generate every possible
 provider and phase combination.
 
@@ -486,6 +498,8 @@ Recommended personal location:
 ```text
 ~/.agent-workflow/tasks/<task-id>/
   state.yaml
+  context.json
+  source-events.jsonl
   events.jsonl
   definition.md
   decision.md
@@ -497,6 +511,13 @@ Recommended personal location:
   reports/
   logs/
 ```
+
+The implemented first increment stores `state.yaml` as strict JSON, which is a
+valid YAML 1.2 subset. Source events remain separate from the generated context
+envelope so untrusted event text is not treated as runner instructions.
+
+See [Event-Driven Workflow](EVENT-WORKFLOW.md) for the implemented command,
+schema, idempotency, permission, and human-approval behavior.
 
 ### State and History
 
@@ -744,7 +765,7 @@ Never:
 The first usable release should:
 
 1. validate a configuration repository;
-2. show a safe plan for Codex, Claude, and `agy`;
+2. show a safe plan for Codex, Claude, Antigravity, and Hermes;
 3. render all managed files into staging;
 4. refuse unmanaged conflicts;
 5. back up managed updates;

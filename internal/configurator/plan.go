@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/kagi-labs/agentctl/internal/providers"
 )
 
 func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Plan, error) {
@@ -46,11 +48,12 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 			if !matchesAgent(targetAgent, target.Agent) {
 				continue
 			}
+			canonicalAgent, _ := providers.CanonicalID(target.Agent)
 			targetRelative, _ := cleanRelativePath(target.Path)
 			destination := filepath.Join(home, targetRelative)
 			action := Action{
 				ResourceID:      resource.ID,
-				Agent:           target.Agent,
+				Agent:           canonicalAgent,
 				TargetPath:      filepath.ToSlash(targetRelative),
 				SourcePath:      sourcePath,
 				DestinationPath: destination,
@@ -95,7 +98,7 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 				continue
 			}
 
-			installed, managed := state.Resources[stateKey(target.Agent, targetRelative)]
+			installed, managed := installedStateResource(state, canonicalAgent, targetRelative)
 			if managed && installed.Checksum == currentChecksum {
 				action.State = ActionUpdate
 				action.Reason = "managed target has a new source version"
@@ -201,18 +204,39 @@ func validateAgentFilter(agent string) error {
 	if agent == "" || agent == "all" {
 		return nil
 	}
-	if _, exists := providerRoots[agent]; !exists {
+	if _, exists := providers.CanonicalID(agent); !exists {
 		return fmt.Errorf("unknown target agent %q", agent)
 	}
 	return nil
 }
 
 func matchesAgent(filter, agent string) bool {
-	return filter == "" || filter == "all" || filter == agent
+	if filter == "" || filter == "all" {
+		return true
+	}
+	canonicalFilter, filterExists := providers.CanonicalID(filter)
+	canonicalAgent, agentExists := providers.CanonicalID(agent)
+	return filterExists && agentExists && canonicalFilter == canonicalAgent
 }
 
 func stateKey(agent, targetRelative string) string {
 	return agent + ":" + filepath.ToSlash(targetRelative)
+}
+
+func installedStateResource(
+	state installState,
+	agent string,
+	targetRelative string,
+) (installedResource, bool) {
+	for _, candidate := range append(
+		[]string{agent},
+		providers.LegacyAliases(agent)...,
+	) {
+		if installed, exists := state.Resources[stateKey(candidate, targetRelative)]; exists {
+			return installed, true
+		}
+	}
+	return installedResource{}, false
 }
 
 func firstSymlink(root, destination string) (string, bool, error) {

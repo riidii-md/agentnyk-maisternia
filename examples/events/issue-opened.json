@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "event_id": "github:delivery:example-issue-42",
+  "source": "github",
+  "type": "issue.opened",
+  "occurred_at": "2026-07-27T12:00:00Z",
+  "repository": {
+    "provider": "github",
+    "id": "owner/repository",
+    "clone_url": null
+  },
+  "subject": {
+    "kind": "issue",
+    "id": "42",
+    "title": "Export fails after retry",
+    "url": "https://example.invalid/owner/repository/issues/42"
+  },
+  "payload": {
+    "summary": "The export returns an error after a retry.",
+    "artifact_paths": []
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "id": "antigravity",
+  "display_name": "Antigravity",
+  "aliases": ["agy"],
+  "renderer": {
+    "config_roots": [
+      {
+        "path": ".gemini/antigravity-cli",
+        "purpose": "CLI settings and runtime data",
+        "ownership": "runtime",
+        "required": false
+      },
+      {
+        "path": ".gemini/config",
+        "purpose": "Global customizations, skills, and plugins",
+        "ownership": "mixed",
+        "required": false
+      }
+    ],
+    "resource_kinds": [
+      "hooks",
+      "instructions",
+      "mcp",
+      "plugins",
+      "settings",
+      "skills"
+    ]
+  },
+  "inspector": {
+    "executables": [
+      {
+        "name": "agy",
+        "version_args": ["--version"],
+        "version_pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      }
+    ],
+    "native_doctor": null
+  },
+  "runner": {
+    "supported": true,
+    "headless": true,
+    "safe_headless": true,
+    "authorities": [
+      "read_only"
+    ],
+    "output_formats": [
+      "text"
+    ]
+  },
+  "parser": {
+    "formats": [
+      "text"
+    ],
+    "structured_output": false
+  },
+  "capabilities": [
+    "config.hooks",
+    "config.instructions",
+    "config.mcp",
+    "config.plugins",
+    "config.settings",
+    "config.skills",
+    "filesystem.read",
+    "repository.read",
+    "runner.headless",
+    "runner.safe_headless",
+    "session.resume",
+    "subagent.spawn"
+  ]
+}

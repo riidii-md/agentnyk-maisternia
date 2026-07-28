@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/outcome.schema.json",
+  "title": "agentctl phase outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "task_id", "phase", "runner", "model_role", "authority",
+    "started_at", "finished_at", "status", "attempt", "verification",
+    "artifacts_created", "next_phase", "human_override", "failure_class"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "task_id": {"type": "string"},
+    "phase": {"type": "string"},
+    "runner": {"type": "string"},
+    "model_role": {"type": "string"},
+    "authority": {"type": "string"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["completed", "failed", "blocked", "cancelled"]},
+    "attempt": {"type": "integer", "minimum": 1},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checks"],
+      "properties": {
+        "status": {"enum": ["passed", "failed", "not_applicable"]},
+        "checks": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "artifacts_created": {"type": "array", "items": {"type": "string"}},
+    "next_phase": {"type": ["string", "null"]},
+    "human_override": {"type": ["string", "null"]},
+    "failure_class": {"type": ["string", "null"]}
+  }
+}

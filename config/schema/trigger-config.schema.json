@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/trigger-config.schema.json",
+  "title": "agentctl trigger configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "triggers"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "triggers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["initial_phase", "authority", "approval_required"],
+        "properties": {
+          "initial_phase": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+          "authority": {"const": "read_only"},
+          "approval_required": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentctl/internal/workflow"
 )
 
 func TestRunDoctorAndPlan(t *testing.T) {
@@ -70,6 +73,21 @@ func TestRunDoctorAndPlan(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "CREATE") {
 		t.Fatalf("plan output = %q, want CREATE", stdout.String())
+	}
+}
+
+func TestRunVersion(t *testing.T) {
+	t.Parallel()
+
+	for _, args := range [][]string{{"version"}, {"--version"}, {"-v"}} {
+		var stdout, stderr bytes.Buffer
+		code := Run(args, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("Run(%v) code = %d, stderr = %s", args, code, stderr.String())
+		}
+		if !strings.HasPrefix(stdout.String(), "agentctl ") {
+			t.Fatalf("Run(%v) output = %q", args, stdout.String())
+		}
 	}
 }
 
@@ -286,6 +304,204 @@ func TestRunReportsConflicts(t *testing.T) {
 	}
 }
 
+func TestRunEventTaskAndWorkCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	event := workflow.TriggerEvent{
+		SchemaVersion: 1,
+		EventID:       "github:delivery:cli-test",
+		Source:        "github",
+		Type:          "issue.opened",
+		OccurredAt:    "2026-07-27T12:00:00Z",
+		Repository: workflow.EventRepository{
+			Provider: "github",
+			ID:       "owner/repository",
+		},
+		Subject: workflow.EventSubject{
+			Kind:  "issue",
+			ID:    "42",
+			Title: "Export fails after retry",
+		},
+		Payload: workflow.EventPayload{
+			Summary:       "Untrusted external text",
+			ArtifactPaths: []string{},
+		},
+	}
+	data, err := json.Marshal(event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eventPath := filepath.Join(t.TempDir(), "event.json")
+	if err := os.WriteFile(eventPath, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"event", "validate",
+		"--repo", repo,
+		eventPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("event validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "issue.opened") &&
+		!strings.Contains(stdout.String(), "scout") {
+		t.Fatalf("event validate output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"event", "ingest",
+		"--repo", repo,
+		"--home", home,
+		eventPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("event ingest code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "no phase executed") {
+		t.Fatalf("event ingest output = %q", stdout.String())
+	}
+
+	store, err := workflow.NewStore(home, workflow.StoreOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskID := workflow.TaskID(event)
+	if _, err := store.LoadTask(taskID); err != nil {
+		t.Fatalf("ingested task missing: %v", err)
+	}
+
+	for _, command := range []struct {
+		args []string
+		want string
+	}{
+		{args: []string{"task", "list", "--home", home}, want: taskID},
+		{args: []string{"task", "show", "--home", home, taskID}, want: `"phase": "scout"`},
+		{args: []string{"task", "context", "--home", home, taskID}, want: `"status": "unresolved"`},
+		{args: []string{"work", "next", "--home", home, taskID}, want: "dispatch: disabled"},
+	} {
+		stdout.Reset()
+		stderr.Reset()
+		code = Run(command.args, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("%v code = %d, stderr = %s", command.args, code, stderr.String())
+		}
+		if !strings.Contains(stdout.String(), command.want) {
+			t.Fatalf("%v output = %q, want %q", command.args, stdout.String(), command.want)
+		}
+	}
+}
+
+func TestRunProviderCommandsAndAlias(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{
+		"provider", "list",
+		"--repo", repo,
+		"--home", home,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("provider list code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, providerID := range []string{"antigravity", "claude", "codex", "hermes"} {
+		if !strings.Contains(stdout.String(), providerID) {
+			t.Errorf("provider list output = %q, missing %q", stdout.String(), providerID)
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"provider", "capabilities",
+		"--repo", repo,
+		"agy",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("provider capabilities code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Antigravity (antigravity)") ||
+		!strings.Contains(stdout.String(), "Aliases: agy") {
+		t.Fatalf("provider capabilities output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"provider", "inspect",
+		"--repo", repo,
+		"--home", home,
+		"--json",
+		"agy",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("provider inspect code = %d, stderr = %s", code, stderr.String())
+	}
+	var inspection providers.Inspection
+	if err := json.Unmarshal(stdout.Bytes(), &inspection); err != nil {
+		t.Fatalf("decode provider inspection: %v", err)
+	}
+	if inspection.ProviderID != "antigravity" || inspection.RequestedAs != "agy" {
+		t.Fatalf("provider inspection = %#v", inspection)
+	}
+}
+
+func TestRunEventRejectsUnsupportedTriggerWithoutWriting(t *testing.T) {
+	t.Parallel()
+
+	event := workflow.TriggerEvent{
+		SchemaVersion: 1,
+		EventID:       "delivery:unsupported",
+		Source:        "github",
+		Type:          "deployment.requested",
+		OccurredAt:    "2026-07-27T12:00:00Z",
+		Repository: workflow.EventRepository{
+			Provider: "github",
+			ID:       "owner/repository",
+		},
+		Subject: workflow.EventSubject{
+			Kind:  "deployment",
+			ID:    "1",
+			Title: "Deploy",
+		},
+		Payload: workflow.EventPayload{ArtifactPaths: []string{}},
+	}
+	data, err := json.Marshal(event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eventPath := filepath.Join(t.TempDir(), "event.json")
+	if err := os.WriteFile(eventPath, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	home := t.TempDir()
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"event", "ingest",
+		"--repo", appRepositoryRoot(t),
+		"--home", home,
+		eventPath,
+	}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("event ingest code = %d, want 1", code)
+	}
+	if !strings.Contains(stderr.String(), "unsupported trigger") {
+		t.Fatalf("stderr = %q, want unsupported trigger", stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(home, ".agent-workflow")); !os.IsNotExist(err) {
+		t.Fatalf("unsupported event created workflow state, stat error = %v", err)
+	}
+}
+
 func createCLIRepository(t *testing.T, agent, targetPath string) (string, string) {
 	t.Helper()
 	repo := t.TempDir()
@@ -316,4 +532,13 @@ func createCLIRepository(t *testing.T, agent, targetPath string) (string, string
 		t.Fatal(err)
 	}
 	return repo, home
+}
+
+func appRepositoryRoot(t *testing.T) string {
+	t.Helper()
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller() failed")
+	}
+	return filepath.Clean(filepath.Join(filepath.Dir(currentFile), "..", ".."))
 }

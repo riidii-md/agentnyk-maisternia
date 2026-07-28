@@ -7,14 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-var providerRoots = map[string]string{
-	"agy":    ".config/agy",
-	"claude": ".claude",
-	"codex":  ".codex",
-	"hermes": ".hermes",
-}
+	"github.com/kagi-labs/agentctl/internal/providers"
+)
 
 func LoadManifest(repoRoot, manifestPath string) (Manifest, error) {
 	repoRoot, err := filepath.Abs(repoRoot)
@@ -111,9 +106,13 @@ func ValidateManifest(repoRoot string, manifest Manifest) error {
 		}
 
 		for _, target := range resource.Targets {
-			root, exists := providerRoots[target.Agent]
+			canonicalAgent, exists := providers.CanonicalID(target.Agent)
 			if !exists {
 				return fmt.Errorf("resource %q uses unknown agent %q", resource.ID, target.Agent)
+			}
+			root, exists := providers.ManagedTargetRoot(canonicalAgent)
+			if !exists {
+				return fmt.Errorf("resource %q uses unsupported agent %q", resource.ID, target.Agent)
 			}
 			targetRelative, err := cleanRelativePath(target.Path)
 			if err != nil {
@@ -128,7 +127,7 @@ func ValidateManifest(repoRoot string, manifest Manifest) error {
 					filepath.ToSlash(root),
 				)
 			}
-			key := target.Agent + ":" + filepath.ToSlash(targetRelative)
+			key := canonicalAgent + ":" + filepath.ToSlash(targetRelative)
 			if previous, exists := destinations[key]; exists {
 				return fmt.Errorf(
 					"duplicate destination %q used by %q and %q",

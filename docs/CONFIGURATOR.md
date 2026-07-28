@@ -16,8 +16,8 @@ flowchart LR
 
     APPLY --> CODEX[Codex home]
     APPLY --> CLAUDE[Claude home]
-    APPLY --> AGY[agy prompts and presets]
-    APPLY --> HERMES[Future Hermes adapter]
+    APPLY --> AGY[Antigravity prompts and configuration]
+    APPLY --> HERMES[Hermes home]
 
     LOCAL[Machine-local overlay] --> PLAN
     SECRET[Environment or keychain references] --> CODEX
@@ -98,6 +98,28 @@ For rename compatibility, `agentctl` reads the legacy
 does not exist. The next successful apply writes the state under
 `~/.config/agentctl/`; the legacy file is left untouched.
 
+### Provider Inspection
+
+```bash
+agentctl provider list
+agentctl provider inspect antigravity
+agentctl provider doctor all
+agentctl provider capabilities hermes
+```
+
+Provider inspection:
+
+- resolves canonical identities and aliases;
+- locates configured executables;
+- reads bounded version output;
+- checks provider configuration roots without reading their contents;
+- rejects roots that traverse symlinks;
+- reports static runner and parser safety contracts.
+
+`provider doctor` does not execute native provider doctor commands. It reports
+whether each native doctor exists and whether its checked-in contract marks it
+safe for an explicit future invocation.
+
 ## Provider Roots
 
 The first manifest schema allows targets only under:
@@ -106,10 +128,79 @@ The first manifest schema allows targets only under:
 |---|---|
 | Codex | `~/.codex/` |
 | Claude | `~/.claude/` |
-| `agy` | `~/.config/agy/` |
+| Antigravity (`agy` alias) | `~/.config/agy/` |
 | Hermes | `~/.hermes/` |
 
 The allowlist prevents a manifest from writing arbitrary home-directory paths.
+
+The Antigravity row is a compatibility target used by the current phase-prompt
+manifest. It is not Antigravity's provider-owned settings root. Provider
+inspection uses the current CLI roots:
+
+| Purpose | Antigravity root |
+|---|---|
+| CLI settings and runtime | `~/.gemini/antigravity-cli/` |
+| Global customizations, skills, and plugins | `~/.gemini/config/` |
+
+A later renderer migration will map canonical workflow resources into provider
+recognized structures under `~/.gemini/config/`. Until that mapping is
+implemented and verified, the compatibility prompt tree remains managed but is
+not treated as proof that Antigravity consumes those files.
+
+## Prompt Source Boundaries
+
+The command catalog has three layers.
+
+### Canonical Work Phases
+
+Files under `config/workflow/phases/` define provider-neutral behavior for
+`/work-*`. They describe inputs, gates, outputs, and authority without embedding
+a provider invocation.
+
+The same source can be rendered for Codex, Claude, and Antigravity.
+
+### Provider Adapters
+
+Files under `config/adapters/<provider>/` implement explicit cross-provider
+aliases. Claude's `/codex-*` adapters are complete executable handoffs. They
+must include:
+
+- a self-contained conversation handoff;
+- the relevant model environment variable and optional Codex profile;
+- temporary prompt and output files;
+- an explicit `codex exec` call;
+- `read-only` or `workspace-write` sandbox authority appropriate to the phase;
+- phase-specific output and post-run verification.
+
+These adapters are intentionally longer than canonical phase prompts. Reducing
+an adapter to a short description removes executable behavior.
+
+### Reusable Commands
+
+Files under `config/commands/` contain provider-neutral commands that do not
+perform a cross-provider invocation. The initial catalog uses this layer for
+temporary-file cleanup.
+
+Current managed command coverage:
+
+| Group | Coverage |
+|---|---|
+| Canonical workflow | 16 `/work-*` commands for Codex, Claude, and Antigravity |
+| Claude-to-Codex | 14 commands, including deep research and fleet orchestration |
+| Direct Codex aliases | 12 phase and cleanup aliases |
+
+`codex-deep-research` and `codex-fleet` remain Claude-only because their purpose
+is to orchestrate independent runners. Invoking Codex from the same Codex
+session would not provide an independent lane.
+
+Repository tests verify the expected Claude-to-Codex command inventory,
+required Codex execution primitives, sandbox choice, showcase rendering
+integration, cleanup approval gate, and absence of personal absolute paths.
+
+The readable-output and cleanup helper binaries are not managed yet because the
+current manifest does not preserve executable file modes. Showcase keeps the
+Markdown output when the readable helper is unavailable; cleanup refuses to
+improvise deletion when its helper is missing.
 
 ## Managed Data
 
@@ -201,11 +292,15 @@ ownership and conflict behavior are proven.
 
 ## Next Engineering Milestones
 
-1. Add schema files for manifest and install state.
-2. Add JSON and TOML managed-key merge.
-3. Add `import` into a staging directory.
-4. Add `diff`, `backup`, and rollback subcommands.
-5. Add profiles and local overlays.
-6. Add plugin and skill lockfiles.
-7. Add task state and event storage.
-8. Add the provider-neutral conductor and runner router.
+1. Add schema files for the configuration manifest and install state.
+2. Map canonical resources to each provider's recognized configuration layout.
+3. Add JSON and TOML managed-key merge.
+4. Add `import` into a staging directory.
+5. Add `diff`, `backup`, and rollback subcommands.
+6. Add profiles, local overlays, and plugin or skill lockfiles.
+7. Resolve runtime requirements against provider capability contracts.
+8. Add controlled provider-neutral dispatch.
+
+The first task-state and manual event-ingestion increment is implemented
+separately from provider configuration. See
+[Event-Driven Workflow](EVENT-WORKFLOW.md).

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/trigger-event.schema.json",
+  "title": "agentctl normalized trigger event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "source", "type", "occurred_at", "repository", "subject", "payload"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "source": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
+    "type": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,127}$"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "repository": {"$ref": "#/$defs/repository"},
+    "subject": {"$ref": "#/$defs/subject"},
+    "payload": {"$ref": "#/$defs/payload"}
+  },
+  "$defs": {
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "id", "clone_url"],
+      "properties": {
+        "provider": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
+        "id": {"type": "string", "minLength": 1, "maxLength": 256},
+        "clone_url": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "uri", "maxLength": 2048}
+          ]
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "url"],
+      "properties": {
+        "kind": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
+        "id": {"type": "string", "minLength": 1, "maxLength": 256},
+        "title": {"type": "string", "minLength": 1, "maxLength": 512},
+        "url": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "format": "uri", "maxLength": 2048}
+          ]
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "artifact_paths"],
+      "properties": {
+        "summary": {"type": "string", "maxLength": 8192},
+        "artifact_paths": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 512}
+        }
+      }
+    }
+  }
+}

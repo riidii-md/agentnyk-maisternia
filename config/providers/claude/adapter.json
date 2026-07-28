@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "id": "claude",
+  "display_name": "Claude Code",
+  "aliases": [],
+  "renderer": {
+    "config_roots": [
+      {
+        "path": ".claude",
+        "purpose": "User settings, instructions, commands, skills, hooks, plugins, and runtime data",
+        "ownership": "mixed",
+        "required": false
+      }
+    ],
+    "resource_kinds": [
+      "commands",
+      "hooks",
+      "instructions",
+      "mcp",
+      "plugins",
+      "settings",
+      "skills"
+    ]
+  },
+  "inspector": {
+    "executables": [
+      {
+        "name": "claude",
+        "version_args": ["--version"],
+        "version_pattern": "^[0-9].*\\(Claude Code\\)$"
+      }
+    ],
+    "native_doctor": {
+      "args": ["doctor"],
+      "safe": false,
+      "note": "May initialize configured integrations, including stdio MCP servers; agentctl reports availability but does not run it automatically."
+    }
+  },
+  "runner": {
+    "supported": true,
+    "headless": true,
+    "safe_headless": true,
+    "authorities": [
+      "artifact_write",
+      "read_only",
+      "workspace_write"
+    ],
+    "output_formats": [
+      "json",
+      "stream-json",
+      "text"
+    ]
+  },
+  "parser": {
+    "formats": [
+      "json",
+      "stream-json",
+      "text"
+    ],
+    "structured_output": true
+  },
+  "capabilities": [
+    "config.commands",
+    "config.hooks",
+    "config.instructions",
+    "config.mcp",
+    "config.plugins",
+    "config.settings",
+    "config.skills",
+    "filesystem.read",
+    "filesystem.workspace_write",
+    "output.structured",
+    "repository.read",
+    "repository.test",
+    "runner.headless",
+    "runner.safe_headless",
+    "session.resume",
+    "subagent.spawn",
+    "workflow.artifact_write",
+    "worktree.isolation"
+  ]
+}

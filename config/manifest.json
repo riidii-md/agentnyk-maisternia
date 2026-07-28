@@ -7,7 +7,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work.md"},
         {"agent": "claude", "path": ".claude/commands/work.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work.md"}
       ]
     },
     {
@@ -16,7 +16,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-brief.md"},
         {"agent": "claude", "path": ".claude/commands/work-brief.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-brief.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-brief.md"}
       ]
     },
     {
@@ -25,7 +25,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-scout.md"},
         {"agent": "claude", "path": ".claude/commands/work-scout.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-scout.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-scout.md"}
       ]
     },
     {
@@ -34,7 +34,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-analyze.md"},
         {"agent": "claude", "path": ".claude/commands/work-analyze.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-analyze.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-analyze.md"}
       ]
     },
     {
@@ -43,7 +43,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-research.md"},
         {"agent": "claude", "path": ".claude/commands/work-research.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-research.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-research.md"}
       ]
     },
     {
@@ -52,7 +52,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-decide.md"},
         {"agent": "claude", "path": ".claude/commands/work-decide.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-decide.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-decide.md"}
       ]
     },
     {
@@ -61,7 +61,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-ready.md"},
         {"agent": "claude", "path": ".claude/commands/work-ready.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-ready.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-ready.md"}
       ]
     },
     {
@@ -70,7 +70,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-plan.md"},
         {"agent": "claude", "path": ".claude/commands/work-plan.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-plan.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-plan.md"}
       ]
     },
     {
@@ -79,7 +79,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-prove.md"},
         {"agent": "claude", "path": ".claude/commands/work-prove.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-prove.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-prove.md"}
       ]
     },
     {
@@ -88,7 +88,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-handoff.md"},
         {"agent": "claude", "path": ".claude/commands/work-handoff.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-handoff.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-handoff.md"}
       ]
     },
     {
@@ -97,7 +97,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-run.md"},
         {"agent": "claude", "path": ".claude/commands/work-run.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-run.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-run.md"}
       ]
     },
     {
@@ -106,7 +106,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-verify.md"},
         {"agent": "claude", "path": ".claude/commands/work-verify.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-verify.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-verify.md"}
       ]
     },
     {
@@ -115,7 +115,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-review.md"},
         {"agent": "claude", "path": ".claude/commands/work-review.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-review.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-review.md"}
       ]
     },
     {
@@ -124,7 +124,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-pr.md"},
         {"agent": "claude", "path": ".claude/commands/work-pr.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-pr.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-pr.md"}
       ]
     },
     {
@@ -133,7 +133,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-showcase.md"},
         {"agent": "claude", "path": ".claude/commands/work-showcase.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-showcase.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-showcase.md"}
       ]
     },
     {
@@ -142,7 +142,7 @@
       "targets": [
         {"agent": "codex", "path": ".codex/commands/work-cleanup.md"},
         {"agent": "claude", "path": ".claude/commands/work-cleanup.md"},
-        {"agent": "agy", "path": ".config/agy/prompts/work-cleanup.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-cleanup.md"}
       ]
     },
     {
@@ -227,6 +227,98 @@
       "source": "config/adapters/claude/codex-showcase.md",
       "targets": [
         {"agent": "claude", "path": ".claude/commands/codex-showcase.md"}
+      ]
+    },
+    {
+      "id": "codex-scout-codex",
+      "source": "config/workflow/phases/scout.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-scout.md"}
+      ]
+    },
+    {
+      "id": "codex-scout-claude",
+      "source": "config/adapters/claude/codex-scout.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-scout.md"}
+      ]
+    },
+    {
+      "id": "codex-analyze-codex",
+      "source": "config/workflow/phases/analyze.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-analyze.md"}
+      ]
+    },
+    {
+      "id": "codex-analyze-claude",
+      "source": "config/adapters/claude/codex-analyze.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-analyze.md"}
+      ]
+    },
+    {
+      "id": "codex-decision-codex",
+      "source": "config/workflow/phases/decide.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-decision.md"}
+      ]
+    },
+    {
+      "id": "codex-decision-claude",
+      "source": "config/adapters/claude/codex-decision.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-decision.md"}
+      ]
+    },
+    {
+      "id": "codex-ready-codex",
+      "source": "config/workflow/phases/ready.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-ready.md"}
+      ]
+    },
+    {
+      "id": "codex-ready-claude",
+      "source": "config/adapters/claude/codex-ready.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-ready.md"}
+      ]
+    },
+    {
+      "id": "codex-pr-check-codex",
+      "source": "config/workflow/phases/pr.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-pr-check.md"}
+      ]
+    },
+    {
+      "id": "codex-pr-check-claude",
+      "source": "config/adapters/claude/codex-pr-check.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-pr-check.md"}
+      ]
+    },
+    {
+      "id": "codex-cleanup",
+      "source": "config/commands/codex-cleanup.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/codex-cleanup.md"},
+        {"agent": "claude", "path": ".claude/commands/codex-cleanup.md"}
+      ]
+    },
+    {
+      "id": "codex-deep-research-claude",
+      "source": "config/adapters/claude/codex-deep-research.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-deep-research.md"}
+      ]
+    },
+    {
+      "id": "codex-fleet-claude",
+      "source": "config/adapters/claude/codex-fleet.md",
+      "targets": [
+        {"agent": "claude", "path": ".claude/commands/codex-fleet.md"}
       ]
     }
   ]

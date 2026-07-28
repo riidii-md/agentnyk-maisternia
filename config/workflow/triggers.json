@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "triggers": {
+    "manual": {
+      "initial_phase": "brief",
+      "authority": "read_only",
+      "approval_required": false
+    },
+    "issue.opened": {
+      "initial_phase": "scout",
+      "authority": "read_only",
+      "approval_required": false
+    },
+    "issue.assigned": {
+      "initial_phase": "brief",
+      "authority": "read_only",
+      "approval_required": false
+    },
+    "pull_request.opened": {
+      "initial_phase": "review",
+      "authority": "read_only",
+      "approval_required": false
+    },
+    "check.failed": {
+      "initial_phase": "analyze",
+      "authority": "read_only",
+      "approval_required": false
+    },
+    "schedule": {
+      "initial_phase": "brief",
+      "authority": "read_only",
+      "approval_required": false
+    }
+  }
+}

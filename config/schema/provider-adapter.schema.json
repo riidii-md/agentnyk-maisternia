@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/provider-adapter.schema.json",
+  "title": "agentctl provider adapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "display_name",
+    "aliases",
+    "renderer",
+    "inspector",
+    "runner",
+    "parser",
+    "capabilities"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"$ref": "#/$defs/identifier"},
+    "display_name": {"type": "string", "minLength": 1},
+    "aliases": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/identifier"},
+      "uniqueItems": true
+    },
+    "renderer": {"$ref": "#/$defs/renderer"},
+    "inspector": {"$ref": "#/$defs/inspector"},
+    "runner": {"$ref": "#/$defs/runner"},
+    "parser": {"$ref": "#/$defs/parser"},
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "config_root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "purpose", "ownership", "required"],
+      "properties": {
+        "path": {"$ref": "#/$defs/relative_path"},
+        "purpose": {"type": "string", "minLength": 1},
+        "ownership": {"enum": ["managed", "mixed", "runtime"]},
+        "required": {"type": "boolean"}
+      }
+    },
+    "renderer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["config_roots", "resource_kinds"],
+      "properties": {
+        "config_roots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/config_root"}
+        },
+        "resource_kinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "commands",
+              "hooks",
+              "instructions",
+              "mcp",
+              "plugins",
+              "profiles",
+              "settings",
+              "skills"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version_args", "version_pattern"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "version_args": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "version_pattern": {"type": "string", "minLength": 1}
+      }
+    },
+    "native_doctor": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["args", "safe", "note"],
+      "properties": {
+        "args": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "safe": {"type": "boolean"},
+        "note": {"type": "string", "minLength": 1}
+      }
+    },
+    "inspector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executables", "native_doctor"],
+      "properties": {
+        "executables": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/executable"}
+        },
+        "native_doctor": {"$ref": "#/$defs/native_doctor"}
+      }
+    },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supported",
+        "headless",
+        "safe_headless",
+        "authorities",
+        "output_formats"
+      ],
+      "properties": {
+        "supported": {"type": "boolean"},
+        "headless": {"type": "boolean"},
+        "safe_headless": {"type": "boolean"},
+        "authorities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "artifact_write",
+              "controlled",
+              "read_only",
+              "workspace_write"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "output_formats": {
+          "type": "array",
+          "items": {"enum": ["json", "jsonl", "stream-json", "text"]},
+          "uniqueItems": true
+        }
+      }
+    },
+    "parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formats", "structured_output"],
+      "properties": {
+        "formats": {
+          "type": "array",
+          "items": {"enum": ["json", "jsonl", "stream-json", "text"]},
+          "uniqueItems": true
+        },
+        "structured_output": {"type": "boolean"}
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ command-line coding agents.
 It provides one version-controlled source of truth for:
 
 - shared work phases;
-- Codex, Claude, `agy`, and future Hermes adapters;
+- Codex, Claude, Antigravity, and Hermes provider adapters;
 - neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
@@ -19,6 +19,10 @@ The repository contains the first safe configurator foundation:
 
 - manifest validation;
 - provider and path allowlists;
+- canonical provider identities with compatibility aliases;
+- checked-in provider capability and safety contracts;
+- executable, version, and configuration-root inspection;
+- read-only provider health reporting;
 - traversal and symlink protection;
 - read-only inventory and planning;
 - staging-tree rendering;
@@ -28,16 +32,62 @@ The repository contains the first safe configurator foundation:
 - drift detection using install checksums;
 - atomic file writes;
 - a complete initial work-phase catalog;
-- Codex alias adapters for Claude.
+- complete Claude-to-Codex command adapters with explicit authority boundaries;
+- direct Codex aliases for the canonical phases;
+- repository tests that prevent command inventory and adapter behavior from
+  silently shrinking;
+- strict normalized event validation;
+- idempotent manual event ingestion;
+- private durable task state and append-only history;
+- read-only task and prepared-context inspection.
 
-Structured TOML and JSON settings merging, task-state persistence, dynamic
-runner dispatch, and configuration import are planned next.
+Structured TOML and JSON settings merging, runtime capability resolution,
+controlled dispatch, and configuration import are planned next.
 
-## Build
+## Installation
+
+Source installation is available now. Homebrew, `go install ...@latest`, and
+release archives become available after the first tagged release and the
+one-time private tap setup described in
+[Release process](docs/RELEASING.md).
+
+### Homebrew
+
+`agentctl` is currently distributed from private GitHub repositories. Authenticate
+Git and provide a GitHub token to Homebrew:
 
 ```bash
-go build ./cmd/agentctl
+gh auth login
+gh auth setup-git
+brew tap kagi-labs/tap
+HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" \
+  brew install --cask kagi-labs/tap/agentctl
 ```
+
+### Go
+
+```bash
+gh auth setup-git
+GOPRIVATE=github.com/kagi-labs/* \
+  go install github.com/kagi-labs/agentctl/cmd/agentctl@latest
+```
+
+### Build From Source
+
+```bash
+git clone git@github.com:kagi-labs/agentctl.git
+cd agentctl
+make install
+```
+
+Verify any installation:
+
+```bash
+agentctl --version
+```
+
+See [Installation](docs/INSTALLATION.md) for upgrades, release downloads, and
+uninstallation.
 
 ## Test
 
@@ -58,8 +108,21 @@ Inspect what would happen without writing:
 ```bash
 go run ./cmd/agentctl plan --target codex
 go run ./cmd/agentctl plan --target claude
-go run ./cmd/agentctl plan --target agy
+go run ./cmd/agentctl plan --target antigravity
 ```
+
+`agy` remains accepted as a permanent compatibility alias for `antigravity`.
+
+Inspect the installed provider CLIs without executing an agent:
+
+```bash
+go run ./cmd/agentctl provider list
+go run ./cmd/agentctl provider inspect agy
+go run ./cmd/agentctl provider doctor all
+go run ./cmd/agentctl provider capabilities hermes
+```
+
+Provider doctor never invokes a provider's native doctor command.
 
 Render a staging tree:
 
@@ -78,10 +141,33 @@ go run ./cmd/agentctl apply --target codex --yes
 Do not run `apply` against a real home directory until the displayed plan has
 been reviewed.
 
+## Event Workflow
+
+Validate an event without creating state:
+
+```bash
+go run ./cmd/agentctl event validate ./examples/events/issue-opened.json
+```
+
+Prepare durable task state without executing an agent:
+
+```bash
+go run ./cmd/agentctl event ingest ./examples/events/issue-opened.json
+go run ./cmd/agentctl task list
+go run ./cmd/agentctl work next <task-id>
+```
+
+All initial triggers are read-only. Ingestion does not dispatch an agent or
+grant implementation, commit, push, PR, or external-write authority.
+
 ## Documentation
 
 - [Improved workflow](docs/WORKFLOW.md)
+- [Event-driven workflow](docs/EVENT-WORKFLOW.md)
 - [Configurator architecture](docs/CONFIGURATOR.md)
+- [Provider adapters](docs/PROVIDERS.md)
+- [Installation](docs/INSTALLATION.md)
+- [Release process](docs/RELEASING.md)
 - [Mdmaid human-in-the-loop integration](docs/MDMAID-HUMAN-IN-THE-LOOP.md)
 - [Mdmaid project boundaries and naming](docs/MDMAID-PROJECT-BOUNDARIES.md)
 - [Security](SECURITY.md)
@@ -102,11 +188,20 @@ Neutral commands describe the work:
 Provider aliases force a runner:
 
 ```text
+/codex-scout
+/codex-analyze
 /codex-plan
 /codex-research
+/codex-decision
+/codex-ready
 /codex-work-loop
 /codex-review
+/codex-pr-check
+/codex-showcase
+/codex-cleanup
 ```
 
 The neutral workflow remains canonical. Aliases are provider-specific adapters,
-not independent prompt copies.
+not independent workflow definitions. Claude adapters are intentionally longer
+because they contain the executable Codex handoff, model/profile selection,
+sandbox authority, temporary-output handling, and result synthesis.

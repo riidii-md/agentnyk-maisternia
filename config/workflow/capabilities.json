@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "phases": {
+    "brief": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["issue.read"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "scout": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["documentation.search", "issue.read", "web.search"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "analyze": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["issue.read", "repository.test"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "research": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["documentation.search", "issue.read", "web.search"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "decide": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["issue.read"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "ready": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["repository.test"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "plan": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["documentation.search", "repository.test"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "prove": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["repository.test"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "handoff": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": [],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "run": {
+      "authority": "workspace_write",
+      "required": ["filesystem.read", "filesystem.workspace_write", "repository.read", "repository.test"],
+      "optional": ["documentation.search"],
+      "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
+    },
+    "verify": {
+      "authority": "controlled",
+      "required": ["filesystem.read", "repository.read", "repository.test"],
+      "optional": ["filesystem.workspace_write"],
+      "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
+    },
+    "review": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["repository.test"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "pr": {
+      "authority": "explicit_approval",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["external.write", "git.commit", "git.push"],
+      "forbidden": ["production.access"]
+    }
+  }
+}

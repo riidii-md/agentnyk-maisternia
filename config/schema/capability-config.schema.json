@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/capability-config.schema.json",
+  "title": "agentctl phase capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "phases"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "phases": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["authority", "required", "optional", "forbidden"],
+        "properties": {
+          "authority": {
+            "enum": ["read_only", "artifact_write", "workspace_write", "controlled", "explicit_approval"]
+          },
+          "required": {"$ref": "#/$defs/capabilityList"},
+          "optional": {"$ref": "#/$defs/capabilityList"},
+          "forbidden": {"$ref": "#/$defs/capabilityList"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "capabilityList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+      }
+    }
+  }
+}

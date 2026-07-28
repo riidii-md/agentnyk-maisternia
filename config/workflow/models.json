@@ -2,19 +2,31 @@
   "schema_version": 1,
   "roles": {
     "strong_reasoning": {
-      "codex": {"environment": "CODEX_PLAN_MODEL"},
+      "codex": {
+        "environment": "CODEX_PLAN_MODEL",
+        "default": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      },
       "claude": {"alias": "opus"},
-      "agy": {"environment": "AGY_REASONING_MODEL"}
+      "antigravity": {"environment": "AGY_REASONING_MODEL"}
     },
     "balanced_review": {
-      "codex": {"environment": "CODEX_REVIEW_MODEL"},
+      "codex": {
+        "environment": "CODEX_REVIEW_MODEL",
+        "default": "gpt-5.6-terra",
+        "reasoning_effort": "medium"
+      },
       "claude": {"alias": "sonnet"},
-      "agy": {"environment": "AGY_REVIEW_MODEL"}
+      "antigravity": {"environment": "AGY_REVIEW_MODEL"}
     },
     "fast_coding": {
-      "codex": {"environment": "CODEX_FAST_MODEL"},
+      "codex": {
+        "environment": "CODEX_FAST_MODEL",
+        "default": "gpt-5.6-luna",
+        "reasoning_effort": "low"
+      },
       "claude": {"alias": "sonnet"},
-      "agy": {"environment": "AGY_FAST_MODEL"}
+      "antigravity": {"environment": "AGY_FAST_MODEL"}
     }
   }
 }
