@@ -39,7 +39,11 @@ Current controls:
 - source-event separation from generated runner context;
 - event idempotency checksums;
 - private task-state permissions, atomic replacement, and append-only logs;
-- per-event and per-task writer leases with stale-process recovery on Unix.
+- per-event and per-task writer leases with stale-process recovery on Unix;
+- private, symlink-rejecting local settings storage;
+- terminal-control sanitization before untrusted task data is rendered;
+- an observational admin TUI with no approval, apply, dispatch, or external
+  write controls.
 
 ## Secret Handling
 
@@ -71,4 +75,6 @@ Changes to these areas require focused security review:
 - permission routing;
 - normalized event validation and idempotency;
 - durable task state, indexes, and leases;
+- terminal rendering of event-derived data;
+- local repository settings and discovery;
 - runner capability resolution and dispatch.

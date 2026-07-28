@@ -39,7 +39,9 @@ The repository contains the first safe configurator foundation:
 - strict normalized event validation;
 - idempotent manual event ingestion;
 - private durable task state and append-only history;
-- read-only task and prepared-context inspection.
+- read-only task and prepared-context inspection;
+- a read-only admin TUI for providers, pipelines, tasks, and configuration;
+- persistent configuration-repository discovery for system installations.
 
 Structured TOML and JSON settings merging, runtime capability resolution,
 controlled dispatch, and configuration import are planned next.
@@ -88,6 +90,27 @@ agentctl --version
 
 See [Installation](docs/INSTALLATION.md) for upgrades, release downloads, and
 uninstallation.
+
+## Admin
+
+Point the system installation at this configuration repository once:
+
+```bash
+agentctl config set-repository /path/to/agentctl
+```
+
+Then open the read-only admin interface from any directory:
+
+```bash
+agentctl admin
+```
+
+Use `1` through `5` to open Overview, Pipelines, Tasks, Providers, and Config.
+Press `?` for all keys. Pipeline branches, approval gates, and verification
+loops are visible, but the TUI cannot approve, apply, dispatch, commit, or push.
+
+See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
+controls, and runtime boundaries.
 
 ## Test
 
@@ -163,6 +186,7 @@ grant implementation, commit, push, PR, or external-write authority.
 ## Documentation
 
 - [Improved workflow](docs/WORKFLOW.md)
+- [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)
 - [Configurator architecture](docs/CONFIGURATOR.md)
 - [Provider adapters](docs/PROVIDERS.md)

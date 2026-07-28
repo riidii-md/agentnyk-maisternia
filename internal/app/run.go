@@ -17,6 +17,8 @@ const usage = `agentctl manages declarative configuration and workflows for CLI 
 
 Usage:
   agentctl version
+  agentctl admin [options]
+  agentctl config <command> [options]
   agentctl doctor [options]
   agentctl inventory [options]
   agentctl plan [options]
@@ -50,6 +52,10 @@ type commandOptions struct {
 }
 
 func Run(args []string, stdout, stderr io.Writer) int {
+	return RunWithIO(args, os.Stdin, stdout, stderr)
+}
+
+func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
 		fmt.Fprint(stderr, usage)
 		return 2
@@ -64,6 +70,10 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	switch args[0] {
+	case "admin":
+		return runAdminCommand(args[1:], stdin, stdout, stderr)
+	case "config":
+		return runConfigCommand(args[1:], stdout, stderr)
 	case "event":
 		return runEventCommand(args[1:], stdout, stderr)
 	case "provider":

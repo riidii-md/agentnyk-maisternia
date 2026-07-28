@@ -134,6 +134,14 @@ agentctl doctor
 agentctl provider doctor all
 ```
 
+For commands that use the version-controlled configuration after a system
+installation, save its checkout path once:
+
+```bash
+agentctl config set-repository /path/to/agentctl
+agentctl admin
+```
+
 Installation places only the `agentctl` executable. It does not apply managed
 agent configuration. Configuration changes still require a reviewed plan and
 an explicit `agentctl apply --yes`.

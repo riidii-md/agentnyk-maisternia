@@ -277,16 +277,84 @@ func TestRunRejectsUnknownCommandBeforeLoadingManifest(t *testing.T) {
 	t.Parallel()
 
 	var stdout, stderr bytes.Buffer
-	code := Run([]string{"admin"}, &stdout, &stderr)
+	code := Run([]string{"bogus"}, &stdout, &stderr)
 	if code != 2 {
-		t.Fatalf("Run(admin) code = %d, want 2", code)
+		t.Fatalf("Run(bogus) code = %d, want 2", code)
 	}
-	if !strings.Contains(stderr.String(), `unknown command "admin"`) {
-		t.Fatalf("Run(admin) stderr = %q, want unknown command", stderr.String())
+	if !strings.Contains(stderr.String(), `unknown command "bogus"`) {
+		t.Fatalf("Run(bogus) stderr = %q, want unknown command", stderr.String())
 	}
 	if strings.Contains(stderr.String(), "inspect manifest") ||
 		strings.Contains(stderr.String(), "lstat") {
-		t.Fatalf("Run(admin) stderr = %q, must not load manifest", stderr.String())
+		t.Fatalf("Run(bogus) stderr = %q, must not load manifest", stderr.String())
+	}
+}
+
+func TestRunAdminHelpDoesNotStartTUI(t *testing.T) {
+	t.Parallel()
+
+	var stdout, stderr bytes.Buffer
+	code := RunWithIO(
+		[]string{"admin", "--help"},
+		strings.NewReader(""),
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("RunWithIO(admin --help) code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "agentctl admin") {
+		t.Fatalf("admin help = %q, want usage", stderr.String())
+	}
+}
+
+func TestRunConfiguresAdminRepository(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	repository := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"config",
+		"set-repository",
+		"--home", home,
+		repository,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("set-repository code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), repository) {
+		t.Fatalf("set-repository stdout = %q, want repository", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{"config", "show", "--home", home}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("config show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "repository: "+repository) {
+		t.Fatalf("config show stdout = %q, want repository", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"config", "clear-repository", "--home", home},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("clear-repository code = %d, stderr = %s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{"config", "show", "--home", home}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("config show after clear code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "repository: <not configured>") {
+		t.Fatalf("config show after clear = %q", stdout.String())
 	}
 }
 
