@@ -1,5 +1,10 @@
 # Idea-Shaping Pipeline
 
+> **Experimental State Fixture:** This document describes an earlier local
+> state-machine slice. It is not the `agentctl` product runtime. Do not expand
+> it into live observation, phase control, approval queues, or agent dispatch;
+> `agentctl` should configure external harnesses, not run them.
+
 Status: First runtime slice implemented
 
 ## Executive Summary

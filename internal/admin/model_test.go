@@ -24,7 +24,7 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	if model.Snapshot().Repository.Path != fixture.Repository.Path {
 		t.Fatalf("snapshot repository = %q", model.Snapshot().Repository.Path)
 	}
-	if !strings.Contains(model.View(), "RECENT TASKS") {
+	if !strings.Contains(model.View(), "STATE FIXTURES") {
 		t.Fatalf("overview did not render:\n%s", model.View())
 	}
 
@@ -34,15 +34,15 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	})
 	model = updated.(Model)
 	if model.ActiveTab() != TabPipelines {
-		t.Fatalf("active tab = %s, want Pipelines", model.ActiveTab())
+		t.Fatalf("active tab = %s, want Presets", model.ActiveTab())
 	}
 	view := model.View()
 	for _, expected := range []string{
-		"PIPELINE",
-		"WAITING",
+		"PRESET WORKFLOW DAG",
+		"RECORDED GATE",
 		"VERIFY failed",
 		"REVIEW changes",
-		"ENTRY BRANCHES",
+		"TRIGGER/DAG ENTRIES",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("pipeline view missing %q:\n%s", expected, view)
@@ -97,7 +97,7 @@ func TestPipelineLoopsAreVisibleAtCommonTerminalSize(t *testing.T) {
 
 	view := model.View()
 	for _, expected := range []string{
-		"BRANCHES AND LOOPS",
+		"DAG BRANCHES",
 		"VERIFY failed",
 		"REVIEW changes",
 	} {
@@ -134,11 +134,11 @@ func TestShapePipelineShowsSourcesAndGrillState(t *testing.T) {
 
 	view := model.View()
 	for _, expected := range []string{
-		"SHAPE PIPELINE",
-		"SOURCE INBOX",
+		"SHAPE PRESET WORKFLOW DAG",
+		"LEGACY SOURCE FIXTURE",
 		"4 total",
 		"1 material",
-		"GRILL STATE",
+		"LEGACY GRILL FIXTURE",
 		"2 open",
 		"1 critical",
 		"weak options",

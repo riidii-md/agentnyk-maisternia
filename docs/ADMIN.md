@@ -2,17 +2,21 @@
 
 ## Purpose
 
-`agentctl admin` is a read-only terminal control surface for the local
-agentctl installation. It brings together:
+`agentctl admin` is a terminal configuration surface for the local
+agentctl installation. It is for designing, previewing, and applying provider
+configuration, not for running or observing agent work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
-- durable workflow tasks and approval state;
-- pipeline phases, trigger branches, and verification loops;
-- managed configuration drift and conflicts.
+- the preset library and each preset's workflow/pipeline DAGs;
+- MCP references, commands, prompts, skills, hooks, settings, and provider targets inside presets;
+- existing Claude, Codex, Hermes, Antigravity, Kaji, and future-harness configuration;
+- managed configuration drift and conflicts;
+- provider mappings for generated commands, prompts, skills, MCP config, and settings.
 
-The interface does not approve work, apply configuration, dispatch an agent,
-commit, push, open a pull request, or perform external writes.
+The interface does not approve work, dispatch an agent, watch live runs, infer
+next actions, commit, push, or open a pull request. Applying configuration must
+remain an explicit preview-and-confirm operation.
 
 ## Configure The Repository
 
@@ -60,53 +64,45 @@ The settings file contains only the repository path and schema version.
 
 ### Overview
 
-Shows repository readiness, healthy provider count, active and waiting tasks,
-configuration drift, and current attention items.
+Shows repository readiness, healthy provider count, available pipeline
+templates, configuration drift, and current render/apply attention items.
 
-### Pipelines
+### Presets
 
-Shows the selected task's known current phase and the configured policy
-topology:
-
-```text
-DISCOVERY  BRIEF -> SCOUT -> ANALYZE -> RESEARCH -> DECIDE
-READINESS  READY -> PLAN -> PROVE -> HANDOFF -> APPROVAL
-EXECUTION  RUN -> VERIFY -> REVIEW -> PR
-```
-
-The view also shows trigger entry branches and the planned control loops:
+Shows the reusable preset library. A preset is a configuration bundle: workflow
+DAGs/pipelines plus MCP references, commands, prompts, skills, hooks, settings,
+and provider targets. This view answers configuration questions:
 
 ```text
-READY not ready -> RESEARCH
-VERIFY failed   -> ANALYZE
-REVIEW changes  -> RUN
+Which presets exist?
+Which workflow DAGs/pipelines are inside this preset?
+Which MCPs, commands, prompts, skills, hooks, and settings belong to it?
+Which provider commands/skills/prompts/settings will be generated?
+Which phases or preset sections are missing provider mappings?
+What will change if this preset is applied?
 ```
 
-For `shape` tasks, the same view switches to the idea-shaping topology and adds
-source inbox and grill summaries:
+It must not present a preset pipeline as a live run, mark phases active, choose
+the next agent, or dispatch work. If legacy task-state fixtures are present,
+they may be shown only as schema/debug information, not as runtime control.
 
-```text
-DISCOVERY  INTAKE -> RESEARCH -> GRILL -> BRAINSTORM
-CONVERGE   CHALLENGE -> DECIDE -> PLAN -> FINAL -> HUMAN FINALIZE
+### State Fixtures
 
-SOURCE INBOX  4 total  1 unread  1 material
-GRILL STATE   3 total  2 open    1 critical
-```
+Shows experimental local state files only when they exist. This view is for
+schema/debug inspection while configuration authoring matures. It is not a task
+monitor, approval queue, or run observer.
 
-Shape loops are guarded by recorded outcomes and a pass budget. Other pipeline
-loops still describe policy topology and are not automatically executed. Only
-the current phase is marked active because completed-phase history is not yet
-projected into the TUI.
+### Providers / Existing Provider Config
 
-### Tasks
+Shows existing Codex, Claude, Antigravity, Hermes, Kaji, and future-harness
+configuration roots and files. This is separate from the preset library. The view
+should classify files as managed, unmanaged, conflicting, unknown, or ignored so
+the user can decide what to import, preserve, or overwrite. It must not inspect
+or copy provider runtime caches, sessions, transcripts, histories, credentials,
+or secrets.
 
-Lists durable task state from `~/.agent-workflow` and shows the selected task's
-repository, phase, authority, approval status, next action, and update time.
-
-### Providers
-
-Shows Codex, Claude, Antigravity, and Hermes executable health, version,
-runner support, configuration roots, capabilities, and inspection issues.
+Shows Codex, Claude, Antigravity, Hermes, Kaji, and future-harness executable
+health, version, configuration roots, render capabilities, and inspection issues.
 Refresh runs the same bounded, read-only version inspection used by
 `agentctl provider doctor`.
 
@@ -139,15 +135,17 @@ session.
 
 ## Current Boundary
 
-The TUI is an observational admin surface. Controlled automation still
-requires additional runtime work:
+The TUI is a configuration studio. Runtime automation is deliberately outside
+its scope. Future work should improve:
 
-- concrete runner capability resolution;
-- generalized durable outcomes beyond the shape transition history;
-- explicit approval records;
-- bounded read-only dispatch;
-- write-phase leases, budgets, and cancellation;
-- artifact registration with `mdmaid.show`.
+- preset-library authoring;
+- workflow/pipeline DAG editing inside presets;
+- MCP/config bundle editing inside presets;
+- existing provider-configuration inspection;
+- provider-native render previews;
+- structured settings merge and ownership;
+- drift and conflict explanation;
+- safe explicit apply flows.
 
-Those features must extend the workflow state machine. They must not be hidden
-inside terminal key handlers.
+Do not add hidden run control, live observation, approval queues, dispatch, or
+agent-session management to terminal key handlers.

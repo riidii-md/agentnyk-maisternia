@@ -87,7 +87,7 @@ func (m Model) render(width, height int) string {
 
 func (m Model) renderHeader(width int) string {
 	left := brandStyle.Render("agentctl admin")
-	status := "read-only"
+	status := "config"
 	if m.loading {
 		status = "refreshing"
 	}
@@ -154,12 +154,6 @@ func (m Model) renderOverview(width int) string {
 			readyProviders++
 		}
 	}
-	waitingTasks := 0
-	for _, task := range m.snapshot.Tasks {
-		if task.Status == "waiting_for_approval" || task.Status == "blocked" {
-			waitingTasks++
-		}
-	}
 	counts := m.snapshot.Config.Counts
 
 	statusLines := []string{
@@ -170,8 +164,8 @@ func (m Model) renderOverview(width int) string {
 			width,
 		),
 		metric(
-			"Tasks",
-			fmt.Sprintf("%d active, %d need attention", len(m.snapshot.Tasks), waitingTasks),
+			"Preset state fixtures",
+			fmt.Sprintf("%d local", len(m.snapshot.Tasks)),
 			width,
 		),
 		metric(
@@ -192,15 +186,6 @@ func (m Model) renderOverview(width int) string {
 	for _, issue := range m.snapshot.Issues {
 		attention = append(attention, renderIssue(issue, width))
 	}
-	for _, task := range m.snapshot.Tasks {
-		if task.Status == "waiting_for_approval" {
-			attention = append(
-				attention,
-				warningStyle.Render("⏸")+" "+
-					truncate(task.Title+" — approval required", width-2),
-			)
-		}
-	}
 	if len(attention) == 0 {
 		attention = []string{goodStyle.Render("✓ No current attention items")}
 	}
@@ -214,9 +199,9 @@ func (m Model) renderOverview(width int) string {
 		tasks = append(tasks, renderTaskSummary(task, width))
 	}
 	if len(tasks) == 0 {
-		tasks = []string{mutedStyle.Render("No durable tasks")}
+		tasks = []string{mutedStyle.Render("No local state fixtures")}
 	}
-	sections = append(sections, section("RECENT TASKS", tasks, width))
+	sections = append(sections, section("STATE FIXTURES", tasks, width))
 	return strings.Join(sections, "\n\n")
 }
 
@@ -227,21 +212,21 @@ func (m Model) renderPipelines(width int) string {
 		index := m.cursor[TabPipelines]
 		selected = &m.snapshot.Tasks[index]
 		sections = append(sections, section(
-			"SELECTED TASK",
+			"SELECTED PRESET STATE FIXTURE",
 			[]string{
 				selectedStyle.Render(
 					truncate(selected.TaskID+"  "+selected.Title, width),
 				),
-				metric("Current phase", strings.ToUpper(selected.Phase), width),
+				metric("Recorded phase", strings.ToUpper(selected.Phase), width),
 				metric("Status", selected.Status, width),
-				metric("Next", selected.NextAction, width),
+				metric("Recorded next", selected.NextAction, width),
 			},
 			width,
 		))
 	} else {
 		sections = append(sections, section(
-			"SELECTED TASK",
-			[]string{mutedStyle.Render("No task selected; showing policy topology")},
+			"SELECTED PRESET STATE FIXTURE",
+			[]string{mutedStyle.Render("No state fixture selected; showing preset DAG topology")},
 			width,
 		))
 	}
@@ -253,13 +238,13 @@ func (m Model) renderPipelines(width int) string {
 		waiting = selected.Status == "waiting_for_approval"
 	}
 	graph := m.snapshot.Pipeline
-	pipelineTitle := "PIPELINE"
+	pipelineTitle := "PRESET WORKFLOW DAG"
 	if selected != nil && selected.Pipeline == "shape" {
 		graph = ShapePipeline()
-		pipelineTitle = "SHAPE PIPELINE"
+		pipelineTitle = "SHAPE PRESET WORKFLOW DAG"
 		summary := m.snapshot.Shape[selected.TaskID]
 		sections = append(sections, section(
-			"SOURCE INBOX",
+			"LEGACY SOURCE FIXTURE",
 			[]string{
 				fmt.Sprintf(
 					"%d total  %d unread  %d material",
@@ -267,12 +252,12 @@ func (m Model) renderPipelines(width int) string {
 					summary.UnreadSources,
 					summary.MaterialSources,
 				),
-				mutedStyle.Render("Source intake remains open until a revision is finalized."),
+				mutedStyle.Render("Schema/debug data only; not live observation."),
 			},
 			width,
 		))
 		sections = append(sections, section(
-			"GRILL STATE",
+			"LEGACY GRILL FIXTURE",
 			[]string{
 				fmt.Sprintf(
 					"%d total  %d open  %d critical",
@@ -280,7 +265,7 @@ func (m Model) renderPipelines(width int) string {
 					summary.OpenQuestions,
 					summary.CriticalQuestions,
 				),
-				mutedStyle.Render("Critical open questions block convergence."),
+				mutedStyle.Render("Schema/debug data only; not an approval queue."),
 			},
 			width,
 		))
@@ -295,7 +280,7 @@ func (m Model) renderPipelines(width int) string {
 		warningStyle.Render("↺") + " READY not ready → RESEARCH",
 		warningStyle.Render("↺") + " VERIFY failed → ANALYZE",
 		warningStyle.Render("↺") + " REVIEW changes → RUN",
-		mutedStyle.Render("Entry phases come from trigger policy; loops require recorded outcomes."),
+		mutedStyle.Render("Preset DAG entry phases come from trigger policy; loops require recorded outcomes."),
 	}
 	if selected != nil && selected.Pipeline == "shape" {
 		branches = []string{
@@ -303,10 +288,10 @@ func (m Model) renderPipelines(width int) string {
 			warningStyle.Render("↺") + " CHALLENGE weak options → BRAINSTORM",
 			warningStyle.Render("↺") + " CHALLENGE missing constraint → GRILL",
 			warningStyle.Render("↺") + " MATERIAL SOURCE → RESEARCH",
-			mutedStyle.Render("Loops are bounded; finalization remains an explicit human action."),
+			mutedStyle.Render("Preset DAG loops are bounded; finalization remains an explicit human action."),
 		}
 	}
-	sections = append(sections, section("BRANCHES AND LOOPS", branches, width))
+	sections = append(sections, section("DAG BRANCHES", branches, width))
 
 	var triggers []string
 	for event, trigger := range m.snapshot.Policy.Triggers.Triggers {
@@ -319,7 +304,7 @@ func (m Model) renderPipelines(width int) string {
 	if len(triggers) == 0 {
 		triggers = []string{mutedStyle.Render("Trigger policy unavailable")}
 	}
-	sections = append(sections, section("ENTRY BRANCHES", triggers, width))
+	sections = append(sections, section("TRIGGER/DAG ENTRIES", triggers, width))
 	return strings.Join(sections, "\n\n")
 }
 
@@ -369,9 +354,9 @@ func renderPipelineGraph(
 				}
 				line := strings.Join(nodes, " → ")
 				if row[len(row)-1] == graph.GateAt {
-					gate := warningStyle.Render("⏸ APPROVAL")
+					gate := warningStyle.Render("⏸ AUTHORITY GATE")
 					if waiting {
-						gate = warningStyle.Bold(true).Render("⏸ WAITING")
+						gate = warningStyle.Bold(true).Render("⏸ RECORDED GATE")
 					}
 					line += " → " + gate
 				}
@@ -396,9 +381,9 @@ func renderPipelineGraph(
 		}
 		line := fmt.Sprintf("%-10s %s", names[index], strings.Join(nodes, " → "))
 		if index == 1 {
-			gate := warningStyle.Render("⏸ APPROVAL")
+			gate := warningStyle.Render("⏸ AUTHORITY GATE")
 			if waiting {
-				gate = warningStyle.Bold(true).Render("⏸ WAITING")
+				gate = warningStyle.Bold(true).Render("⏸ RECORDED GATE")
 			}
 			line += " → " + gate
 		}
@@ -450,9 +435,9 @@ func renderPhaseNode(node PhaseNode, currentPhase string) string {
 
 func (m Model) renderTasks(width int) string {
 	if len(m.snapshot.Tasks) == 0 {
-		return section("TASKS", []string{
-			mutedStyle.Render("No durable tasks"),
-			mutedStyle.Render("Ingest an event with agentctl event ingest."),
+		return section("STATE FIXTURES", []string{
+			mutedStyle.Render("No local state fixtures"),
+			mutedStyle.Render("Experimental schema/debug state only."),
 		}, width)
 	}
 	index := m.cursor[TabTasks]
@@ -460,7 +445,7 @@ func (m Model) renderTasks(width int) string {
 	var rows []string
 	if width >= 96 {
 		rows = append(rows, mutedStyle.Render(
-			fmt.Sprintf("%-26s %-12s %-22s %s", "TASK", "PHASE", "STATUS", "TITLE"),
+			fmt.Sprintf("%-26s %-12s %-22s %s", "FIXTURE", "PHASE", "STATUS", "TITLE"),
 		))
 		for rowIndex := start; rowIndex < end; rowIndex++ {
 			task := m.snapshot.Tasks[rowIndex]
@@ -487,15 +472,15 @@ func (m Model) renderTasks(width int) string {
 	}
 	task := m.snapshot.Tasks[index]
 	details := []string{
-		metric("Task", task.TaskID, width),
+		metric("Fixture", task.TaskID, width),
 		metric("Repository", task.Repository, width),
 		metric("Authority", task.Authority, width),
-		metric("Approval", approvalText(task.Approval), width),
-		metric("Next action", task.NextAction, width),
+		metric("Approval fixture", approvalText(task.Approval), width),
+		metric("Recorded next", task.NextAction, width),
 		metric("Updated", displayTime(task.UpdatedAt), width),
 	}
-	return section("TASKS", rows, width) + "\n\n" +
-		section("DETAIL", details, width)
+	return section("STATE FIXTURES", rows, width) + "\n\n" +
+		section("FIXTURE DETAIL", details, width)
 }
 
 func (m Model) renderProviders(width int) string {
@@ -635,11 +620,11 @@ func (m Model) renderHelp(width int) string {
 		"←/→ or h/l       next or previous view",
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
-		"r                refresh all read-only state",
+		"r                refresh configuration state",
 		"? / esc          toggle or close help",
 		"q / ctrl+c       quit",
 		"",
-		mutedStyle.Render("Admin is observational. It cannot approve, apply, dispatch, commit, or push."),
+		mutedStyle.Render("Admin is for configuration. It cannot observe runs, approve, dispatch, commit, or push."),
 	}
 	return section("KEYS", lines, width)
 }

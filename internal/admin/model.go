@@ -21,8 +21,8 @@ const (
 
 var tabNames = []string{
 	"Overview",
-	"Pipelines",
-	"Tasks",
+	"Presets",
+	"State",
 	"Providers",
 	"Config",
 }

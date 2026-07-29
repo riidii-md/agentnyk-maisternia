@@ -2,17 +2,19 @@
 
 [![CI](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml)
 
-`agentctl` is a provider-neutral workflow and configuration manager for
-command-line coding agents.
+`agentctl` is a provider-neutral preset and pipeline configurator for
+command-line coding agent harnesses.
 
 It provides one version-controlled source of truth for:
 
 - shared work phases;
 - Codex, Claude, Antigravity, and Hermes provider adapters;
-- neutral `/work-*` commands;
+- reusable preset-library entries;
+- workflow/pipeline DAGs inside presets;
+- MCP references and neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
-- model roles and runner routing;
+- model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
 
 ## Status
@@ -38,20 +40,19 @@ The repository contains the first safe configurator foundation:
 - direct Codex aliases for the canonical phases;
 - repository tests that prevent command inventory and adapter behavior from
   silently shrinking;
-- strict normalized event validation;
-- idempotent manual event ingestion;
-- private durable task state and append-only history;
-- read-only task and prepared-context inspection;
-- a read-only admin TUI for providers, pipelines, tasks, and configuration;
-- durable idea-shaping pipelines with sources, grill questions, guarded loops,
-  and explicit finalization;
+- strict normalized event validation as untrusted input fixtures;
 - provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
-  `/work-brainstorm` commands;
+  `/work-brainstorm` command templates;
+- a configuration TUI for preset-library entries, workflow DAGs, existing
+  provider config, render plans, and managed files;
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
-Structured TOML and JSON settings merging, runtime capability resolution,
-controlled dispatch, and configuration import are planned next.
+Structured TOML and JSON settings merging, preset-library authoring commands,
+workflow DAG editing, provider-native rendering, MCP/config bundles, existing
+provider-config inspection, and configuration import are planned next. Runtime
+dispatch is intentionally out of scope; existing harnesses run the rendered
+commands.
 
 ## Installation
 
@@ -112,38 +113,48 @@ Then open the read-only admin interface from any directory:
 agentctl admin
 ```
 
-Use `1` through `5` to open Overview, Pipelines, Tasks, Providers, and Config.
-Press `?` for all keys. Pipeline branches, approval gates, and verification
-loops are visible, but the TUI cannot approve, apply, dispatch, commit, or push.
+Use `1` through `5` to open Overview, Presets, State Fixtures, Providers, and
+Config. Press `?` for all keys. The TUI is for configuration authoring and
+preview: preset-library entries, workflow DAGs, MCP/config bundles, existing
+provider configuration, provider mappings, render plans, drift, conflicts, and
+explicit apply. It must not run, observe, approve, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
-controls, and runtime boundaries.
+controls, and configuration boundaries.
 
-## Pipeline Execution
+## Pipeline Configuration
 
-`agentctl` currently owns the pipeline control plane:
+`agentctl` owns the preset and pipeline configuration layer:
 
-- durable task, source, question, and event state;
-- legal phase transitions;
-- convergence gates and loop budgets;
-- authority and approval boundaries;
-- provider command installation;
-- status inspection through the CLI and TUI.
+- reusable preset-library entries;
+- provider-neutral workflow/pipeline DAGs and phase definitions inside presets;
+- MCP references, provider adapters, and capability metadata;
+- command, prompt, skill, hook, MCP, and settings rendering;
+- existing provider-configuration inspection;
+- safe preview, conflict detection, and guarded installation;
+- configuration inspection through the CLI and TUI.
 
-It does not currently launch Claude, Codex, Antigravity, or Hermes. Run the
-configured command inside the provider you want:
+It does **not** own runtime execution, task observation, agent dispatch, phase
+control, or harness approvals. After `agentctl` renders and installs a pipeline,
+run it inside the harness you choose:
 
 ```text
-Claude:  /work-shape
-Codex:   /work-shape
-Hermes:  /work-shape
+Claude Code: /work-shape
+Codex CLI:   /work-shape
+Hermes:      work-shape skill
+Antigravity: provider-native prompt/command mapping
 ```
 
-Those commands read and update the same provider-neutral agentctl task.
-Antigravity currently receives the managed legacy prompt path, but its native
-invocation mapping still needs validation. A future dispatcher will select or
-honor a configured provider and run a bounded phase, but that remains disabled
-until capability resolution and approval enforcement are implemented.
+Those harnesses own their own sessions, histories, approvals, and execution
+loops. `agentctl` may validate and render configuration for them, but it must not
+become a controller or observer of live runs.
+
+The current `event`, `task`, `work next`, and `pipeline start/transition`
+commands are retained as experimental state-model fixtures while the
+configuration model settles. They should not be presented as the product
+runtime, and new TUI work should focus on preset-library authoring, workflow DAG
+editing, MCP/config bundle editing, existing provider-configuration inspection,
+render previews, provider mappings, drift, and conflicts.
 
 ## Test
 
@@ -211,59 +222,28 @@ go run ./cmd/agentctl apply --target codex --yes
 Do not run `apply` against a real home directory until the displayed plan has
 been reviewed.
 
-## Event Workflow
+## Experimental State Fixtures
 
-Validate an event without creating state:
+The repository still contains earlier state-machine commands for event
+validation, manual ingestion, task inspection, and idea-shaping transitions:
 
 ```bash
 go run ./cmd/agentctl event validate ./examples/events/issue-opened.json
-```
-
-Prepare durable task state without executing an agent:
-
-```bash
 go run ./cmd/agentctl event ingest ./examples/events/issue-opened.json
 go run ./cmd/agentctl task list
 go run ./cmd/agentctl work next <task-id>
+agentctl pipeline start shape --title "Improve agent workflow"
 ```
 
-All initial triggers are read-only. Ingestion does not dispatch an agent or
-grant implementation, commit, push, PR, or external-write authority.
+Treat these as experimental schema fixtures, not the product runtime. They are
+useful for validating untrusted event envelopes and exploring state shapes, but
+new product work should focus on preset-library authoring, workflow DAG editing,
+MCP/config bundle editing, existing provider-configuration inspection,
+provider-native rendering, configuration previews, drift/conflict handling, and
+explicit apply.
 
-## Shape Workflow
-
-Start a durable idea-shaping task:
-
-```bash
-agentctl pipeline start shape \
-  --title "Improve agent workflow" \
-  --repository kagi-labs/agentctl
-```
-
-Add sources and record focused human questions:
-
-```bash
-agentctl source add <task-id> https://example.com/source
-agentctl source list <task-id>
-agentctl grill ask --why "This determines the viable options." \
-  --critical <task-id> "What cannot change?"
-agentctl grill next <task-id>
-```
-
-Move through guarded phases:
-
-```bash
-agentctl pipeline transition <task-id> research
-agentctl pipeline transition <task-id> grill
-agentctl pipeline transition <task-id> brainstorm
-agentctl pipeline transition --outcome weak-options <task-id> brainstorm
-agentctl pipeline transition --finalize <task-id> final
-```
-
-The shape pipeline keeps target-project access read-only. Generated workflow
-artifacts may be written under private agentctl task state. Critical grill
-questions, invalid edges, exhausted loop budgets, and implicit finalization are
-rejected.
+`agentctl` should not expand these commands into live observation, phase
+control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 ## Documentation
 
@@ -272,6 +252,7 @@ rejected.
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)
 - [Configurator architecture](docs/CONFIGURATOR.md)
+- [Configuration boundary](docs/CONFIGURATION-BOUNDARY.md)
 - [Provider adapters](docs/PROVIDERS.md)
 - [Installation](docs/INSTALLATION.md)
 - [Release process](docs/RELEASING.md)
