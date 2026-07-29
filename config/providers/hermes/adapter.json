@@ -62,6 +62,8 @@
     "runner.headless",
     "session.resume",
     "usage.reporting",
+    "workflow.goal",
+    "workflow.goal_persistent",
     "worktree.isolation"
   ]
 }

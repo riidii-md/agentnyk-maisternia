@@ -51,6 +51,16 @@
       ]
     },
     {
+      "id": "work-experiment",
+      "source": "config/workflow/phases/experiment.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-experiment.md"},
+        {"agent": "claude", "path": ".claude/commands/work-experiment.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-experiment.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-experiment/SKILL.md"}
+      ]
+    },
+    {
       "id": "codex-shape-codex",
       "source": "config/workflow/phases/shape.md",
       "targets": [

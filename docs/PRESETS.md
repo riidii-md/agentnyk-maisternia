@@ -30,6 +30,8 @@ The repository starts with:
 - `standard-work`: the provider-neutral delivery workflow;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, and planning;
+- `scored-experiment`: a provider-native baseline, focused change, scoring,
+  evidence, and bounded continuation loop;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases.
 
 Inspect them:
@@ -37,6 +39,7 @@ Inspect them:
 ```bash
 agentctl preset list
 agentctl preset show idea-shaping
+agentctl preset show scored-experiment
 agentctl preset validate all
 ```
 
@@ -126,3 +129,7 @@ conflict detection, backups, atomic writes, and explicit confirmation.
 `agentctl` stops after rendering or installing configuration. Claude Code,
 Codex CLI, Hermes, and Antigravity own execution, sessions, approvals, history,
 and runtime loops.
+
+See [Provider-native experiment loops](PROVIDER-NATIVE-EXPERIMENTS.md) for the
+scored experiment contract, provider mappings, safety model, and boundary with
+Kaji.

@@ -36,7 +36,8 @@ The repository contains the first safe configurator foundation:
 - drift detection using install checksums;
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
-- reusable standard-work, idea-shaping, and Codex-compatibility presets;
+- reusable standard-work, idea-shaping, scored-experiment, and
+  Codex-compatibility presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -58,6 +59,11 @@ editing, TUI write actions, broader provider-native rendering, existing
 provider-file classification, and configuration import are planned next.
 Runtime dispatch is intentionally out of scope; existing harnesses run the
 rendered commands.
+
+The `scored-experiment` preset establishes the provider-native experiment
+workflow and capability contract. Native Stop/tool-guard hook rendering still
+depends on the planned structured settings merge; see
+[Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
 
 ## Installation
 
@@ -215,6 +221,7 @@ Inspect and validate the preset library:
 ```bash
 go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
+go run ./cmd/agentctl preset show scored-experiment
 go run ./cmd/agentctl preset validate all
 ```
 

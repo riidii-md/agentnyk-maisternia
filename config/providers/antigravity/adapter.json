@@ -65,7 +65,9 @@
     "repository.read",
     "runner.headless",
     "runner.safe_headless",
+    "safety.tool_guard",
     "session.resume",
-    "subagent.spawn"
+    "subagent.spawn",
+    "workflow.stop_continue"
   ]
 }

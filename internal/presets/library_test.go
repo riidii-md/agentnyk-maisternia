@@ -19,8 +19,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 3 {
-		t.Fatalf("preset count = %d, want 3", len(library.Presets))
+	if len(library.Presets) != 4 {
+		t.Fatalf("preset count = %d, want 4", len(library.Presets))
 	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
@@ -28,6 +28,21 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if len(shape.Pipelines) != 1 || shape.Pipelines[0].ID != "shape" {
 		t.Fatalf("idea-shaping pipelines = %#v", shape.Pipelines)
+	}
+	experiment, found := library.Get("scored-experiment")
+	if !found {
+		t.Fatal("scored-experiment preset missing")
+	}
+	if len(experiment.Pipelines) != 1 ||
+		experiment.Pipelines[0].ID != "improve" {
+		t.Fatalf("scored-experiment pipelines = %#v", experiment.Pipelines)
+	}
+	if got := experiment.Contents.Commands; len(got) != 1 ||
+		got[0] != "work-experiment" {
+		t.Fatalf("scored-experiment commands = %v", got)
+	}
+	if got := experiment.Targets; len(got) != 4 {
+		t.Fatalf("scored-experiment targets = %v, want all four providers", got)
 	}
 
 	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
@@ -56,6 +71,20 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 				t.Fatalf("selected unexpected target: %#v", target)
 			}
 		}
+	}
+
+	experimentManifest, err := SelectManifest(experiment, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(scored-experiment) error = %v", err)
+	}
+	if len(experimentManifest.Resources) != 1 {
+		t.Fatalf(
+			"scored-experiment resource count = %d, want 1",
+			len(experimentManifest.Resources),
+		)
+	}
+	if got := experimentManifest.Resources[0].Targets; len(got) != 4 {
+		t.Fatalf("scored-experiment rendered targets = %v, want 4", got)
 	}
 }
 

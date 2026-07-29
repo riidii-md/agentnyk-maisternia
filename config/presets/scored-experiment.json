@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "scored-experiment",
+  "name": "Scored Experiment",
+  "description": "Provider-native baseline, focused change, scoring, evidence, and bounded continuation loop.",
+  "pipelines": [
+    {
+      "id": "improve",
+      "name": "Improve",
+      "entry_phases": ["baseline"],
+      "phases": [
+        "baseline", "experiment", "score", "record", "decide", "review"
+      ],
+      "edges": [
+        {"from": "baseline", "to": "experiment"},
+        {"from": "experiment", "to": "score"},
+        {"from": "score", "to": "record"},
+        {"from": "record", "to": "decide"},
+        {"from": "decide", "to": "review", "condition": "target or limit"},
+        {"from": "decide", "to": "experiment", "condition": "continue", "loop": true}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-experiment"],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}
