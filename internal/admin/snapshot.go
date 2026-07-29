@@ -53,14 +53,24 @@ type ProviderPlan struct {
 type ConfigStatus struct {
 	Counts      ActionCounts
 	ByProvider  []ProviderPlan
+	Actions     []configurator.Action
 	Conflicts   []configurator.Action
 	StatePath   string
 	ActionCount int
 }
 
+type ResourcePreview struct {
+	ID      string
+	Kind    string
+	Source  string
+	Targets []configurator.Target
+	Content string
+}
+
 type PresetStatus struct {
-	Preset presets.Preset
-	Config ConfigStatus
+	Preset    presets.Preset
+	Config    ConfigStatus
+	Resources []ResourcePreview
 }
 
 type Snapshot struct {
@@ -172,6 +182,21 @@ func (l Loader) Load() Snapshot {
 					continue
 				}
 				selected, err := presets.SelectManifest(preset, manifest)
+				if err != nil {
+					presetsReady = false
+					snapshot.addIssue(
+						SeverityError,
+						"preset "+preset.ID,
+						err,
+					)
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				status.Resources, err = loadResourcePreviews(
+					selection.Path,
+					preset.Contents,
+					selected.Resources,
+				)
 				if err != nil {
 					presetsReady = false
 					snapshot.addIssue(
@@ -327,6 +352,7 @@ func summarizePlan(plan configurator.Plan, home string) ConfigStatus {
 	status := ConfigStatus{
 		StatePath:   configurator.StatePath(home),
 		ActionCount: len(plan.Actions),
+		Actions:     append([]configurator.Action(nil), plan.Actions...),
 	}
 	byProvider := make(map[string]ActionCounts)
 	for _, action := range plan.Actions {
@@ -347,6 +373,45 @@ func summarizePlan(plan configurator.Plan, home string) ConfigStatus {
 		return status.ByProvider[i].Provider < status.ByProvider[j].Provider
 	})
 	return status
+}
+
+func loadResourcePreviews(
+	repository string,
+	contents presets.Contents,
+	resources []configurator.Resource,
+) ([]ResourcePreview, error) {
+	kinds := resourceKinds(contents)
+	previews := make([]ResourcePreview, 0, len(resources))
+	for _, resource := range resources {
+		content, err := os.ReadFile(filepath.Join(repository, filepath.FromSlash(resource.Source)))
+		if err != nil {
+			return nil, fmt.Errorf("read resource %q: %w", resource.ID, err)
+		}
+		previews = append(previews, ResourcePreview{
+			ID:      resource.ID,
+			Kind:    kinds[resource.ID],
+			Source:  resource.Source,
+			Targets: append([]configurator.Target(nil), resource.Targets...),
+			Content: string(content),
+		})
+	}
+	return previews, nil
+}
+
+func resourceKinds(contents presets.Contents) map[string]string {
+	result := make(map[string]string)
+	add := func(kind string, ids []string) {
+		for _, id := range ids {
+			result[id] = kind
+		}
+	}
+	add("MCP reference", contents.MCPRefs)
+	add("command", contents.Commands)
+	add("prompt", contents.Prompts)
+	add("skill", contents.Skills)
+	add("hook", contents.Hooks)
+	add("setting", contents.Settings)
+	return result
 }
 
 func increment(counts ActionCounts, state configurator.ActionState) ActionCounts {

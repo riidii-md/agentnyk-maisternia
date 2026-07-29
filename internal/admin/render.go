@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kagi-labs/agentctl/internal/configurator"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -132,9 +133,21 @@ func (m Model) renderTabs(width int) string {
 }
 
 func (m Model) renderFooter(width int) string {
+	if m.presetPreview {
+		return mutedStyle.Render(truncate(
+			"j/k resource  pgup/pgdn scroll prompt  esc back  ? help  q quit",
+			width,
+		))
+	}
 	keys := "1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	if m.tab == TabPipelines {
+		keys = "enter inspect  1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	}
 	if width < 72 {
 		keys = "1-5 view  j/k select  r refresh  ? help  q quit"
+		if m.tab == TabPipelines {
+			keys = "enter inspect  1-5 view  j/k select  r refresh  q quit"
+		}
 	}
 	return mutedStyle.Render(truncate(keys, width))
 }
@@ -199,13 +212,16 @@ func (m Model) renderOverview(width int) string {
 		tasks = append(tasks, renderTaskSummary(task, width))
 	}
 	if len(tasks) == 0 {
-		tasks = []string{mutedStyle.Render("No local state fixtures")}
+		tasks = []string{mutedStyle.Render("No legacy state fixtures")}
 	}
-	sections = append(sections, section("STATE FIXTURES", tasks, width))
+	sections = append(sections, section("LEGACY FIXTURES", tasks, width))
 	return strings.Join(sections, "\n\n")
 }
 
 func (m Model) renderPipelines(width int) string {
+	if m.presetPreview {
+		return m.renderPresetResourcePreview(width)
+	}
 	if len(m.snapshot.Presets) == 0 {
 		return section("PRESET LIBRARY", []string{
 			mutedStyle.Render("No presets found under config/presets."),
@@ -233,9 +249,24 @@ func (m Model) renderPipelines(width int) string {
 	details := []string{
 		metric("Description", preset.Description, width),
 		metric("Targets", strings.Join(preset.Targets, ", "), width),
-		metric("Contents", presetContentSummary(preset.Contents), width),
+	}
+	if width >= 90 {
+		details = append(
+			details,
+			metric("Contents", presetContentSummary(preset.Contents), width),
+		)
+	}
+	details = append(
+		details,
 		metric("Resources", strings.Join(preset.Contents.ResourceIDs(), ", "), width),
 		metric("Plan", actionCountSummary(selected.Config.Counts), width),
+	)
+	if width >= 90 {
+		details = append(details, metric(
+			"Prompt source",
+			fmt.Sprintf("%d resources; Enter to inspect", len(selected.Resources)),
+			width,
+		))
 	}
 	sections := []string{
 		section("PRESET LIBRARY", rows, width),
@@ -269,6 +300,80 @@ func (m Model) renderPipelines(width int) string {
 		))
 	}
 	return strings.Join(sections, "\n\n")
+}
+
+func (m Model) renderPresetResourcePreview(width int) string {
+	presetIndex := m.cursor[TabPipelines]
+	if presetIndex < 0 || presetIndex >= len(m.snapshot.Presets) {
+		return section("PRESET PROMPTS / RESOURCES", []string{
+			mutedStyle.Render("No preset selected."),
+		}, width)
+	}
+	status := m.snapshot.Presets[presetIndex]
+	if len(status.Resources) == 0 {
+		return section("PRESET PROMPTS / RESOURCES", []string{
+			mutedStyle.Render("This preset has no readable resources."),
+		}, width)
+	}
+
+	resourceIndex := m.presetResourceCursor
+	start, end := window(resourceIndex, len(status.Resources), 5)
+	var rows []string
+	for rowIndex := start; rowIndex < end; rowIndex++ {
+		resource := status.Resources[rowIndex]
+		line := fmt.Sprintf(
+			"%-12s %-24s %s",
+			truncate(resource.Kind, 11),
+			truncate(resource.ID, 23),
+			resource.Source,
+		)
+		rows = append(rows, selectable(line, rowIndex == resourceIndex, width))
+	}
+
+	resource := status.Resources[resourceIndex]
+	details := []string{
+		metric("Preset", status.Preset.Name, width),
+		metric("Kind", resource.Kind, width),
+		metric("Source", resource.Source, width),
+		metric("Targets", resourceTargetSummary(resource.Targets), width),
+	}
+	content := renderResourceContent(
+		resource.Content,
+		m.presetContentOffset,
+		width,
+	)
+	return strings.Join([]string{
+		section("PRESET PROMPTS / RESOURCES", rows, width),
+		section("SELECTED RESOURCE", details, width),
+		section("SOURCE TEXT", content, width),
+	}, "\n\n")
+}
+
+func resourceTargetSummary(targets []configurator.Target) string {
+	values := make([]string, 0, len(targets))
+	for _, target := range targets {
+		values = append(values, target.Agent+":"+target.Path)
+	}
+	return strings.Join(values, ", ")
+}
+
+func renderResourceContent(content string, offset, width int) []string {
+	lines := strings.Split(content, "\n")
+	if len(lines) == 0 {
+		return []string{mutedStyle.Render("Empty resource")}
+	}
+	if offset >= len(lines) {
+		offset = len(lines) - 1
+	}
+	result := make([]string, 0, len(lines)-offset)
+	for index := offset; index < len(lines); index++ {
+		prefix := mutedStyle.Render(fmt.Sprintf("%4d │ ", index+1))
+		result = append(result, prefix+truncate(
+			lines[index],
+			maximum(1, width-lipgloss.Width(prefix)),
+		))
+	}
+	return result
 }
 
 func presetContentSummary(contents presets.Contents) string {
@@ -321,21 +426,24 @@ func renderPresetBranches(pipeline presets.Pipeline, width int) []string {
 		if edge.Condition == "" && !edge.Loop {
 			continue
 		}
-		marker := mutedStyle.Render("◇")
+		marker := "◇"
+		style := mutedStyle
 		if edge.Loop {
-			marker = warningStyle.Render("↺")
+			marker = "↺"
+			style = warningStyle
 		}
 		condition := edge.Condition
 		if condition == "" {
 			condition = "loop"
 		}
-		line := marker + " " + fmt.Sprintf(
+		body := fmt.Sprintf(
 			"%s --%s--> %s",
 			strings.ToUpper(edge.From),
 			condition,
 			strings.ToUpper(edge.To),
 		)
-		line = truncate(line, width)
+		line := style.Render(marker) + " " +
+			truncate(body, maximum(1, width-2))
 		if edge.Loop {
 			loops = append(loops, line)
 		} else {
@@ -368,9 +476,10 @@ func packRenderedLines(values []string, width int) []string {
 
 func (m Model) renderTasks(width int) string {
 	if len(m.snapshot.Tasks) == 0 {
-		return section("STATE FIXTURES", []string{
-			mutedStyle.Render("No local state fixtures"),
-			mutedStyle.Render("Experimental schema/debug state only."),
+		return section("LEGACY STATE FIXTURES", []string{
+			mutedStyle.Render("No legacy state fixtures"),
+			mutedStyle.Render("Experimental schema/debug data only."),
+			mutedStyle.Render("Not provider state, sessions, or live pipeline runs."),
 		}, width)
 	}
 	index := m.cursor[TabTasks]
@@ -405,6 +514,10 @@ func (m Model) renderTasks(width int) string {
 	}
 	task := m.snapshot.Tasks[index]
 	details := []string{
+		mutedStyle.Render(truncate(
+			"Legacy schema/debug data. Not provider state, sessions, or live pipeline runs.",
+			width,
+		)),
 		metric("Fixture", task.TaskID, width),
 		metric("Repository", task.Repository, width),
 		metric("Authority", task.Authority, width),
@@ -412,7 +525,7 @@ func (m Model) renderTasks(width int) string {
 		metric("Recorded next", task.NextAction, width),
 		metric("Updated", displayTime(task.UpdatedAt), width),
 	}
-	return section("STATE FIXTURES", rows, width) + "\n\n" +
+	return section("LEGACY STATE FIXTURES", rows, width) + "\n\n" +
 		section("FIXTURE DETAIL", details, width)
 }
 
@@ -467,14 +580,21 @@ func (m Model) renderProviders(width int) string {
 		metric("Name", provider.DisplayName, width),
 		metric("Executable", executableText(provider), width),
 		metric("Runner", runnerText(provider), width),
-		metric("Config roots", rootSummary(provider), width),
 		metric("Capabilities", strings.Join(provider.Capabilities, ", "), width),
 	}
 	for _, issue := range provider.Issues {
 		details = append(details, renderProviderIssue(issue, width))
 	}
-	return section("PROVIDERS", rows, width) + "\n\n" +
-		section("DETAIL", details, width)
+	return strings.Join([]string{
+		section("PROVIDERS", rows, width),
+		section("DETAIL", details, width),
+		section(
+			"CURRENT MANIFEST TARGETS",
+			m.renderProviderTargets(provider.ProviderID, width),
+			width,
+		),
+		section("CONFIG ROOTS", renderProviderRoots(provider, width), width),
+	}, "\n\n")
 }
 
 func (m Model) renderConfig(width int) string {
@@ -526,6 +646,10 @@ func (m Model) renderConfig(width int) string {
 	if len(m.snapshot.Config.Conflicts) == 0 {
 		conflicts = []string{goodStyle.Render("✓ No conflicts")}
 	} else {
+		conflicts = append(conflicts, mutedStyle.Render(truncate(
+			"Agentctl preserves conflicts instead of overwriting them.",
+			width,
+		)))
 		index := m.cursor[TabConfig]
 		start, end := window(index, len(m.snapshot.Config.Conflicts), 6)
 		for rowIndex := start; rowIndex < end; rowIndex++ {
@@ -539,11 +663,25 @@ func (m Model) renderConfig(width int) string {
 			conflicts = append(conflicts, selectable(line, rowIndex == index, width))
 		}
 	}
-	return strings.Join([]string{
+	sections := []string{
 		section("CONFIGURATION", summary, width),
 		section("BY PROVIDER", providersRows, width),
 		section("CONFLICTS", conflicts, width),
-	}, "\n\n")
+	}
+	if len(m.snapshot.Config.Conflicts) > 0 {
+		action := m.snapshot.Config.Conflicts[m.cursor[TabConfig]]
+		sections = append(sections, section("SELECTED CONFLICT", []string{
+			metric("Resource", action.ResourceID, width),
+			metric("Why", action.Reason, width),
+			metric("Source", action.SourcePath, width),
+			metric("Target", action.DestinationPath, width),
+			mutedStyle.Render(truncate(
+				"No file is changed until you explicitly resolve this conflict.",
+				width,
+			)),
+		}, width))
+	}
+	return strings.Join(sections, "\n\n")
 }
 
 func (m Model) renderHelp(width int) string {
@@ -553,6 +691,8 @@ func (m Model) renderHelp(width int) string {
 		"←/→ or h/l       next or previous view",
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
+		"enter            inspect preset prompt/resource source",
+		"pgup / pgdown    scroll prompt/resource source",
 		"r                refresh configuration state",
 		"? / esc          toggle or close help",
 		"q / ctrl+c       quit",
@@ -657,18 +797,79 @@ func runnerText(provider providers.Inspection) string {
 	)
 }
 
-func rootSummary(provider providers.Inspection) string {
-	counts := make(map[string]int)
+func renderProviderRoots(provider providers.Inspection, width int) []string {
+	if len(provider.ConfigRoots) == 0 {
+		return []string{mutedStyle.Render("No declared configuration roots.")}
+	}
+	lines := make([]string, 0, len(provider.ConfigRoots))
 	for _, root := range provider.ConfigRoots {
-		counts[root.Status]++
-	}
-	var parts []string
-	for _, status := range []string{"present", "missing", "unsafe"} {
-		if counts[status] > 0 {
-			parts = append(parts, fmt.Sprintf("%s=%d", status, counts[status]))
+		status := strings.ToUpper(root.Status)
+		style := mutedStyle
+		switch root.Status {
+		case "present":
+			style = goodStyle
+		case "unsafe":
+			style = errorStyle
+		case "missing":
+			style = warningStyle
 		}
+		prefix := style.Render(fmt.Sprintf("%-8s", truncate(status, 7)))
+		detail := fmt.Sprintf(
+			"%s  [%s]  %s",
+			root.Path,
+			root.Ownership,
+			root.Purpose,
+		)
+		lines = append(lines, prefix+" "+truncate(
+			detail,
+			maximum(1, width-lipgloss.Width(prefix)-1),
+		))
 	}
-	return strings.Join(parts, ", ")
+	return lines
+}
+
+func (m Model) renderProviderTargets(providerID string, width int) []string {
+	lines := []string{mutedStyle.Render(truncate(
+		"Only manifest target paths are inspected. Runtime and session files are excluded.",
+		width,
+	))}
+	shown := 0
+	total := 0
+	for _, action := range m.snapshot.Config.Actions {
+		if action.Agent != providerID || action.State == configurator.ActionCreate {
+			continue
+		}
+		total++
+		if shown >= 7 {
+			continue
+		}
+		state := strings.ToUpper(string(action.State))
+		style := mutedStyle
+		switch action.State {
+		case configurator.ActionUnchanged:
+			style = goodStyle
+		case configurator.ActionUpdate:
+			style = warningStyle
+		case configurator.ActionConflict:
+			style = errorStyle
+		}
+		prefix := style.Render(fmt.Sprintf("%-10s", truncate(state, 9)))
+		lines = append(lines, prefix+" "+truncate(
+			action.TargetPath,
+			maximum(1, width-lipgloss.Width(prefix)-1),
+		))
+		shown++
+	}
+	if total == 0 {
+		lines = append(lines, mutedStyle.Render("No existing manifest targets for this provider."))
+	} else if total > shown {
+		lines = append(lines, mutedStyle.Render(fmt.Sprintf(
+			"%d more existing targets; use agentctl plan --target %s for the full list.",
+			total-shown,
+			providerID,
+		)))
+	}
+	return lines
 }
 
 func displayTime(value string) string {

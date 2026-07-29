@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kagi-labs/agentctl/internal/configurator"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -25,7 +26,7 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	if model.Snapshot().Repository.Path != fixture.Repository.Path {
 		t.Fatalf("snapshot repository = %q", model.Snapshot().Repository.Path)
 	}
-	if !strings.Contains(model.View(), "STATE FIXTURES") {
+	if !strings.Contains(model.View(), "LEGACY FIXTURES") {
 		t.Fatalf("overview did not render:\n%s", model.View())
 	}
 
@@ -44,6 +45,7 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 		"PIPELINE DAG: DELIVERY",
 		"VERIFY --failed--> ANALYZE",
 		"REVIEW --changes--> RUN",
+		"Enter to inspect",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("pipeline view missing %q:\n%s", expected, view)
@@ -54,6 +56,25 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	model = updated.(Model)
 	if model.Cursor(TabPipelines) != 1 {
 		t.Fatalf("pipeline cursor = %d, want 1", model.Cursor(TabPipelines))
+	}
+}
+
+func TestFixtureTabIsExplicitlyLegacyDebugState(t *testing.T) {
+	t.Parallel()
+
+	if got := TabTasks.String(); got != "Fixtures" {
+		t.Fatalf("fixture tab name = %q, want Fixtures", got)
+	}
+
+	model := loadedAdminModel(t, TabTasks, 100, 28)
+	view := model.View()
+	for _, expected := range []string{
+		"LEGACY STATE FIXTURES",
+		"Not provider state, sessions, or live pipeline runs.",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("fixture view missing %q:\n%s", expected, view)
+		}
 	}
 }
 
@@ -86,6 +107,21 @@ func TestModelRenderingStaysWithinWidth(t *testing.T) {
 	}
 }
 
+func TestPipelineBranchRenderingDoesNotLeakANSIFragments(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 100, 32)
+	view := model.View()
+	for _, fragment := range []string{"[38;5;", "[0m"} {
+		if strings.Contains(view, fragment) {
+			t.Fatalf("pipeline view leaked ANSI fragment %q:\n%s", fragment, view)
+		}
+	}
+	if !strings.Contains(view, "VERIFY --failed--> ANALYZE") {
+		t.Fatalf("pipeline branch is missing:\n%s", view)
+	}
+}
+
 func TestPipelineLoopsAreVisibleAtCommonTerminalSize(t *testing.T) {
 	t.Parallel()
 
@@ -104,6 +140,91 @@ func TestPipelineLoopsAreVisibleAtCommonTerminalSize(t *testing.T) {
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("80x24 pipeline missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestPresetResourcePreviewCanBeOpenedAndNavigated(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 110, 36)
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"PRESET PROMPTS / RESOURCES",
+		"work-brief",
+		"# /work-brief",
+		"Summarize the current ticket.",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("resource preview missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyDown})
+	model = updated.(Model)
+	if view = model.View(); !strings.Contains(view, "# /work-plan") {
+		t.Fatalf("resource preview did not navigate:\n%s", view)
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	model = updated.(Model)
+	if view = model.View(); !strings.Contains(view, "PRESET LIBRARY") {
+		t.Fatalf("resource preview did not close:\n%s", view)
+	}
+}
+
+func TestProviderViewShowsRootsAndCurrentManagedTargets(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabProviders, 110, 36)
+	view := model.View()
+	for _, expected := range []string{
+		"CONFIG ROOTS",
+		"/home/user/.codex",
+		"CURRENT MANIFEST TARGETS",
+		".codex/commands/work-brief.md",
+		"Runtime and session files are excluded.",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("provider view missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Config.Conflicts = []configurator.Action{{
+		ResourceID:      "codex-brief",
+		Agent:           "claude",
+		TargetPath:      ".claude/commands/codex-brief.md",
+		SourcePath:      "/workspace/agentctl/config/workflow/codex-brief.md",
+		DestinationPath: "/home/user/.claude/commands/codex-brief.md",
+		State:           configurator.ActionConflict,
+		Reason:          "existing target is not managed by agentctl",
+	}}
+	fixture.Config.Counts.Conflict = 1
+
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabConfig
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 120, Height: 42})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"Agentctl preserves conflicts instead of overwriting them.",
+		"SELECTED CONFLICT",
+		"existing target is not managed by agentctl",
+		"/home/user/.claude/commands/codex-brief.md",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("config view missing %q:\n%s", expected, view)
 		}
 	}
 }
@@ -182,6 +303,13 @@ func adminFixture() Snapshot {
 					Headless:     true,
 					SafeHeadless: true,
 				},
+				ConfigRoots: []providers.RootState{{
+					Path:      "/home/user/.codex",
+					Purpose:   "Codex commands and settings",
+					Ownership: "mixed",
+					Required:  true,
+					Status:    "present",
+				}},
 				Capabilities: []string{"filesystem.read", "repository.read"},
 			},
 		},
@@ -229,6 +357,28 @@ func adminFixture() Snapshot {
 				Config: ConfigStatus{
 					Counts:      ActionCounts{Create: 10},
 					ActionCount: 10,
+				},
+				Resources: []ResourcePreview{
+					{
+						ID:      "work-brief",
+						Kind:    "command",
+						Source:  "config/workflow/phases/brief.md",
+						Content: "# /work-brief\n\nSummarize the current ticket.",
+						Targets: []configurator.Target{{
+							Agent: "codex",
+							Path:  ".codex/commands/work-brief.md",
+						}},
+					},
+					{
+						ID:      "work-plan",
+						Kind:    "command",
+						Source:  "config/workflow/phases/plan.md",
+						Content: "# /work-plan\n\nCreate the implementation plan.",
+						Targets: []configurator.Target{{
+							Agent: "codex",
+							Path:  ".codex/commands/work-plan.md",
+						}},
+					},
 				},
 			},
 			{
@@ -335,6 +485,23 @@ func adminFixture() Snapshot {
 					},
 				},
 			},
+			Actions: []configurator.Action{{
+				ResourceID: "work-brief",
+				Agent:      "codex",
+				TargetPath: ".codex/commands/work-brief.md",
+				State:      configurator.ActionUnchanged,
+				Reason:     "target matches source",
+			}},
 		},
 	}
+}
+
+func loadedAdminModel(t *testing.T, tab Tab, width, height int) Model {
+	t.Helper()
+	model := NewModel(func() Snapshot { return adminFixture() })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = tab
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: width, Height: height})
+	return updated.(Model)
 }

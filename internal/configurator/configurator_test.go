@@ -142,6 +142,9 @@ func TestBuildPlanClassifiesCreateUnchangedAndConflict(t *testing.T) {
 	if !plan.HasConflicts() {
 		t.Fatal("HasConflicts() = false, want true")
 	}
+	if got := plan.Actions[0].Reason; got != "existing target is not managed by agentctl" {
+		t.Fatalf("conflict reason = %q", got)
+	}
 }
 
 func TestAntigravityAliasProducesCanonicalPlanAndMigratesState(t *testing.T) {
@@ -271,6 +274,9 @@ func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 		t.Fatalf("BuildPlan(drift) error = %v", err)
 	}
 	assertOnlyAction(t, conflictPlan, ActionConflict)
+	if got := conflictPlan.Actions[0].Reason; got != "managed target changed since the last apply" {
+		t.Fatalf("conflict reason = %q", got)
+	}
 	if err := Apply(conflictPlan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrConflicts) {
 		t.Fatalf("Apply(conflict) error = %v, want ErrConflicts", err)
 	}

@@ -58,6 +58,18 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 		if preset.Config.ActionCount == 0 {
 			t.Fatalf("preset %q has no scoped plan actions", preset.Preset.ID)
 		}
+		if len(preset.Resources) == 0 {
+			t.Fatalf("preset %q has no resource previews", preset.Preset.ID)
+		}
+		for _, resource := range preset.Resources {
+			if resource.Content == "" {
+				t.Fatalf(
+					"preset %q resource %q has empty preview",
+					preset.Preset.ID,
+					resource.ID,
+				)
+			}
+		}
 	}
 	if !snapshot.LoadedAt.Equal(loadedAt) {
 		t.Fatalf("loaded at = %s, want %s", snapshot.LoadedAt, loadedAt)

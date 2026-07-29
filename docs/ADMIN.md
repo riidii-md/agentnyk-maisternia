@@ -83,29 +83,31 @@ Which provider targets are declared?
 What will change if this preset is applied?
 ```
 
+Press `Enter` to open the preset's managed prompt/resource source browser.
+Use `j`/`k` to move between resources and `Page Up`/`Page Down` to scroll
+source text. The browser shows the canonical repository source and its rendered
+provider targets; it does not read content back from provider session storage.
+
 It must not present a preset pipeline as a live run, mark phases active, choose
 the next agent, or dispatch work. If legacy task-state fixtures are present,
 they may be shown only as schema/debug information, not as runtime control.
 
-### State Fixtures
+### Legacy Fixtures
 
 Shows experimental local state files only when they exist. This view is for
 schema/debug inspection while configuration authoring matures. It is not a task
-monitor, approval queue, or run observer.
+monitor, approval queue, provider status view, session browser, or run observer.
 
 ### Providers / Existing Provider Config
 
 Shows existing Codex, Claude, Antigravity, Hermes, Kaji, and future-harness
-configuration roots and files. This is separate from the preset library. The view
-should classify files as managed, unmanaged, conflicting, unknown, or ignored so
-the user can decide what to import, preserve, or overwrite. It must not inspect
-or copy provider runtime caches, sessions, transcripts, histories, credentials,
-or secrets.
-
-Shows Codex, Claude, Antigravity, Hermes, Kaji, and future-harness executable
-health, version, configuration roots, render capabilities, and inspection issues.
-Refresh runs the same bounded, read-only version inspection used by
-`agentctl provider doctor`.
+configuration roots and existing manifest target paths. This is separate from the
+preset library. The view shows executable health, version, exact declared
+configuration roots, render capabilities, inspection issues, and the current
+unchanged/update/conflict classification of existing manifest targets. It does
+not recursively enumerate or copy provider runtime caches, sessions, transcripts,
+histories, credentials, or secrets. Refresh runs the same bounded, read-only
+inspection used by `agentctl provider doctor` and configuration planning.
 
 ### Config
 
@@ -124,6 +126,12 @@ agentctl preset plan standard-work
 agentctl preset apply --yes standard-work
 ```
 
+An unmanaged conflict means a file already exists at a declared target but
+agentctl has no install-state ownership record for it. A changed managed conflict
+means agentctl previously installed the file and its current checksum no longer
+matches that record. Both are preserved until the user explicitly resolves the
+difference.
+
 ## Keys
 
 | Key | Action |
@@ -133,6 +141,8 @@ agentctl preset apply --yes standard-work
 | Left/Right or `h`/`l` | Switch views |
 | Up/Down or `j`/`k` | Move selection |
 | `g`, `G` | First or last item |
+| `Enter` | Inspect a preset's prompt/resource source |
+| `Page Up`, `Page Down` | Scroll prompt/resource source |
 | `r` | Refresh all read-only state |
 | `?`, `Esc` | Open or close help |
 | `q`, `Ctrl+C` | Quit |
@@ -144,16 +154,27 @@ session.
 ## Current Boundary
 
 The TUI is a configuration studio. Runtime automation is deliberately outside
-its scope. The preset library and DAG browser are implemented. Future work
-should add:
+its scope. The preset library, DAG browser, source preview, provider inspection,
+and conflict explanation are implemented.
+
+Pipeline and step editing should be delivered in a separate change because it
+introduces writes. That editor should:
+
+1. Edit repository preset data, never provider files directly.
+2. Work on an in-memory draft until the user asks to save.
+3. Validate preset schema, phase references, edges, entry phases, loop markers,
+   manifest resource references, and provider targets before save.
+4. Show the exact JSON/file diff and resulting provider plan before confirmation.
+5. Write atomically and retain a recoverable previous version.
+6. Keep applying provider configuration as a separate explicit action.
+
+Other future work should add:
 
 - create, copy, edit, and delete actions in the TUI;
 - structured workflow/pipeline DAG editing inside presets;
 - MCP/config bundle editing inside presets;
-- existing provider-configuration inspection;
 - provider-native render previews;
 - structured settings merge and ownership;
-- drift and conflict explanation;
 - safe explicit apply flows.
 
 Do not add hidden run control, live observation, approval queues, dispatch, or

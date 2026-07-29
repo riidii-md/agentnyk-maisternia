@@ -22,7 +22,7 @@ const (
 var tabNames = []string{
 	"Overview",
 	"Presets",
-	"State",
+	"Fixtures",
 	"Providers",
 	"Config",
 }
@@ -40,6 +40,10 @@ type Model struct {
 	height   int
 	loading  bool
 	help     bool
+
+	presetPreview        bool
+	presetResourceCursor int
+	presetContentOffset  int
 }
 
 type RunOptions struct {
@@ -92,7 +96,21 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "?":
 			m.help = !m.help
 		case "esc":
-			m.help = false
+			if m.help {
+				m.help = false
+			} else if m.presetPreview {
+				m.presetPreview = false
+				m.presetResourceCursor = 0
+				m.presetContentOffset = 0
+			}
+		case "enter":
+			if m.tab == TabPipelines &&
+				!m.presetPreview &&
+				len(m.selectedPresetResources()) > 0 {
+				m.presetPreview = true
+				m.presetResourceCursor = 0
+				m.presetContentOffset = 0
+			}
 		case "r":
 			if !m.loading {
 				m.loading = true
@@ -100,28 +118,60 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "tab", "right", "l":
 			m.help = false
+			m.closePresetPreview()
 			m.tab = (m.tab + 1) % tabCount
 			m.clampCursor()
 		case "shift+tab", "left", "h":
 			m.help = false
+			m.closePresetPreview()
 			m.tab = (m.tab + tabCount - 1) % tabCount
 			m.clampCursor()
 		case "1", "2", "3", "4", "5":
 			m.help = false
+			m.closePresetPreview()
 			m.tab = Tab(int(message.Runes[0] - '1'))
 			m.clampCursor()
 		case "up", "k":
-			if m.cursor[m.tab] > 0 {
+			if m.presetPreview && m.tab == TabPipelines {
+				if m.presetResourceCursor > 0 {
+					m.presetResourceCursor--
+					m.presetContentOffset = 0
+				}
+			} else if m.cursor[m.tab] > 0 {
 				m.cursor[m.tab]--
 			}
 		case "down", "j":
-			if m.cursor[m.tab] < m.itemCount()-1 {
+			if m.presetPreview && m.tab == TabPipelines {
+				if m.presetResourceCursor < len(m.selectedPresetResources())-1 {
+					m.presetResourceCursor++
+					m.presetContentOffset = 0
+				}
+			} else if m.cursor[m.tab] < m.itemCount()-1 {
 				m.cursor[m.tab]++
 			}
+		case "pgup", "ctrl+u":
+			if m.presetPreview {
+				m.presetContentOffset = maximum(0, m.presetContentOffset-10)
+			}
+		case "pgdown", "ctrl+d":
+			if m.presetPreview {
+				m.presetContentOffset += 10
+				m.clampPresetContentOffset()
+			}
 		case "home", "g":
-			m.cursor[m.tab] = 0
+			if m.presetPreview {
+				m.presetResourceCursor = 0
+				m.presetContentOffset = 0
+			} else {
+				m.cursor[m.tab] = 0
+			}
 		case "end", "G":
-			if count := m.itemCount(); count > 0 {
+			if m.presetPreview {
+				if count := len(m.selectedPresetResources()); count > 0 {
+					m.presetResourceCursor = count - 1
+					m.presetContentOffset = 0
+				}
+			} else if count := m.itemCount(); count > 0 {
 				m.cursor[m.tab] = count - 1
 			}
 		}
@@ -178,6 +228,47 @@ func (m *Model) clampCursor() {
 	if m.cursor[m.tab] >= count {
 		m.cursor[m.tab] = count - 1
 	}
+	m.clampPresetResourceCursor()
+}
+
+func (m *Model) clampPresetResourceCursor() {
+	resources := m.selectedPresetResources()
+	if len(resources) == 0 {
+		m.presetResourceCursor = 0
+		m.presetContentOffset = 0
+		return
+	}
+	if m.presetResourceCursor >= len(resources) {
+		m.presetResourceCursor = len(resources) - 1
+		m.presetContentOffset = 0
+	}
+}
+
+func (m *Model) clampPresetContentOffset() {
+	resources := m.selectedPresetResources()
+	if len(resources) == 0 {
+		m.presetContentOffset = 0
+		return
+	}
+	lines := strings.Split(resources[m.presetResourceCursor].Content, "\n")
+	last := maximum(0, len(lines)-10)
+	if m.presetContentOffset > last {
+		m.presetContentOffset = last
+	}
+}
+
+func (m *Model) closePresetPreview() {
+	m.presetPreview = false
+	m.presetResourceCursor = 0
+	m.presetContentOffset = 0
+}
+
+func (m Model) selectedPresetResources() []ResourcePreview {
+	index := m.cursor[TabPipelines]
+	if index < 0 || index >= len(m.snapshot.Presets) {
+		return nil
+	}
+	return m.snapshot.Presets[index].Resources
 }
 
 func (m Model) itemCount() int {

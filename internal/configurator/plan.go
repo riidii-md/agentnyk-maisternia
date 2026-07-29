@@ -104,7 +104,11 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 				action.Reason = "managed target has a new source version"
 			} else {
 				action.State = ActionConflict
-				action.Reason = "target is unmanaged or changed since the last apply"
+				if managed {
+					action.Reason = "managed target changed since the last apply"
+				} else {
+					action.Reason = "existing target is not managed by agentctl"
+				}
 			}
 			plan.Actions = append(plan.Actions, action)
 		}
