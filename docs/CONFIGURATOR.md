@@ -298,8 +298,8 @@ ownership and conflict behavior are proven.
 4. Add `import` into a staging directory.
 5. Add `diff`, `backup`, and rollback subcommands.
 6. Add profiles, local overlays, and plugin or skill lockfiles.
-7. Resolve runtime requirements against provider capability contracts.
-8. Add controlled provider-neutral dispatch.
+7. Resolve render requirements against provider capability contracts.
+8. Add pipeline authoring and provider-native render previews.
 
 The first task-state and manual event-ingestion increment is implemented
 separately from provider configuration. See

@@ -74,11 +74,11 @@ homebrew_casks:
     repository:
       owner: kagi-labs
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      token: '{{ envOrDefault "HOMEBREW_TAP_TOKEN" "" }}'
     directory: Casks
     homepage: https://github.com/kagi-labs/agentctl
-    description: Provider-neutral workflow and safe configuration manager for CLI coding agents
-    skip_upload: '{{ if eq .Env.HOMEBREW_TAP_TOKEN "" }}true{{ else }}auto{{ end }}'
+    description: Provider-neutral pipeline configurator for CLI coding agent harnesses
+    skip_upload: '{{ if eq (envOrDefault "HOMEBREW_TAP_TOKEN" "") "" }}true{{ else }}auto{{ end }}'
     custom_block: |
       require "download_strategy"
 
