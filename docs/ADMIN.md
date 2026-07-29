@@ -2,17 +2,19 @@
 
 ## Purpose
 
-`agentctl admin` is a read-only terminal control surface for the local
-agentctl installation. It brings together:
+`agentctl admin` is a terminal configuration surface for the local
+agentctl installation. It is for designing, previewing, and applying provider
+configuration, not for running or observing agent work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
-- durable workflow tasks and approval state;
-- pipeline phases, trigger branches, and verification loops;
-- managed configuration drift and conflicts.
+- pipeline templates and provider render targets;
+- managed configuration drift and conflicts;
+- provider mappings for generated commands, prompts, skills, and settings.
 
-The interface does not approve work, apply configuration, dispatch an agent,
-commit, push, open a pull request, or perform external writes.
+The interface does not approve work, dispatch an agent, watch live runs, infer
+next actions, commit, push, or open a pull request. Applying configuration must
+remain an explicit preview-and-confirm operation.
 
 ## Configure The Repository
 
@@ -60,53 +62,35 @@ The settings file contains only the repository path and schema version.
 
 ### Overview
 
-Shows repository readiness, healthy provider count, active and waiting tasks,
-configuration drift, and current attention items.
+Shows repository readiness, healthy provider count, available pipeline
+templates, configuration drift, and current render/apply attention items.
 
 ### Pipelines
 
-Shows the selected task's known current phase and the configured policy
-topology:
+Shows reusable pipeline templates, their phases, and the provider targets they
+can render to. This view answers configuration questions:
 
 ```text
-DISCOVERY  BRIEF -> SCOUT -> ANALYZE -> RESEARCH -> DECIDE
-READINESS  READY -> PLAN -> PROVE -> HANDOFF -> APPROVAL
-EXECUTION  RUN -> VERIFY -> REVIEW -> PR
+Which pipelines exist?
+Which provider commands/skills/prompts will be generated?
+Which phases are missing provider mappings?
+What will change if this pipeline is applied?
 ```
 
-The view also shows trigger entry branches and the planned control loops:
+It must not present a pipeline as a live run, mark phases active, choose the next
+agent, or dispatch work. If legacy task-state fixtures are present, they may be
+shown only as schema/debug information, not as runtime control.
 
-```text
-READY not ready -> RESEARCH
-VERIFY failed   -> ANALYZE
-REVIEW changes  -> RUN
-```
+### State Fixtures
 
-For `shape` tasks, the same view switches to the idea-shaping topology and adds
-source inbox and grill summaries:
-
-```text
-DISCOVERY  INTAKE -> RESEARCH -> GRILL -> BRAINSTORM
-CONVERGE   CHALLENGE -> DECIDE -> PLAN -> FINAL -> HUMAN FINALIZE
-
-SOURCE INBOX  4 total  1 unread  1 material
-GRILL STATE   3 total  2 open    1 critical
-```
-
-Shape loops are guarded by recorded outcomes and a pass budget. Other pipeline
-loops still describe policy topology and are not automatically executed. Only
-the current phase is marked active because completed-phase history is not yet
-projected into the TUI.
-
-### Tasks
-
-Lists durable task state from `~/.agent-workflow` and shows the selected task's
-repository, phase, authority, approval status, next action, and update time.
+Shows experimental local state files only when they exist. This view is for
+schema/debug inspection while configuration authoring matures. It is not a task
+monitor, approval queue, or run observer.
 
 ### Providers
 
 Shows Codex, Claude, Antigravity, and Hermes executable health, version,
-runner support, configuration roots, capabilities, and inspection issues.
+configuration roots, render capabilities, and inspection issues.
 Refresh runs the same bounded, read-only version inspection used by
 `agentctl provider doctor`.
 
@@ -139,15 +123,14 @@ session.
 
 ## Current Boundary
 
-The TUI is an observational admin surface. Controlled automation still
-requires additional runtime work:
+The TUI is a configuration studio. Runtime automation is deliberately outside
+its scope. Future work should improve:
 
-- concrete runner capability resolution;
-- generalized durable outcomes beyond the shape transition history;
-- explicit approval records;
-- bounded read-only dispatch;
-- write-phase leases, budgets, and cancellation;
-- artifact registration with `mdmaid.show`.
+- pipeline template authoring;
+- provider-native render previews;
+- structured settings merge and ownership;
+- drift and conflict explanation;
+- safe explicit apply flows.
 
-Those features must extend the workflow state machine. They must not be hidden
-inside terminal key handlers.
+Do not add hidden run control, live observation, approval queues, dispatch, or
+agent-session management to terminal key handlers.

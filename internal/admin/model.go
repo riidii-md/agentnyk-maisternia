@@ -22,7 +22,7 @@ const (
 var tabNames = []string{
 	"Overview",
 	"Pipelines",
-	"Tasks",
+	"State",
 	"Providers",
 	"Config",
 }

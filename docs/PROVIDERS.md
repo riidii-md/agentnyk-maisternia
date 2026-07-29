@@ -13,7 +13,7 @@ Provider adapters are checked-in capability contracts. They answer:
 - where its configuration lives;
 - which resource types it understands;
 - how to detect its executable and version;
-- whether headless execution is available and safe to automate;
+- whether headless execution metadata exists for downstream harnesses;
 - which authority modes may be requested;
 - which output formats can be parsed.
 
@@ -81,7 +81,7 @@ An adapter has four operational parts:
 |---|---|
 | Renderer | Configuration roots and resource kinds |
 | Inspector | Executable discovery, version parsing, native doctor metadata |
-| Runner | Headless safety, authority boundaries, output formats |
+| Runner metadata | Headless safety metadata, authority boundaries, output formats |
 | Parser | Accepted result formats and structured-output support |
 
 Capabilities are facts, not preferences. Workflow routing may eventually
@@ -179,5 +179,5 @@ The next useful implementation step is renderer mapping:
 3. support structured settings merge with key ownership;
 4. render all output to staging before apply;
 5. add provider-specific validation fixtures;
-6. leave runtime dispatch disabled until capability resolution and approval
-   policy are complete.
+6. keep runtime dispatch out of `agentctl`; provider execution belongs to the
+   external harness after configuration is rendered and applied.
