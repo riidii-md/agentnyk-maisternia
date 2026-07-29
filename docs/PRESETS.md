@@ -119,12 +119,32 @@ agentctl preset render \
   standard-work
 
 agentctl preset apply --target codex --yes standard-work
+
+# Preserve customized target files and apply everything else.
+agentctl preset apply \
+  --target codex \
+  --conflicts keep \
+  --yes \
+  codex-compatibility
+
+# Back up customized files and replace them with preset versions.
+agentctl preset apply \
+  --target codex \
+  --conflicts replace \
+  --yes \
+  codex-compatibility
 ```
 
 These commands select only the manifest resources declared by the preset. They
 delegate to the same configurator used by full-manifest operations, preserving
 target allowlists, symlink checks, managed install state, drift detection,
 conflict detection, backups, atomic writes, and explicit confirmation.
+
+Conflict handling defaults to `abort`. `keep` records the exact source and
+target checksums behind the decision, so the target is reported as `IGNORED`
+instead of blocking later applies. If either side changes, the decision becomes
+stale and agentctl requires a new decision. `replace` backs up each target before
+installing and managing the preset version.
 
 `agentctl` stops after rendering or installing configuration. Claude Code,
 Codex CLI, Hermes, and Antigravity own execution, sessions, approvals, history,

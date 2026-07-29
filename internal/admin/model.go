@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/kagi-labs/agentctl/internal/configurator"
 )
 
 type Tab int
@@ -31,15 +32,42 @@ type loadSnapshotMsg struct {
 	snapshot Snapshot
 }
 
-type Model struct {
-	loader   func() Snapshot
+type applyPresetMsg struct {
+	presetID string
 	snapshot Snapshot
-	tab      Tab
-	cursor   map[Tab]int
-	width    int
-	height   int
-	loading  bool
-	help     bool
+	err      error
+}
+
+type applyStage string
+
+const (
+	applyChoose   applyStage = "choose"
+	applyConfirm  applyStage = "confirm"
+	applyRunning  applyStage = "running"
+	applyComplete applyStage = "complete"
+)
+
+type presetApplyDialog struct {
+	Stage    applyStage
+	PresetID string
+	Name     string
+	Targets  []string
+	Counts   ActionCounts
+	Policy   configurator.ConflictPolicy
+	Err      error
+}
+
+type Model struct {
+	loader      func() Snapshot
+	applyPreset func(string, configurator.ConflictPolicy) error
+	snapshot    Snapshot
+	tab         Tab
+	cursor      map[Tab]int
+	width       int
+	height      int
+	loading     bool
+	help        bool
+	applyDialog presetApplyDialog
 
 	presetPreview        bool
 	presetResourceCursor int
@@ -47,14 +75,16 @@ type Model struct {
 }
 
 type RunOptions struct {
-	Input     io.Reader
-	Output    io.Writer
-	Loader    func() Snapshot
-	AltScreen bool
+	Input       io.Reader
+	Output      io.Writer
+	Loader      func() Snapshot
+	ApplyPreset func(string, configurator.ConflictPolicy) error
+	AltScreen   bool
 }
 
 func Run(options RunOptions) error {
 	model := NewModel(options.Loader)
+	model.applyPreset = options.ApplyPreset
 	programOptions := []tea.ProgramOption{
 		tea.WithInput(options.Input),
 		tea.WithOutput(options.Output),
@@ -89,7 +119,21 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.clampCursor()
 		return m, nil
+	case applyPresetMsg:
+		if m.applyDialog.PresetID != message.presetID {
+			return m, nil
+		}
+		m.applyDialog.Stage = applyComplete
+		m.applyDialog.Err = message.err
+		if message.err == nil {
+			m.snapshot = message.snapshot
+			m.clampCursor()
+		}
+		return m, nil
 	case tea.KeyMsg:
+		if m.applyDialog.Stage != "" {
+			return m.updateApplyDialog(message)
+		}
 		switch message.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -110,6 +154,10 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.presetPreview = true
 				m.presetResourceCursor = 0
 				m.presetContentOffset = 0
+			}
+		case "a":
+			if m.tab == TabPipelines && !m.presetPreview {
+				m.openPresetApply()
 			}
 		case "r":
 			if !m.loading {
@@ -177,6 +225,94 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, nil
+}
+
+func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
+	key := message.String()
+	if m.applyDialog.Stage == applyRunning {
+		return m, nil
+	}
+	if key == "ctrl+c" || key == "q" {
+		return m, tea.Quit
+	}
+	if m.applyDialog.Stage == applyComplete {
+		if key == "enter" || key == "esc" {
+			m.applyDialog = presetApplyDialog{}
+		}
+		return m, nil
+	}
+	if key == "esc" || key == "n" {
+		m.applyDialog = presetApplyDialog{}
+		return m, nil
+	}
+	switch m.applyDialog.Stage {
+	case applyChoose:
+		switch key {
+		case "k":
+			m.applyDialog.Policy = configurator.ConflictKeep
+			m.applyDialog.Stage = applyConfirm
+		case "x":
+			m.applyDialog.Policy = configurator.ConflictReplace
+			m.applyDialog.Stage = applyConfirm
+		}
+	case applyConfirm:
+		if key == "b" && m.applyDialog.Counts.Conflict > 0 {
+			m.applyDialog.Stage = applyChoose
+			m.applyDialog.Policy = configurator.ConflictAbort
+			return m, nil
+		}
+		if key == "y" {
+			m.applyDialog.Stage = applyRunning
+			return m, m.applyPresetCommand()
+		}
+	}
+	return m, nil
+}
+
+func (m *Model) openPresetApply() {
+	index := m.cursor[TabPipelines]
+	if index < 0 || index >= len(m.snapshot.Presets) {
+		return
+	}
+	status := m.snapshot.Presets[index]
+	stage := applyConfirm
+	if status.Config.Counts.Conflict > 0 {
+		stage = applyChoose
+	}
+	m.applyDialog = presetApplyDialog{
+		Stage:    stage,
+		PresetID: status.Preset.ID,
+		Name:     status.Preset.Name,
+		Targets:  append([]string(nil), status.Preset.Targets...),
+		Counts:   status.Config.Counts,
+		Policy:   configurator.ConflictAbort,
+	}
+}
+
+func (m Model) applyPresetCommand() tea.Cmd {
+	presetID := m.applyDialog.PresetID
+	policy := m.applyDialog.Policy
+	applyPreset := m.applyPreset
+	loader := m.loader
+	return func() tea.Msg {
+		if applyPreset == nil {
+			return applyPresetMsg{
+				presetID: presetID,
+				err:      fmt.Errorf("preset apply is not configured"),
+			}
+		}
+		if err := applyPreset(presetID, policy); err != nil {
+			return applyPresetMsg{presetID: presetID, err: err}
+		}
+		var snapshot Snapshot
+		if loader != nil {
+			snapshot = loader()
+		}
+		return applyPresetMsg{
+			presetID: presetID,
+			snapshot: snapshot,
+		}
+	}
 }
 
 func (m Model) View() string {

@@ -58,7 +58,9 @@ func (m Model) render(width, height int) string {
 	}
 
 	var body string
-	if m.help {
+	if m.applyDialog.Stage != "" {
+		body = m.renderPresetApplyDialog(width)
+	} else if m.help {
 		body = m.renderHelp(width)
 	} else {
 		switch m.tab {
@@ -133,6 +135,20 @@ func (m Model) renderTabs(width int) string {
 }
 
 func (m Model) renderFooter(width int) string {
+	if m.applyDialog.Stage != "" {
+		var keys string
+		switch m.applyDialog.Stage {
+		case applyChoose:
+			keys = "k keep existing  x replace from preset  esc cancel"
+		case applyConfirm:
+			keys = "y apply  b back  esc cancel"
+		case applyRunning:
+			keys = "applying preset..."
+		case applyComplete:
+			keys = "enter close  q quit"
+		}
+		return mutedStyle.Render(truncate(keys, width))
+	}
 	if m.presetPreview {
 		return mutedStyle.Render(truncate(
 			"j/k resource  pgup/pgdn scroll prompt  esc back  ? help  q quit",
@@ -141,12 +157,12 @@ func (m Model) renderFooter(width int) string {
 	}
 	keys := "1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
-		keys = "enter inspect  1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+		keys = "a apply  enter inspect  1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	}
 	if width < 72 {
 		keys = "1-5 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
-			keys = "enter inspect  1-5 view  j/k select  r refresh  q quit"
+			keys = "a apply  enter inspect  1-5 view  j/k select  r refresh  q quit"
 		}
 	}
 	return mutedStyle.Render(truncate(keys, width))
@@ -184,10 +200,11 @@ func (m Model) renderOverview(width int) string {
 		metric(
 			"Configuration",
 			fmt.Sprintf(
-				"%d unchanged, %d create, %d update, %d conflict",
+				"%d unchanged, %d create, %d update, %d kept, %d conflict",
 				counts.Unchanged,
 				counts.Create,
 				counts.Update,
+				counts.Ignored,
 				counts.Conflict,
 			),
 			width,
@@ -271,6 +288,12 @@ func (m Model) renderPipelines(width int) string {
 	sections := []string{
 		section("PRESET LIBRARY", rows, width),
 		section(strings.ToUpper(preset.Name), details, width),
+	}
+	if width >= 90 {
+		sections = append(sections, section("ACTIONS", []string{
+			"a  Apply preset",
+			"Enter  Inspect prompt/resource source",
+		}, width))
 	}
 
 	if len(preset.Pipelines) == 0 {
@@ -390,12 +413,97 @@ func presetContentSummary(contents presets.Contents) string {
 
 func actionCountSummary(counts ActionCounts) string {
 	return fmt.Sprintf(
-		"%d unchanged, %d create, %d update, %d conflict",
+		"%d unchanged, %d create, %d update, %d kept, %d conflict",
 		counts.Unchanged,
 		counts.Create,
 		counts.Update,
+		counts.Ignored,
 		counts.Conflict,
 	)
+}
+
+func (m Model) renderPresetApplyDialog(width int) string {
+	dialog := m.applyDialog
+	summary := []string{
+		metric("Preset", dialog.Name+" ("+dialog.PresetID+")", width),
+		metric("Targets", strings.Join(dialog.Targets, ", "), width),
+		metric("Plan", actionCountSummary(dialog.Counts), width),
+	}
+	var action []string
+	switch dialog.Stage {
+	case applyChoose:
+		action = []string{
+			warningStyle.Render(truncate(fmt.Sprintf(
+				"%d unresolved conflicts require your decision.",
+				dialog.Counts.Conflict,
+			), width)),
+			"",
+			"k  Keep existing",
+			mutedStyle.Render(truncate(
+				"   Preserve customized files, remember the decision, and apply the rest.",
+				width,
+			)),
+			"x  Replace from preset",
+			mutedStyle.Render(truncate(
+				"   Back up customized files, then install and manage the preset versions.",
+				width,
+			)),
+			"",
+			"Esc  Cancel without changing files",
+		}
+	case applyConfirm:
+		decision := "APPLY READY CHANGES"
+		description := "No unresolved conflicts; apply the planned preset changes."
+		switch dialog.Policy {
+		case configurator.ConflictKeep:
+			decision = "KEEP EXISTING"
+			description = fmt.Sprintf(
+				"Preserve and remember %d customized files; apply all other changes.",
+				dialog.Counts.Conflict,
+			)
+		case configurator.ConflictReplace:
+			decision = "REPLACE FROM PRESET"
+			description = fmt.Sprintf(
+				"Back up and replace %d customized files; apply all other changes.",
+				dialog.Counts.Conflict,
+			)
+		}
+		action = []string{
+			activeStyle.Render(decision),
+			truncate(description, width),
+			"",
+			warningStyle.Render(truncate(
+				"Press y to apply. Press Esc to cancel.",
+				width,
+			)),
+		}
+	case applyRunning:
+		action = []string{
+			activeStyle.Render("Applying preset..."),
+			mutedStyle.Render(truncate(
+				"Plans are rechecked before each file is changed.",
+				width,
+			)),
+		}
+	case applyComplete:
+		if dialog.Err != nil {
+			action = []string{
+				errorStyle.Render("Preset apply failed"),
+				truncate(dialog.Err.Error(), width),
+				mutedStyle.Render(truncate(
+					"Review the error and refresh before retrying.",
+					width,
+				)),
+			}
+		} else {
+			action = []string{
+				goodStyle.Render("Preset applied"),
+				"Configuration state has been refreshed.",
+			}
+		}
+	}
+	return section("APPLY PRESET", summary, width) + "\n\n" +
+		section("DECISION", action, width)
 }
 
 func renderPresetPhaseChain(pipeline presets.Pipeline, width int) []string {
@@ -624,16 +732,18 @@ func (m Model) renderConfig(width int) string {
 		metric("Unchanged", fmt.Sprint(counts.Unchanged), width),
 		metric("Create", fmt.Sprint(counts.Create), width),
 		metric("Update", fmt.Sprint(counts.Update), width),
+		metric("Kept existing", fmt.Sprint(counts.Ignored), width),
 		metric("Conflict", fmt.Sprint(counts.Conflict), width),
 	}
 	var providersRows []string
 	for _, provider := range m.snapshot.Config.ByProvider {
 		line := fmt.Sprintf(
-			"%-16s unchanged %-4d create %-4d update %-4d conflict %-4d",
+			"%-16s unchanged %-4d create %-4d update %-4d kept %-4d conflict %-4d",
 			provider.Provider,
 			provider.Counts.Unchanged,
 			provider.Counts.Create,
 			provider.Counts.Update,
+			provider.Counts.Ignored,
 			provider.Counts.Conflict,
 		)
 		providersRows = append(providersRows, truncate(line, width))
@@ -692,6 +802,7 @@ func (m Model) renderHelp(width int) string {
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
 		"enter            inspect preset prompt/resource source",
+		"a                apply selected preset",
 		"pgup / pgdown    scroll prompt/resource source",
 		"r                refresh configuration state",
 		"? / esc          toggle or close help",
@@ -848,6 +959,8 @@ func (m Model) renderProviderTargets(providerID string, width int) []string {
 		switch action.State {
 		case configurator.ActionUnchanged:
 			style = goodStyle
+		case configurator.ActionIgnored:
+			style = activeStyle
 		case configurator.ActionUpdate:
 			style = warningStyle
 		case configurator.ActionConflict:

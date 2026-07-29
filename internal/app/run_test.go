@@ -842,6 +842,107 @@ func TestRunPresetPlanRenderAndApply(t *testing.T) {
 	}
 }
 
+func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	targetRelative := filepath.Join(".codex", "commands", "work-experiment.md")
+
+	t.Run("keep existing", func(t *testing.T) {
+		home := t.TempDir()
+		target := filepath.Join(home, targetRelative)
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte("custom command"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		var stdout, stderr bytes.Buffer
+		code := Run([]string{
+			"preset", "apply",
+			"--repo", repo,
+			"--home", home,
+			"--target", "codex",
+			"--conflicts", "keep",
+			"--yes",
+			"scored-experiment",
+		}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("preset apply keep code = %d, stderr = %s", code, stderr.String())
+		}
+		data, err := os.ReadFile(target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(data); got != "custom command" {
+			t.Fatalf("kept target = %q", got)
+		}
+
+		stdout.Reset()
+		stderr.Reset()
+		code = Run([]string{
+			"preset", "plan",
+			"--repo", repo,
+			"--home", home,
+			"--target", "codex",
+			"scored-experiment",
+		}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("preset plan after keep code = %d, stderr = %s", code, stderr.String())
+		}
+		if !strings.Contains(stdout.String(), "IGNORED") {
+			t.Fatalf("preset plan after keep = %q, want IGNORED", stdout.String())
+		}
+	})
+
+	t.Run("replace from preset", func(t *testing.T) {
+		home := t.TempDir()
+		target := filepath.Join(home, targetRelative)
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte("custom command"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		var stdout, stderr bytes.Buffer
+		code := Run([]string{
+			"preset", "apply",
+			"--repo", repo,
+			"--home", home,
+			"--target", "codex",
+			"--conflicts", "replace",
+			"--yes",
+			"scored-experiment",
+		}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("preset apply replace code = %d, stderr = %s", code, stderr.String())
+		}
+		data, err := os.ReadFile(target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(data); got == "custom command" {
+			t.Fatalf("replace left target unchanged")
+		}
+		backups, err := filepath.Glob(filepath.Join(
+			home,
+			".config",
+			"agentctl",
+			"backups",
+			"*",
+			targetRelative,
+		))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(backups) != 1 {
+			t.Fatalf("replace backups = %v, want one", backups)
+		}
+	})
+}
+
 func TestRunEventRejectsUnsupportedTriggerWithoutWriting(t *testing.T) {
 	t.Parallel()
 

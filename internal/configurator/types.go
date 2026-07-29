@@ -7,7 +7,7 @@ import (
 
 const (
 	ManifestSchemaVersion = 1
-	StateSchemaVersion    = 1
+	StateSchemaVersion    = 2
 	maxManagedFileSize    = 2 << 20
 )
 
@@ -39,7 +39,16 @@ const (
 	ActionCreate    ActionState = "create"
 	ActionUnchanged ActionState = "unchanged"
 	ActionUpdate    ActionState = "update"
+	ActionIgnored   ActionState = "ignored"
 	ActionConflict  ActionState = "conflict"
+)
+
+type ConflictPolicy string
+
+const (
+	ConflictAbort   ConflictPolicy = "abort"
+	ConflictKeep    ConflictPolicy = "keep"
+	ConflictReplace ConflictPolicy = "replace"
 )
 
 type Action struct {
@@ -69,17 +78,27 @@ func (p Plan) HasConflicts() bool {
 }
 
 type ApplyOptions struct {
-	Confirmed bool
-	Now       func() time.Time
+	Confirmed      bool
+	ConflictPolicy ConflictPolicy
+	Now            func() time.Time
 }
 
 type installState struct {
-	SchemaVersion int                          `json:"schema_version"`
-	Resources     map[string]installedResource `json:"resources"`
+	SchemaVersion int                           `json:"schema_version"`
+	Resources     map[string]installedResource  `json:"resources"`
+	Resolutions   map[string]conflictResolution `json:"conflict_resolutions,omitempty"`
 }
 
 type installedResource struct {
 	Checksum  string    `json:"checksum"`
 	Source    string    `json:"source"`
 	Installed time.Time `json:"installed_at"`
+}
+
+type conflictResolution struct {
+	Decision       ConflictPolicy `json:"decision"`
+	TargetChecksum string         `json:"target_checksum"`
+	SourceChecksum string         `json:"source_checksum"`
+	Source         string         `json:"source"`
+	DecidedAt      time.Time      `json:"decided_at"`
 }

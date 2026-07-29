@@ -42,6 +42,7 @@ type ActionCounts struct {
 	Create    int
 	Update    int
 	Unchanged int
+	Ignored   int
 	Conflict  int
 }
 
@@ -269,6 +270,51 @@ func (l Loader) Load() Snapshot {
 	return snapshot
 }
 
+func (l Loader) ApplyPreset(
+	presetID string,
+	policy configurator.ConflictPolicy,
+) error {
+	selection, err := l.resolveRepository()
+	if err != nil {
+		return err
+	}
+	if selection.Path == "" {
+		return errors.New("repository is not configured")
+	}
+	manifest, err := configurator.LoadManifest(
+		selection.Path,
+		"config/manifest.json",
+	)
+	if err != nil {
+		return err
+	}
+	library, err := presets.LoadLibrary(selection.Path)
+	if err != nil {
+		return err
+	}
+	preset, exists := library.Get(presetID)
+	if !exists {
+		return fmt.Errorf("preset %q does not exist", presetID)
+	}
+	selected, err := presets.SelectManifest(preset, manifest)
+	if err != nil {
+		return err
+	}
+	plan, err := configurator.BuildPlan(
+		selection.Path,
+		l.Home,
+		selected,
+		"all",
+	)
+	if err != nil {
+		return err
+	}
+	return configurator.Apply(plan, configurator.ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: policy,
+	})
+}
+
 func (l Loader) resolveRepository() (RepositorySelection, error) {
 	cwd := l.Cwd
 	if strings.TrimSpace(cwd) == "" {
@@ -422,6 +468,8 @@ func increment(counts ActionCounts, state configurator.ActionState) ActionCounts
 		counts.Update++
 	case configurator.ActionUnchanged:
 		counts.Unchanged++
+	case configurator.ActionIgnored:
+		counts.Ignored++
 	case configurator.ActionConflict:
 		counts.Conflict++
 	}

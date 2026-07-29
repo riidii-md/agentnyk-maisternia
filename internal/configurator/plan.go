@@ -99,12 +99,28 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 			}
 
 			installed, managed := installedStateResource(state, canonicalAgent, targetRelative)
+			resolution, resolved := conflictResolutionState(
+				state,
+				canonicalAgent,
+				targetRelative,
+			)
+			if resolved &&
+				resolution.Decision == ConflictKeep &&
+				resolution.TargetChecksum == currentChecksum &&
+				resolution.SourceChecksum == sourceChecksum {
+				action.State = ActionIgnored
+				action.Reason = "existing target kept by explicit decision"
+				plan.Actions = append(plan.Actions, action)
+				continue
+			}
 			if managed && installed.Checksum == currentChecksum {
 				action.State = ActionUpdate
 				action.Reason = "managed target has a new source version"
 			} else {
 				action.State = ActionConflict
-				if managed {
+				if resolved {
+					action.Reason = "previous keep-existing decision is stale"
+				} else if managed {
 					action.Reason = "managed target changed since the last apply"
 				} else {
 					action.Reason = "existing target is not managed by agentctl"
@@ -135,6 +151,7 @@ func loadState(home string) (installState, error) {
 	state := installState{
 		SchemaVersion: StateSchemaVersion,
 		Resources:     make(map[string]installedResource),
+		Resolutions:   make(map[string]conflictResolution),
 	}
 	path, err := stateReadPath(home)
 	if err != nil {
@@ -154,11 +171,15 @@ func loadState(home string) (installState, error) {
 	if err := decoder.Decode(&state); err != nil {
 		return installState{}, fmt.Errorf("decode install state: %w", err)
 	}
-	if state.SchemaVersion != StateSchemaVersion {
+	if state.SchemaVersion != 1 && state.SchemaVersion != StateSchemaVersion {
 		return installState{}, fmt.Errorf("unsupported install state schema %d", state.SchemaVersion)
 	}
+	state.SchemaVersion = StateSchemaVersion
 	if state.Resources == nil {
 		state.Resources = make(map[string]installedResource)
+	}
+	if state.Resolutions == nil {
+		state.Resolutions = make(map[string]conflictResolution)
 	}
 	return state, nil
 }
@@ -241,6 +262,22 @@ func installedStateResource(
 		}
 	}
 	return installedResource{}, false
+}
+
+func conflictResolutionState(
+	state installState,
+	agent string,
+	targetRelative string,
+) (conflictResolution, bool) {
+	for _, candidate := range append(
+		[]string{agent},
+		providers.LegacyAliases(agent)...,
+	) {
+		if resolution, exists := state.Resolutions[stateKey(candidate, targetRelative)]; exists {
+			return resolution, true
+		}
+	}
+	return conflictResolution{}, false
 }
 
 func firstSymlink(root, destination string) (string, bool, error) {

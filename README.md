@@ -118,17 +118,18 @@ Point the system installation at this configuration repository once:
 agentctl config set-repository /path/to/agentctl
 ```
 
-Then open the read-only admin interface from any directory:
+Then open the admin interface from any directory:
 
 ```bash
 agentctl admin
 ```
 
-Use `1` through `5` to open Overview, Presets, State Fixtures, Providers, and
+Use `1` through `5` to open Overview, Presets, Fixtures, Providers, and
 Config. Press `?` for all keys. The current TUI browses preset-library entries,
 their workflow DAGs and contents, provider health, preset-scoped plans, drift,
-and conflicts. Preset writes and apply remain explicit CLI operations. The TUI
-must not run, observe, approve, dispatch, commit, or push.
+and conflicts. On a selected preset, press `a` to review and apply it. Conflicts
+require an explicit keep-existing or replace-from-preset decision followed by
+confirmation. The TUI must not run, observe, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
@@ -240,6 +241,10 @@ the full manifest apply, and still requires explicit confirmation:
 
 ```bash
 go run ./cmd/agentctl preset apply --target codex --yes standard-work
+go run ./cmd/agentctl preset apply \
+  --conflicts keep \
+  --yes \
+  codex-compatibility
 ```
 
 Render a staging tree:
@@ -250,10 +255,14 @@ go run ./cmd/agentctl render \
   --output ./build/rendered
 ```
 
-`apply` refuses unmanaged conflicts and requires explicit confirmation:
+`apply` aborts on conflicts by default and requires explicit confirmation.
+Choose `keep` to preserve customized files and remember that decision, or
+`replace` to back them up and install the repository version:
 
 ```bash
 go run ./cmd/agentctl apply --target codex --yes
+go run ./cmd/agentctl apply --target codex --conflicts keep --yes
+go run ./cmd/agentctl apply --target codex --conflicts replace --yes
 ```
 
 Do not run `apply` against a real home directory until the displayed plan has

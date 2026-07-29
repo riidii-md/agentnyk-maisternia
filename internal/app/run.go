@@ -45,15 +45,17 @@ Common options:
   --manifest <path>  Manifest path relative to repository (default: config/manifest.json)
   --home <dir>       Target home directory (default: current user home)
   --target <agent>   all, codex, claude, antigravity (agy), or hermes (default: all)
+  --conflicts <mode> abort, keep, or replace when applying (default: abort)
 `
 
 type commandOptions struct {
-	repo     string
-	manifest string
-	home     string
-	target   string
-	output   string
-	yes      bool
+	repo      string
+	manifest  string
+	home      string
+	target    string
+	output    string
+	conflicts string
+	yes       bool
 }
 
 func Run(args []string, stdout, stderr io.Writer) int {
@@ -187,15 +189,22 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			return 1
 		}
 		printPlan(stdout, plan)
-		if plan.HasConflicts() {
-			fmt.Fprintln(stderr, "error: resolve conflicts before apply")
+		policy, _ := conflictPolicy(options.conflicts)
+		if plan.HasConflicts() && policy == configurator.ConflictAbort {
+			fmt.Fprintln(
+				stderr,
+				"error: resolve conflicts with --conflicts keep or --conflicts replace",
+			)
 			return 1
 		}
 		if !options.yes {
 			fmt.Fprintln(stderr, "apply requires --yes after reviewing the plan")
 			return 2
 		}
-		if err := configurator.Apply(plan, configurator.ApplyOptions{Confirmed: true}); err != nil {
+		if err := configurator.Apply(plan, configurator.ApplyOptions{
+			Confirmed:      true,
+			ConflictPolicy: policy,
+		}); err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
@@ -214,10 +223,11 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 		return commandOptions{}, 1
 	}
 	options := commandOptions{
-		repo:     ".",
-		manifest: "config/manifest.json",
-		home:     home,
-		target:   "all",
+		repo:      ".",
+		manifest:  "config/manifest.json",
+		home:      home,
+		target:    "all",
+		conflicts: string(configurator.ConflictAbort),
 	}
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -230,6 +240,12 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 	}
 	if command == "apply" {
 		flags.BoolVar(&options.yes, "yes", false, "confirm configuration changes")
+		flags.StringVar(
+			&options.conflicts,
+			"conflicts",
+			options.conflicts,
+			"conflict policy: abort, keep, or replace",
+		)
 	}
 	if err := flags.Parse(args); err != nil {
 		return commandOptions{}, 2
@@ -237,6 +253,16 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 	if flags.NArg() != 0 {
 		fmt.Fprintf(stderr, "error: unexpected arguments: %s\n", strings.Join(flags.Args(), " "))
 		return commandOptions{}, 2
+	}
+	if command == "apply" {
+		if _, valid := conflictPolicy(options.conflicts); !valid {
+			fmt.Fprintf(
+				stderr,
+				"error: invalid --conflicts value %q; use abort, keep, or replace\n",
+				options.conflicts,
+			)
+			return commandOptions{}, 2
+		}
 	}
 
 	options.repo, err = filepath.Abs(options.repo)
@@ -257,6 +283,18 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 		}
 	}
 	return options, 0
+}
+
+func conflictPolicy(value string) (configurator.ConflictPolicy, bool) {
+	policy := configurator.ConflictPolicy(strings.ToLower(strings.TrimSpace(value)))
+	switch policy {
+	case configurator.ConflictAbort,
+		configurator.ConflictKeep,
+		configurator.ConflictReplace:
+		return policy, true
+	default:
+		return "", false
+	}
 }
 
 func printPlan(output io.Writer, plan configurator.Plan) {

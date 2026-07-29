@@ -33,6 +33,7 @@ Options:
   --output <dir>       Staging directory (render)
   --name <name>        Preset display name (create, copy, and edit)
   --description <text> Preset description (create and edit)
+  --conflicts <mode>   abort, keep, or replace when applying
   --yes                Confirm delete or apply
 
 Preset files live under config/presets. Pipelines inside them are declarative
@@ -62,6 +63,7 @@ type presetOptions struct {
 	output      string
 	name        optionalString
 	description optionalString
+	conflicts   string
 	yes         bool
 	args        []string
 }
@@ -111,10 +113,11 @@ func parsePresetOptions(
 		return presetOptions{}, 1
 	}
 	options := presetOptions{
-		repo:     ".",
-		manifest: "config/manifest.json",
-		home:     home,
-		target:   "all",
+		repo:      ".",
+		manifest:  "config/manifest.json",
+		home:      home,
+		target:    "all",
+		conflicts: string(configurator.ConflictAbort),
 	}
 	flags := flag.NewFlagSet("preset "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -143,11 +146,27 @@ func parsePresetOptions(
 	}
 	if command == "apply" {
 		flags.BoolVar(&options.yes, "yes", false, "confirm configuration changes")
+		flags.StringVar(
+			&options.conflicts,
+			"conflicts",
+			options.conflicts,
+			"conflict policy: abort, keep, or replace",
+		)
 	}
 	if err := flags.Parse(args); err != nil {
 		return presetOptions{}, 2
 	}
 	options.args = flags.Args()
+	if command == "apply" {
+		if _, valid := conflictPolicy(options.conflicts); !valid {
+			fmt.Fprintf(
+				stderr,
+				"error: invalid --conflicts value %q; use abort, keep, or replace\n",
+				options.conflicts,
+			)
+			return presetOptions{}, 2
+		}
+	}
 
 	options.repo, err = filepath.Abs(options.repo)
 	if err != nil {
@@ -425,8 +444,12 @@ func runPresetInstallation(
 			return 1
 		}
 		printPlan(stdout, plan)
-		if plan.HasConflicts() {
-			fmt.Fprintln(stderr, "error: resolve conflicts before apply")
+		policy, _ := conflictPolicy(options.conflicts)
+		if plan.HasConflicts() && policy == configurator.ConflictAbort {
+			fmt.Fprintln(
+				stderr,
+				"error: resolve conflicts with --conflicts keep or --conflicts replace",
+			)
 			return 1
 		}
 		if !options.yes {
@@ -435,7 +458,10 @@ func runPresetInstallation(
 		}
 		if err := configurator.Apply(
 			plan,
-			configurator.ApplyOptions{Confirmed: true},
+			configurator.ApplyOptions{
+				Confirmed:      true,
+				ConflictPolicy: policy,
+			},
 		); err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1

@@ -176,6 +176,110 @@ func TestPresetResourcePreviewCanBeOpenedAndNavigated(t *testing.T) {
 	}
 }
 
+func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets[0].Config.Counts.Conflict = 2
+	fixture.Presets[0].Config.ActionCount += 2
+	var appliedPreset string
+	var appliedPolicy configurator.ConflictPolicy
+
+	model := NewModel(func() Snapshot { return fixture })
+	model.applyPreset = func(
+		presetID string,
+		policy configurator.ConflictPolicy,
+	) error {
+		appliedPreset = presetID
+		appliedPolicy = policy
+		return nil
+	}
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 100, Height: 32})
+	model = updated.(Model)
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	model = updated.(Model)
+	view := model.View()
+	for _, expected := range []string{
+		"APPLY PRESET",
+		"2 unresolved conflicts",
+		"k  Keep existing",
+		"x  Replace from preset",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("apply choice missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	model = updated.(Model)
+	if view = model.View(); !strings.Contains(view, "KEEP EXISTING") ||
+		!strings.Contains(view, "Press y to apply") {
+		t.Fatalf("keep confirmation missing:\n%s", view)
+	}
+
+	updated, command := model.Update(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune{'y'},
+	})
+	model = updated.(Model)
+	if command == nil {
+		t.Fatal("confirmed apply returned no command")
+	}
+	updated, _ = model.Update(command())
+	model = updated.(Model)
+	if appliedPreset != "standard-work" || appliedPolicy != configurator.ConflictKeep {
+		t.Fatalf("apply = %q %q", appliedPreset, appliedPolicy)
+	}
+	if view = model.View(); !strings.Contains(view, "Preset applied") {
+		t.Fatalf("apply result missing:\n%s", view)
+	}
+}
+
+func TestPresetViewExposesApplyAction(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 100, 32)
+	view := model.View()
+	for _, expected := range []string{"ACTIONS", "a  Apply preset"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("preset actions missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestPresetApplyDialogStaysWithinTerminalWidth(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets[0].Config.Counts.Conflict = 2
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 64, Height: 24})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune{'a'},
+	})
+	model = updated.(Model)
+
+	for lineNumber, line := range strings.Split(model.View(), "\n") {
+		if width := lipgloss.Width(line); width > 64 {
+			t.Fatalf(
+				"apply dialog line %d width = %d:\n%s",
+				lineNumber,
+				width,
+				model.View(),
+			)
+		}
+	}
+}
+
 func TestProviderViewShowsRootsAndCurrentManagedTargets(t *testing.T) {
 	t.Parallel()
 

@@ -3,9 +3,10 @@
 ## Purpose
 
 `agentctl admin` is a terminal configuration surface for the local
-agentctl installation. Its current implementation is a read-only browser for
-configuration and plans, not a writer and not a surface for running or observing
-agent work. It brings together:
+agentctl installation. It is primarily a read-only browser for configuration
+and plans, with one guarded write path: applying the selected preset after an
+explicit conflict decision and final confirmation. It is not a surface for
+running or observing agent work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
@@ -15,9 +16,9 @@ agent work. It brings together:
 - managed configuration drift and conflicts;
 - provider mappings for generated commands, prompts, skills, MCP config, and settings.
 
-The interface does not approve work, dispatch an agent, watch live runs, infer
-next actions, commit, push, or open a pull request. Applying configuration must
-remain an explicit preview-and-confirm operation.
+The interface does not dispatch an agent, watch live runs, infer next actions,
+commit, push, or open a pull request. Applying configuration remains an explicit
+preview, conflict-decision, and confirmation operation.
 
 ## Configure The Repository
 
@@ -88,6 +89,16 @@ Use `j`/`k` to move between resources and `Page Up`/`Page Down` to scroll
 source text. The browser shows the canonical repository source and its rendered
 provider targets; it does not read content back from provider session storage.
 
+Press `a` to open the preset apply panel. If the plan has conflicts, choose:
+
+- `k` keeps customized files, remembers the exact decision, and applies all
+  remaining preset changes;
+- `x` backs up conflicting files and replaces them with preset versions;
+- `Esc` cancels without writing.
+
+After choosing, press `y` for final confirmation. Abort remains the default;
+agentctl never chooses keep or replace automatically.
+
 It must not present a preset pipeline as a live run, mark phases active, choose
 the next agent, or dispatch work. If legacy task-state fixtures are present,
 they may be shown only as schema/debug information, not as runtime control.
@@ -111,12 +122,14 @@ inspection used by `agentctl provider doctor` and configuration planning.
 
 ### Config
 
-Summarizes managed resources as unchanged, create, update, or conflict actions.
-Conflicts can be inspected, but applying changes still requires a separate:
+Summarizes managed resources as unchanged, create, update, kept-existing, or
+conflict actions. Presets can be applied from the Presets view or through:
 
 ```bash
 agentctl plan
 agentctl apply --yes
+agentctl apply --conflicts keep --yes
+agentctl apply --conflicts replace --yes
 ```
 
 For a single preset, use:
@@ -124,6 +137,7 @@ For a single preset, use:
 ```bash
 agentctl preset plan standard-work
 agentctl preset apply --yes standard-work
+agentctl preset apply --conflicts keep --yes codex-compatibility
 ```
 
 An unmanaged conflict means a file already exists at a declared target but
@@ -131,6 +145,12 @@ agentctl has no install-state ownership record for it. A changed managed conflic
 means agentctl previously installed the file and its current checksum no longer
 matches that record. Both are preserved until the user explicitly resolves the
 difference.
+
+A keep-existing decision records both source and target checksums. It appears as
+`IGNORED`/kept rather than a conflict on later plans. If the repository source or
+customized target changes, agentctl marks that decision stale and asks again.
+Replace decisions create timestamped backups under
+`~/.config/agentctl/backups/`.
 
 ## Keys
 
@@ -142,6 +162,10 @@ difference.
 | Up/Down or `j`/`k` | Move selection |
 | `g`, `G` | First or last item |
 | `Enter` | Inspect a preset's prompt/resource source |
+| `a` | Review and apply the selected preset |
+| `k` | Keep existing files in the apply decision panel |
+| `x` | Replace conflicts from the preset in the apply decision panel |
+| `y` | Confirm the reviewed preset apply |
 | `Page Up`, `Page Down` | Scroll prompt/resource source |
 | `r` | Refresh all read-only state |
 | `?`, `Esc` | Open or close help |
@@ -155,7 +179,7 @@ session.
 
 The TUI is a configuration studio. Runtime automation is deliberately outside
 its scope. The preset library, DAG browser, source preview, provider inspection,
-and conflict explanation are implemented.
+conflict explanation, and guarded preset apply are implemented.
 
 Pipeline and step editing should be delivered in a separate change because it
 introduces writes. That editor should:
@@ -175,7 +199,6 @@ Other future work should add:
 - MCP/config bundle editing inside presets;
 - provider-native render previews;
 - structured settings merge and ownership;
-- safe explicit apply flows.
 
 Do not add hidden run control, live observation, approval queues, dispatch, or
 agent-session management to terminal key handlers.
