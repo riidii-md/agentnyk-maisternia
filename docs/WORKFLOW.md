@@ -223,6 +223,33 @@ Hermes receives them as native skills under `~/.hermes/skills/`.
 See [Idea-Shaping Pipeline](IDEA-SHAPING-PIPELINE.md) for the phase contracts,
 state model, and remaining delivery increments.
 
+### What Runs Today
+
+The current `shape` implementation separates orchestration state from agent
+execution.
+
+`agentctl pipeline start` and `agentctl pipeline transition` run locally. They
+create state, enforce legal edges, apply question gates, count loops, and
+require explicit finalization. They do not start an AI provider.
+
+The `/work-shape` command runs inside whichever configured provider the human
+chooses. Claude and Codex receive command files, and Hermes receives a native
+skill. These target the same durable agentctl task contract. Antigravity
+receives the retained legacy prompt path, but native invocation there remains
+unverified until its renderer mapping is completed.
+
+There is intentionally no `agentctl pipeline run` or automatic provider choice
+yet. That layer requires:
+
+- resolving required capabilities against installed provider adapters;
+- honoring an explicit provider override;
+- selecting a provider only within the phase authority envelope;
+- bounded subprocess execution and structured result parsing;
+- durable outcomes, cancellation, retries, and cost limits;
+- approval before any authority expansion.
+
+Until those controls exist, the human chooses and invokes the provider.
+
 ## Phase Contracts
 
 ### Brief

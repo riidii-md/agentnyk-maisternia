@@ -1,5 +1,7 @@
 # agentctl
 
+[![CI](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml)
+
 `agentctl` is a provider-neutral workflow and configuration manager for
 command-line coding agents.
 
@@ -41,6 +43,11 @@ The repository contains the first safe configurator foundation:
 - private durable task state and append-only history;
 - read-only task and prepared-context inspection;
 - a read-only admin TUI for providers, pipelines, tasks, and configuration;
+- durable idea-shaping pipelines with sources, grill questions, guarded loops,
+  and explicit finalization;
+- provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
+  `/work-brainstorm` commands;
+- cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
 Structured TOML and JSON settings merging, runtime capability resolution,
@@ -112,11 +119,51 @@ loops are visible, but the TUI cannot approve, apply, dispatch, commit, or push.
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and runtime boundaries.
 
+## Pipeline Execution
+
+`agentctl` currently owns the pipeline control plane:
+
+- durable task, source, question, and event state;
+- legal phase transitions;
+- convergence gates and loop budgets;
+- authority and approval boundaries;
+- provider command installation;
+- status inspection through the CLI and TUI.
+
+It does not currently launch Claude, Codex, Antigravity, or Hermes. Run the
+configured command inside the provider you want:
+
+```text
+Claude:  /work-shape
+Codex:   /work-shape
+Hermes:  /work-shape
+```
+
+Those commands read and update the same provider-neutral agentctl task.
+Antigravity currently receives the managed legacy prompt path, but its native
+invocation mapping still needs validation. A future dispatcher will select or
+honor a configured provider and run a bounded phase, but that remains disabled
+until capability resolution and approval enforcement are implemented.
+
 ## Test
 
 ```bash
-go test ./...
+make verify
 ```
+
+## CI/CD
+
+The `CI` workflow runs on pull requests, pushes to `main`, and manual dispatch:
+
+1. module verification, formatting, vet, race tests, coverage, and a local
+   build;
+2. GoReleaser configuration validation;
+3. release-equivalent snapshot archives for macOS, Linux, and Windows on
+   `amd64` and `arm64`;
+4. upload of archives, checksums, and coverage for 14 days.
+
+Pushing a `v*` tag reruns `make verify`, publishes a GitHub release through
+GoReleaser, and updates the Homebrew tap when its token is configured.
 
 ## Safe First Run
 

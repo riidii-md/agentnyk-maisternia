@@ -1,5 +1,24 @@
 # Releasing agentctl
 
+## Continuous Integration Builds
+
+Every pull request, push to `main`, and manual `CI` run performs the quality
+gates before building release-equivalent snapshots.
+
+The `Build release archives` job uses `.goreleaser.yml` to produce:
+
+- macOS archives for `amd64` and `arm64`;
+- Linux archives for `amd64` and `arm64`;
+- Windows archives for `amd64` and `arm64`;
+- `checksums.txt`.
+
+GitHub stores the archives as the `agentctl-<commit>` workflow artifact for 14
+days. CI snapshots are downloadable test builds, not releases, and do not
+publish to GitHub Releases or Homebrew.
+
+Run the same workflow manually from the Actions page when a downloadable build
+is needed without pushing another commit.
+
 ## Release Outputs
 
 Pushing a `v*` tag runs `.github/workflows/release.yml`. GoReleaser creates:
@@ -14,6 +33,8 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`. GoReleaser creates:
 - a Homebrew cask when tap publishing is configured.
 
 Release binaries embed the version, commit, and commit date.
+The release job reruns `make verify` before publishing, even when the same
+commit previously passed the branch CI workflow.
 
 ## One-Time Homebrew Setup
 
