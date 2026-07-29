@@ -2,17 +2,19 @@
 
 [![CI](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml)
 
-`agentctl` is a provider-neutral pipeline configurator for
+`agentctl` is a provider-neutral preset and pipeline configurator for
 command-line coding agent harnesses.
 
 It provides one version-controlled source of truth for:
 
 - shared work phases;
 - Codex, Claude, Antigravity, and Hermes provider adapters;
-- neutral `/work-*` commands;
+- reusable preset-library entries;
+- workflow/pipeline DAGs inside presets;
+- MCP references and neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
-- model roles and provider capability metadata;
+- model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
 
 ## Status
@@ -41,13 +43,14 @@ The repository contains the first safe configurator foundation:
 - strict normalized event validation as untrusted input fixtures;
 - provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
   `/work-brainstorm` command templates;
-- a configuration TUI for providers, pipeline templates, render plans, and
-  managed files;
+- a configuration TUI for preset-library entries, workflow DAGs, existing
+  provider config, render plans, and managed files;
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
-Structured TOML and JSON settings merging, pipeline authoring commands,
-provider-native rendering, and configuration import are planned next. Runtime
+Structured TOML and JSON settings merging, preset-library authoring commands,
+workflow DAG editing, provider-native rendering, MCP/config bundles, existing
+provider-config inspection, and configuration import are planned next. Runtime
 dispatch is intentionally out of scope; existing harnesses run the rendered
 commands.
 
@@ -110,21 +113,24 @@ Then open the read-only admin interface from any directory:
 agentctl admin
 ```
 
-Use `1` through `5` to open Overview, Pipelines, State Fixtures, Providers, and
+Use `1` through `5` to open Overview, Presets, State Fixtures, Providers, and
 Config. Press `?` for all keys. The TUI is for configuration authoring and
-preview: pipeline templates, provider mappings, render plans, drift, conflicts,
-and explicit apply. It must not run, observe, approve, dispatch, commit, or push.
+preview: preset-library entries, workflow DAGs, MCP/config bundles, existing
+provider configuration, provider mappings, render plans, drift, conflicts, and
+explicit apply. It must not run, observe, approve, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
 
 ## Pipeline Configuration
 
-`agentctl` owns the pipeline configuration layer:
+`agentctl` owns the preset and pipeline configuration layer:
 
-- provider-neutral pipeline and phase definitions;
-- provider adapters and capability metadata;
-- command, prompt, skill, and settings rendering;
+- reusable preset-library entries;
+- provider-neutral workflow/pipeline DAGs and phase definitions inside presets;
+- MCP references, provider adapters, and capability metadata;
+- command, prompt, skill, hook, MCP, and settings rendering;
+- existing provider-configuration inspection;
 - safe preview, conflict detection, and guarded installation;
 - configuration inspection through the CLI and TUI.
 
@@ -146,8 +152,9 @@ become a controller or observer of live runs.
 The current `event`, `task`, `work next`, and `pipeline start/transition`
 commands are retained as experimental state-model fixtures while the
 configuration model settles. They should not be presented as the product
-runtime, and new TUI work should focus on pipeline authoring, render previews,
-provider mappings, drift, and conflicts.
+runtime, and new TUI work should focus on preset-library authoring, workflow DAG
+editing, MCP/config bundle editing, existing provider-configuration inspection,
+render previews, provider mappings, drift, and conflicts.
 
 ## Test
 
@@ -230,8 +237,10 @@ agentctl pipeline start shape --title "Improve agent workflow"
 
 Treat these as experimental schema fixtures, not the product runtime. They are
 useful for validating untrusted event envelopes and exploring state shapes, but
-new product work should focus on pipeline authoring, provider-native rendering,
-configuration previews, drift/conflict handling, and explicit apply.
+new product work should focus on preset-library authoring, workflow DAG editing,
+MCP/config bundle editing, existing provider-configuration inspection,
+provider-native rendering, configuration previews, drift/conflict handling, and
+explicit apply.
 
 `agentctl` should not expand these commands into live observation, phase
 control, approval queues, or agent dispatch. Existing harnesses own execution.

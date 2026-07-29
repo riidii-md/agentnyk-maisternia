@@ -164,7 +164,7 @@ func (m Model) renderOverview(width int) string {
 			width,
 		),
 		metric(
-			"State fixtures",
+			"Preset state fixtures",
 			fmt.Sprintf("%d local", len(m.snapshot.Tasks)),
 			width,
 		),
@@ -212,7 +212,7 @@ func (m Model) renderPipelines(width int) string {
 		index := m.cursor[TabPipelines]
 		selected = &m.snapshot.Tasks[index]
 		sections = append(sections, section(
-			"SELECTED STATE FIXTURE",
+			"SELECTED PRESET STATE FIXTURE",
 			[]string{
 				selectedStyle.Render(
 					truncate(selected.TaskID+"  "+selected.Title, width),
@@ -225,8 +225,8 @@ func (m Model) renderPipelines(width int) string {
 		))
 	} else {
 		sections = append(sections, section(
-			"SELECTED STATE FIXTURE",
-			[]string{mutedStyle.Render("No state fixture selected; showing pipeline template topology")},
+			"SELECTED PRESET STATE FIXTURE",
+			[]string{mutedStyle.Render("No state fixture selected; showing preset DAG topology")},
 			width,
 		))
 	}
@@ -238,10 +238,10 @@ func (m Model) renderPipelines(width int) string {
 		waiting = selected.Status == "waiting_for_approval"
 	}
 	graph := m.snapshot.Pipeline
-	pipelineTitle := "PIPELINE TEMPLATE"
+	pipelineTitle := "PRESET WORKFLOW DAG"
 	if selected != nil && selected.Pipeline == "shape" {
 		graph = ShapePipeline()
-		pipelineTitle = "SHAPE PIPELINE TEMPLATE"
+		pipelineTitle = "SHAPE PRESET WORKFLOW DAG"
 		summary := m.snapshot.Shape[selected.TaskID]
 		sections = append(sections, section(
 			"LEGACY SOURCE FIXTURE",
@@ -280,7 +280,7 @@ func (m Model) renderPipelines(width int) string {
 		warningStyle.Render("↺") + " READY not ready → RESEARCH",
 		warningStyle.Render("↺") + " VERIFY failed → ANALYZE",
 		warningStyle.Render("↺") + " REVIEW changes → RUN",
-		mutedStyle.Render("Entry phases come from trigger policy; loops require recorded outcomes."),
+		mutedStyle.Render("Preset DAG entry phases come from trigger policy; loops require recorded outcomes."),
 	}
 	if selected != nil && selected.Pipeline == "shape" {
 		branches = []string{
@@ -288,10 +288,10 @@ func (m Model) renderPipelines(width int) string {
 			warningStyle.Render("↺") + " CHALLENGE weak options → BRAINSTORM",
 			warningStyle.Render("↺") + " CHALLENGE missing constraint → GRILL",
 			warningStyle.Render("↺") + " MATERIAL SOURCE → RESEARCH",
-			mutedStyle.Render("Loops are bounded; finalization remains an explicit human action."),
+			mutedStyle.Render("Preset DAG loops are bounded; finalization remains an explicit human action."),
 		}
 	}
-	sections = append(sections, section("TEMPLATE BRANCHES", branches, width))
+	sections = append(sections, section("DAG BRANCHES", branches, width))
 
 	var triggers []string
 	for event, trigger := range m.snapshot.Policy.Triggers.Triggers {
@@ -304,7 +304,7 @@ func (m Model) renderPipelines(width int) string {
 	if len(triggers) == 0 {
 		triggers = []string{mutedStyle.Render("Trigger policy unavailable")}
 	}
-	sections = append(sections, section("TRIGGER TEMPLATE ENTRIES", triggers, width))
+	sections = append(sections, section("TRIGGER/DAG ENTRIES", triggers, width))
 	return strings.Join(sections, "\n\n")
 }
 

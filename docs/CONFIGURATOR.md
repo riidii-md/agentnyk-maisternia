@@ -299,7 +299,7 @@ ownership and conflict behavior are proven.
 5. Add `diff`, `backup`, and rollback subcommands.
 6. Add profiles, local overlays, and plugin or skill lockfiles.
 7. Resolve render requirements against provider capability contracts.
-8. Add pipeline authoring and provider-native render previews.
+8. Add preset-library authoring, workflow DAG editing, existing provider-config inspection, and provider-native render previews.
 
 The first task-state and manual event-ingestion increment is implemented
 separately from provider configuration. See

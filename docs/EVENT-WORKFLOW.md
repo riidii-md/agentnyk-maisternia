@@ -8,7 +8,7 @@
 ## Status
 
 `agentctl` can now validate normalized events and turn them into durable,
-inspectable task state. This is a local, manually invoked control plane.
+inspectable task state. This is an experimental local state fixture, not the target agentctl product boundary.
 
 It does not:
 

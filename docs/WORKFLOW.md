@@ -4,10 +4,11 @@
 
 This document defines the target configuration workflow for `agentctl`.
 
-`agentctl` is a pipeline configurator for existing command-line agent
-harnesses. It defines reusable provider-neutral pipeline templates and renders
-those templates into provider-native commands, prompts, skills, hooks, and
-settings.
+`agentctl` is a preset and pipeline configurator for existing command-line agent
+harnesses. It defines a reusable library of presets. Each preset can contain
+workflow/pipeline DAGs, MCP references, command templates, prompts, skills,
+hooks, provider settings, and target mappings. `agentctl` renders those presets
+into provider-native files.
 
 Runtime dispatch and live observation are out of scope. Claude Code, Codex CLI,
 Hermes, Antigravity, Kaji, and future harnesses own their own execution loops,
@@ -18,9 +19,10 @@ sessions, approvals, histories, and runtime state.
 `agentctl` should let a user manage many providers and harnesses without having
 to remember:
 
-- which reusable pipelines and phases exist;
-- which command, prompt, skill, hook, or settings files each provider needs;
+- which reusable presets exist;
+- which workflow/pipeline DAGs, phases, MCPs, commands, prompts, skills, hooks, and settings each preset contains;
 - which provider mappings are installed, missing, or drifting;
+- which Claude, Codex, Hermes, Antigravity, or Kaji configuration already exists outside agentctl;
 - which generated files would change before apply;
 - which authority boundary a generated command asks the harness to preserve.
 
@@ -33,8 +35,9 @@ chosen harness.
 
 ### `agentctl` owns
 
-- Provider-neutral pipeline definitions.
-- Phase prompt/command templates.
+- A local library of reusable presets.
+- Provider-neutral workflow/pipeline DAG definitions inside presets.
+- Phase prompt/command templates, MCP references, hooks, skills, and settings bundles.
 - Provider adapters and capability metadata.
 - Provider-native rendering and staging trees.
 - Path allowlists, ownership rules, drift detection, conflict detection, and
@@ -58,25 +61,47 @@ and explicit apply.
 
 ## Design Principles
 
-### Pipelines Are Configuration Artifacts
+### Presets Are The Library; Pipelines Are Workflow DAGs
 
-A pipeline in `agentctl` is not a running job. It is a reusable declarative
-artifact that can be rendered into one or more provider harnesses.
+The top-level reusable thing is a preset. A preset is a configuration bundle the
+user can create, copy, edit, preview, and apply later. A pipeline is one part of
+that preset: the workflow DAG or phase graph. Presets may also include MCP
+server/tool configuration, command aliases, prompts, skills, hooks, provider
+settings, and target mappings.
+
+A pipeline in `agentctl` is not a running job. It is a declarative workflow graph
+that can be rendered into one or more provider harnesses as part of a preset.
 
 Example shape:
 
 ```yaml
-id: feature-delivery
-phases:
-  - scout
-  - plan
-  - run
-  - verify
-  - review
-targets:
-  - codex
-  - claude
-  - hermes
+preset:
+  id: feature-delivery
+  description: Feature implementation workflow for CLI agent harnesses
+  pipelines:
+    default:
+      dag:
+        scout: [plan]
+        plan: [run]
+        run: [verify]
+        verify: [review, run]
+        review: []
+  mcps:
+    - github
+    - filesystem
+  commands:
+    - /work-scout
+    - /work-plan
+    - /work-run
+    - /work-verify
+    - /work-review
+  targets:
+    codex:
+      render_as: commands
+    claude:
+      render_as: slash_commands
+    hermes:
+      render_as: skills
 ```
 
 ### Commands Describe Work, Not Providers
@@ -153,7 +178,9 @@ silently broaden:
 
 ```mermaid
 flowchart TD
-    D[Pipeline definitions] --> C[agentctl configurator]
+    L[Preset library] --> D[Workflow DAGs + MCP/config bundles]
+    D --> C[agentctl configurator]
+    E[Existing provider configuration] --> C
     A[Provider adapters] --> C
     C --> P[Preview render plan]
     P --> X[Conflict and drift checks]
@@ -171,7 +198,7 @@ flowchart TD
 Plain-text fallback:
 
 ```text
-pipeline definitions + provider adapters
+preset library + existing provider configuration + provider adapters
   -> preview generated provider files
   -> inspect conflicts and drift
   -> explicit apply
@@ -185,12 +212,15 @@ pausing, resuming, approving, and recording live work.
 
 The TUI is a configuration studio. It should help users:
 
-1. browse pipeline templates;
-2. create or edit pipeline definitions;
-3. inspect provider adapters and render targets;
-4. preview generated files;
-5. inspect drift and conflicts;
-6. apply reviewed configuration changes explicitly.
+1. browse the preset library;
+2. create, copy, edit, rename, or delete presets;
+3. edit workflow/pipeline DAGs inside a preset;
+4. configure MCP references, commands, prompts, skills, hooks, settings, and provider targets inside a preset;
+5. inspect existing Claude, Codex, Hermes, Antigravity, Kaji, and future-harness configuration;
+6. compare existing provider files with rendered preset output;
+7. preview generated files;
+8. inspect drift and conflicts;
+9. apply reviewed configuration changes explicitly.
 
 It should not:
 
@@ -233,10 +263,15 @@ Future changes should either:
 
 ## Implementation Priorities
 
-1. Define first-class pipeline template objects.
-2. Add pipeline authoring commands and TUI screens.
-3. Render provider-native commands, prompts, skills, hooks, and settings from
-   templates.
-4. Improve structured settings merge and key ownership.
-5. Improve render previews, conflict explanations, and drift explanations.
-6. Keep runtime dispatch and live observation out of `agentctl`.
+1. Define first-class preset objects.
+2. Model workflow/pipeline DAGs as editable preset contents.
+3. Add MCP, command, prompt, skill, hook, settings, and provider-target sections
+   to presets.
+4. Add preset-library authoring commands and TUI screens.
+5. Add provider-configuration inspection views for existing Claude, Codex,
+   Hermes, Antigravity, Kaji, and future harnesses.
+6. Render provider-native commands, prompts, skills, hooks, MCP config, and
+   settings from presets.
+7. Improve structured settings merge and key ownership.
+8. Improve render previews, conflict explanations, and drift explanations.
+9. Keep runtime dispatch and live observation out of `agentctl`.

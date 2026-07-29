@@ -8,9 +8,11 @@ configuration, not for running or observing agent work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
-- pipeline templates and provider render targets;
+- the preset library and each preset's workflow/pipeline DAGs;
+- MCP references, commands, prompts, skills, hooks, settings, and provider targets inside presets;
+- existing Claude, Codex, Hermes, Antigravity, Kaji, and future-harness configuration;
 - managed configuration drift and conflicts;
-- provider mappings for generated commands, prompts, skills, and settings.
+- provider mappings for generated commands, prompts, skills, MCP config, and settings.
 
 The interface does not approve work, dispatch an agent, watch live runs, infer
 next actions, commit, push, or open a pull request. Applying configuration must
@@ -62,24 +64,28 @@ The settings file contains only the repository path and schema version.
 
 ### Overview
 
-Shows repository readiness, healthy provider count, available pipeline
-templates, configuration drift, and current render/apply attention items.
+Shows repository readiness, healthy provider count, available presets, existing
+provider-config inspection status, configuration drift, and current render/apply
+attention items.
 
-### Pipelines
+### Presets
 
-Shows reusable pipeline templates, their phases, and the provider targets they
-can render to. This view answers configuration questions:
+Shows the reusable preset library. A preset is a configuration bundle: workflow
+DAGs/pipelines plus MCP references, commands, prompts, skills, hooks, settings,
+and provider targets. This view answers configuration questions:
 
 ```text
-Which pipelines exist?
-Which provider commands/skills/prompts will be generated?
-Which phases are missing provider mappings?
-What will change if this pipeline is applied?
+Which presets exist?
+Which workflow DAGs/pipelines are inside this preset?
+Which MCPs, commands, prompts, skills, hooks, and settings belong to it?
+Which provider commands/skills/prompts/settings will be generated?
+Which phases or preset sections are missing provider mappings?
+What will change if this preset is applied?
 ```
 
-It must not present a pipeline as a live run, mark phases active, choose the next
-agent, or dispatch work. If legacy task-state fixtures are present, they may be
-shown only as schema/debug information, not as runtime control.
+It must not present a preset pipeline as a live run, mark phases active, choose
+the next agent, or dispatch work. If legacy task-state fixtures are present,
+they may be shown only as schema/debug information, not as runtime control.
 
 ### State Fixtures
 
@@ -87,10 +93,17 @@ Shows experimental local state files only when they exist. This view is for
 schema/debug inspection while configuration authoring matures. It is not a task
 monitor, approval queue, or run observer.
 
-### Providers
+### Providers / Existing Provider Config
 
-Shows Codex, Claude, Antigravity, and Hermes executable health, version,
-configuration roots, render capabilities, and inspection issues.
+Shows existing Codex, Claude, Antigravity, Hermes, Kaji, and future-harness
+configuration roots and files. This is separate from the preset library. The view
+should classify files as managed, unmanaged, conflicting, unknown, or ignored so
+the user can decide what to import, preserve, or overwrite. It must not inspect
+or copy provider runtime caches, sessions, transcripts, histories, credentials,
+or secrets.
+
+Shows Codex, Claude, Antigravity, Hermes, Kaji, and future-harness executable
+health, version, configuration roots, render capabilities, and inspection issues.
 Refresh runs the same bounded, read-only version inspection used by
 `agentctl provider doctor`.
 
@@ -126,7 +139,10 @@ session.
 The TUI is a configuration studio. Runtime automation is deliberately outside
 its scope. Future work should improve:
 
-- pipeline template authoring;
+- preset-library authoring;
+- workflow/pipeline DAG editing inside presets;
+- MCP/config bundle editing inside presets;
+- existing provider-configuration inspection;
 - provider-native render previews;
 - structured settings merge and ownership;
 - drift and conflict explanation;

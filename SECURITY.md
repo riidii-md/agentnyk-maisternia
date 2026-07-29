@@ -77,4 +77,4 @@ Changes to these areas require focused security review:
 - durable task state, indexes, and leases;
 - terminal rendering of event-derived data;
 - local repository settings and discovery;
-- pipeline authoring and provider-native render previews.
+- preset-library authoring, workflow DAG editing, existing provider-config inspection, and provider-native render previews.
