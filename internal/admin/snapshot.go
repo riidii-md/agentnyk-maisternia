@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/settings"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -57,15 +58,20 @@ type ConfigStatus struct {
 	ActionCount int
 }
 
+type PresetStatus struct {
+	Preset presets.Preset
+	Config ConfigStatus
+}
+
 type Snapshot struct {
 	LoadedAt   time.Time
 	Repository RepositoryStatus
 	Providers  []providers.Inspection
+	Presets    []PresetStatus
 	Tasks      []workflow.TaskState
 	Shape      map[string]workflow.ShapeSummary
 	Policy     workflow.Policy
 	Config     ConfigStatus
-	Pipeline   PipelineGraph
 	Issues     []Issue
 }
 
@@ -94,7 +100,6 @@ func (l Loader) Load() Snapshot {
 	}
 	snapshot := Snapshot{
 		LoadedAt: now(),
-		Pipeline: DefaultPipeline(),
 		Shape:    make(map[string]workflow.ShapeSummary),
 		Config: ConfigStatus{
 			StatePath: configurator.StatePath(l.Home),
@@ -140,6 +145,7 @@ func (l Loader) Load() Snapshot {
 		selection.Path,
 		"config/manifest.json",
 	)
+	presetsReady := false
 	if manifestErr != nil {
 		snapshot.addIssue(SeverityError, "manifest", manifestErr)
 	} else {
@@ -152,6 +158,49 @@ func (l Loader) Load() Snapshot {
 			snapshot.addIssue(SeverityError, "config", err)
 		} else {
 			snapshot.Config = summarizePlan(plan, l.Home)
+		}
+
+		library, err := presets.LoadLibrary(selection.Path)
+		if err != nil {
+			snapshot.addIssue(SeverityError, "presets", err)
+		} else {
+			presetsReady = true
+			for _, preset := range library.Presets {
+				status := PresetStatus{Preset: preset}
+				if len(preset.Contents.ResourceIDs()) == 0 {
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				selected, err := presets.SelectManifest(preset, manifest)
+				if err != nil {
+					presetsReady = false
+					snapshot.addIssue(
+						SeverityError,
+						"preset "+preset.ID,
+						err,
+					)
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				plan, err := configurator.BuildPlan(
+					selection.Path,
+					l.Home,
+					selected,
+					"all",
+				)
+				if err != nil {
+					presetsReady = false
+					snapshot.addIssue(
+						SeverityError,
+						"preset "+preset.ID,
+						err,
+					)
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				status.Config = summarizePlan(plan, l.Home)
+				snapshot.Presets = append(snapshot.Presets, status)
+			}
 		}
 	}
 
@@ -189,6 +238,7 @@ func (l Loader) Load() Snapshot {
 	}
 
 	snapshot.Repository.Ready = manifestErr == nil &&
+		presetsReady &&
 		len(snapshot.Policy.Capabilities.Phases) > 0 &&
 		len(snapshot.Providers) > 0
 	return snapshot

@@ -2,7 +2,9 @@
 
 ## Status
 
-This document defines the target configuration workflow for `agentctl`.
+This document defines the configuration workflow for `agentctl`. The first
+preset-library, scoped render/apply, and read-only TUI slice is implemented;
+structured DAG/content editing remains in progress.
 
 `agentctl` is a preset and pipeline configurator for existing command-line agent
 harnesses. It defines a reusable library of presets. Each preset can contain
@@ -261,17 +263,26 @@ Future changes should either:
 1. narrow those commands to configuration authoring and schema validation; or
 2. move runtime execution concerns into a separate harness such as Kaji.
 
-## Implementation Priorities
+## Implementation Status
 
-1. Define first-class preset objects.
-2. Model workflow/pipeline DAGs as editable preset contents.
-3. Add MCP, command, prompt, skill, hook, settings, and provider-target sections
-   to presets.
-4. Add preset-library authoring commands and TUI screens.
-5. Add provider-configuration inspection views for existing Claude, Codex,
+Implemented:
+
+1. First-class, versioned preset objects under `config/presets`.
+2. Workflow/pipeline DAG data with phases, entry phases, conditions, branches,
+   and explicit loops.
+3. MCP, command, prompt, skill, hook, settings, and provider-target sections
+   whose values reference managed manifest resources.
+4. Preset create, copy, metadata edit, delete, list, show, validate, plan,
+   render, and apply commands.
+5. A read-only Presets TUI backed by the real library and per-preset plans.
+
+Next:
+
+1. Add structured CLI and TUI editing for preset contents and DAGs.
+2. Add provider-configuration inspection views for existing Claude, Codex,
    Hermes, Antigravity, Kaji, and future harnesses.
-6. Render provider-native commands, prompts, skills, hooks, MCP config, and
+3. Render broader provider-native commands, prompts, skills, hooks, MCP config, and
    settings from presets.
-7. Improve structured settings merge and key ownership.
-8. Improve render previews, conflict explanations, and drift explanations.
-9. Keep runtime dispatch and live observation out of `agentctl`.
+4. Improve structured settings merge and key ownership.
+5. Improve render previews, conflict explanations, and drift explanations.
+6. Keep runtime dispatch and live observation out of `agentctl`.

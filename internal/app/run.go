@@ -10,6 +10,7 @@ import (
 
 	"github.com/kagi-labs/agentctl/internal/buildinfo"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/workflow"
 )
 
@@ -19,6 +20,7 @@ Usage:
   agentctl version
   agentctl admin [options]
   agentctl config <command> [options]
+  agentctl preset <command> [options]
   agentctl doctor [options]
   agentctl inventory [options]
   agentctl plan [options]
@@ -77,6 +79,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runAdminCommand(args[1:], stdin, stdout, stderr)
 	case "config":
 		return runConfigCommand(args[1:], stdout, stderr)
+	case "preset":
+		return runPresetCommand(args[1:], stdout, stderr)
 	case "event":
 		return runEventCommand(args[1:], stdout, stderr)
 	case "pipeline":
@@ -112,6 +116,19 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 
 	switch command {
 	case "doctor":
+		library, err := presets.LoadLibrary(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		for _, preset := range library.Presets {
+			if err := presets.ValidateAgainstManifest(preset, manifest); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+		}
+		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(library.Presets))
+
 		present, err := workflow.PolicyPresent(options.repo)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: inspect workflow policy: %v\n", err)

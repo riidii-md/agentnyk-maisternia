@@ -2,11 +2,11 @@ package admin
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
 	"github.com/mattn/go-runewidth"
@@ -164,8 +164,8 @@ func (m Model) renderOverview(width int) string {
 			width,
 		),
 		metric(
-			"Preset state fixtures",
-			fmt.Sprintf("%d local", len(m.snapshot.Tasks)),
+			"Presets",
+			fmt.Sprintf("%d available", len(m.snapshot.Presets)),
 			width,
 		),
 		metric(
@@ -206,231 +206,164 @@ func (m Model) renderOverview(width int) string {
 }
 
 func (m Model) renderPipelines(width int) string {
-	var sections []string
-	var selected *workflow.TaskState
-	if len(m.snapshot.Tasks) > 0 {
-		index := m.cursor[TabPipelines]
-		selected = &m.snapshot.Tasks[index]
-		sections = append(sections, section(
-			"SELECTED PRESET STATE FIXTURE",
-			[]string{
-				selectedStyle.Render(
-					truncate(selected.TaskID+"  "+selected.Title, width),
-				),
-				metric("Recorded phase", strings.ToUpper(selected.Phase), width),
-				metric("Status", selected.Status, width),
-				metric("Recorded next", selected.NextAction, width),
-			},
-			width,
-		))
-	} else {
-		sections = append(sections, section(
-			"SELECTED PRESET STATE FIXTURE",
-			[]string{mutedStyle.Render("No state fixture selected; showing preset DAG topology")},
-			width,
-		))
+	if len(m.snapshot.Presets) == 0 {
+		return section("PRESET LIBRARY", []string{
+			mutedStyle.Render("No presets found under config/presets."),
+			mutedStyle.Render("Create one with agentctl preset create."),
+		}, width)
 	}
 
-	currentPhase := ""
-	waiting := false
-	if selected != nil {
-		currentPhase = selected.Phase
-		waiting = selected.Status == "waiting_for_approval"
-	}
-	graph := m.snapshot.Pipeline
-	pipelineTitle := "PRESET WORKFLOW DAG"
-	if selected != nil && selected.Pipeline == "shape" {
-		graph = ShapePipeline()
-		pipelineTitle = "SHAPE PRESET WORKFLOW DAG"
-		summary := m.snapshot.Shape[selected.TaskID]
-		sections = append(sections, section(
-			"LEGACY SOURCE FIXTURE",
-			[]string{
-				fmt.Sprintf(
-					"%d total  %d unread  %d material",
-					summary.SourcesTotal,
-					summary.UnreadSources,
-					summary.MaterialSources,
-				),
-				mutedStyle.Render("Schema/debug data only; not live observation."),
-			},
-			width,
-		))
-		sections = append(sections, section(
-			"LEGACY GRILL FIXTURE",
-			[]string{
-				fmt.Sprintf(
-					"%d total  %d open  %d critical",
-					summary.QuestionsTotal,
-					summary.OpenQuestions,
-					summary.CriticalQuestions,
-				),
-				mutedStyle.Render("Schema/debug data only; not an approval queue."),
-			},
-			width,
-		))
-	}
-	sections = append(sections, section(
-		pipelineTitle,
-		renderPipelineGraph(graph, currentPhase, waiting, width),
-		width,
-	))
-
-	branches := []string{
-		warningStyle.Render("↺") + " READY not ready → RESEARCH",
-		warningStyle.Render("↺") + " VERIFY failed → ANALYZE",
-		warningStyle.Render("↺") + " REVIEW changes → RUN",
-		mutedStyle.Render("Preset DAG entry phases come from trigger policy; loops require recorded outcomes."),
-	}
-	if selected != nil && selected.Pipeline == "shape" {
-		branches = []string{
-			warningStyle.Render("↺") + " GRILL evidence gap → RESEARCH",
-			warningStyle.Render("↺") + " CHALLENGE weak options → BRAINSTORM",
-			warningStyle.Render("↺") + " CHALLENGE missing constraint → GRILL",
-			warningStyle.Render("↺") + " MATERIAL SOURCE → RESEARCH",
-			mutedStyle.Render("Preset DAG loops are bounded; finalization remains an explicit human action."),
-		}
-	}
-	sections = append(sections, section("DAG BRANCHES", branches, width))
-
-	var triggers []string
-	for event, trigger := range m.snapshot.Policy.Triggers.Triggers {
-		triggers = append(
-			triggers,
-			fmt.Sprintf("%-22s → %s", event, strings.ToUpper(trigger.InitialPhase)),
+	index := m.cursor[TabPipelines]
+	start, end := window(index, len(m.snapshot.Presets), 5)
+	var rows []string
+	for rowIndex := start; rowIndex < end; rowIndex++ {
+		status := m.snapshot.Presets[rowIndex]
+		line := fmt.Sprintf(
+			"%-22s %-26s %d DAG  %d resources",
+			truncate(status.Preset.ID, 21),
+			truncate(status.Preset.Name, 25),
+			len(status.Preset.Pipelines),
+			len(status.Preset.Contents.ResourceIDs()),
 		)
+		rows = append(rows, selectable(line, rowIndex == index, width))
 	}
-	sort.Strings(triggers)
-	if len(triggers) == 0 {
-		triggers = []string{mutedStyle.Render("Trigger policy unavailable")}
+
+	selected := m.snapshot.Presets[index]
+	preset := selected.Preset
+	details := []string{
+		metric("Description", preset.Description, width),
+		metric("Targets", strings.Join(preset.Targets, ", "), width),
+		metric("Contents", presetContentSummary(preset.Contents), width),
+		metric("Resources", strings.Join(preset.Contents.ResourceIDs(), ", "), width),
+		metric("Plan", actionCountSummary(selected.Config.Counts), width),
 	}
-	sections = append(sections, section("TRIGGER/DAG ENTRIES", triggers, width))
+	sections := []string{
+		section("PRESET LIBRARY", rows, width),
+		section(strings.ToUpper(preset.Name), details, width),
+	}
+
+	if len(preset.Pipelines) == 0 {
+		sections = append(sections, section(
+			"PIPELINE DAGS",
+			[]string{mutedStyle.Render("This preset contains configuration only.")},
+			width,
+		))
+		return strings.Join(sections, "\n\n")
+	}
+
+	for _, pipeline := range preset.Pipelines {
+		lines := []string{
+			metric("Entry", strings.Join(pipeline.EntryPhases, ", "), width),
+		}
+		lines = append(lines, renderPresetPhaseChain(pipeline, width)...)
+		branches := renderPresetBranches(pipeline, width)
+		if len(branches) == 0 {
+			branches = []string{mutedStyle.Render("No conditional or loop edges.")}
+		}
+		lines = append(lines, activeStyle.Render("DAG BRANCHES"))
+		lines = append(lines, branches...)
+		sections = append(sections, section(
+			"PIPELINE DAG: "+strings.ToUpper(pipeline.Name),
+			lines,
+			width,
+		))
+	}
 	return strings.Join(sections, "\n\n")
 }
 
-func renderPipelineGraph(
-	graph PipelineGraph,
-	currentPhase string,
-	waiting bool,
-	width int,
-) []string {
-	if _, shape := graph.Node("intake"); shape {
-		return renderShapePipelineGraph(graph, currentPhase, width)
-	}
-	if width < 72 {
-		groups := []struct {
-			label string
-			rows  [][]string
-		}{
-			{
-				label: "DISCOVERY",
-				rows: [][]string{
-					{"brief", "scout", "analyze"},
-					{"research", "decide"},
-				},
-			},
-			{
-				label: "READINESS",
-				rows: [][]string{
-					{"ready", "plan", "prove"},
-					{"handoff"},
-				},
-			},
-			{
-				label: "EXECUTION",
-				rows: [][]string{
-					{"run", "verify", "review", "pr"},
-				},
-			},
-		}
-		var lines []string
-		for _, group := range groups {
-			lines = append(lines, mutedStyle.Render(group.label))
-			for _, row := range group.rows {
-				var nodes []string
-				for _, id := range row {
-					node, _ := graph.Node(id)
-					nodes = append(nodes, renderPhaseNode(node, currentPhase))
-				}
-				line := strings.Join(nodes, " → ")
-				if row[len(row)-1] == graph.GateAt {
-					gate := warningStyle.Render("⏸ AUTHORITY GATE")
-					if waiting {
-						gate = warningStyle.Bold(true).Render("⏸ RECORDED GATE")
-					}
-					line += " → " + gate
-				}
-				lines = append(lines, line)
-			}
-		}
-		return lines
-	}
+func presetContentSummary(contents presets.Contents) string {
+	return fmt.Sprintf(
+		"%d MCP, %d commands, %d prompts, %d skills, %d hooks, %d settings",
+		len(contents.MCPRefs),
+		len(contents.Commands),
+		len(contents.Prompts),
+		len(contents.Skills),
+		len(contents.Hooks),
+		len(contents.Settings),
+	)
+}
 
-	lanes := [][]string{
-		{"brief", "scout", "analyze", "research", "decide"},
-		{"ready", "plan", "prove", "handoff"},
-		{"run", "verify", "review", "pr"},
-	}
-	names := []string{"DISCOVERY", "READINESS", "EXECUTION"}
+func actionCountSummary(counts ActionCounts) string {
+	return fmt.Sprintf(
+		"%d unchanged, %d create, %d update, %d conflict",
+		counts.Unchanged,
+		counts.Create,
+		counts.Update,
+		counts.Conflict,
+	)
+}
+
+func renderPresetPhaseChain(pipeline presets.Pipeline, width int) []string {
 	var lines []string
-	for index, lane := range lanes {
-		var nodes []string
-		for _, id := range lane {
-			node, _ := graph.Node(id)
-			nodes = append(nodes, renderPhaseNode(node, currentPhase))
+	line := ""
+	for _, phase := range pipeline.Phases {
+		node := mutedStyle.Render("○") + " " + strings.ToUpper(phase)
+		candidate := node
+		if line != "" {
+			candidate = line + " → " + node
 		}
-		line := fmt.Sprintf("%-10s %s", names[index], strings.Join(nodes, " → "))
-		if index == 1 {
-			gate := warningStyle.Render("⏸ AUTHORITY GATE")
-			if waiting {
-				gate = warningStyle.Bold(true).Render("⏸ RECORDED GATE")
-			}
-			line += " → " + gate
+		if line != "" && lipgloss.Width(candidate) > width {
+			lines = append(lines, line)
+			line = node
+			continue
 		}
+		line = candidate
+	}
+	if line != "" {
 		lines = append(lines, line)
 	}
 	return lines
 }
 
-func renderShapePipelineGraph(
-	graph PipelineGraph,
-	currentPhase string,
-	width int,
-) []string {
-	lanes := [][]string{
-		{"intake", "research", "grill", "brainstorm"},
-		{"challenge", "decide", "plan", "final"},
-	}
-	names := []string{"DISCOVERY", "CONVERGE"}
-	var lines []string
-	for index, lane := range lanes {
-		var nodes []string
-		for _, id := range lane {
-			node, _ := graph.Node(id)
-			nodes = append(nodes, renderPhaseNode(node, currentPhase))
+func renderPresetBranches(pipeline presets.Pipeline, width int) []string {
+	var loops, conditions []string
+	for _, edge := range pipeline.Edges {
+		if edge.Condition == "" && !edge.Loop {
+			continue
 		}
-		line := strings.Join(nodes, " → ")
-		if width >= 88 {
-			line = fmt.Sprintf("%-10s %s", names[index], line)
+		marker := mutedStyle.Render("◇")
+		if edge.Loop {
+			marker = warningStyle.Render("↺")
+		}
+		condition := edge.Condition
+		if condition == "" {
+			condition = "loop"
+		}
+		line := marker + " " + fmt.Sprintf(
+			"%s --%s--> %s",
+			strings.ToUpper(edge.From),
+			condition,
+			strings.ToUpper(edge.To),
+		)
+		line = truncate(line, width)
+		if edge.Loop {
+			loops = append(loops, line)
 		} else {
-			lines = append(lines, mutedStyle.Render(names[index]))
+			conditions = append(conditions, line)
 		}
-		if index == 1 {
-			line += " → " + warningStyle.Render("HUMAN FINALIZE")
-		}
-		lines = append(lines, truncate(line, width))
 	}
-	return lines
+	return packRenderedLines(append(loops, conditions...), width)
 }
 
-func renderPhaseNode(node PhaseNode, currentPhase string) string {
-	marker := mutedStyle.Render("○")
-	label := node.Label
-	if node.ID == currentPhase {
-		marker = activeStyle.Render("●")
-		label = activeStyle.Render(label)
+func packRenderedLines(values []string, width int) []string {
+	var lines []string
+	line := ""
+	for _, value := range values {
+		candidate := value
+		if line != "" {
+			candidate = line + "  " + value
+		}
+		if line != "" && lipgloss.Width(candidate) > width {
+			lines = append(lines, line)
+			line = value
+			continue
+		}
+		line = candidate
 	}
-	return marker + " " + label
+	if line != "" {
+		lines = append(lines, line)
+	}
+	return lines
 }
 
 func (m Model) renderTasks(width int) string {

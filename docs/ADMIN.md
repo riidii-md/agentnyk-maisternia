@@ -3,8 +3,9 @@
 ## Purpose
 
 `agentctl admin` is a terminal configuration surface for the local
-agentctl installation. It is for designing, previewing, and applying provider
-configuration, not for running or observing agent work. It brings together:
+agentctl installation. Its current implementation is a read-only browser for
+configuration and plans, not a writer and not a surface for running or observing
+agent work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
@@ -65,21 +66,20 @@ The settings file contains only the repository path and schema version.
 ### Overview
 
 Shows repository readiness, healthy provider count, available presets, existing
-provider-config inspection status, configuration drift, and current render/apply
-attention items.
+provider health, configuration drift, and current render/apply attention items.
 
 ### Presets
 
 Shows the reusable preset library. A preset is a configuration bundle: workflow
 DAGs/pipelines plus MCP references, commands, prompts, skills, hooks, settings,
-and provider targets. This view answers configuration questions:
+and provider targets. The current view loads `config/presets/*.json`, computes a
+safe plan for each selected preset, and answers:
 
 ```text
 Which presets exist?
 Which workflow DAGs/pipelines are inside this preset?
 Which MCPs, commands, prompts, skills, hooks, and settings belong to it?
-Which provider commands/skills/prompts/settings will be generated?
-Which phases or preset sections are missing provider mappings?
+Which provider targets are declared?
 What will change if this preset is applied?
 ```
 
@@ -117,6 +117,13 @@ agentctl plan
 agentctl apply --yes
 ```
 
+For a single preset, use:
+
+```bash
+agentctl preset plan standard-work
+agentctl preset apply --yes standard-work
+```
+
 ## Keys
 
 | Key | Action |
@@ -137,10 +144,11 @@ session.
 ## Current Boundary
 
 The TUI is a configuration studio. Runtime automation is deliberately outside
-its scope. Future work should improve:
+its scope. The preset library and DAG browser are implemented. Future work
+should add:
 
-- preset-library authoring;
-- workflow/pipeline DAG editing inside presets;
+- create, copy, edit, and delete actions in the TUI;
+- structured workflow/pipeline DAG editing inside presets;
 - MCP/config bundle editing inside presets;
 - existing provider-configuration inspection;
 - provider-native render previews;

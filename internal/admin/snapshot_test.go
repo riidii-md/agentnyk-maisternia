@@ -51,6 +51,14 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	if snapshot.Config.ActionCount == 0 || snapshot.Config.Counts.Create == 0 {
 		t.Fatalf("config summary = %#v, want create actions", snapshot.Config)
 	}
+	if len(snapshot.Presets) != 3 {
+		t.Fatalf("presets = %d, want 3", len(snapshot.Presets))
+	}
+	for _, preset := range snapshot.Presets {
+		if preset.Config.ActionCount == 0 {
+			t.Fatalf("preset %q has no scoped plan actions", preset.Preset.ID)
+		}
+	}
 	if !snapshot.LoadedAt.Equal(loadedAt) {
 		t.Fatalf("loaded at = %s, want %s", snapshot.LoadedAt, loadedAt)
 	}
@@ -97,30 +105,6 @@ func TestLoaderRepositoryPrecedence(t *testing.T) {
 	}
 	if selection.Path != environment || selection.Source != "AGENTCTL_REPO" {
 		t.Fatalf("environment selection = %#v", selection)
-	}
-}
-
-func TestDefaultPipelineIncludesApprovalAndLoops(t *testing.T) {
-	t.Parallel()
-
-	graph := DefaultPipeline()
-	if graph.GateAt != "handoff" {
-		t.Fatalf("gate = %q, want handoff", graph.GateAt)
-	}
-	loops := make(map[string]string)
-	for _, edge := range graph.Edges {
-		if edge.Loop {
-			loops[edge.From] = edge.To
-		}
-	}
-	for from, to := range map[string]string{
-		"ready":  "research",
-		"verify": "analyze",
-		"review": "run",
-	} {
-		if loops[from] != to {
-			t.Fatalf("loop %s = %q, want %q", from, loops[from], to)
-		}
 	}
 }
 

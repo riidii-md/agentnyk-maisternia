@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
 )
@@ -38,11 +39,11 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	}
 	view := model.View()
 	for _, expected := range []string{
-		"PRESET WORKFLOW DAG",
-		"RECORDED GATE",
-		"VERIFY failed",
-		"REVIEW changes",
-		"TRIGGER/DAG ENTRIES",
+		"PRESET LIBRARY",
+		"STANDARD WORK",
+		"PIPELINE DAG: DELIVERY",
+		"VERIFY --failed--> ANALYZE",
+		"REVIEW --changes--> RUN",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("pipeline view missing %q:\n%s", expected, view)
@@ -98,8 +99,8 @@ func TestPipelineLoopsAreVisibleAtCommonTerminalSize(t *testing.T) {
 	view := model.View()
 	for _, expected := range []string{
 		"DAG BRANCHES",
-		"VERIFY failed",
-		"REVIEW changes",
+		"VERIFY --failed--> ANALYZE",
+		"REVIEW --changes--> RUN",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("80x24 pipeline missing %q:\n%s", expected, view)
@@ -107,41 +108,24 @@ func TestPipelineLoopsAreVisibleAtCommonTerminalSize(t *testing.T) {
 	}
 }
 
-func TestShapePipelineShowsSourcesAndGrillState(t *testing.T) {
+func TestIdeaShapingPresetShowsContentsAndDAG(t *testing.T) {
 	t.Parallel()
 
-	fixture := adminFixture()
-	fixture.Tasks[0].Pipeline = "shape"
-	fixture.Tasks[0].Phase = "grill"
-	fixture.Tasks[0].Status = "blocked"
-	fixture.Shape = map[string]workflow.ShapeSummary{
-		fixture.Tasks[0].TaskID: {
-			SourcesTotal:      4,
-			UnreadSources:     1,
-			MaterialSources:   1,
-			QuestionsTotal:    3,
-			OpenQuestions:     2,
-			CriticalQuestions: 1,
-		},
-	}
-
-	model := NewModel(func() Snapshot { return fixture })
+	model := NewModel(func() Snapshot { return adminFixture() })
 	updated, _ := model.Update(model.Init()())
 	model = updated.(Model)
 	model.tab = TabPipelines
+	model.cursor[TabPipelines] = 1
 	updated, _ = model.Update(tea.WindowSizeMsg{Width: 100, Height: 32})
 	model = updated.(Model)
 
 	view := model.View()
 	for _, expected := range []string{
-		"SHAPE PRESET WORKFLOW DAG",
-		"LEGACY SOURCE FIXTURE",
-		"4 total",
-		"1 material",
-		"LEGACY GRILL FIXTURE",
-		"2 open",
-		"1 critical",
-		"weak options",
+		"IDEA SHAPING",
+		"PIPELINE DAG: SHAPE",
+		"work-source",
+		"GRILL --evidence gap--> RESEARCH",
+		"CHALLENGE --weak options--> BRAINSTORM",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("shape pipeline missing %q:\n%s", expected, view)
@@ -201,6 +185,100 @@ func adminFixture() Snapshot {
 				Capabilities: []string{"filesystem.read", "repository.read"},
 			},
 		},
+		Presets: []PresetStatus{
+			{
+				Preset: presets.Preset{
+					SchemaVersion: presets.SchemaVersion,
+					ID:            "standard-work",
+					Name:          "Standard Work",
+					Description:   "Provider-neutral delivery workflow.",
+					Pipelines: []presets.Pipeline{{
+						ID:          "delivery",
+						Name:        "Delivery",
+						EntryPhases: []string{"brief"},
+						Phases: []string{
+							"brief", "scout", "analyze", "research",
+							"decide", "plan", "run", "verify", "review",
+						},
+						Edges: []presets.Edge{
+							{From: "brief", To: "scout"},
+							{From: "scout", To: "analyze"},
+							{From: "analyze", To: "research"},
+							{From: "research", To: "decide"},
+							{From: "decide", To: "plan"},
+							{From: "plan", To: "run", Condition: "approval"},
+							{From: "run", To: "verify"},
+							{From: "verify", To: "review", Condition: "pass"},
+							{
+								From: "verify", To: "analyze",
+								Condition: "failed", Loop: true,
+							},
+							{
+								From: "review", To: "run",
+								Condition: "changes", Loop: true,
+							},
+						},
+					}},
+					Contents: presets.Contents{
+						Commands: []string{
+							"work-brief", "work-plan", "work-run", "work-verify",
+						},
+					},
+					Targets: []string{"codex", "claude", "antigravity"},
+				},
+				Config: ConfigStatus{
+					Counts:      ActionCounts{Create: 10},
+					ActionCount: 10,
+				},
+			},
+			{
+				Preset: presets.Preset{
+					SchemaVersion: presets.SchemaVersion,
+					ID:            "idea-shaping",
+					Name:          "Idea Shaping",
+					Description:   "Research and focused human questioning.",
+					Pipelines: []presets.Pipeline{{
+						ID:          "shape",
+						Name:        "Shape",
+						EntryPhases: []string{"intake"},
+						Phases: []string{
+							"intake", "research", "grill", "brainstorm",
+							"challenge", "decide", "plan", "final",
+						},
+						Edges: []presets.Edge{
+							{From: "intake", To: "research"},
+							{From: "research", To: "grill"},
+							{From: "grill", To: "brainstorm"},
+							{From: "brainstorm", To: "challenge"},
+							{From: "challenge", To: "decide"},
+							{From: "decide", To: "plan"},
+							{
+								From: "plan", To: "final",
+								Condition: "human finalization",
+							},
+							{
+								From: "grill", To: "research",
+								Condition: "evidence gap", Loop: true,
+							},
+							{
+								From: "challenge", To: "brainstorm",
+								Condition: "weak options", Loop: true,
+							},
+						},
+					}},
+					Contents: presets.Contents{
+						Commands: []string{
+							"work-source", "work-grill", "work-brainstorm",
+						},
+					},
+					Targets: []string{"codex", "claude", "antigravity", "hermes"},
+				},
+				Config: ConfigStatus{
+					Counts:      ActionCounts{Create: 8},
+					ActionCount: 8,
+				},
+			},
+		},
 		Tasks: []workflow.TaskState{
 			{
 				TaskID:     "github-kagi-agentctl-issue-42",
@@ -258,6 +336,5 @@ func adminFixture() Snapshot {
 				},
 			},
 		},
-		Pipeline: DefaultPipeline(),
 	}
 }

@@ -35,6 +35,11 @@ The repository contains the first safe configurator foundation:
 - backups before managed updates;
 - drift detection using install checksums;
 - atomic file writes;
+- a strict, versioned preset library under `config/presets`;
+- reusable standard-work, idea-shaping, and Codex-compatibility presets;
+- preset DAG validation with explicit loop edges and cycle rejection;
+- preset create, copy, metadata edit, delete, list, show, and validation commands;
+- preset-scoped plan, staging render, and guarded apply;
 - a complete initial work-phase catalog;
 - complete Claude-to-Codex command adapters with explicit authority boundaries;
 - direct Codex aliases for the canonical phases;
@@ -43,16 +48,16 @@ The repository contains the first safe configurator foundation:
 - strict normalized event validation as untrusted input fixtures;
 - provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
   `/work-brainstorm` command templates;
-- a configuration TUI for preset-library entries, workflow DAGs, existing
-  provider config, render plans, and managed files;
+- a read-only configuration TUI backed by real preset-library entries,
+  workflow DAGs, provider health, per-preset plans, and managed files;
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
-Structured TOML and JSON settings merging, preset-library authoring commands,
-workflow DAG editing, provider-native rendering, MCP/config bundles, existing
-provider-config inspection, and configuration import are planned next. Runtime
-dispatch is intentionally out of scope; existing harnesses run the rendered
-commands.
+Structured TOML and JSON settings merging, structured preset-content and DAG
+editing, TUI write actions, broader provider-native rendering, existing
+provider-file classification, and configuration import are planned next.
+Runtime dispatch is intentionally out of scope; existing harnesses run the
+rendered commands.
 
 ## Installation
 
@@ -114,10 +119,10 @@ agentctl admin
 ```
 
 Use `1` through `5` to open Overview, Presets, State Fixtures, Providers, and
-Config. Press `?` for all keys. The TUI is for configuration authoring and
-preview: preset-library entries, workflow DAGs, MCP/config bundles, existing
-provider configuration, provider mappings, render plans, drift, conflicts, and
-explicit apply. It must not run, observe, approve, dispatch, commit, or push.
+Config. Press `?` for all keys. The current TUI browses preset-library entries,
+their workflow DAGs and contents, provider health, preset-scoped plans, drift,
+and conflicts. Preset writes and apply remain explicit CLI operations. The TUI
+must not run, observe, approve, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
@@ -152,8 +157,8 @@ become a controller or observer of live runs.
 The current `event`, `task`, `work next`, and `pipeline start/transition`
 commands are retained as experimental state-model fixtures while the
 configuration model settles. They should not be presented as the product
-runtime, and new TUI work should focus on preset-library authoring, workflow DAG
-editing, MCP/config bundle editing, existing provider-configuration inspection,
+runtime, and new TUI work should focus on structured preset and workflow DAG
+editing, MCP/config bundle editing, existing provider-file classification,
 render previews, provider mappings, drift, and conflicts.
 
 ## Test
@@ -205,6 +210,31 @@ go run ./cmd/agentctl provider capabilities hermes
 
 Provider doctor never invokes a provider's native doctor command.
 
+Inspect and validate the preset library:
+
+```bash
+go run ./cmd/agentctl preset list
+go run ./cmd/agentctl preset show idea-shaping
+go run ./cmd/agentctl preset validate all
+```
+
+Plan or stage only the files selected by one preset:
+
+```bash
+go run ./cmd/agentctl preset plan --target hermes idea-shaping
+go run ./cmd/agentctl preset render \
+  --target codex \
+  --output ./build/standard-work \
+  standard-work
+```
+
+Preset apply uses the same conflict, drift, backup, and managed-state checks as
+the full manifest apply, and still requires explicit confirmation:
+
+```bash
+go run ./cmd/agentctl preset apply --target codex --yes standard-work
+```
+
 Render a staging tree:
 
 ```bash
@@ -248,6 +278,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 ## Documentation
 
 - [Improved workflow](docs/WORKFLOW.md)
+- [Preset library](docs/PRESETS.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)

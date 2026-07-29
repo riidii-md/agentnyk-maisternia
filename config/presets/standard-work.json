@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "standard-work",
+  "name": "Standard Work",
+  "description": "Provider-neutral discovery, planning, implementation, verification, review, and PR workflow.",
+  "pipelines": [
+    {
+      "id": "delivery",
+      "name": "Delivery",
+      "entry_phases": ["brief", "scout"],
+      "phases": [
+        "brief", "scout", "analyze", "research", "decide", "ready", "plan",
+        "prove", "handoff", "run", "verify", "review", "pr"
+      ],
+      "edges": [
+        {"from": "brief", "to": "scout"},
+        {"from": "scout", "to": "analyze"},
+        {"from": "analyze", "to": "research"},
+        {"from": "research", "to": "decide"},
+        {"from": "decide", "to": "ready"},
+        {"from": "ready", "to": "plan"},
+        {"from": "plan", "to": "prove"},
+        {"from": "prove", "to": "handoff"},
+        {"from": "handoff", "to": "run", "condition": "approval"},
+        {"from": "run", "to": "verify"},
+        {"from": "verify", "to": "review", "condition": "pass"},
+        {"from": "review", "to": "pr", "condition": "pass"},
+        {"from": "ready", "to": "research", "condition": "not ready", "loop": true},
+        {"from": "verify", "to": "analyze", "condition": "failed", "loop": true},
+        {"from": "review", "to": "run", "condition": "changes", "loop": true}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [
+      "work-conductor", "work-brief", "work-scout", "work-analyze",
+      "work-research", "work-decide", "work-ready", "work-plan", "work-prove",
+      "work-handoff", "work-run", "work-verify", "work-review", "work-pr",
+      "work-showcase", "work-cleanup"
+    ],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity"]
+}

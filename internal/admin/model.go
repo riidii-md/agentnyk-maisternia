@@ -158,7 +158,6 @@ func (m Model) load() tea.Cmd {
 	return func() tea.Msg {
 		if loader == nil {
 			return loadSnapshotMsg{snapshot: Snapshot{
-				Pipeline: DefaultPipeline(),
 				Issues: []Issue{{
 					Severity: SeverityError,
 					Area:     "admin",
@@ -183,7 +182,9 @@ func (m *Model) clampCursor() {
 
 func (m Model) itemCount() int {
 	switch m.tab {
-	case TabPipelines, TabTasks:
+	case TabPipelines:
+		return len(m.snapshot.Presets)
+	case TabTasks:
 		return len(m.snapshot.Tasks)
 	case TabProviders:
 		return len(m.snapshot.Providers)

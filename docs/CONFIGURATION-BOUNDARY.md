@@ -65,3 +65,19 @@ The inspection surface should classify files as managed, unmanaged, conflicting,
 or unknown. It should help the user decide what to import or overwrite, but it
 should not treat provider runtime caches, sessions, transcripts, or histories as
 agentctl-owned configuration.
+
+## Implemented Slice
+
+The first preset-library implementation provides:
+
+- strict JSON preset files under `config/presets`;
+- manifest-backed content references;
+- provider target selection;
+- declarative DAG phases, edges, conditions, entry phases, and explicit loops;
+- create, copy, metadata edit, delete, list, show, and validate commands;
+- preset-scoped plan, staging render, and guarded apply;
+- a read-only Presets TUI backed by the same library and planner.
+
+Structured editing of contents and DAGs is still file-based. TUI write actions,
+provider-file classification/import, and structured settings merges remain
+future work.

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "idea-shaping",
+  "name": "Idea Shaping",
+  "description": "Continuous source intake, research, focused human questions, option generation, challenge, decision, and planning.",
+  "pipelines": [
+    {
+      "id": "shape",
+      "name": "Shape",
+      "entry_phases": ["intake"],
+      "phases": [
+        "intake", "research", "grill", "brainstorm", "challenge", "decide",
+        "plan", "final"
+      ],
+      "edges": [
+        {"from": "intake", "to": "research"},
+        {"from": "research", "to": "grill"},
+        {"from": "grill", "to": "brainstorm"},
+        {"from": "brainstorm", "to": "challenge"},
+        {"from": "challenge", "to": "decide"},
+        {"from": "decide", "to": "plan"},
+        {"from": "plan", "to": "final", "condition": "human finalization"},
+        {"from": "grill", "to": "research", "condition": "evidence gap", "loop": true},
+        {"from": "challenge", "to": "brainstorm", "condition": "weak options", "loop": true},
+        {"from": "challenge", "to": "grill", "condition": "missing constraint", "loop": true}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [
+      "work-shape", "work-source", "work-grill", "work-brainstorm",
+      "work-research", "work-decide", "work-plan"
+    ],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}
