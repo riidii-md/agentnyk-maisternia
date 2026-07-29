@@ -92,6 +92,8 @@ jobs:
           distribution: goreleaser
           version: "~> v2"
           args: release --snapshot --clean
+        env:
+          HOMEBREW_TAP_TOKEN: ""
 
       - name: Upload snapshot archives
         uses: actions/upload-artifact@v7
