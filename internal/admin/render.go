@@ -3,13 +3,11 @@ package admin
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kagi-labs/agentctl/internal/configurator"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/workflow"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -68,8 +66,6 @@ func (m Model) render(width, height int) string {
 			body = m.renderOverview(width)
 		case TabPipelines:
 			body = m.renderPipelines(width)
-		case TabTasks:
-			body = m.renderTasks(width)
 		case TabProviders:
 			body = m.renderProviders(width)
 		case TabConfig:
@@ -155,14 +151,22 @@ func (m Model) renderFooter(width int) string {
 			width,
 		))
 	}
-	keys := "1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
-		keys = "a apply  enter inspect  1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+		keys = "a apply  enter inspect  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
+		m.snapshot.Config.Counts.Conflict > 0 &&
+		m.firstConflictingPreset() >= 0 {
+		keys = "a resolve  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	}
 	if width < 72 {
-		keys = "1-5 view  j/k select  r refresh  ? help  q quit"
+		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
-			keys = "a apply  enter inspect  1-5 view  j/k select  r refresh  q quit"
+			keys = "a apply  enter inspect  1-4 view  j/k select  r refresh  q quit"
+		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
+			m.snapshot.Config.Counts.Conflict > 0 &&
+			m.firstConflictingPreset() >= 0 {
+			keys = "a resolve  1-4 view  j/k select  r refresh  q quit"
 		}
 	}
 	return mutedStyle.Render(truncate(keys, width))
@@ -170,12 +174,15 @@ func (m Model) renderFooter(width int) string {
 
 func (m Model) renderOverview(width int) string {
 	var sections []string
-	repositoryState := warningStyle.Render("NOT CONFIGURED")
+	repositoryState := "NOT CONFIGURED"
+	repositoryStyle := warningStyle
 	if m.snapshot.Repository.Path != "" {
-		repositoryState = errorStyle.Render("INVALID")
+		repositoryState = "INVALID"
+		repositoryStyle = errorStyle
 	}
 	if m.snapshot.Repository.Ready {
-		repositoryState = goodStyle.Render("READY")
+		repositoryState = "READY"
+		repositoryStyle = goodStyle
 	}
 	readyProviders := 0
 	for _, provider := range m.snapshot.Providers {
@@ -186,7 +193,7 @@ func (m Model) renderOverview(width int) string {
 	counts := m.snapshot.Config.Counts
 
 	statusLines := []string{
-		metric("Repository", repositoryState, width),
+		styledMetric("Repository", repositoryState, repositoryStyle, width),
 		metric(
 			"Providers",
 			fmt.Sprintf("%d/%d ready", readyProviders, len(m.snapshot.Providers)),
@@ -216,22 +223,23 @@ func (m Model) renderOverview(width int) string {
 	for _, issue := range m.snapshot.Issues {
 		attention = append(attention, renderIssue(issue, width))
 	}
+	if counts.Conflict > 0 {
+		message := fmt.Sprintf(
+			"%d configuration conflicts. Open Config for details.",
+			counts.Conflict,
+		)
+		if m.firstConflictingPreset() >= 0 {
+			message = fmt.Sprintf(
+				"%d configuration conflicts. Press a to review and apply a preset.",
+				counts.Conflict,
+			)
+		}
+		attention = append(attention, warningStyle.Render("! ")+truncate(message, width-2))
+	}
 	if len(attention) == 0 {
 		attention = []string{goodStyle.Render("✓ No current attention items")}
 	}
 	sections = append(sections, section("ATTENTION", attention, width))
-
-	var tasks []string
-	for index, task := range m.snapshot.Tasks {
-		if index == 5 {
-			break
-		}
-		tasks = append(tasks, renderTaskSummary(task, width))
-	}
-	if len(tasks) == 0 {
-		tasks = []string{mutedStyle.Render("No legacy state fixtures")}
-	}
-	sections = append(sections, section("LEGACY FIXTURES", tasks, width))
 	return strings.Join(sections, "\n\n")
 }
 
@@ -271,6 +279,19 @@ func (m Model) renderPipelines(width int) string {
 		details = append(
 			details,
 			metric("Contents", presetContentSummary(preset.Contents), width),
+		)
+	} else {
+		details = append(
+			details,
+			metric("Contents", fmt.Sprintf(
+				"%d MCP  %d cmd  %d prompt  %d skill  %d hook  %d setting",
+				len(preset.Contents.MCPRefs),
+				len(preset.Contents.Commands),
+				len(preset.Contents.Prompts),
+				len(preset.Contents.Skills),
+				len(preset.Contents.Hooks),
+				len(preset.Contents.Settings),
+			), width),
 		)
 	}
 	details = append(
@@ -582,61 +603,6 @@ func packRenderedLines(values []string, width int) []string {
 	return lines
 }
 
-func (m Model) renderTasks(width int) string {
-	if len(m.snapshot.Tasks) == 0 {
-		return section("LEGACY STATE FIXTURES", []string{
-			mutedStyle.Render("No legacy state fixtures"),
-			mutedStyle.Render("Experimental schema/debug data only."),
-			mutedStyle.Render("Not provider state, sessions, or live pipeline runs."),
-		}, width)
-	}
-	index := m.cursor[TabTasks]
-	start, end := window(index, len(m.snapshot.Tasks), 8)
-	var rows []string
-	if width >= 96 {
-		rows = append(rows, mutedStyle.Render(
-			fmt.Sprintf("%-26s %-12s %-22s %s", "FIXTURE", "PHASE", "STATUS", "TITLE"),
-		))
-		for rowIndex := start; rowIndex < end; rowIndex++ {
-			task := m.snapshot.Tasks[rowIndex]
-			line := fmt.Sprintf(
-				"%-26s %-12s %-22s %s",
-				truncate(task.TaskID, 25),
-				truncate(task.Phase, 11),
-				truncate(task.Status, 21),
-				truncate(task.Title, width-64),
-			)
-			rows = append(rows, selectable(line, rowIndex == index, width))
-		}
-	} else {
-		for rowIndex := start; rowIndex < end; rowIndex++ {
-			task := m.snapshot.Tasks[rowIndex]
-			line := fmt.Sprintf(
-				"%-10s %-20s %s",
-				truncate(task.Phase, 9),
-				truncate(task.Status, 19),
-				truncate(task.Title, width-33),
-			)
-			rows = append(rows, selectable(line, rowIndex == index, width))
-		}
-	}
-	task := m.snapshot.Tasks[index]
-	details := []string{
-		mutedStyle.Render(truncate(
-			"Legacy schema/debug data. Not provider state, sessions, or live pipeline runs.",
-			width,
-		)),
-		metric("Fixture", task.TaskID, width),
-		metric("Repository", task.Repository, width),
-		metric("Authority", task.Authority, width),
-		metric("Approval fixture", approvalText(task.Approval), width),
-		metric("Recorded next", task.NextAction, width),
-		metric("Updated", displayTime(task.UpdatedAt), width),
-	}
-	return section("LEGACY STATE FIXTURES", rows, width) + "\n\n" +
-		section("FIXTURE DETAIL", details, width)
-}
-
 func (m Model) renderProviders(width int) string {
 	if len(m.snapshot.Providers) == 0 {
 		return section("PROVIDERS", []string{
@@ -752,6 +718,26 @@ func (m Model) renderConfig(width int) string {
 		providersRows = []string{mutedStyle.Render("No configuration actions")}
 	}
 
+	var resolution []string
+	if presetIndex := m.firstConflictingPreset(); presetIndex >= 0 {
+		preset := m.snapshot.Presets[presetIndex]
+		resolution = []string{
+			activeStyle.Render("a  Review and apply ") +
+				truncate(
+					fmt.Sprintf(
+						"%s (%d conflicts)",
+						preset.Preset.Name,
+						preset.Config.Counts.Conflict,
+					),
+					maximum(1, width-20),
+				),
+			mutedStyle.Render(truncate(
+				"Keep preserves customized files; replace backs them up before installing.",
+				width,
+			)),
+		}
+	}
+
 	var conflicts []string
 	if len(m.snapshot.Config.Conflicts) == 0 {
 		conflicts = []string{goodStyle.Render("✓ No conflicts")}
@@ -775,9 +761,15 @@ func (m Model) renderConfig(width int) string {
 	}
 	sections := []string{
 		section("CONFIGURATION", summary, width),
+	}
+	if len(resolution) > 0 {
+		sections = append(sections, section("RESOLVE CONFLICTS", resolution, width))
+	}
+	sections = append(
+		sections,
 		section("BY PROVIDER", providersRows, width),
 		section("CONFLICTS", conflicts, width),
-	}
+	)
 	if len(m.snapshot.Config.Conflicts) > 0 {
 		action := m.snapshot.Config.Conflicts[m.cursor[TabConfig]]
 		sections = append(sections, section("SELECTED CONFLICT", []string{
@@ -796,13 +788,13 @@ func (m Model) renderConfig(width int) string {
 
 func (m Model) renderHelp(width int) string {
 	lines := []string{
-		"1-5              open a view",
+		"1-4              open a view",
 		"tab / shift+tab  next or previous view",
 		"←/→ or h/l       next or previous view",
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
 		"enter            inspect preset prompt/resource source",
-		"a                apply selected preset",
+		"a                apply a preset or resolve conflicts",
 		"pgup / pgdown    scroll prompt/resource source",
 		"r                refresh configuration state",
 		"? / esc          toggle or close help",
@@ -832,6 +824,22 @@ func metric(label string, value any, width int) string {
 	return prefix + truncate(fmt.Sprint(value), maximum(1, width-labelWidth))
 }
 
+func styledMetric(
+	label string,
+	value string,
+	style lipgloss.Style,
+	width int,
+) string {
+	labelWidth := 16
+	if width < 72 {
+		labelWidth = 13
+	}
+	prefix := labelStyle.Render(fmt.Sprintf("%-*s", labelWidth, label))
+	return prefix + style.Render(
+		truncate(value, maximum(1, width-labelWidth)),
+	)
+}
+
 func renderIssue(issue Issue, width int) string {
 	marker := mutedStyle.Render("•")
 	switch issue.Severity {
@@ -855,35 +863,12 @@ func renderProviderIssue(issue providers.Issue, width int) string {
 	}, width)
 }
 
-func renderTaskSummary(task workflow.TaskState, width int) string {
-	marker := activeStyle.Render("●")
-	if task.Status == "waiting_for_approval" {
-		marker = warningStyle.Render("⏸")
-	} else if task.Status == "blocked" {
-		marker = errorStyle.Render("!")
-	}
-	value := fmt.Sprintf(
-		"%-10s %s — %s",
-		strings.ToUpper(task.Phase),
-		task.Title,
-		task.Status,
-	)
-	return marker + " " + truncate(value, width-2)
-}
-
 func selectable(value string, selected bool, width int) string {
 	value = truncate(value, width)
 	if selected {
 		return selectedStyle.Width(width).Render(value)
 	}
 	return value
-}
-
-func approvalText(approval workflow.Approval) string {
-	if !approval.Required {
-		return "not required"
-	}
-	return approval.Status
 }
 
 func executableText(provider providers.Inspection) string {
@@ -983,14 +968,6 @@ func (m Model) renderProviderTargets(providerID string, width int) []string {
 		)))
 	}
 	return lines
-}
-
-func displayTime(value string) string {
-	parsed, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		return value
-	}
-	return parsed.Local().Format("2006-01-02 15:04")
 }
 
 func truncate(value string, width int) string {

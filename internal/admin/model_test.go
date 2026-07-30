@@ -26,7 +26,8 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	if model.Snapshot().Repository.Path != fixture.Repository.Path {
 		t.Fatalf("snapshot repository = %q", model.Snapshot().Repository.Path)
 	}
-	if !strings.Contains(model.View(), "LEGACY FIXTURES") {
+	if !strings.Contains(model.View(), "STATUS") ||
+		strings.Contains(model.View(), "FIXTURES") {
 		t.Fatalf("overview did not render:\n%s", model.View())
 	}
 
@@ -59,21 +60,28 @@ func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	}
 }
 
-func TestFixtureTabIsExplicitlyLegacyDebugState(t *testing.T) {
+func TestAdminUsesFourUserFacingTabs(t *testing.T) {
 	t.Parallel()
 
-	if got := TabTasks.String(); got != "Fixtures" {
-		t.Fatalf("fixture tab name = %q, want Fixtures", got)
+	if tabCount != 4 {
+		t.Fatalf("tab count = %d, want 4", tabCount)
 	}
+	if got := strings.Join(tabNames, ","); got != "Overview,Presets,Providers,Config" {
+		t.Fatalf("tabs = %q", got)
+	}
+}
 
-	model := loadedAdminModel(t, TabTasks, 100, 28)
+func TestOverviewStatusDoesNotLeakANSIFragments(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabOverview, 100, 28)
 	view := model.View()
-	for _, expected := range []string{
-		"LEGACY STATE FIXTURES",
-		"Not provider state, sessions, or live pipeline runs.",
-	} {
-		if !strings.Contains(view, expected) {
-			t.Fatalf("fixture view missing %q:\n%s", expected, view)
+	if !strings.Contains(view, "READY") {
+		t.Fatalf("overview status missing READY:\n%s", view)
+	}
+	for _, fragment := range []string{"[38;5;", "[0m"} {
+		if strings.Contains(view, fragment) {
+			t.Fatalf("overview leaked ANSI fragment %q:\n%s", fragment, view)
 		}
 	}
 }
@@ -251,6 +259,48 @@ func TestPresetViewExposesApplyAction(t *testing.T) {
 	}
 }
 
+func TestPresetContentsRemainVisibleAtCommonTerminalWidth(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets = append(fixture.Presets, PresetStatus{
+		Preset: presets.Preset{
+			SchemaVersion: presets.SchemaVersion,
+			ID:            "codex-resource-lab",
+			Name:          "Codex Resource Lab",
+			Contents: presets.Contents{
+				MCPRefs:  []string{"mcp"},
+				Prompts:  []string{"prompt"},
+				Skills:   []string{"skill"},
+				Hooks:    []string{"hook"},
+				Settings: []string{"settings"},
+			},
+			Targets: []string{"codex"},
+		},
+	})
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	model.cursor[TabPipelines] = 2
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 80, Height: 30})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"1 MCP",
+		"0 cmd",
+		"1 prompt",
+		"1 skill",
+		"1 hook",
+		"1 setting",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("compact preset contents missing %q:\n%s", expected, view)
+		}
+	}
+}
+
 func TestPresetApplyDialogStaysWithinTerminalWidth(t *testing.T) {
 	t.Parallel()
 
@@ -312,6 +362,7 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 		Reason:          "existing target is not managed by agentctl",
 	}}
 	fixture.Config.Counts.Conflict = 1
+	fixture.Presets[0].Config.Counts.Conflict = 1
 
 	model := NewModel(func() Snapshot { return fixture })
 	updated, _ := model.Update(model.Init()())
@@ -322,6 +373,8 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 
 	view := model.View()
 	for _, expected := range []string{
+		"RESOLVE CONFLICTS",
+		"a  Review and apply",
 		"Agentctl preserves conflicts instead of overwriting them.",
 		"SELECTED CONFLICT",
 		"existing target is not managed by agentctl",
@@ -329,6 +382,54 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("config view missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestConflictActionOpensFirstConflictingPreset(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Config.Counts.Conflict = 3
+	fixture.Presets[1].Config.Counts.Conflict = 3
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabConfig
+
+	updated, _ = model.Update(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune{'a'},
+	})
+	model = updated.(Model)
+	if view := model.View(); !strings.Contains(view, "APPLY PRESET") ||
+		!strings.Contains(view, "Idea Shaping") {
+		t.Fatalf("conflict shortcut did not open preset apply:\n%s", view)
+	}
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	model = updated.(Model)
+	if model.ActiveTab() != TabConfig {
+		t.Fatalf("cancel returned to %s, want Config", model.ActiveTab())
+	}
+}
+
+func TestConflictActionIsVisibleAtCommonTerminalSize(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Config.Counts.Conflict = 3
+	fixture.Presets[0].Config.Counts.Conflict = 3
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabConfig
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{"RESOLVE CONFLICTS", "a  Review and apply"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("compact config view missing %q:\n%s", expected, view)
 		}
 	}
 }
@@ -531,32 +632,6 @@ func adminFixture() Snapshot {
 					Counts:      ActionCounts{Create: 8},
 					ActionCount: 8,
 				},
-			},
-		},
-		Tasks: []workflow.TaskState{
-			{
-				TaskID:     "github-kagi-agentctl-issue-42",
-				Title:      "Build an admin terminal interface",
-				Repository: "kagi-labs/agentctl",
-				Phase:      "handoff",
-				Status:     "waiting_for_approval",
-				NextAction: "request implementation approval",
-				Authority:  "artifact_write",
-				Approval: workflow.Approval{
-					Required: true,
-					Status:   "pending",
-				},
-				UpdatedAt: "2026-07-28T12:00:00Z",
-			},
-			{
-				TaskID:     "github-kagi-agentctl-issue-43",
-				Title:      "Check provider configuration",
-				Repository: "kagi-labs/agentctl",
-				Phase:      "verify",
-				Status:     "ready",
-				NextAction: "run deterministic verification",
-				Authority:  "controlled",
-				UpdatedAt:  "2026-07-28T11:00:00Z",
 			},
 		},
 		Policy: workflow.Policy{

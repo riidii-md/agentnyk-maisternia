@@ -14,7 +14,6 @@ type Tab int
 const (
 	TabOverview Tab = iota
 	TabPipelines
-	TabTasks
 	TabProviders
 	TabConfig
 	tabCount
@@ -23,7 +22,6 @@ const (
 var tabNames = []string{
 	"Overview",
 	"Presets",
-	"Fixtures",
 	"Providers",
 	"Config",
 }
@@ -158,6 +156,9 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "a":
 			if m.tab == TabPipelines && !m.presetPreview {
 				m.openPresetApply()
+			} else if (m.tab == TabOverview || m.tab == TabConfig) &&
+				m.snapshot.Config.Counts.Conflict > 0 {
+				m.openFirstConflictingPreset()
 			}
 		case "r":
 			if !m.loading {
@@ -174,7 +175,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.closePresetPreview()
 			m.tab = (m.tab + tabCount - 1) % tabCount
 			m.clampCursor()
-		case "1", "2", "3", "4", "5":
+		case "1", "2", "3", "4":
 			m.help = false
 			m.closePresetPreview()
 			m.tab = Tab(int(message.Runes[0] - '1'))
@@ -287,6 +288,25 @@ func (m *Model) openPresetApply() {
 		Counts:   status.Config.Counts,
 		Policy:   configurator.ConflictAbort,
 	}
+}
+
+func (m *Model) openFirstConflictingPreset() {
+	index := m.firstConflictingPreset()
+	if index < 0 {
+		return
+	}
+	m.cursor[TabPipelines] = index
+	m.closePresetPreview()
+	m.openPresetApply()
+}
+
+func (m Model) firstConflictingPreset() int {
+	for index, status := range m.snapshot.Presets {
+		if status.Config.Counts.Conflict > 0 {
+			return index
+		}
+	}
+	return -1
 }
 
 func (m Model) applyPresetCommand() tea.Cmd {
@@ -411,8 +431,6 @@ func (m Model) itemCount() int {
 	switch m.tab {
 	case TabPipelines:
 		return len(m.snapshot.Presets)
-	case TabTasks:
-		return len(m.snapshot.Tasks)
 	case TabProviders:
 		return len(m.snapshot.Providers)
 	case TabConfig:

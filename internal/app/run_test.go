@@ -683,6 +683,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	}
 	for _, presetID := range []string{
 		"codex-compatibility",
+		"codex-resource-lab",
 		"idea-shaping",
 		"standard-work",
 	} {
@@ -716,7 +717,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "4 presets valid") {
+	if !strings.Contains(stdout.String(), "5 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
 }

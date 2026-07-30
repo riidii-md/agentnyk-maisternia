@@ -76,8 +76,8 @@ The first preset-library implementation provides:
 - declarative DAG phases, edges, conditions, entry phases, and explicit loops;
 - create, copy, metadata edit, delete, list, show, and validate commands;
 - preset-scoped plan, staging render, and guarded apply;
-- a read-only Presets TUI backed by the same library and planner.
+- a Presets TUI backed by the same library and planner, with guarded apply.
 
-Structured editing of contents and DAGs is still file-based. TUI write actions,
+Structured editing of contents and DAGs is still file-based. TUI authoring,
 provider-file classification/import, and structured settings merges remain
 future work.

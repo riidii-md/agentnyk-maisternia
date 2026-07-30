@@ -19,8 +19,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 4 {
-		t.Fatalf("preset count = %d, want 4", len(library.Presets))
+	if len(library.Presets) != 5 {
+		t.Fatalf("preset count = %d, want 5", len(library.Presets))
 	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
@@ -43,6 +43,20 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := experiment.Targets; len(got) != 4 {
 		t.Fatalf("scored-experiment targets = %v, want all four providers", got)
+	}
+	resourceLab, found := library.Get("codex-resource-lab")
+	if !found {
+		t.Fatal("codex-resource-lab preset missing")
+	}
+	if got := resourceLab.Contents; len(got.MCPRefs) != 1 ||
+		len(got.Prompts) != 1 ||
+		len(got.Skills) != 1 ||
+		len(got.Hooks) != 1 ||
+		len(got.Settings) != 1 {
+		t.Fatalf("codex-resource-lab contents = %#v", got)
+	}
+	if len(resourceLab.Contents.Commands) != 0 {
+		t.Fatalf("codex-resource-lab commands = %v, want none", resourceLab.Contents.Commands)
 	}
 
 	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
@@ -70,6 +84,22 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 			if target.Agent == "unknown" {
 				t.Fatalf("selected unexpected target: %#v", target)
 			}
+		}
+	}
+
+	resourceLabManifest, err := SelectManifest(resourceLab, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(codex-resource-lab) error = %v", err)
+	}
+	if len(resourceLabManifest.Resources) != 5 {
+		t.Fatalf(
+			"codex-resource-lab resource count = %d, want 5",
+			len(resourceLabManifest.Resources),
+		)
+	}
+	for _, resource := range resourceLabManifest.Resources {
+		if len(resource.Targets) != 1 || resource.Targets[0].Agent != "codex" {
+			t.Fatalf("codex resource lab target = %#v", resource.Targets)
 		}
 	}
 

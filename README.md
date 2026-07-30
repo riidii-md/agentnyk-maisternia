@@ -36,8 +36,8 @@ The repository contains the first safe configurator foundation:
 - drift detection using install checksums;
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
-- reusable standard-work, idea-shaping, scored-experiment, and
-  Codex-compatibility presets;
+- reusable standard-work, idea-shaping, scored-experiment,
+  Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -49,14 +49,14 @@ The repository contains the first safe configurator foundation:
 - strict normalized event validation as untrusted input fixtures;
 - provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
   `/work-brainstorm` command templates;
-- a read-only configuration TUI backed by real preset-library entries,
-  workflow DAGs, provider health, per-preset plans, and managed files;
+- a configuration TUI backed by real preset-library entries, workflow DAGs,
+  provider health, per-preset plans, managed files, and guarded preset apply;
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
 Structured TOML and JSON settings merging, structured preset-content and DAG
-editing, TUI write actions, broader provider-native rendering, existing
-provider-file classification, and configuration import are planned next.
+editing, broader provider-native rendering, existing provider-file
+classification, and configuration import are planned next.
 Runtime dispatch is intentionally out of scope; existing harnesses run the
 rendered commands.
 
@@ -124,12 +124,13 @@ Then open the admin interface from any directory:
 agentctl admin
 ```
 
-Use `1` through `5` to open Overview, Presets, Fixtures, Providers, and
-Config. Press `?` for all keys. The current TUI browses preset-library entries,
-their workflow DAGs and contents, provider health, preset-scoped plans, drift,
-and conflicts. On a selected preset, press `a` to review and apply it. Conflicts
-require an explicit keep-existing or replace-from-preset decision followed by
-confirmation. The TUI must not run, observe, dispatch, commit, or push.
+Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
+for all keys. The current TUI browses preset-library entries, their workflow
+DAGs and contents, provider health, preset-scoped plans, drift, and conflicts.
+On a selected preset, press `a` to review and apply it. Overview and Config also
+offer `a resolve` when a preset has conflicts. Conflicts require an explicit
+keep-existing or replace-from-preset decision followed by confirmation. The TUI
+must not run, observe, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
@@ -223,6 +224,7 @@ Inspect and validate the preset library:
 go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
+go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
 

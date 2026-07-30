@@ -32,7 +32,9 @@ The repository starts with:
   decision, and planning;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
-- `codex-compatibility`: permanent Codex-prefixed compatibility aliases.
+- `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
+- `codex-resource-lab`: a safe Codex-only example with one MCP reference,
+  prompt, skill, hook, and settings resource.
 
 Inspect them:
 
@@ -40,8 +42,15 @@ Inspect them:
 agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
+agentctl preset show codex-resource-lab
 agentctl preset validate all
 ```
+
+`codex-resource-lab` makes all six content counters testable in the TUI. Its
+prompt and skill install to provider-native locations. Its MCP and hook files
+are review fragments, not active configuration, because agentctl does not yet
+merge structured TOML or JSON. Its settings resource is an opt-in named Codex
+profile and does not replace the user's main `config.toml`.
 
 Validation rejects unknown fields, unsupported schema versions, invalid IDs,
 duplicate resources, unknown manifest resources, unknown providers, dangling

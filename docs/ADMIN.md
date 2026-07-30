@@ -100,14 +100,7 @@ After choosing, press `y` for final confirmation. Abort remains the default;
 agentctl never chooses keep or replace automatically.
 
 It must not present a preset pipeline as a live run, mark phases active, choose
-the next agent, or dispatch work. If legacy task-state fixtures are present,
-they may be shown only as schema/debug information, not as runtime control.
-
-### Legacy Fixtures
-
-Shows experimental local state files only when they exist. This view is for
-schema/debug inspection while configuration authoring matures. It is not a task
-monitor, approval queue, provider status view, session browser, or run observer.
+the next agent, or dispatch work.
 
 ### Providers / Existing Provider Config
 
@@ -123,7 +116,10 @@ inspection used by `agentctl provider doctor` and configuration planning.
 ### Config
 
 Summarizes managed resources as unchanged, create, update, kept-existing, or
-conflict actions. Presets can be applied from the Presets view or through:
+conflict actions. When conflicts belong to a preset, press `a` from Config to
+open that preset's guarded apply panel. Resolve one preset at a time; after an
+apply, the refreshed plan shows whether another preset still needs a decision.
+Presets can also be applied through:
 
 ```bash
 agentctl plan
@@ -152,17 +148,32 @@ customized target changes, agentctl marks that decision stale and asks again.
 Replace decisions create timestamped backups under
 `~/.config/agentctl/backups/`.
 
+The `codex-resource-lab` preset provides one visible example of every Codex
+resource category:
+
+- an MCP configuration fragment;
+- a deprecated custom prompt kept for compatibility testing;
+- a preferred Codex skill;
+- an inactive hook example;
+- an opt-in named settings profile.
+
+The prompt, skill, and named profile use their provider-native paths. MCP and
+hook examples are installed under `.codex/agentctl/fragments/` for review
+because structured merge into active `config.toml` and `hooks.json` files is not
+implemented yet. Applying the preset therefore cannot silently activate a
+server or hook.
+
 ## Keys
 
 | Key | Action |
 |---|---|
-| `1` through `5` | Open a view |
+| `1` through `4` | Open a view |
 | `Tab`, `Shift+Tab` | Switch views |
 | Left/Right or `h`/`l` | Switch views |
 | Up/Down or `j`/`k` | Move selection |
 | `g`, `G` | First or last item |
 | `Enter` | Inspect a preset's prompt/resource source |
-| `a` | Review and apply the selected preset |
+| `a` | Review/apply a preset, or open the first preset with conflicts |
 | `k` | Keep existing files in the apply decision panel |
 | `x` | Replace conflicts from the preset in the apply decision panel |
 | `y` | Confirm the reviewed preset apply |

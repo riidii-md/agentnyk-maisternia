@@ -79,8 +79,6 @@ type Snapshot struct {
 	Repository RepositoryStatus
 	Providers  []providers.Inspection
 	Presets    []PresetStatus
-	Tasks      []workflow.TaskState
-	Shape      map[string]workflow.ShapeSummary
 	Policy     workflow.Policy
 	Config     ConfigStatus
 	Issues     []Issue
@@ -111,29 +109,9 @@ func (l Loader) Load() Snapshot {
 	}
 	snapshot := Snapshot{
 		LoadedAt: now(),
-		Shape:    make(map[string]workflow.ShapeSummary),
 		Config: ConfigStatus{
 			StatePath: configurator.StatePath(l.Home),
 		},
-	}
-
-	store, err := workflow.NewStore(l.Home, workflow.StoreOptions{})
-	if err != nil {
-		snapshot.addIssue(SeverityError, "tasks", err)
-	} else if snapshot.Tasks, err = store.List(); err != nil {
-		snapshot.addIssue(SeverityError, "tasks", err)
-	} else {
-		for _, task := range snapshot.Tasks {
-			if task.Pipeline != "shape" {
-				continue
-			}
-			summary, err := store.ShapeSummary(task.TaskID)
-			if err != nil {
-				snapshot.addIssue(SeverityError, "shape "+task.TaskID, err)
-				continue
-			}
-			snapshot.Shape[task.TaskID] = summary
-		}
 	}
 
 	selection, err := l.resolveRepository()

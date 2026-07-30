@@ -3,7 +3,7 @@
 ## Status
 
 This document defines the configuration workflow for `agentctl`. The first
-preset-library, scoped render/apply, and read-only TUI slice is implemented;
+preset-library, scoped render/apply, and guarded-apply TUI slice is implemented;
 structured DAG/content editing remains in progress.
 
 `agentctl` is a preset and pipeline configurator for existing command-line agent
@@ -274,7 +274,8 @@ Implemented:
    whose values reference managed manifest resources.
 4. Preset create, copy, metadata edit, delete, list, show, validate, plan,
    render, and apply commands.
-5. A read-only Presets TUI backed by the real library and per-preset plans.
+5. A Presets TUI backed by the real library and per-preset plans, with guarded
+   apply and explicit conflict decisions.
 
 Next:
 
