@@ -1,0 +1,18 @@
+{
+  "description": "Inactive agentctl hook example. Review and move into an active Codex config layer before trusting it.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agentctl version",
+            "timeout": 3,
+            "statusMessage": "Checking agentctl installation"
+          }
+        ]
+      }
+    ]
+  }
+}

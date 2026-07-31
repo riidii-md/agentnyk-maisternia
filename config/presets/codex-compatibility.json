@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "codex-compatibility",
+  "name": "Codex Compatibility Aliases",
+  "description": "Permanent codex-prefixed aliases for Codex and Claude users.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [
+      "codex-shape-codex", "codex-shape-claude",
+      "codex-brief-codex", "codex-brief-claude",
+      "codex-research-codex", "codex-research-claude",
+      "codex-plan-codex", "codex-plan-claude",
+      "codex-work-loop-codex", "codex-work-loop-claude",
+      "codex-review-codex", "codex-review-claude",
+      "codex-showcase-codex", "codex-showcase-claude",
+      "codex-scout-codex", "codex-scout-claude",
+      "codex-analyze-codex", "codex-analyze-claude",
+      "codex-decision-codex", "codex-decision-claude",
+      "codex-ready-codex", "codex-ready-claude",
+      "codex-pr-check-codex", "codex-pr-check-claude",
+      "codex-cleanup", "codex-deep-research-claude", "codex-fleet-claude"
+    ],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex", "claude"]
+}

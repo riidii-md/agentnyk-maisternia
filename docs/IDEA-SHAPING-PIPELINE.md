@@ -46,7 +46,7 @@ The first runtime slice now includes:
 - a three-cycle default loop budget;
 - append-only source records with classification;
 - append-only grill questions and answers;
-- shape topology and summaries in `agentctl admin`;
+- shape preset topology and managed resources in `agentctl admin`;
 - `/work-shape`, `/work-source`, `/work-grill`, and `/work-brainstorm` for
   Codex, Claude, Antigravity, and Hermes;
 - `/codex-shape` as a compatibility alias.
@@ -352,8 +352,9 @@ own authority envelope and approval gates.
 
 ## TUI Experience
 
-The existing admin TUI can extend its pipeline view rather than introducing a
-separate application.
+The following task-oriented screen is historical design material for a separate
+runtime harness. `agentctl admin` now shows only preset topology and
+configuration; it must not add live task observation.
 
 ```text
 TASK: Improve agent workflow

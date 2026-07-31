@@ -51,6 +51,16 @@
       ]
     },
     {
+      "id": "work-experiment",
+      "source": "config/workflow/phases/experiment.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-experiment.md"},
+        {"agent": "claude", "path": ".claude/commands/work-experiment.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-experiment.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-experiment/SKILL.md"}
+      ]
+    },
+    {
       "id": "codex-shape-codex",
       "source": "config/workflow/phases/shape.md",
       "targets": [
@@ -373,6 +383,41 @@
       "source": "config/adapters/claude/codex-fleet.md",
       "targets": [
         {"agent": "claude", "path": ".claude/commands/codex-fleet.md"}
+      ]
+    },
+    {
+      "id": "codex-lab-mcp-context7",
+      "source": "config/codex/resource-lab/mcp-context7.toml",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/fragments/mcp-context7.toml"}
+      ]
+    },
+    {
+      "id": "codex-lab-prompt-plan",
+      "source": "config/codex/resource-lab/prompt-plan.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/agentctl-plan.md"}
+      ]
+    },
+    {
+      "id": "codex-lab-skill-status",
+      "source": "config/codex/resource-lab/status-skill.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/agentctl-status/SKILL.md"}
+      ]
+    },
+    {
+      "id": "codex-lab-hook-example",
+      "source": "config/codex/resource-lab/hooks.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/fragments/hooks.json"}
+      ]
+    },
+    {
+      "id": "codex-lab-settings-profile",
+      "source": "config/codex/resource-lab/toolbox.config.toml",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl-toolbox.config.toml"}
       ]
     }
   ]

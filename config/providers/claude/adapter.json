@@ -74,9 +74,13 @@
     "repository.test",
     "runner.headless",
     "runner.safe_headless",
+    "safety.tool_guard",
     "session.resume",
     "subagent.spawn",
     "workflow.artifact_write",
+    "workflow.goal",
+    "workflow.scheduled_loop",
+    "workflow.stop_continue",
     "worktree.isolation"
   ]
 }

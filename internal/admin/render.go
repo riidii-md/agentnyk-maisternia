@@ -2,13 +2,12 @@ package admin
 
 import (
 	"fmt"
-	"sort"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/workflow"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -57,7 +56,9 @@ func (m Model) render(width, height int) string {
 	}
 
 	var body string
-	if m.help {
+	if m.applyDialog.Stage != "" {
+		body = m.renderPresetApplyDialog(width)
+	} else if m.help {
 		body = m.renderHelp(width)
 	} else {
 		switch m.tab {
@@ -65,8 +66,6 @@ func (m Model) render(width, height int) string {
 			body = m.renderOverview(width)
 		case TabPipelines:
 			body = m.renderPipelines(width)
-		case TabTasks:
-			body = m.renderTasks(width)
 		case TabProviders:
 			body = m.renderProviders(width)
 		case TabConfig:
@@ -132,21 +131,58 @@ func (m Model) renderTabs(width int) string {
 }
 
 func (m Model) renderFooter(width int) string {
-	keys := "1-5 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	if m.applyDialog.Stage != "" {
+		var keys string
+		switch m.applyDialog.Stage {
+		case applyChoose:
+			keys = "k keep existing  x replace from preset  esc cancel"
+		case applyConfirm:
+			keys = "y apply  b back  esc cancel"
+		case applyRunning:
+			keys = "applying preset..."
+		case applyComplete:
+			keys = "enter close  q quit"
+		}
+		return mutedStyle.Render(truncate(keys, width))
+	}
+	if m.presetPreview {
+		return mutedStyle.Render(truncate(
+			"j/k resource  pgup/pgdn scroll prompt  esc back  ? help  q quit",
+			width,
+		))
+	}
+	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	if m.tab == TabPipelines {
+		keys = "a apply  enter inspect  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
+		m.snapshot.Config.Counts.Conflict > 0 &&
+		m.firstConflictingPreset() >= 0 {
+		keys = "a resolve  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+	}
 	if width < 72 {
-		keys = "1-5 view  j/k select  r refresh  ? help  q quit"
+		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
+		if m.tab == TabPipelines {
+			keys = "a apply  enter inspect  1-4 view  j/k select  r refresh  q quit"
+		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
+			m.snapshot.Config.Counts.Conflict > 0 &&
+			m.firstConflictingPreset() >= 0 {
+			keys = "a resolve  1-4 view  j/k select  r refresh  q quit"
+		}
 	}
 	return mutedStyle.Render(truncate(keys, width))
 }
 
 func (m Model) renderOverview(width int) string {
 	var sections []string
-	repositoryState := warningStyle.Render("NOT CONFIGURED")
+	repositoryState := "NOT CONFIGURED"
+	repositoryStyle := warningStyle
 	if m.snapshot.Repository.Path != "" {
-		repositoryState = errorStyle.Render("INVALID")
+		repositoryState = "INVALID"
+		repositoryStyle = errorStyle
 	}
 	if m.snapshot.Repository.Ready {
-		repositoryState = goodStyle.Render("READY")
+		repositoryState = "READY"
+		repositoryStyle = goodStyle
 	}
 	readyProviders := 0
 	for _, provider := range m.snapshot.Providers {
@@ -157,24 +193,25 @@ func (m Model) renderOverview(width int) string {
 	counts := m.snapshot.Config.Counts
 
 	statusLines := []string{
-		metric("Repository", repositoryState, width),
+		styledMetric("Repository", repositoryState, repositoryStyle, width),
 		metric(
 			"Providers",
 			fmt.Sprintf("%d/%d ready", readyProviders, len(m.snapshot.Providers)),
 			width,
 		),
 		metric(
-			"State fixtures",
-			fmt.Sprintf("%d local", len(m.snapshot.Tasks)),
+			"Presets",
+			fmt.Sprintf("%d available", len(m.snapshot.Presets)),
 			width,
 		),
 		metric(
 			"Configuration",
 			fmt.Sprintf(
-				"%d unchanged, %d create, %d update, %d conflict",
+				"%d unchanged, %d create, %d update, %d kept, %d conflict",
 				counts.Unchanged,
 				counts.Create,
 				counts.Update,
+				counts.Ignored,
 				counts.Conflict,
 			),
 			width,
@@ -186,301 +223,384 @@ func (m Model) renderOverview(width int) string {
 	for _, issue := range m.snapshot.Issues {
 		attention = append(attention, renderIssue(issue, width))
 	}
+	if counts.Conflict > 0 {
+		message := fmt.Sprintf(
+			"%d configuration conflicts. Open Config for details.",
+			counts.Conflict,
+		)
+		if m.firstConflictingPreset() >= 0 {
+			message = fmt.Sprintf(
+				"%d configuration conflicts. Press a to review and apply a preset.",
+				counts.Conflict,
+			)
+		}
+		attention = append(attention, warningStyle.Render("! ")+truncate(message, width-2))
+	}
 	if len(attention) == 0 {
 		attention = []string{goodStyle.Render("✓ No current attention items")}
 	}
 	sections = append(sections, section("ATTENTION", attention, width))
-
-	var tasks []string
-	for index, task := range m.snapshot.Tasks {
-		if index == 5 {
-			break
-		}
-		tasks = append(tasks, renderTaskSummary(task, width))
-	}
-	if len(tasks) == 0 {
-		tasks = []string{mutedStyle.Render("No local state fixtures")}
-	}
-	sections = append(sections, section("STATE FIXTURES", tasks, width))
 	return strings.Join(sections, "\n\n")
 }
 
 func (m Model) renderPipelines(width int) string {
-	var sections []string
-	var selected *workflow.TaskState
-	if len(m.snapshot.Tasks) > 0 {
-		index := m.cursor[TabPipelines]
-		selected = &m.snapshot.Tasks[index]
-		sections = append(sections, section(
-			"SELECTED STATE FIXTURE",
-			[]string{
-				selectedStyle.Render(
-					truncate(selected.TaskID+"  "+selected.Title, width),
-				),
-				metric("Recorded phase", strings.ToUpper(selected.Phase), width),
-				metric("Status", selected.Status, width),
-				metric("Recorded next", selected.NextAction, width),
-			},
-			width,
-		))
+	if m.presetPreview {
+		return m.renderPresetResourcePreview(width)
+	}
+	if len(m.snapshot.Presets) == 0 {
+		return section("PRESET LIBRARY", []string{
+			mutedStyle.Render("No presets found under config/presets."),
+			mutedStyle.Render("Create one with agentctl preset create."),
+		}, width)
+	}
+
+	index := m.cursor[TabPipelines]
+	start, end := window(index, len(m.snapshot.Presets), 5)
+	var rows []string
+	for rowIndex := start; rowIndex < end; rowIndex++ {
+		status := m.snapshot.Presets[rowIndex]
+		line := fmt.Sprintf(
+			"%-22s %-26s %d DAG  %d resources",
+			truncate(status.Preset.ID, 21),
+			truncate(status.Preset.Name, 25),
+			len(status.Preset.Pipelines),
+			len(status.Preset.Contents.ResourceIDs()),
+		)
+		rows = append(rows, selectable(line, rowIndex == index, width))
+	}
+
+	selected := m.snapshot.Presets[index]
+	preset := selected.Preset
+	details := []string{
+		metric("Description", preset.Description, width),
+		metric("Targets", strings.Join(preset.Targets, ", "), width),
+	}
+	if width >= 90 {
+		details = append(
+			details,
+			metric("Contents", presetContentSummary(preset.Contents), width),
+		)
 	} else {
-		sections = append(sections, section(
-			"SELECTED STATE FIXTURE",
-			[]string{mutedStyle.Render("No state fixture selected; showing pipeline template topology")},
-			width,
-		))
-	}
-
-	currentPhase := ""
-	waiting := false
-	if selected != nil {
-		currentPhase = selected.Phase
-		waiting = selected.Status == "waiting_for_approval"
-	}
-	graph := m.snapshot.Pipeline
-	pipelineTitle := "PIPELINE TEMPLATE"
-	if selected != nil && selected.Pipeline == "shape" {
-		graph = ShapePipeline()
-		pipelineTitle = "SHAPE PIPELINE TEMPLATE"
-		summary := m.snapshot.Shape[selected.TaskID]
-		sections = append(sections, section(
-			"LEGACY SOURCE FIXTURE",
-			[]string{
-				fmt.Sprintf(
-					"%d total  %d unread  %d material",
-					summary.SourcesTotal,
-					summary.UnreadSources,
-					summary.MaterialSources,
-				),
-				mutedStyle.Render("Schema/debug data only; not live observation."),
-			},
-			width,
-		))
-		sections = append(sections, section(
-			"LEGACY GRILL FIXTURE",
-			[]string{
-				fmt.Sprintf(
-					"%d total  %d open  %d critical",
-					summary.QuestionsTotal,
-					summary.OpenQuestions,
-					summary.CriticalQuestions,
-				),
-				mutedStyle.Render("Schema/debug data only; not an approval queue."),
-			},
-			width,
-		))
-	}
-	sections = append(sections, section(
-		pipelineTitle,
-		renderPipelineGraph(graph, currentPhase, waiting, width),
-		width,
-	))
-
-	branches := []string{
-		warningStyle.Render("↺") + " READY not ready → RESEARCH",
-		warningStyle.Render("↺") + " VERIFY failed → ANALYZE",
-		warningStyle.Render("↺") + " REVIEW changes → RUN",
-		mutedStyle.Render("Entry phases come from trigger policy; loops require recorded outcomes."),
-	}
-	if selected != nil && selected.Pipeline == "shape" {
-		branches = []string{
-			warningStyle.Render("↺") + " GRILL evidence gap → RESEARCH",
-			warningStyle.Render("↺") + " CHALLENGE weak options → BRAINSTORM",
-			warningStyle.Render("↺") + " CHALLENGE missing constraint → GRILL",
-			warningStyle.Render("↺") + " MATERIAL SOURCE → RESEARCH",
-			mutedStyle.Render("Loops are bounded; finalization remains an explicit human action."),
-		}
-	}
-	sections = append(sections, section("TEMPLATE BRANCHES", branches, width))
-
-	var triggers []string
-	for event, trigger := range m.snapshot.Policy.Triggers.Triggers {
-		triggers = append(
-			triggers,
-			fmt.Sprintf("%-22s → %s", event, strings.ToUpper(trigger.InitialPhase)),
+		details = append(
+			details,
+			metric("Contents", fmt.Sprintf(
+				"%d MCP  %d cmd  %d prompt  %d skill  %d hook  %d setting",
+				len(preset.Contents.MCPRefs),
+				len(preset.Contents.Commands),
+				len(preset.Contents.Prompts),
+				len(preset.Contents.Skills),
+				len(preset.Contents.Hooks),
+				len(preset.Contents.Settings),
+			), width),
 		)
 	}
-	sort.Strings(triggers)
-	if len(triggers) == 0 {
-		triggers = []string{mutedStyle.Render("Trigger policy unavailable")}
+	details = append(
+		details,
+		metric("Resources", strings.Join(preset.Contents.ResourceIDs(), ", "), width),
+		metric("Plan", actionCountSummary(selected.Config.Counts), width),
+	)
+	if width >= 90 {
+		details = append(details, metric(
+			"Prompt source",
+			fmt.Sprintf("%d resources; Enter to inspect", len(selected.Resources)),
+			width,
+		))
 	}
-	sections = append(sections, section("TRIGGER TEMPLATE ENTRIES", triggers, width))
+	sections := []string{
+		section("PRESET LIBRARY", rows, width),
+		section(strings.ToUpper(preset.Name), details, width),
+	}
+	if width >= 90 {
+		sections = append(sections, section("ACTIONS", []string{
+			"a  Apply preset",
+			"Enter  Inspect prompt/resource source",
+		}, width))
+	}
+
+	if len(preset.Pipelines) == 0 {
+		sections = append(sections, section(
+			"PIPELINE DAGS",
+			[]string{mutedStyle.Render("This preset contains configuration only.")},
+			width,
+		))
+		return strings.Join(sections, "\n\n")
+	}
+
+	for _, pipeline := range preset.Pipelines {
+		lines := []string{
+			metric("Entry", strings.Join(pipeline.EntryPhases, ", "), width),
+		}
+		lines = append(lines, renderPresetPhaseChain(pipeline, width)...)
+		branches := renderPresetBranches(pipeline, width)
+		if len(branches) == 0 {
+			branches = []string{mutedStyle.Render("No conditional or loop edges.")}
+		}
+		lines = append(lines, activeStyle.Render("DAG BRANCHES"))
+		lines = append(lines, branches...)
+		sections = append(sections, section(
+			"PIPELINE DAG: "+strings.ToUpper(pipeline.Name),
+			lines,
+			width,
+		))
+	}
 	return strings.Join(sections, "\n\n")
 }
 
-func renderPipelineGraph(
-	graph PipelineGraph,
-	currentPhase string,
-	waiting bool,
-	width int,
-) []string {
-	if _, shape := graph.Node("intake"); shape {
-		return renderShapePipelineGraph(graph, currentPhase, width)
+func (m Model) renderPresetResourcePreview(width int) string {
+	presetIndex := m.cursor[TabPipelines]
+	if presetIndex < 0 || presetIndex >= len(m.snapshot.Presets) {
+		return section("PRESET PROMPTS / RESOURCES", []string{
+			mutedStyle.Render("No preset selected."),
+		}, width)
 	}
-	if width < 72 {
-		groups := []struct {
-			label string
-			rows  [][]string
-		}{
-			{
-				label: "DISCOVERY",
-				rows: [][]string{
-					{"brief", "scout", "analyze"},
-					{"research", "decide"},
-				},
-			},
-			{
-				label: "READINESS",
-				rows: [][]string{
-					{"ready", "plan", "prove"},
-					{"handoff"},
-				},
-			},
-			{
-				label: "EXECUTION",
-				rows: [][]string{
-					{"run", "verify", "review", "pr"},
-				},
-			},
-		}
-		var lines []string
-		for _, group := range groups {
-			lines = append(lines, mutedStyle.Render(group.label))
-			for _, row := range group.rows {
-				var nodes []string
-				for _, id := range row {
-					node, _ := graph.Node(id)
-					nodes = append(nodes, renderPhaseNode(node, currentPhase))
-				}
-				line := strings.Join(nodes, " → ")
-				if row[len(row)-1] == graph.GateAt {
-					gate := warningStyle.Render("⏸ AUTHORITY GATE")
-					if waiting {
-						gate = warningStyle.Bold(true).Render("⏸ RECORDED GATE")
-					}
-					line += " → " + gate
-				}
-				lines = append(lines, line)
-			}
-		}
-		return lines
+	status := m.snapshot.Presets[presetIndex]
+	if len(status.Resources) == 0 {
+		return section("PRESET PROMPTS / RESOURCES", []string{
+			mutedStyle.Render("This preset has no readable resources."),
+		}, width)
 	}
 
-	lanes := [][]string{
-		{"brief", "scout", "analyze", "research", "decide"},
-		{"ready", "plan", "prove", "handoff"},
-		{"run", "verify", "review", "pr"},
+	resourceIndex := m.presetResourceCursor
+	start, end := window(resourceIndex, len(status.Resources), 5)
+	var rows []string
+	for rowIndex := start; rowIndex < end; rowIndex++ {
+		resource := status.Resources[rowIndex]
+		line := fmt.Sprintf(
+			"%-12s %-24s %s",
+			truncate(resource.Kind, 11),
+			truncate(resource.ID, 23),
+			resource.Source,
+		)
+		rows = append(rows, selectable(line, rowIndex == resourceIndex, width))
 	}
-	names := []string{"DISCOVERY", "READINESS", "EXECUTION"}
-	var lines []string
-	for index, lane := range lanes {
-		var nodes []string
-		for _, id := range lane {
-			node, _ := graph.Node(id)
-			nodes = append(nodes, renderPhaseNode(node, currentPhase))
+
+	resource := status.Resources[resourceIndex]
+	details := []string{
+		metric("Preset", status.Preset.Name, width),
+		metric("Kind", resource.Kind, width),
+		metric("Source", resource.Source, width),
+		metric("Targets", resourceTargetSummary(resource.Targets), width),
+	}
+	content := renderResourceContent(
+		resource.Content,
+		m.presetContentOffset,
+		width,
+	)
+	return strings.Join([]string{
+		section("PRESET PROMPTS / RESOURCES", rows, width),
+		section("SELECTED RESOURCE", details, width),
+		section("SOURCE TEXT", content, width),
+	}, "\n\n")
+}
+
+func resourceTargetSummary(targets []configurator.Target) string {
+	values := make([]string, 0, len(targets))
+	for _, target := range targets {
+		values = append(values, target.Agent+":"+target.Path)
+	}
+	return strings.Join(values, ", ")
+}
+
+func renderResourceContent(content string, offset, width int) []string {
+	lines := strings.Split(content, "\n")
+	if len(lines) == 0 {
+		return []string{mutedStyle.Render("Empty resource")}
+	}
+	if offset >= len(lines) {
+		offset = len(lines) - 1
+	}
+	result := make([]string, 0, len(lines)-offset)
+	for index := offset; index < len(lines); index++ {
+		prefix := mutedStyle.Render(fmt.Sprintf("%4d │ ", index+1))
+		result = append(result, prefix+truncate(
+			lines[index],
+			maximum(1, width-lipgloss.Width(prefix)),
+		))
+	}
+	return result
+}
+
+func presetContentSummary(contents presets.Contents) string {
+	return fmt.Sprintf(
+		"%d MCP, %d commands, %d prompts, %d skills, %d hooks, %d settings",
+		len(contents.MCPRefs),
+		len(contents.Commands),
+		len(contents.Prompts),
+		len(contents.Skills),
+		len(contents.Hooks),
+		len(contents.Settings),
+	)
+}
+
+func actionCountSummary(counts ActionCounts) string {
+	return fmt.Sprintf(
+		"%d unchanged, %d create, %d update, %d kept, %d conflict",
+		counts.Unchanged,
+		counts.Create,
+		counts.Update,
+		counts.Ignored,
+		counts.Conflict,
+	)
+}
+
+func (m Model) renderPresetApplyDialog(width int) string {
+	dialog := m.applyDialog
+	summary := []string{
+		metric("Preset", dialog.Name+" ("+dialog.PresetID+")", width),
+		metric("Targets", strings.Join(dialog.Targets, ", "), width),
+		metric("Plan", actionCountSummary(dialog.Counts), width),
+	}
+	var action []string
+	switch dialog.Stage {
+	case applyChoose:
+		action = []string{
+			warningStyle.Render(truncate(fmt.Sprintf(
+				"%d unresolved conflicts require your decision.",
+				dialog.Counts.Conflict,
+			), width)),
+			"",
+			"k  Keep existing",
+			mutedStyle.Render(truncate(
+				"   Preserve customized files, remember the decision, and apply the rest.",
+				width,
+			)),
+			"x  Replace from preset",
+			mutedStyle.Render(truncate(
+				"   Back up customized files, then install and manage the preset versions.",
+				width,
+			)),
+			"",
+			"Esc  Cancel without changing files",
 		}
-		line := fmt.Sprintf("%-10s %s", names[index], strings.Join(nodes, " → "))
-		if index == 1 {
-			gate := warningStyle.Render("⏸ AUTHORITY GATE")
-			if waiting {
-				gate = warningStyle.Bold(true).Render("⏸ RECORDED GATE")
+	case applyConfirm:
+		decision := "APPLY READY CHANGES"
+		description := "No unresolved conflicts; apply the planned preset changes."
+		switch dialog.Policy {
+		case configurator.ConflictKeep:
+			decision = "KEEP EXISTING"
+			description = fmt.Sprintf(
+				"Preserve and remember %d customized files; apply all other changes.",
+				dialog.Counts.Conflict,
+			)
+		case configurator.ConflictReplace:
+			decision = "REPLACE FROM PRESET"
+			description = fmt.Sprintf(
+				"Back up and replace %d customized files; apply all other changes.",
+				dialog.Counts.Conflict,
+			)
+		}
+		action = []string{
+			activeStyle.Render(decision),
+			truncate(description, width),
+			"",
+			warningStyle.Render(truncate(
+				"Press y to apply. Press Esc to cancel.",
+				width,
+			)),
+		}
+	case applyRunning:
+		action = []string{
+			activeStyle.Render("Applying preset..."),
+			mutedStyle.Render(truncate(
+				"Plans are rechecked before each file is changed.",
+				width,
+			)),
+		}
+	case applyComplete:
+		if dialog.Err != nil {
+			action = []string{
+				errorStyle.Render("Preset apply failed"),
+				truncate(dialog.Err.Error(), width),
+				mutedStyle.Render(truncate(
+					"Review the error and refresh before retrying.",
+					width,
+				)),
 			}
-			line += " → " + gate
+		} else {
+			action = []string{
+				goodStyle.Render("Preset applied"),
+				"Configuration state has been refreshed.",
+			}
 		}
+	}
+	return section("APPLY PRESET", summary, width) + "\n\n" +
+		section("DECISION", action, width)
+}
+
+func renderPresetPhaseChain(pipeline presets.Pipeline, width int) []string {
+	var lines []string
+	line := ""
+	for _, phase := range pipeline.Phases {
+		node := mutedStyle.Render("○") + " " + strings.ToUpper(phase)
+		candidate := node
+		if line != "" {
+			candidate = line + " → " + node
+		}
+		if line != "" && lipgloss.Width(candidate) > width {
+			lines = append(lines, line)
+			line = node
+			continue
+		}
+		line = candidate
+	}
+	if line != "" {
 		lines = append(lines, line)
 	}
 	return lines
 }
 
-func renderShapePipelineGraph(
-	graph PipelineGraph,
-	currentPhase string,
-	width int,
-) []string {
-	lanes := [][]string{
-		{"intake", "research", "grill", "brainstorm"},
-		{"challenge", "decide", "plan", "final"},
-	}
-	names := []string{"DISCOVERY", "CONVERGE"}
-	var lines []string
-	for index, lane := range lanes {
-		var nodes []string
-		for _, id := range lane {
-			node, _ := graph.Node(id)
-			nodes = append(nodes, renderPhaseNode(node, currentPhase))
+func renderPresetBranches(pipeline presets.Pipeline, width int) []string {
+	var loops, conditions []string
+	for _, edge := range pipeline.Edges {
+		if edge.Condition == "" && !edge.Loop {
+			continue
 		}
-		line := strings.Join(nodes, " → ")
-		if width >= 88 {
-			line = fmt.Sprintf("%-10s %s", names[index], line)
+		marker := "◇"
+		style := mutedStyle
+		if edge.Loop {
+			marker = "↺"
+			style = warningStyle
+		}
+		condition := edge.Condition
+		if condition == "" {
+			condition = "loop"
+		}
+		body := fmt.Sprintf(
+			"%s --%s--> %s",
+			strings.ToUpper(edge.From),
+			condition,
+			strings.ToUpper(edge.To),
+		)
+		line := style.Render(marker) + " " +
+			truncate(body, maximum(1, width-2))
+		if edge.Loop {
+			loops = append(loops, line)
 		} else {
-			lines = append(lines, mutedStyle.Render(names[index]))
+			conditions = append(conditions, line)
 		}
-		if index == 1 {
-			line += " → " + warningStyle.Render("HUMAN FINALIZE")
+	}
+	return packRenderedLines(append(loops, conditions...), width)
+}
+
+func packRenderedLines(values []string, width int) []string {
+	var lines []string
+	line := ""
+	for _, value := range values {
+		candidate := value
+		if line != "" {
+			candidate = line + "  " + value
 		}
-		lines = append(lines, truncate(line, width))
+		if line != "" && lipgloss.Width(candidate) > width {
+			lines = append(lines, line)
+			line = value
+			continue
+		}
+		line = candidate
+	}
+	if line != "" {
+		lines = append(lines, line)
 	}
 	return lines
-}
-
-func renderPhaseNode(node PhaseNode, currentPhase string) string {
-	marker := mutedStyle.Render("○")
-	label := node.Label
-	if node.ID == currentPhase {
-		marker = activeStyle.Render("●")
-		label = activeStyle.Render(label)
-	}
-	return marker + " " + label
-}
-
-func (m Model) renderTasks(width int) string {
-	if len(m.snapshot.Tasks) == 0 {
-		return section("STATE FIXTURES", []string{
-			mutedStyle.Render("No local state fixtures"),
-			mutedStyle.Render("Experimental schema/debug state only."),
-		}, width)
-	}
-	index := m.cursor[TabTasks]
-	start, end := window(index, len(m.snapshot.Tasks), 8)
-	var rows []string
-	if width >= 96 {
-		rows = append(rows, mutedStyle.Render(
-			fmt.Sprintf("%-26s %-12s %-22s %s", "FIXTURE", "PHASE", "STATUS", "TITLE"),
-		))
-		for rowIndex := start; rowIndex < end; rowIndex++ {
-			task := m.snapshot.Tasks[rowIndex]
-			line := fmt.Sprintf(
-				"%-26s %-12s %-22s %s",
-				truncate(task.TaskID, 25),
-				truncate(task.Phase, 11),
-				truncate(task.Status, 21),
-				truncate(task.Title, width-64),
-			)
-			rows = append(rows, selectable(line, rowIndex == index, width))
-		}
-	} else {
-		for rowIndex := start; rowIndex < end; rowIndex++ {
-			task := m.snapshot.Tasks[rowIndex]
-			line := fmt.Sprintf(
-				"%-10s %-20s %s",
-				truncate(task.Phase, 9),
-				truncate(task.Status, 19),
-				truncate(task.Title, width-33),
-			)
-			rows = append(rows, selectable(line, rowIndex == index, width))
-		}
-	}
-	task := m.snapshot.Tasks[index]
-	details := []string{
-		metric("Fixture", task.TaskID, width),
-		metric("Repository", task.Repository, width),
-		metric("Authority", task.Authority, width),
-		metric("Approval fixture", approvalText(task.Approval), width),
-		metric("Recorded next", task.NextAction, width),
-		metric("Updated", displayTime(task.UpdatedAt), width),
-	}
-	return section("STATE FIXTURES", rows, width) + "\n\n" +
-		section("FIXTURE DETAIL", details, width)
 }
 
 func (m Model) renderProviders(width int) string {
@@ -534,14 +654,21 @@ func (m Model) renderProviders(width int) string {
 		metric("Name", provider.DisplayName, width),
 		metric("Executable", executableText(provider), width),
 		metric("Runner", runnerText(provider), width),
-		metric("Config roots", rootSummary(provider), width),
 		metric("Capabilities", strings.Join(provider.Capabilities, ", "), width),
 	}
 	for _, issue := range provider.Issues {
 		details = append(details, renderProviderIssue(issue, width))
 	}
-	return section("PROVIDERS", rows, width) + "\n\n" +
-		section("DETAIL", details, width)
+	return strings.Join([]string{
+		section("PROVIDERS", rows, width),
+		section("DETAIL", details, width),
+		section(
+			"CURRENT MANIFEST TARGETS",
+			m.renderProviderTargets(provider.ProviderID, width),
+			width,
+		),
+		section("CONFIG ROOTS", renderProviderRoots(provider, width), width),
+	}, "\n\n")
 }
 
 func (m Model) renderConfig(width int) string {
@@ -571,16 +698,18 @@ func (m Model) renderConfig(width int) string {
 		metric("Unchanged", fmt.Sprint(counts.Unchanged), width),
 		metric("Create", fmt.Sprint(counts.Create), width),
 		metric("Update", fmt.Sprint(counts.Update), width),
+		metric("Kept existing", fmt.Sprint(counts.Ignored), width),
 		metric("Conflict", fmt.Sprint(counts.Conflict), width),
 	}
 	var providersRows []string
 	for _, provider := range m.snapshot.Config.ByProvider {
 		line := fmt.Sprintf(
-			"%-16s unchanged %-4d create %-4d update %-4d conflict %-4d",
+			"%-16s unchanged %-4d create %-4d update %-4d kept %-4d conflict %-4d",
 			provider.Provider,
 			provider.Counts.Unchanged,
 			provider.Counts.Create,
 			provider.Counts.Update,
+			provider.Counts.Ignored,
 			provider.Counts.Conflict,
 		)
 		providersRows = append(providersRows, truncate(line, width))
@@ -589,10 +718,34 @@ func (m Model) renderConfig(width int) string {
 		providersRows = []string{mutedStyle.Render("No configuration actions")}
 	}
 
+	var resolution []string
+	if presetIndex := m.firstConflictingPreset(); presetIndex >= 0 {
+		preset := m.snapshot.Presets[presetIndex]
+		resolution = []string{
+			activeStyle.Render("a  Review and apply ") +
+				truncate(
+					fmt.Sprintf(
+						"%s (%d conflicts)",
+						preset.Preset.Name,
+						preset.Config.Counts.Conflict,
+					),
+					maximum(1, width-20),
+				),
+			mutedStyle.Render(truncate(
+				"Keep preserves customized files; replace backs them up before installing.",
+				width,
+			)),
+		}
+	}
+
 	var conflicts []string
 	if len(m.snapshot.Config.Conflicts) == 0 {
 		conflicts = []string{goodStyle.Render("✓ No conflicts")}
 	} else {
+		conflicts = append(conflicts, mutedStyle.Render(truncate(
+			"Agentctl preserves conflicts instead of overwriting them.",
+			width,
+		)))
 		index := m.cursor[TabConfig]
 		start, end := window(index, len(m.snapshot.Config.Conflicts), 6)
 		for rowIndex := start; rowIndex < end; rowIndex++ {
@@ -606,20 +759,43 @@ func (m Model) renderConfig(width int) string {
 			conflicts = append(conflicts, selectable(line, rowIndex == index, width))
 		}
 	}
-	return strings.Join([]string{
+	sections := []string{
 		section("CONFIGURATION", summary, width),
+	}
+	if len(resolution) > 0 {
+		sections = append(sections, section("RESOLVE CONFLICTS", resolution, width))
+	}
+	sections = append(
+		sections,
 		section("BY PROVIDER", providersRows, width),
 		section("CONFLICTS", conflicts, width),
-	}, "\n\n")
+	)
+	if len(m.snapshot.Config.Conflicts) > 0 {
+		action := m.snapshot.Config.Conflicts[m.cursor[TabConfig]]
+		sections = append(sections, section("SELECTED CONFLICT", []string{
+			metric("Resource", action.ResourceID, width),
+			metric("Why", action.Reason, width),
+			metric("Source", action.SourcePath, width),
+			metric("Target", action.DestinationPath, width),
+			mutedStyle.Render(truncate(
+				"No file is changed until you explicitly resolve this conflict.",
+				width,
+			)),
+		}, width))
+	}
+	return strings.Join(sections, "\n\n")
 }
 
 func (m Model) renderHelp(width int) string {
 	lines := []string{
-		"1-5              open a view",
+		"1-4              open a view",
 		"tab / shift+tab  next or previous view",
 		"←/→ or h/l       next or previous view",
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
+		"enter            inspect preset prompt/resource source",
+		"a                apply a preset or resolve conflicts",
+		"pgup / pgdown    scroll prompt/resource source",
 		"r                refresh configuration state",
 		"? / esc          toggle or close help",
 		"q / ctrl+c       quit",
@@ -648,6 +824,22 @@ func metric(label string, value any, width int) string {
 	return prefix + truncate(fmt.Sprint(value), maximum(1, width-labelWidth))
 }
 
+func styledMetric(
+	label string,
+	value string,
+	style lipgloss.Style,
+	width int,
+) string {
+	labelWidth := 16
+	if width < 72 {
+		labelWidth = 13
+	}
+	prefix := labelStyle.Render(fmt.Sprintf("%-*s", labelWidth, label))
+	return prefix + style.Render(
+		truncate(value, maximum(1, width-labelWidth)),
+	)
+}
+
 func renderIssue(issue Issue, width int) string {
 	marker := mutedStyle.Render("•")
 	switch issue.Severity {
@@ -671,35 +863,12 @@ func renderProviderIssue(issue providers.Issue, width int) string {
 	}, width)
 }
 
-func renderTaskSummary(task workflow.TaskState, width int) string {
-	marker := activeStyle.Render("●")
-	if task.Status == "waiting_for_approval" {
-		marker = warningStyle.Render("⏸")
-	} else if task.Status == "blocked" {
-		marker = errorStyle.Render("!")
-	}
-	value := fmt.Sprintf(
-		"%-10s %s — %s",
-		strings.ToUpper(task.Phase),
-		task.Title,
-		task.Status,
-	)
-	return marker + " " + truncate(value, width-2)
-}
-
 func selectable(value string, selected bool, width int) string {
 	value = truncate(value, width)
 	if selected {
 		return selectedStyle.Width(width).Render(value)
 	}
 	return value
-}
-
-func approvalText(approval workflow.Approval) string {
-	if !approval.Required {
-		return "not required"
-	}
-	return approval.Status
 }
 
 func executableText(provider providers.Inspection) string {
@@ -724,26 +893,81 @@ func runnerText(provider providers.Inspection) string {
 	)
 }
 
-func rootSummary(provider providers.Inspection) string {
-	counts := make(map[string]int)
+func renderProviderRoots(provider providers.Inspection, width int) []string {
+	if len(provider.ConfigRoots) == 0 {
+		return []string{mutedStyle.Render("No declared configuration roots.")}
+	}
+	lines := make([]string, 0, len(provider.ConfigRoots))
 	for _, root := range provider.ConfigRoots {
-		counts[root.Status]++
-	}
-	var parts []string
-	for _, status := range []string{"present", "missing", "unsafe"} {
-		if counts[status] > 0 {
-			parts = append(parts, fmt.Sprintf("%s=%d", status, counts[status]))
+		status := strings.ToUpper(root.Status)
+		style := mutedStyle
+		switch root.Status {
+		case "present":
+			style = goodStyle
+		case "unsafe":
+			style = errorStyle
+		case "missing":
+			style = warningStyle
 		}
+		prefix := style.Render(fmt.Sprintf("%-8s", truncate(status, 7)))
+		detail := fmt.Sprintf(
+			"%s  [%s]  %s",
+			root.Path,
+			root.Ownership,
+			root.Purpose,
+		)
+		lines = append(lines, prefix+" "+truncate(
+			detail,
+			maximum(1, width-lipgloss.Width(prefix)-1),
+		))
 	}
-	return strings.Join(parts, ", ")
+	return lines
 }
 
-func displayTime(value string) string {
-	parsed, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		return value
+func (m Model) renderProviderTargets(providerID string, width int) []string {
+	lines := []string{mutedStyle.Render(truncate(
+		"Only manifest target paths are inspected. Runtime and session files are excluded.",
+		width,
+	))}
+	shown := 0
+	total := 0
+	for _, action := range m.snapshot.Config.Actions {
+		if action.Agent != providerID || action.State == configurator.ActionCreate {
+			continue
+		}
+		total++
+		if shown >= 7 {
+			continue
+		}
+		state := strings.ToUpper(string(action.State))
+		style := mutedStyle
+		switch action.State {
+		case configurator.ActionUnchanged:
+			style = goodStyle
+		case configurator.ActionIgnored:
+			style = activeStyle
+		case configurator.ActionUpdate:
+			style = warningStyle
+		case configurator.ActionConflict:
+			style = errorStyle
+		}
+		prefix := style.Render(fmt.Sprintf("%-10s", truncate(state, 9)))
+		lines = append(lines, prefix+" "+truncate(
+			action.TargetPath,
+			maximum(1, width-lipgloss.Width(prefix)-1),
+		))
+		shown++
 	}
-	return parsed.Local().Format("2006-01-02 15:04")
+	if total == 0 {
+		lines = append(lines, mutedStyle.Render("No existing manifest targets for this provider."))
+	} else if total > shown {
+		lines = append(lines, mutedStyle.Render(fmt.Sprintf(
+			"%d more existing targets; use agentctl plan --target %s for the full list.",
+			total-shown,
+			providerID,
+		)))
+	}
+	return lines
 }
 
 func truncate(value string, width int) string {

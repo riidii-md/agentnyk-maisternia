@@ -12,7 +12,16 @@ import (
 )
 
 func Apply(plan Plan, options ApplyOptions) error {
-	if plan.HasConflicts() {
+	policy := options.ConflictPolicy
+	if policy == "" {
+		policy = ConflictAbort
+	}
+	switch policy {
+	case ConflictAbort, ConflictKeep, ConflictReplace:
+	default:
+		return fmt.Errorf("unsupported conflict policy %q", policy)
+	}
+	if plan.HasConflicts() && policy == ConflictAbort {
 		return ErrConflicts
 	}
 	if !options.Confirmed {
@@ -35,8 +44,41 @@ func Apply(plan Plan, options ApplyOptions) error {
 		return err
 	}
 
+	// Preflight the complete plan before the first write to reduce partial applies.
+	for _, action := range plan.Actions {
+		if err := verifyActionStillValid(plan.Home, action); err != nil {
+			return err
+		}
+	}
+
 	for _, action := range plan.Actions {
 		if action.State == ActionUnchanged {
+			if err := verifyActionStillValid(plan.Home, action); err != nil {
+				return err
+			}
+			recordInstalledResource(state, action, appliedAt)
+			continue
+		}
+		if action.State == ActionIgnored {
+			if err := verifyActionStillValid(plan.Home, action); err != nil {
+				return err
+			}
+			continue
+		}
+		if action.State == ActionConflict {
+			if err := verifyActionStillValid(plan.Home, action); err != nil {
+				return err
+			}
+			if policy == ConflictKeep {
+				recordConflictResolution(state, action, appliedAt)
+				continue
+			}
+			if err := backupTarget(plan.Home, action, appliedAt); err != nil {
+				return err
+			}
+			if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
+				return fmt.Errorf("replace %s: %w", action.TargetPath, err)
+			}
 			recordInstalledResource(state, action, appliedAt)
 			continue
 		}
@@ -65,13 +107,35 @@ func Apply(plan Plan, options ApplyOptions) error {
 
 func recordInstalledResource(state installState, action Action, installedAt time.Time) {
 	targetRelative := filepath.FromSlash(action.TargetPath)
-	state.Resources[stateKey(action.Agent, targetRelative)] = installedResource{
+	key := stateKey(action.Agent, targetRelative)
+	state.Resources[key] = installedResource{
 		Checksum:  action.SourceChecksum,
 		Source:    action.SourcePath,
 		Installed: installedAt,
 	}
+	delete(state.Resolutions, key)
 	for _, alias := range providers.LegacyAliases(action.Agent) {
 		delete(state.Resources, stateKey(alias, targetRelative))
+		delete(state.Resolutions, stateKey(alias, targetRelative))
+	}
+}
+
+func recordConflictResolution(
+	state installState,
+	action Action,
+	decidedAt time.Time,
+) {
+	targetRelative := filepath.FromSlash(action.TargetPath)
+	key := stateKey(action.Agent, targetRelative)
+	state.Resolutions[key] = conflictResolution{
+		Decision:       ConflictKeep,
+		TargetChecksum: action.CurrentChecksum,
+		SourceChecksum: action.SourceChecksum,
+		Source:         action.SourcePath,
+		DecidedAt:      decidedAt,
+	}
+	for _, alias := range providers.LegacyAliases(action.Agent) {
+		delete(state.Resolutions, stateKey(alias, targetRelative))
 	}
 }
 
@@ -99,19 +163,19 @@ func verifyActionStillValid(home string, action Action) error {
 			return fmt.Errorf("%w: inspect create target: %v", ErrPlanStale, err)
 		}
 		return fmt.Errorf("%w: create target now exists", ErrPlanStale)
-	case ActionUpdate:
+	case ActionUpdate, ActionConflict, ActionUnchanged, ActionIgnored:
 		if err != nil {
-			return fmt.Errorf("%w: update target unavailable: %v", ErrPlanStale, err)
+			return fmt.Errorf("%w: target unavailable: %v", ErrPlanStale, err)
 		}
 		if !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("%w: update target is no longer a regular file", ErrPlanStale)
+			return fmt.Errorf("%w: target is no longer a regular file", ErrPlanStale)
 		}
 		currentChecksum, err := fileChecksum(action.DestinationPath)
 		if err != nil {
-			return fmt.Errorf("%w: checksum update target: %v", ErrPlanStale, err)
+			return fmt.Errorf("%w: checksum target: %v", ErrPlanStale, err)
 		}
 		if currentChecksum != action.CurrentChecksum {
-			return fmt.Errorf("%w: update target changed after planning", ErrPlanStale)
+			return fmt.Errorf("%w: target changed after planning", ErrPlanStale)
 		}
 		return nil
 	default:
@@ -184,6 +248,9 @@ func writeState(home string, state installState) error {
 	state.SchemaVersion = StateSchemaVersion
 	if state.Resources == nil {
 		state.Resources = make(map[string]installedResource)
+	}
+	if state.Resolutions == nil {
+		state.Resolutions = make(map[string]conflictResolution)
 	}
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {

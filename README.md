@@ -2,17 +2,19 @@
 
 [![CI](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml)
 
-`agentctl` is a provider-neutral pipeline configurator for
+`agentctl` is a provider-neutral preset and pipeline configurator for
 command-line coding agent harnesses.
 
 It provides one version-controlled source of truth for:
 
 - shared work phases;
 - Codex, Claude, Antigravity, and Hermes provider adapters;
-- neutral `/work-*` commands;
+- reusable preset-library entries;
+- workflow/pipeline DAGs inside presets;
+- MCP references and neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
-- model roles and provider capability metadata;
+- model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
 
 ## Status
@@ -33,6 +35,12 @@ The repository contains the first safe configurator foundation:
 - backups before managed updates;
 - drift detection using install checksums;
 - atomic file writes;
+- a strict, versioned preset library under `config/presets`;
+- reusable standard-work, idea-shaping, scored-experiment,
+  Codex-compatibility, and Codex resource-lab presets;
+- preset DAG validation with explicit loop edges and cycle rejection;
+- preset create, copy, metadata edit, delete, list, show, and validation commands;
+- preset-scoped plan, staging render, and guarded apply;
 - a complete initial work-phase catalog;
 - complete Claude-to-Codex command adapters with explicit authority boundaries;
 - direct Codex aliases for the canonical phases;
@@ -41,15 +49,21 @@ The repository contains the first safe configurator foundation:
 - strict normalized event validation as untrusted input fixtures;
 - provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
   `/work-brainstorm` command templates;
-- a configuration TUI for providers, pipeline templates, render plans, and
-  managed files;
+- a configuration TUI backed by real preset-library entries, workflow DAGs,
+  provider health, per-preset plans, managed files, and guarded preset apply;
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
-Structured TOML and JSON settings merging, pipeline authoring commands,
-provider-native rendering, and configuration import are planned next. Runtime
-dispatch is intentionally out of scope; existing harnesses run the rendered
-commands.
+Structured TOML and JSON settings merging, structured preset-content and DAG
+editing, broader provider-native rendering, existing provider-file
+classification, and configuration import are planned next.
+Runtime dispatch is intentionally out of scope; existing harnesses run the
+rendered commands.
+
+The `scored-experiment` preset establishes the provider-native experiment
+workflow and capability contract. Native Stop/tool-guard hook rendering still
+depends on the planned structured settings merge; see
+[Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
 
 ## Installation
 
@@ -104,27 +118,32 @@ Point the system installation at this configuration repository once:
 agentctl config set-repository /path/to/agentctl
 ```
 
-Then open the read-only admin interface from any directory:
+Then open the admin interface from any directory:
 
 ```bash
 agentctl admin
 ```
 
-Use `1` through `5` to open Overview, Pipelines, State Fixtures, Providers, and
-Config. Press `?` for all keys. The TUI is for configuration authoring and
-preview: pipeline templates, provider mappings, render plans, drift, conflicts,
-and explicit apply. It must not run, observe, approve, dispatch, commit, or push.
+Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
+for all keys. The current TUI browses preset-library entries, their workflow
+DAGs and contents, provider health, preset-scoped plans, drift, and conflicts.
+On a selected preset, press `a` to review and apply it. Overview and Config also
+offer `a resolve` when a preset has conflicts. Conflicts require an explicit
+keep-existing or replace-from-preset decision followed by confirmation. The TUI
+must not run, observe, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
 
 ## Pipeline Configuration
 
-`agentctl` owns the pipeline configuration layer:
+`agentctl` owns the preset and pipeline configuration layer:
 
-- provider-neutral pipeline and phase definitions;
-- provider adapters and capability metadata;
-- command, prompt, skill, and settings rendering;
+- reusable preset-library entries;
+- provider-neutral workflow/pipeline DAGs and phase definitions inside presets;
+- MCP references, provider adapters, and capability metadata;
+- command, prompt, skill, hook, MCP, and settings rendering;
+- existing provider-configuration inspection;
 - safe preview, conflict detection, and guarded installation;
 - configuration inspection through the CLI and TUI.
 
@@ -146,8 +165,9 @@ become a controller or observer of live runs.
 The current `event`, `task`, `work next`, and `pipeline start/transition`
 commands are retained as experimental state-model fixtures while the
 configuration model settles. They should not be presented as the product
-runtime, and new TUI work should focus on pipeline authoring, render previews,
-provider mappings, drift, and conflicts.
+runtime, and new TUI work should focus on structured preset and workflow DAG
+editing, MCP/config bundle editing, existing provider-file classification,
+render previews, provider mappings, drift, and conflicts.
 
 ## Test
 
@@ -198,6 +218,37 @@ go run ./cmd/agentctl provider capabilities hermes
 
 Provider doctor never invokes a provider's native doctor command.
 
+Inspect and validate the preset library:
+
+```bash
+go run ./cmd/agentctl preset list
+go run ./cmd/agentctl preset show idea-shaping
+go run ./cmd/agentctl preset show scored-experiment
+go run ./cmd/agentctl preset show codex-resource-lab
+go run ./cmd/agentctl preset validate all
+```
+
+Plan or stage only the files selected by one preset:
+
+```bash
+go run ./cmd/agentctl preset plan --target hermes idea-shaping
+go run ./cmd/agentctl preset render \
+  --target codex \
+  --output ./build/standard-work \
+  standard-work
+```
+
+Preset apply uses the same conflict, drift, backup, and managed-state checks as
+the full manifest apply, and still requires explicit confirmation:
+
+```bash
+go run ./cmd/agentctl preset apply --target codex --yes standard-work
+go run ./cmd/agentctl preset apply \
+  --conflicts keep \
+  --yes \
+  codex-compatibility
+```
+
 Render a staging tree:
 
 ```bash
@@ -206,10 +257,14 @@ go run ./cmd/agentctl render \
   --output ./build/rendered
 ```
 
-`apply` refuses unmanaged conflicts and requires explicit confirmation:
+`apply` aborts on conflicts by default and requires explicit confirmation.
+Choose `keep` to preserve customized files and remember that decision, or
+`replace` to back them up and install the repository version:
 
 ```bash
 go run ./cmd/agentctl apply --target codex --yes
+go run ./cmd/agentctl apply --target codex --conflicts keep --yes
+go run ./cmd/agentctl apply --target codex --conflicts replace --yes
 ```
 
 Do not run `apply` against a real home directory until the displayed plan has
@@ -230,8 +285,10 @@ agentctl pipeline start shape --title "Improve agent workflow"
 
 Treat these as experimental schema fixtures, not the product runtime. They are
 useful for validating untrusted event envelopes and exploring state shapes, but
-new product work should focus on pipeline authoring, provider-native rendering,
-configuration previews, drift/conflict handling, and explicit apply.
+new product work should focus on preset-library authoring, workflow DAG editing,
+MCP/config bundle editing, existing provider-configuration inspection,
+provider-native rendering, configuration previews, drift/conflict handling, and
+explicit apply.
 
 `agentctl` should not expand these commands into live observation, phase
 control, approval queues, or agent dispatch. Existing harnesses own execution.
@@ -239,6 +296,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 ## Documentation
 
 - [Improved workflow](docs/WORKFLOW.md)
+- [Preset library](docs/PRESETS.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)

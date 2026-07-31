@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/settings"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -41,6 +42,7 @@ type ActionCounts struct {
 	Create    int
 	Update    int
 	Unchanged int
+	Ignored   int
 	Conflict  int
 }
 
@@ -52,20 +54,33 @@ type ProviderPlan struct {
 type ConfigStatus struct {
 	Counts      ActionCounts
 	ByProvider  []ProviderPlan
+	Actions     []configurator.Action
 	Conflicts   []configurator.Action
 	StatePath   string
 	ActionCount int
+}
+
+type ResourcePreview struct {
+	ID      string
+	Kind    string
+	Source  string
+	Targets []configurator.Target
+	Content string
+}
+
+type PresetStatus struct {
+	Preset    presets.Preset
+	Config    ConfigStatus
+	Resources []ResourcePreview
 }
 
 type Snapshot struct {
 	LoadedAt   time.Time
 	Repository RepositoryStatus
 	Providers  []providers.Inspection
-	Tasks      []workflow.TaskState
-	Shape      map[string]workflow.ShapeSummary
+	Presets    []PresetStatus
 	Policy     workflow.Policy
 	Config     ConfigStatus
-	Pipeline   PipelineGraph
 	Issues     []Issue
 }
 
@@ -94,30 +109,9 @@ func (l Loader) Load() Snapshot {
 	}
 	snapshot := Snapshot{
 		LoadedAt: now(),
-		Pipeline: DefaultPipeline(),
-		Shape:    make(map[string]workflow.ShapeSummary),
 		Config: ConfigStatus{
 			StatePath: configurator.StatePath(l.Home),
 		},
-	}
-
-	store, err := workflow.NewStore(l.Home, workflow.StoreOptions{})
-	if err != nil {
-		snapshot.addIssue(SeverityError, "tasks", err)
-	} else if snapshot.Tasks, err = store.List(); err != nil {
-		snapshot.addIssue(SeverityError, "tasks", err)
-	} else {
-		for _, task := range snapshot.Tasks {
-			if task.Pipeline != "shape" {
-				continue
-			}
-			summary, err := store.ShapeSummary(task.TaskID)
-			if err != nil {
-				snapshot.addIssue(SeverityError, "shape "+task.TaskID, err)
-				continue
-			}
-			snapshot.Shape[task.TaskID] = summary
-		}
 	}
 
 	selection, err := l.resolveRepository()
@@ -140,6 +134,7 @@ func (l Loader) Load() Snapshot {
 		selection.Path,
 		"config/manifest.json",
 	)
+	presetsReady := false
 	if manifestErr != nil {
 		snapshot.addIssue(SeverityError, "manifest", manifestErr)
 	} else {
@@ -152,6 +147,64 @@ func (l Loader) Load() Snapshot {
 			snapshot.addIssue(SeverityError, "config", err)
 		} else {
 			snapshot.Config = summarizePlan(plan, l.Home)
+		}
+
+		library, err := presets.LoadLibrary(selection.Path)
+		if err != nil {
+			snapshot.addIssue(SeverityError, "presets", err)
+		} else {
+			presetsReady = true
+			for _, preset := range library.Presets {
+				status := PresetStatus{Preset: preset}
+				if len(preset.Contents.ResourceIDs()) == 0 {
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				selected, err := presets.SelectManifest(preset, manifest)
+				if err != nil {
+					presetsReady = false
+					snapshot.addIssue(
+						SeverityError,
+						"preset "+preset.ID,
+						err,
+					)
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				status.Resources, err = loadResourcePreviews(
+					selection.Path,
+					preset.Contents,
+					selected.Resources,
+				)
+				if err != nil {
+					presetsReady = false
+					snapshot.addIssue(
+						SeverityError,
+						"preset "+preset.ID,
+						err,
+					)
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				plan, err := configurator.BuildPlan(
+					selection.Path,
+					l.Home,
+					selected,
+					"all",
+				)
+				if err != nil {
+					presetsReady = false
+					snapshot.addIssue(
+						SeverityError,
+						"preset "+preset.ID,
+						err,
+					)
+					snapshot.Presets = append(snapshot.Presets, status)
+					continue
+				}
+				status.Config = summarizePlan(plan, l.Home)
+				snapshot.Presets = append(snapshot.Presets, status)
+			}
 		}
 	}
 
@@ -189,9 +242,55 @@ func (l Loader) Load() Snapshot {
 	}
 
 	snapshot.Repository.Ready = manifestErr == nil &&
+		presetsReady &&
 		len(snapshot.Policy.Capabilities.Phases) > 0 &&
 		len(snapshot.Providers) > 0
 	return snapshot
+}
+
+func (l Loader) ApplyPreset(
+	presetID string,
+	policy configurator.ConflictPolicy,
+) error {
+	selection, err := l.resolveRepository()
+	if err != nil {
+		return err
+	}
+	if selection.Path == "" {
+		return errors.New("repository is not configured")
+	}
+	manifest, err := configurator.LoadManifest(
+		selection.Path,
+		"config/manifest.json",
+	)
+	if err != nil {
+		return err
+	}
+	library, err := presets.LoadLibrary(selection.Path)
+	if err != nil {
+		return err
+	}
+	preset, exists := library.Get(presetID)
+	if !exists {
+		return fmt.Errorf("preset %q does not exist", presetID)
+	}
+	selected, err := presets.SelectManifest(preset, manifest)
+	if err != nil {
+		return err
+	}
+	plan, err := configurator.BuildPlan(
+		selection.Path,
+		l.Home,
+		selected,
+		"all",
+	)
+	if err != nil {
+		return err
+	}
+	return configurator.Apply(plan, configurator.ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: policy,
+	})
 }
 
 func (l Loader) resolveRepository() (RepositorySelection, error) {
@@ -277,6 +376,7 @@ func summarizePlan(plan configurator.Plan, home string) ConfigStatus {
 	status := ConfigStatus{
 		StatePath:   configurator.StatePath(home),
 		ActionCount: len(plan.Actions),
+		Actions:     append([]configurator.Action(nil), plan.Actions...),
 	}
 	byProvider := make(map[string]ActionCounts)
 	for _, action := range plan.Actions {
@@ -299,6 +399,45 @@ func summarizePlan(plan configurator.Plan, home string) ConfigStatus {
 	return status
 }
 
+func loadResourcePreviews(
+	repository string,
+	contents presets.Contents,
+	resources []configurator.Resource,
+) ([]ResourcePreview, error) {
+	kinds := resourceKinds(contents)
+	previews := make([]ResourcePreview, 0, len(resources))
+	for _, resource := range resources {
+		content, err := os.ReadFile(filepath.Join(repository, filepath.FromSlash(resource.Source)))
+		if err != nil {
+			return nil, fmt.Errorf("read resource %q: %w", resource.ID, err)
+		}
+		previews = append(previews, ResourcePreview{
+			ID:      resource.ID,
+			Kind:    kinds[resource.ID],
+			Source:  resource.Source,
+			Targets: append([]configurator.Target(nil), resource.Targets...),
+			Content: string(content),
+		})
+	}
+	return previews, nil
+}
+
+func resourceKinds(contents presets.Contents) map[string]string {
+	result := make(map[string]string)
+	add := func(kind string, ids []string) {
+		for _, id := range ids {
+			result[id] = kind
+		}
+	}
+	add("MCP reference", contents.MCPRefs)
+	add("command", contents.Commands)
+	add("prompt", contents.Prompts)
+	add("skill", contents.Skills)
+	add("hook", contents.Hooks)
+	add("setting", contents.Settings)
+	return result
+}
+
 func increment(counts ActionCounts, state configurator.ActionState) ActionCounts {
 	switch state {
 	case configurator.ActionCreate:
@@ -307,6 +446,8 @@ func increment(counts ActionCounts, state configurator.ActionState) ActionCounts
 		counts.Update++
 	case configurator.ActionUnchanged:
 		counts.Unchanged++
+	case configurator.ActionIgnored:
+		counts.Ignored++
 	case configurator.ActionConflict:
 		counts.Conflict++
 	}

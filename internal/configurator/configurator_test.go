@@ -142,6 +142,9 @@ func TestBuildPlanClassifiesCreateUnchangedAndConflict(t *testing.T) {
 	if !plan.HasConflicts() {
 		t.Fatal("HasConflicts() = false, want true")
 	}
+	if got := plan.Actions[0].Reason; got != "existing target is not managed by agentctl" {
+		t.Fatalf("conflict reason = %q", got)
+	}
 }
 
 func TestAntigravityAliasProducesCanonicalPlanAndMigratesState(t *testing.T) {
@@ -271,10 +274,208 @@ func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 		t.Fatalf("BuildPlan(drift) error = %v", err)
 	}
 	assertOnlyAction(t, conflictPlan, ActionConflict)
+	if got := conflictPlan.Actions[0].Reason; got != "managed target changed since the last apply" {
+		t.Fatalf("conflict reason = %q", got)
+	}
 	if err := Apply(conflictPlan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrConflicts) {
 		t.Fatalf("Apply(conflict) error = %v, want ErrConflicts", err)
 	}
 	assertFileContents(t, destination, "local edit")
+}
+
+func TestApplyKeepsConflictsAndPersistsExplicitDecision(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "existing.md"), "preset version")
+	writeFile(t, filepath.Join(repo, "config", "missing.md"), "new command")
+	existingTarget := filepath.Join(home, ".codex", "commands", "existing.md")
+	missingTarget := filepath.Join(home, ".codex", "commands", "missing.md")
+	writeFile(t, existingTarget, "custom version")
+	manifest := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Resources: []Resource{
+			{
+				ID:     "existing",
+				Source: "config/existing.md",
+				Targets: []Target{{
+					Agent: "codex",
+					Path:  ".codex/commands/existing.md",
+				}},
+			},
+			{
+				ID:     "missing",
+				Source: "config/missing.md",
+				Targets: []Target{{
+					Agent: "codex",
+					Path:  ".codex/commands/missing.md",
+				}},
+			},
+		},
+	}
+
+	plan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: ConflictKeep,
+	}); err != nil {
+		t.Fatalf("Apply(keep) error = %v", err)
+	}
+	assertFileContents(t, existingTarget, "custom version")
+	assertFileContents(t, missingTarget, "new command")
+
+	nextPlan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if action := actionForResource(t, nextPlan, "existing"); action.State != ActionIgnored {
+		t.Fatalf("kept action = %#v, want ignored", action)
+	}
+	if nextPlan.HasConflicts() {
+		t.Fatalf("kept plan still has conflicts: %#v", nextPlan.Actions)
+	}
+
+	writeFile(t, filepath.Join(repo, "config", "existing.md"), "new preset version")
+	stalePlan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	action := actionForResource(t, stalePlan, "existing")
+	if action.State != ActionConflict {
+		t.Fatalf("stale keep action = %#v, want conflict", action)
+	}
+	if action.Reason != "previous keep-existing decision is stale" {
+		t.Fatalf("stale keep reason = %q", action.Reason)
+	}
+}
+
+func TestApplyReplacesConflictAfterBackup(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	source := filepath.Join(repo, "config", "work-plan.md")
+	destination := filepath.Join(home, ".codex", "commands", "work-plan.md")
+	writeFile(t, source, "preset version")
+	writeFile(t, destination, "custom version")
+	manifest := validManifest(
+		"config/work-plan.md",
+		"codex",
+		".codex/commands/work-plan.md",
+	)
+	plan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionConflict)
+
+	now := time.Date(2026, 7, 29, 20, 0, 0, 0, time.UTC)
+	if err := Apply(plan, ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: ConflictReplace,
+		Now:            func() time.Time { return now },
+	}); err != nil {
+		t.Fatalf("Apply(replace) error = %v", err)
+	}
+	assertFileContents(t, destination, "preset version")
+	assertFileContents(
+		t,
+		filepath.Join(
+			home,
+			".config",
+			"agentctl",
+			"backups",
+			"20260729T200000Z",
+			".codex",
+			"commands",
+			"work-plan.md",
+		),
+		"custom version",
+	)
+
+	nextPlan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, nextPlan, ActionUnchanged)
+}
+
+func TestApplyConflictPolicyStillRejectsStaleTarget(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	source := filepath.Join(repo, "config", "work-plan.md")
+	destination := filepath.Join(home, ".codex", "commands", "work-plan.md")
+	writeFile(t, source, "preset version")
+	writeFile(t, destination, "custom version")
+	manifest := validManifest(
+		"config/work-plan.md",
+		"codex",
+		".codex/commands/work-plan.md",
+	)
+	plan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, destination, "changed after planning")
+
+	for _, policy := range []ConflictPolicy{ConflictKeep, ConflictReplace} {
+		err := Apply(plan, ApplyOptions{
+			Confirmed:      true,
+			ConflictPolicy: policy,
+		})
+		if !errors.Is(err, ErrPlanStale) {
+			t.Fatalf("Apply(%s) error = %v, want ErrPlanStale", policy, err)
+		}
+	}
+	assertFileContents(t, destination, "changed after planning")
+}
+
+func TestApplyPreflightsCompletePlanBeforeWriting(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "a.md"), "a")
+	writeFile(t, filepath.Join(repo, "config", "z.md"), "z")
+	manifest := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Resources: []Resource{
+			{
+				ID:     "a",
+				Source: "config/a.md",
+				Targets: []Target{{
+					Agent: "codex",
+					Path:  ".codex/commands/a.md",
+				}},
+			},
+			{
+				ID:     "z",
+				Source: "config/z.md",
+				Targets: []Target{{
+					Agent: "codex",
+					Path:  ".codex/commands/z.md",
+				}},
+			},
+		},
+	}
+	plan, err := BuildPlan(repo, home, manifest, "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(home, ".codex", "commands", "z.md"), "appeared")
+
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrPlanStale) {
+		t.Fatalf("Apply() error = %v, want ErrPlanStale", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".codex", "commands", "a.md")); !os.IsNotExist(err) {
+		t.Fatalf("preflight allowed an earlier write, stat error = %v", err)
+	}
 }
 
 func TestStatePathUsesAgentctlAndLoadsLegacyState(t *testing.T) {
@@ -297,7 +498,7 @@ func TestStatePathUsesAgentctlAndLoadsLegacyState(t *testing.T) {
 		t.Fatal(err)
 	}
 	legacyState := installState{
-		SchemaVersion: StateSchemaVersion,
+		SchemaVersion: 1,
 		Resources: map[string]installedResource{
 			stateKey("codex", ".codex/commands/work-plan.md"): {
 				Checksum:  checksum,
@@ -328,6 +529,17 @@ func TestStatePathUsesAgentctlAndLoadsLegacyState(t *testing.T) {
 	}
 	if _, err := os.Stat(wantStatePath); err != nil {
 		t.Fatalf("migrated state missing: %v", err)
+	}
+	migrated, err := loadState(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if migrated.SchemaVersion != StateSchemaVersion {
+		t.Fatalf(
+			"migrated schema = %d, want %d",
+			migrated.SchemaVersion,
+			StateSchemaVersion,
+		)
 	}
 }
 
@@ -779,6 +991,17 @@ func assertOnlyAction(t *testing.T, plan Plan, want ActionState) {
 	if got := plan.Actions[0].State; got != want {
 		t.Fatalf("action state = %q, want %q", got, want)
 	}
+}
+
+func actionForResource(t *testing.T, plan Plan, resourceID string) Action {
+	t.Helper()
+	for _, action := range plan.Actions {
+		if action.ResourceID == resourceID {
+			return action
+		}
+	}
+	t.Fatalf("resource %q not found in plan", resourceID)
+	return Action{}
 }
 
 func assertFileContents(t *testing.T, path, want string) {

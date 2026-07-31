@@ -671,6 +671,279 @@ func TestRunProviderCommandsAndAlias(t *testing.T) {
 	}
 }
 
+func TestRunPresetLibraryCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{"preset", "list", "--repo", repo}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset list code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, presetID := range []string{
+		"codex-compatibility",
+		"codex-resource-lab",
+		"idea-shaping",
+		"standard-work",
+	} {
+		if !strings.Contains(stdout.String(), presetID) {
+			t.Errorf("preset list output = %q, missing %q", stdout.String(), presetID)
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"preset", "show", "--repo", repo, "idea-shaping"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("preset show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"id": "idea-shaping"`) ||
+		!strings.Contains(stdout.String(), `"id": "shape"`) {
+		t.Fatalf("preset show output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"preset", "validate", "--repo", repo, "all"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "5 presets valid") {
+		t.Fatalf("preset validate output = %q", stdout.String())
+	}
+}
+
+func TestRunPresetAuthoringCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	run := func(args ...string) int {
+		stdout.Reset()
+		stderr.Reset()
+		return Run(append([]string{"preset"}, args...), &stdout, &stderr)
+	}
+
+	if code := run(
+		"create", "--repo", repo,
+		"--name", "Team Workflow",
+		"--description", "Initial description",
+		"team-work",
+	); code != 0 {
+		t.Fatalf("preset create code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "created preset team-work") {
+		t.Fatalf("preset create output = %q", stdout.String())
+	}
+
+	if code := run(
+		"copy", "--repo", repo,
+		"--name", "Team Workflow Copy",
+		"team-work", "team-work-copy",
+	); code != 0 {
+		t.Fatalf("preset copy code = %d, stderr = %s", code, stderr.String())
+	}
+	if code := run(
+		"edit", "--repo", repo,
+		"--description", "Updated description",
+		"team-work-copy",
+	); code != 0 {
+		t.Fatalf("preset edit code = %d, stderr = %s", code, stderr.String())
+	}
+	if code := run("show", "--repo", repo, "team-work-copy"); code != 0 {
+		t.Fatalf("preset show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"name": "Team Workflow Copy"`) ||
+		!strings.Contains(stdout.String(), `"description": "Updated description"`) {
+		t.Fatalf("edited preset output = %q", stdout.String())
+	}
+
+	if code := run("delete", "--repo", repo, "team-work"); code != 2 {
+		t.Fatalf("preset delete without --yes code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr.String(), "--yes") {
+		t.Fatalf("preset delete stderr = %q, want --yes instruction", stderr.String())
+	}
+	if code := run("delete", "--repo", repo, "--yes", "team-work"); code != 0 {
+		t.Fatalf("preset delete code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(repo, "config", "presets", "team-work.json")); !os.IsNotExist(err) {
+		t.Fatalf("deleted preset still exists, stat error = %v", err)
+	}
+}
+
+func TestRunPresetPlanRenderAndApply(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	output := filepath.Join(t.TempDir(), "rendered")
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{
+		"preset", "plan",
+		"--repo", repo,
+		"--home", home,
+		"--target", "hermes",
+		"idea-shaping",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset plan code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "CREATE") ||
+		!strings.Contains(stdout.String(), ".hermes/") {
+		t.Fatalf("preset plan output = %q", stdout.String())
+	}
+	if strings.Contains(stdout.String(), ".codex/") {
+		t.Fatalf("preset plan output includes unselected provider: %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"preset", "render",
+		"--repo", repo,
+		"--target", "hermes",
+		"--output", output,
+		"idea-shaping",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset render code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(output, ".hermes")); err != nil {
+		t.Fatalf("preset render did not create Hermes output: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(output, ".codex")); !os.IsNotExist(err) {
+		t.Fatalf("preset render created unselected Codex output, stat error = %v", err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"preset", "apply",
+		"--repo", repo,
+		"--home", home,
+		"--target", "hermes",
+		"idea-shaping",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("preset apply without --yes code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr.String(), "--yes") {
+		t.Fatalf("preset apply stderr = %q, want --yes instruction", stderr.String())
+	}
+}
+
+func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	targetRelative := filepath.Join(".codex", "commands", "work-experiment.md")
+
+	t.Run("keep existing", func(t *testing.T) {
+		home := t.TempDir()
+		target := filepath.Join(home, targetRelative)
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte("custom command"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		var stdout, stderr bytes.Buffer
+		code := Run([]string{
+			"preset", "apply",
+			"--repo", repo,
+			"--home", home,
+			"--target", "codex",
+			"--conflicts", "keep",
+			"--yes",
+			"scored-experiment",
+		}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("preset apply keep code = %d, stderr = %s", code, stderr.String())
+		}
+		data, err := os.ReadFile(target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(data); got != "custom command" {
+			t.Fatalf("kept target = %q", got)
+		}
+
+		stdout.Reset()
+		stderr.Reset()
+		code = Run([]string{
+			"preset", "plan",
+			"--repo", repo,
+			"--home", home,
+			"--target", "codex",
+			"scored-experiment",
+		}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("preset plan after keep code = %d, stderr = %s", code, stderr.String())
+		}
+		if !strings.Contains(stdout.String(), "IGNORED") {
+			t.Fatalf("preset plan after keep = %q, want IGNORED", stdout.String())
+		}
+	})
+
+	t.Run("replace from preset", func(t *testing.T) {
+		home := t.TempDir()
+		target := filepath.Join(home, targetRelative)
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte("custom command"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		var stdout, stderr bytes.Buffer
+		code := Run([]string{
+			"preset", "apply",
+			"--repo", repo,
+			"--home", home,
+			"--target", "codex",
+			"--conflicts", "replace",
+			"--yes",
+			"scored-experiment",
+		}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("preset apply replace code = %d, stderr = %s", code, stderr.String())
+		}
+		data, err := os.ReadFile(target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(data); got == "custom command" {
+			t.Fatalf("replace left target unchanged")
+		}
+		backups, err := filepath.Glob(filepath.Join(
+			home,
+			".config",
+			"agentctl",
+			"backups",
+			"*",
+			targetRelative,
+		))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(backups) != 1 {
+			t.Fatalf("replace backups = %v, want one", backups)
+		}
+	})
+}
+
 func TestRunEventRejectsUnsupportedTriggerWithoutWriting(t *testing.T) {
 	t.Parallel()
 

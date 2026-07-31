@@ -49,6 +49,36 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 			t.Errorf("%s structured output = false, want true", providerID)
 		}
 	}
+
+	expectedLoopCapabilities := map[string][]string{
+		Codex: {
+			"safety.tool_guard",
+			"workflow.goal",
+			"workflow.stop_continue",
+		},
+		Claude: {
+			"safety.tool_guard",
+			"workflow.goal",
+			"workflow.scheduled_loop",
+			"workflow.stop_continue",
+		},
+		Hermes: {
+			"workflow.goal",
+			"workflow.goal_persistent",
+		},
+		Antigravity: {
+			"safety.tool_guard",
+			"workflow.stop_continue",
+		},
+	}
+	for providerID, capabilities := range expectedLoopCapabilities {
+		adapter, _ := registry.Resolve(providerID)
+		for _, capability := range capabilities {
+			if !contains(adapter.Capabilities, capability) {
+				t.Errorf("%s is missing capability %q", providerID, capability)
+			}
+		}
+	}
 }
 
 func TestValidateAdapterRejectsContractContradictions(t *testing.T) {
