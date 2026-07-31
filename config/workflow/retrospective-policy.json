@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "mode": "post-run",
+  "output_directory": ".agent-runs/retrospectives",
+  "record_glob": ".agent-runs/retrospectives/*/record.json",
+  "mutation_policy": "proposal-only",
+  "minimum_repeated_findings": 2,
+  "allow_single_critical_finding": true,
+  "require_held_out_replay": true,
+  "require_human_approval": true,
+  "unknown_metrics_policy": "preserve-unknown",
+  "report_lanes": [
+    "correctness",
+    "observable-trajectory",
+    "process-safety",
+    "cost"
+  ],
+  "profile_resources": [
+    "instructions",
+    "commands",
+    "prompts",
+    "skills",
+    "mcp",
+    "hooks",
+    "settings",
+    "plugins",
+    "model-routing"
+  ]
+}

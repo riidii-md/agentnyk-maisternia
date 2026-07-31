@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "harness-profile",
+  "name": "Harness Profile",
+  "description": "Read-only inventory and cost baseline for active instructions, commands, prompts, skills, MCP, hooks, settings, plugins, and model routing.",
+  "pipelines": [
+    {
+      "id": "profile",
+      "name": "Profile",
+      "entry_phases": ["inventory"],
+      "phases": ["inventory", "measure", "report"],
+      "edges": [
+        {"from": "inventory", "to": "measure"},
+        {"from": "measure", "to": "report"}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-profile"],
+    "prompts": [],
+    "skills": ["session-retrospective-skill"],
+    "hooks": [],
+    "settings": ["retrospective-policy", "retrospective-record-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

@@ -32,6 +32,11 @@ The repository starts with:
   decision, and planning;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
+- `harness-profile`: read-only configuration, capability, and usage profiling;
+- `session-audit`: evidence-backed correctness, trajectory, process/safety, and
+  cost review for one completed run;
+- `harness-improvement`: post-run profiling, audit, repeated-pattern proposals,
+  held-out replay, and human-approved installation;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource.
@@ -42,6 +47,7 @@ Inspect them:
 agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
+agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
 agentctl preset validate all
 ```
@@ -162,3 +168,6 @@ and runtime loops.
 See [Provider-native experiment loops](PROVIDER-NATIVE-EXPERIMENTS.md) for the
 scored experiment contract, provider mappings, safety model, and boundary with
 Kaji.
+
+See [Session retrospectives and harness improvement](RETROSPECTIVES.md) for the
+profiling, audit, post-run artifact, replay, and human-approval contracts.

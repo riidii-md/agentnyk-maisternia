@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "session-audit",
+  "name": "Session Audit",
+  "description": "Evidence-backed post-run audit of correctness, observable trajectory efficiency, process and safety, and measured cost.",
+  "pipelines": [
+    {
+      "id": "audit",
+      "name": "Audit",
+      "entry_phases": ["intake"],
+      "phases": [
+        "intake", "redact", "outcome", "claims", "trajectory", "process",
+        "cost", "report"
+      ],
+      "edges": [
+        {"from": "intake", "to": "redact"},
+        {"from": "redact", "to": "outcome"},
+        {"from": "outcome", "to": "claims"},
+        {"from": "claims", "to": "trajectory"},
+        {"from": "trajectory", "to": "process"},
+        {"from": "process", "to": "cost"},
+        {"from": "cost", "to": "report"}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-audit"],
+    "prompts": [],
+    "skills": ["session-retrospective-skill"],
+    "hooks": [],
+    "settings": ["retrospective-policy", "retrospective-record-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}
