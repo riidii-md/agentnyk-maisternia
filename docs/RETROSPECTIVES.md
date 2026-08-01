@@ -39,7 +39,8 @@ INVENTORY -> MEASURE -> REPORT
 
 ### `session-audit`
 
-Installs `/work-audit`, the shared skill, and the policy.
+Installs `/work-audit`, `/work-session-analysis`, the shared skill, and the
+policy.
 
 The audit reads one explicitly selected run and returns four independent lanes:
 
@@ -61,6 +62,7 @@ Installs the complete command set:
 ```text
 /work-profile
 /work-audit
+/work-session-analysis
 /work-improve
 /work-retrospective
 ```
@@ -85,6 +87,31 @@ to proposal design. Only the human-accepted branch reaches installation.
 After installing `harness-improvement`, invoke `/work-retrospective` at the end
 of a completed task. The shared skill also makes the workflow discoverable when
 the harness selects skills from task context.
+
+For a direct analysis of one completed session without running the wider
+improvement lifecycle, invoke:
+
+```text
+/work-session-analysis <explicit session export or current completed task>
+```
+
+The command delegates seven independent review lanes when the provider supports
+subagents:
+
+| Reviewer | Bottlenecks it investigates |
+|---|---|
+| Token and time | Provider usage, retries, rework, delegation cost, avoidable detours |
+| Repetitive work | Repeated reads, searches, explanations, attempts, and rediscovery |
+| Skills | Broken activation, paths, frontmatter, duplication, conflicts, and stale procedures |
+| User friction | Repeated context, corrections, rejected actions, unclear status, and unreadable output |
+| Setup friction | Missing tools, permissions, stale config, MCP availability, and provider mismatches |
+| Commands | Wrong flags, failed parsing, unsafe assumptions, missing validation, and weak fallbacks |
+| Delegation | Duplicate subagents, weak scopes, unused results, context gaps, and merge overhead |
+
+Each reviewer returns `BOTTLENECK`, `NO_BOTTLENECK`, or
+`INSUFFICIENT_EVIDENCE` with cited evidence and one minimal, measurable
+improvement when a bottleneck exists. Providers without subagents run the same
+lanes sequentially and record that limitation.
 
 The first implementation deliberately does not install provider Stop hooks.
 Automatically starting model review at every stop can recurse, spend tokens
@@ -113,6 +140,7 @@ Expected files are:
 ```text
 profile.md
 audit.md
+session-analysis.md
 proposal.md       # only when evidence supports a change
 index.md          # links the review package
 record.json       # structured metrics, findings, proposals, and decisions
@@ -222,4 +250,10 @@ Then invoke this inside the configured harness after a completed task:
 
 ```text
 /work-retrospective <explicit session export or current completed task>
+```
+
+Or run only the concrete session bottleneck analysis:
+
+```text
+/work-session-analysis <explicit session export or current completed task>
 ```

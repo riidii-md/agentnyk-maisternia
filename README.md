@@ -68,6 +68,9 @@ depends on the planned structured settings merge; see
 
 The retrospective presets add read-only harness profiling, evidence-backed run
 audits, and proposal-only improvement with held-out replay and human approval.
+`/work-session-analysis` provides the direct end-of-session bottleneck review
+for token cost, repetition, skills, user friction, setup, commands, and
+delegated subagents.
 See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
 
 ## Installation

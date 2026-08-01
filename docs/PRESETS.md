@@ -34,7 +34,7 @@ The repository starts with:
   evidence, and bounded continuation loop;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
 - `session-audit`: evidence-backed correctness, trajectory, process/safety, and
-  cost review for one completed run;
+  cost review plus delegated bottleneck analysis for one completed run;
 - `harness-improvement`: post-run profiling, audit, repeated-pattern proposals,
   held-out replay, and human-approved installation;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases;

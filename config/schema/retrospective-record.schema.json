@@ -26,10 +26,11 @@
     "artifacts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["profile", "audit", "proposal", "index"],
+      "required": ["profile", "audit", "session_analysis", "proposal", "index"],
       "properties": {
         "profile": {"type": ["string", "null"]},
         "audit": {"type": ["string", "null"]},
+        "session_analysis": {"type": ["string", "null"]},
         "proposal": {"type": ["string", "null"]},
         "index": {"type": ["string", "null"]}
       }
@@ -70,13 +71,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id", "lane", "severity", "verdict", "summary", "evidence",
+        "id", "lane", "category", "severity", "verdict", "summary", "evidence",
         "escaped", "review_status"
       ],
       "properties": {
         "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
         "lane": {
           "enum": ["correctness", "observable-trajectory", "process-safety", "cost"]
+        },
+        "category": {
+          "enum": [
+            "token-spending", "repetitive-work", "broken-skills",
+            "user-friction", "setup-friction", "broken-commands",
+            "delegation", "other"
+          ]
         },
         "severity": {"enum": ["info", "low", "medium", "high", "critical"]},
         "verdict": {

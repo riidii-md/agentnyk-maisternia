@@ -9,23 +9,34 @@
       "name": "Audit",
       "entry_phases": ["intake"],
       "phases": [
-        "intake", "redact", "outcome", "claims", "trajectory", "process",
-        "cost", "report"
+        "intake", "redact", "dispatch", "token_cost", "repetition", "skills",
+        "user_friction", "setup", "commands", "delegation", "synthesize",
+        "report"
       ],
       "edges": [
         {"from": "intake", "to": "redact"},
-        {"from": "redact", "to": "outcome"},
-        {"from": "outcome", "to": "claims"},
-        {"from": "claims", "to": "trajectory"},
-        {"from": "trajectory", "to": "process"},
-        {"from": "process", "to": "cost"},
-        {"from": "cost", "to": "report"}
+        {"from": "redact", "to": "dispatch"},
+        {"from": "dispatch", "to": "token_cost"},
+        {"from": "dispatch", "to": "repetition"},
+        {"from": "dispatch", "to": "skills"},
+        {"from": "dispatch", "to": "user_friction"},
+        {"from": "dispatch", "to": "setup"},
+        {"from": "dispatch", "to": "commands"},
+        {"from": "dispatch", "to": "delegation"},
+        {"from": "token_cost", "to": "synthesize"},
+        {"from": "repetition", "to": "synthesize"},
+        {"from": "skills", "to": "synthesize"},
+        {"from": "user_friction", "to": "synthesize"},
+        {"from": "setup", "to": "synthesize"},
+        {"from": "commands", "to": "synthesize"},
+        {"from": "delegation", "to": "synthesize"},
+        {"from": "synthesize", "to": "report"}
       ]
     }
   ],
   "contents": {
     "mcp_refs": [],
-    "commands": ["work-audit"],
+    "commands": ["work-audit", "work-session-analysis"],
     "prompts": [],
     "skills": ["session-retrospective-skill"],
     "hooks": [],

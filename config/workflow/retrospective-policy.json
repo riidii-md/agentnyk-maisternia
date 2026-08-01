@@ -9,11 +9,21 @@
   "require_held_out_replay": true,
   "require_human_approval": true,
   "unknown_metrics_policy": "preserve-unknown",
+  "review_concurrency_limit": 4,
   "report_lanes": [
     "correctness",
     "observable-trajectory",
     "process-safety",
     "cost"
+  ],
+  "session_analysis_reviewers": [
+    "token-spending",
+    "repetitive-work",
+    "broken-skills",
+    "user-friction",
+    "setup-friction",
+    "broken-commands",
+    "delegation"
   ],
   "profile_resources": [
     "instructions",

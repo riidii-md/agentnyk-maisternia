@@ -19,8 +19,9 @@ Input:
 1. Create a run ID, `.agent-runs/retrospectives/<run-id>/`, and a `record.json`
    that conforms to the installed retrospective record schema.
 2. Run the `/work-profile` procedure against the active harness configuration.
-3. Run the `/work-audit` procedure against the explicitly selected completed
-   run and final artifacts.
+3. Run `/work-session-analysis` against the explicitly selected completed run;
+   use `/work-audit` for its correctness, trajectory, process/safety, and cost
+   evidence contract.
 4. Compare the result with earlier accepted and dismissed findings when they
    are available.
 5. Run the `/work-improve` procedure only for evidence-backed repeated patterns

@@ -67,6 +67,22 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if len(audit.Pipelines) != 1 || audit.Pipelines[0].ID != "audit" {
 		t.Fatalf("session-audit pipelines = %#v", audit.Pipelines)
 	}
+	if got := audit.Contents.Commands; len(got) != 2 ||
+		got[1] != "work-session-analysis" {
+		t.Fatalf("session-audit commands = %v", got)
+	}
+	auditPhases := make(map[string]struct{}, len(audit.Pipelines[0].Phases))
+	for _, phase := range audit.Pipelines[0].Phases {
+		auditPhases[phase] = struct{}{}
+	}
+	for _, reviewer := range []string{
+		"token_cost", "repetition", "skills", "user_friction", "setup",
+		"commands", "delegation",
+	} {
+		if _, found := auditPhases[reviewer]; !found {
+			t.Errorf("session-audit reviewer phase %q missing", reviewer)
+		}
+	}
 	improvement, found := library.Get("harness-improvement")
 	if !found {
 		t.Fatal("harness-improvement preset missing")
@@ -75,8 +91,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		improvement.Pipelines[0].ID != "improve-harness" {
 		t.Fatalf("harness-improvement pipelines = %#v", improvement.Pipelines)
 	}
-	if got := improvement.Contents.Commands; len(got) != 4 {
-		t.Fatalf("harness-improvement commands = %v, want 4", got)
+	if got := improvement.Contents.Commands; len(got) != 5 {
+		t.Fatalf("harness-improvement commands = %v, want 5", got)
 	}
 	if got := improvement.Targets; len(got) != 4 {
 		t.Fatalf("harness-improvement targets = %v, want all four providers", got)
@@ -158,9 +174,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
 	}
-	if len(improvementManifest.Resources) != 7 {
+	if len(improvementManifest.Resources) != 8 {
 		t.Fatalf(
-			"harness-improvement resource count = %d, want 7",
+			"harness-improvement resource count = %d, want 8",
 			len(improvementManifest.Resources),
 		)
 	}

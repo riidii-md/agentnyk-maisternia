@@ -30,7 +30,8 @@
   "contents": {
     "mcp_refs": [],
     "commands": [
-      "work-profile", "work-audit", "work-improve", "work-retrospective"
+      "work-profile", "work-audit", "work-session-analysis", "work-improve",
+      "work-retrospective"
     ],
     "prompts": [],
     "skills": ["session-retrospective-skill"],
