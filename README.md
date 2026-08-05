@@ -36,8 +36,9 @@ The repository contains the first safe configurator foundation:
 - drift detection using install checksums;
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
-- reusable standard-work, idea-shaping, scored-experiment,
-  Codex-compatibility, and Codex resource-lab presets;
+- reusable standard-work, idea-shaping, scored-experiment, harness-profile,
+  session-audit, harness-improvement, Codex-compatibility, and Codex
+  resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -64,6 +65,13 @@ The `scored-experiment` preset establishes the provider-native experiment
 workflow and capability contract. Native Stop/tool-guard hook rendering still
 depends on the planned structured settings merge; see
 [Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
+
+The retrospective presets add read-only harness profiling, evidence-backed run
+audits, and proposal-only improvement with held-out replay and human approval.
+`/work-session-analysis` provides the direct end-of-session bottleneck review
+for token cost, repetition, skills, user friction, setup, commands, and
+delegated subagents.
+See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
 
 ## Installation
 
@@ -224,6 +232,7 @@ Inspect and validate the preset library:
 go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
+go run ./cmd/agentctl preset show harness-improvement
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
@@ -297,6 +306,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
+- [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)

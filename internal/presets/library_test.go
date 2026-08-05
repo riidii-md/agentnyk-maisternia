@@ -19,8 +19,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 5 {
-		t.Fatalf("preset count = %d, want 5", len(library.Presets))
+	if len(library.Presets) != 8 {
+		t.Fatalf("preset count = %d, want 8", len(library.Presets))
 	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
@@ -43,6 +43,59 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := experiment.Targets; len(got) != 4 {
 		t.Fatalf("scored-experiment targets = %v, want all four providers", got)
+	}
+	profile, found := library.Get("harness-profile")
+	if !found {
+		t.Fatal("harness-profile preset missing")
+	}
+	if got := profile.Contents.Commands; len(got) != 1 || got[0] != "work-profile" {
+		t.Fatalf("harness-profile commands = %v", got)
+	}
+	if got := profile.Contents.Settings; len(got) != 2 ||
+		got[0] != "retrospective-policy" ||
+		got[1] != "retrospective-record-schema" {
+		t.Fatalf("harness-profile settings = %v", got)
+	}
+	if got := profile.Contents.Skills; len(got) != 1 ||
+		got[0] != "session-retrospective-skill" {
+		t.Fatalf("harness-profile skills = %v", got)
+	}
+	audit, found := library.Get("session-audit")
+	if !found {
+		t.Fatal("session-audit preset missing")
+	}
+	if len(audit.Pipelines) != 1 || audit.Pipelines[0].ID != "audit" {
+		t.Fatalf("session-audit pipelines = %#v", audit.Pipelines)
+	}
+	if got := audit.Contents.Commands; len(got) != 2 ||
+		got[1] != "work-session-analysis" {
+		t.Fatalf("session-audit commands = %v", got)
+	}
+	auditPhases := make(map[string]struct{}, len(audit.Pipelines[0].Phases))
+	for _, phase := range audit.Pipelines[0].Phases {
+		auditPhases[phase] = struct{}{}
+	}
+	for _, reviewer := range []string{
+		"token_cost", "repetition", "skills", "user_friction", "setup",
+		"commands", "delegation",
+	} {
+		if _, found := auditPhases[reviewer]; !found {
+			t.Errorf("session-audit reviewer phase %q missing", reviewer)
+		}
+	}
+	improvement, found := library.Get("harness-improvement")
+	if !found {
+		t.Fatal("harness-improvement preset missing")
+	}
+	if len(improvement.Pipelines) != 1 ||
+		improvement.Pipelines[0].ID != "improve-harness" {
+		t.Fatalf("harness-improvement pipelines = %#v", improvement.Pipelines)
+	}
+	if got := improvement.Contents.Commands; len(got) != 5 {
+		t.Fatalf("harness-improvement commands = %v, want 5", got)
+	}
+	if got := improvement.Targets; len(got) != 4 {
+		t.Fatalf("harness-improvement targets = %v, want all four providers", got)
 	}
 	resourceLab, found := library.Get("codex-resource-lab")
 	if !found {
@@ -115,6 +168,50 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := experimentManifest.Resources[0].Targets; len(got) != 4 {
 		t.Fatalf("scored-experiment rendered targets = %v, want 4", got)
+	}
+
+	improvementManifest, err := SelectManifest(improvement, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
+	}
+	if len(improvementManifest.Resources) != 8 {
+		t.Fatalf(
+			"harness-improvement resource count = %d, want 8",
+			len(improvementManifest.Resources),
+		)
+	}
+	for _, resource := range improvementManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("harness-improvement resource %q targets = %v, want 4", resource.ID, got)
+		}
+	}
+}
+
+func TestRepositoryRetrospectiveJSONIsValid(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	paths := []string{
+		"config/schema/retrospective-record.schema.json",
+		"config/workflow/retrospective-policy.json",
+	}
+	for _, relative := range paths {
+		relative := relative
+		t.Run(relative, func(t *testing.T) {
+			t.Parallel()
+
+			content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var document map[string]any
+			if err := json.Unmarshal(content, &document); err != nil {
+				t.Fatalf("parse %s: %v", relative, err)
+			}
+			if document["schema_version"] == nil && document["$schema"] == nil {
+				t.Fatalf("%s has no schema marker", relative)
+			}
+		})
 	}
 }
 

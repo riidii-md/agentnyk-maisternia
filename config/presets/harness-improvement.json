@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "harness-improvement",
+  "name": "Harness Improvement",
+  "description": "Controlled post-run profiling, evidence audit, repeated-pattern analysis, held-out replay, and human-approved harness improvement.",
+  "pipelines": [
+    {
+      "id": "improve-harness",
+      "name": "Improve Harness",
+      "entry_phases": ["profile"],
+      "phases": [
+        "profile", "audit", "aggregate", "propose", "replay", "approve",
+        "install", "monitor", "final"
+      ],
+      "edges": [
+        {"from": "profile", "to": "audit"},
+        {"from": "audit", "to": "aggregate"},
+        {"from": "aggregate", "to": "propose"},
+        {"from": "propose", "to": "replay"},
+        {"from": "replay", "to": "approve", "condition": "evidence sufficient"},
+        {"from": "replay", "to": "propose", "condition": "revise candidate", "loop": true},
+        {"from": "approve", "to": "install", "condition": "human accepts"},
+        {"from": "approve", "to": "final", "condition": "human rejects"},
+        {"from": "install", "to": "monitor"},
+        {"from": "monitor", "to": "final"},
+        {"from": "monitor", "to": "propose", "condition": "regression", "loop": true}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [
+      "work-profile", "work-audit", "work-session-analysis", "work-improve",
+      "work-retrospective"
+    ],
+    "prompts": [],
+    "skills": ["session-retrospective-skill"],
+    "hooks": [],
+    "settings": ["retrospective-policy", "retrospective-record-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

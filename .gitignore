@@ -2,6 +2,7 @@
 /agentctl
 /build/
 /dist/
+/.agent-runs/
 /coverage.out
 /.DS_Store
 *.tmp
