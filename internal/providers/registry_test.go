@@ -53,8 +53,10 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 	expectedLoopCapabilities := map[string][]string{
 		Codex: {
 			"safety.tool_guard",
+			"subagent.spawn",
 			"workflow.goal",
 			"workflow.stop_continue",
+			"worktree.isolation",
 		},
 		Claude: {
 			"safety.tool_guard",

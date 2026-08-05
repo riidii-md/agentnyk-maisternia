@@ -61,6 +61,66 @@
       ]
     },
     {
+      "id": "work-parallel-plan",
+      "source": "config/workflow/phases/parallel-plan.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-parallel-plan.md"},
+        {"agent": "claude", "path": ".claude/commands/work-parallel-plan.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-parallel-plan.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-parallel-plan/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-parallel-run",
+      "source": "config/workflow/phases/parallel-run.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-parallel-run.md"},
+        {"agent": "claude", "path": ".claude/commands/work-parallel-run.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-parallel-run.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-parallel-run/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-speed-loop",
+      "source": "config/workflow/phases/speed-loop.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-speed-loop.md"},
+        {"agent": "claude", "path": ".claude/commands/work-speed-loop.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-speed-loop.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-speed-loop/SKILL.md"}
+      ]
+    },
+    {
+      "id": "parallel-work-skill",
+      "source": "config/workflow/skills/parallel-work.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/parallel-work/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/parallel-work/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/parallel-work/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/parallel-work/SKILL.md"}
+      ]
+    },
+    {
+      "id": "parallel-work-policy",
+      "source": "config/workflow/parallel-work-policy.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/parallel-work-policy.json"},
+        {"agent": "claude", "path": ".claude/agentctl/parallel-work-policy.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/parallel-work-policy.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/parallel-work-policy.json"}
+      ]
+    },
+    {
+      "id": "parallel-plan-schema",
+      "source": "config/schema/parallel-plan.schema.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/parallel-plan.schema.json"},
+        {"agent": "claude", "path": ".claude/agentctl/parallel-plan.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/parallel-plan.schema.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/parallel-plan.schema.json"}
+      ]
+    },
+    {
       "id": "codex-shape-codex",
       "source": "config/workflow/phases/shape.md",
       "targets": [

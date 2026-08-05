@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "max_parallelism": 4,
+  "require_human_plan_approval": true,
+  "parallel_write_isolation": "required",
+  "allow_parallel_read_only_without_isolation": true,
+  "overlapping_write_paths": "serialize",
+  "shared_generated_files": "single-owner",
+  "integration_barrier": "every-wave",
+  "integration_conflict_policy": "stop",
+  "max_task_attempts": 3,
+  "provider_capability_fallback": "sequential",
+  "require_final_verification": true,
+  "report_cost_and_speedup": true
+}

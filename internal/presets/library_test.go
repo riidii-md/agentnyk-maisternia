@@ -19,8 +19,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 5 {
-		t.Fatalf("preset count = %d, want 5", len(library.Presets))
+	if len(library.Presets) != 6 {
+		t.Fatalf("preset count = %d, want 6", len(library.Presets))
 	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
@@ -43,6 +43,32 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := experiment.Targets; len(got) != 4 {
 		t.Fatalf("scored-experiment targets = %v, want all four providers", got)
+	}
+	parallel, found := library.Get("parallel-work")
+	if !found {
+		t.Fatal("parallel-work preset missing")
+	}
+	if len(parallel.Pipelines) != 1 ||
+		parallel.Pipelines[0].ID != "speed-loop" {
+		t.Fatalf("parallel-work pipelines = %#v", parallel.Pipelines)
+	}
+	if got := parallel.Contents.Commands; len(got) != 3 ||
+		got[0] != "work-parallel-plan" ||
+		got[1] != "work-parallel-run" ||
+		got[2] != "work-speed-loop" {
+		t.Fatalf("parallel-work commands = %v", got)
+	}
+	if got := parallel.Contents.Skills; len(got) != 1 ||
+		got[0] != "parallel-work-skill" {
+		t.Fatalf("parallel-work skills = %v", got)
+	}
+	if got := parallel.Contents.Settings; len(got) != 2 ||
+		got[0] != "parallel-work-policy" ||
+		got[1] != "parallel-plan-schema" {
+		t.Fatalf("parallel-work settings = %v", got)
+	}
+	if got := parallel.Targets; len(got) != 4 {
+		t.Fatalf("parallel-work targets = %v, want all four providers", got)
 	}
 	resourceLab, found := library.Get("codex-resource-lab")
 	if !found {
@@ -115,6 +141,42 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := experimentManifest.Resources[0].Targets; len(got) != 4 {
 		t.Fatalf("scored-experiment rendered targets = %v, want 4", got)
+	}
+
+	parallelManifest, err := SelectManifest(parallel, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(parallel-work) error = %v", err)
+	}
+	if len(parallelManifest.Resources) != 6 {
+		t.Fatalf(
+			"parallel-work resource count = %d, want 6",
+			len(parallelManifest.Resources),
+		)
+	}
+	for _, resource := range parallelManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("parallel-work resource %q targets = %v, want 4", resource.ID, got)
+		}
+	}
+}
+
+func TestRepositoryParallelWorkPolicyIsValidJSON(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	content, err := os.ReadFile(filepath.Join(root, "config", "workflow", "parallel-work-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		SchemaVersion  int `json:"schema_version"`
+		MaxParallelism int `json:"max_parallelism"`
+	}
+	if err := json.Unmarshal(content, &policy); err != nil {
+		t.Fatalf("parse parallel-work policy: %v", err)
+	}
+	if policy.SchemaVersion != 1 || policy.MaxParallelism != 4 {
+		t.Fatalf("parallel-work policy = %#v", policy)
 	}
 }
 

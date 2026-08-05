@@ -36,7 +36,7 @@ The repository contains the first safe configurator foundation:
 - drift detection using install checksums;
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
-- reusable standard-work, idea-shaping, scored-experiment,
+- reusable standard-work, idea-shaping, scored-experiment, parallel-work,
   Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
@@ -64,6 +64,10 @@ The `scored-experiment` preset establishes the provider-native experiment
 workflow and capability contract. Native Stop/tool-guard hook rendering still
 depends on the planned structured settings merge; see
 [Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
+
+The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
+`/work-speed-loop` for dependency-safe concurrent execution. See
+[Parallel work and the speed loop](docs/PARALLEL-WORK.md).
 
 ## Installation
 
@@ -224,6 +228,7 @@ Inspect and validate the preset library:
 go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
+go run ./cmd/agentctl preset show parallel-work
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
@@ -297,6 +302,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
+- [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)

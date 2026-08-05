@@ -32,6 +32,8 @@ The repository starts with:
   decision, and planning;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
+- `parallel-work`: dependency-aware parallel planning and bounded execution
+  waves with isolated writes, integration barriers, and sequential fallback;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource.
@@ -42,6 +44,7 @@ Inspect them:
 agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
+agentctl preset show parallel-work
 agentctl preset show codex-resource-lab
 agentctl preset validate all
 ```
@@ -162,3 +165,7 @@ and runtime loops.
 See [Provider-native experiment loops](PROVIDER-NATIVE-EXPERIMENTS.md) for the
 scored experiment contract, provider mappings, safety model, and boundary with
 Kaji.
+
+See [Parallel work and the speed loop](PARALLEL-WORK.md) for dependency-aware
+planning, write isolation, execution waves, integration barriers, provider
+fallback, and speed/cost reporting.
