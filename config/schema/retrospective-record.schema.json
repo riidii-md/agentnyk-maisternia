@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/retrospective-record.schema.json",
+  "title": "agentctl retrospective record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "task",
+    "provider",
+    "artifacts",
+    "metrics",
+    "findings",
+    "proposals",
+    "human_decision"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "task": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "provider": {"enum": ["codex", "claude", "antigravity", "hermes", "unknown"]},
+    "model": {"type": ["string", "null"], "maxLength": 256},
+    "started_at": {"type": ["string", "null"], "format": "date-time"},
+    "completed_at": {"type": ["string", "null"], "format": "date-time"},
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "audit", "session_analysis", "proposal", "index"],
+      "properties": {
+        "profile": {"type": ["string", "null"]},
+        "audit": {"type": ["string", "null"]},
+        "session_analysis": {"type": ["string", "null"]},
+        "proposal": {"type": ["string", "null"]},
+        "index": {"type": ["string", "null"]}
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/metric"}
+    },
+    "findings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "proposals": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/proposal"}
+    },
+    "human_decision": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/humanDecision"}
+      ]
+    }
+  },
+  "$defs": {
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "value", "unit", "source"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,127}$"},
+        "status": {"enum": ["measured", "estimated", "unknown"]},
+        "value": {"type": ["number", "string", "null"]},
+        "unit": {"type": ["string", "null"], "maxLength": 64},
+        "source": {"type": ["string", "null"], "maxLength": 2048}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "lane", "category", "severity", "verdict", "summary", "evidence",
+        "escaped", "review_status"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
+        "lane": {
+          "enum": ["correctness", "observable-trajectory", "process-safety", "cost"]
+        },
+        "category": {
+          "enum": [
+            "token-spending", "repetitive-work", "broken-skills",
+            "user-friction", "setup-friction", "broken-commands",
+            "delegation", "other"
+          ]
+        },
+        "severity": {"enum": ["info", "low", "medium", "high", "critical"]},
+        "verdict": {
+          "enum": ["supported", "refuted", "unverifiable", "superseded", "not-applicable"]
+        },
+        "summary": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "evidence": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "escaped": {"type": "boolean"},
+        "review_status": {"enum": ["unreviewed", "accepted", "dismissed", "needs-evidence"]}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference"],
+      "properties": {
+        "kind": {"enum": ["test", "file", "diff", "tool", "documentation", "telemetry", "human", "model-judgment"]},
+        "reference": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "finding_ids", "summary", "targets", "status"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
+        "finding_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        },
+        "summary": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        },
+        "status": {
+          "enum": [
+            "proposed", "replay-passed", "replay-failed", "accepted",
+            "rejected", "installed", "rolled-back"
+          ]
+        }
+      }
+    },
+    "humanDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "decided_at", "rationale"],
+      "properties": {
+        "decision": {"enum": ["accept", "reject", "revise", "collect-more-evidence"]},
+        "decided_at": {"type": "string", "format": "date-time"},
+        "rationale": {"type": "string", "maxLength": 4096}
+      }
+    }
+  }
+}

@@ -34,6 +34,11 @@ The repository starts with:
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution
   waves with isolated writes, integration barriers, and sequential fallback;
+- `harness-profile`: read-only configuration, capability, and usage profiling;
+- `session-audit`: evidence-backed correctness, trajectory, process/safety, and
+  cost review plus delegated bottleneck analysis for one completed run;
+- `harness-improvement`: post-run profiling, audit, repeated-pattern proposals,
+  held-out replay, and human-approved installation;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource.
@@ -45,6 +50,7 @@ agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
 agentctl preset show parallel-work
+agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
 agentctl preset validate all
 ```
@@ -169,3 +175,6 @@ Kaji.
 See [Parallel work and the speed loop](PARALLEL-WORK.md) for dependency-aware
 planning, write isolation, execution waves, integration barriers, provider
 fallback, and speed/cost reporting.
+
+See [Session retrospectives and harness improvement](RETROSPECTIVES.md) for the
+profiling, audit, post-run artifact, replay, and human-approval contracts.

@@ -121,6 +121,86 @@
       ]
     },
     {
+      "id": "work-profile",
+      "source": "config/workflow/phases/profile.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-profile.md"},
+        {"agent": "claude", "path": ".claude/commands/work-profile.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-profile.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-profile/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-audit",
+      "source": "config/workflow/phases/audit.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-audit.md"},
+        {"agent": "claude", "path": ".claude/commands/work-audit.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-audit.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-audit/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-improve",
+      "source": "config/workflow/phases/improve.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-improve.md"},
+        {"agent": "claude", "path": ".claude/commands/work-improve.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-improve.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-improve/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-retrospective",
+      "source": "config/workflow/phases/retrospective.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-retrospective.md"},
+        {"agent": "claude", "path": ".claude/commands/work-retrospective.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-retrospective.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-retrospective/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-session-analysis",
+      "source": "config/workflow/phases/session-analysis.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-session-analysis.md"},
+        {"agent": "claude", "path": ".claude/commands/work-session-analysis.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-session-analysis.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-session-analysis/SKILL.md"}
+      ]
+    },
+    {
+      "id": "retrospective-policy",
+      "source": "config/workflow/retrospective-policy.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/retrospective-policy.json"},
+        {"agent": "claude", "path": ".claude/agentctl/retrospective-policy.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/retrospective-policy.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/retrospective-policy.json"}
+      ]
+    },
+    {
+      "id": "retrospective-record-schema",
+      "source": "config/schema/retrospective-record.schema.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/retrospective-record.schema.json"},
+        {"agent": "claude", "path": ".claude/agentctl/retrospective-record.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/retrospective-record.schema.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/retrospective-record.schema.json"}
+      ]
+    },
+    {
+      "id": "session-retrospective-skill",
+      "source": "config/workflow/skills/session-retrospective.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/session-retrospective/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/session-retrospective/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/session-retrospective/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/session-retrospective/SKILL.md"}
+      ]
+    },
+    {
       "id": "codex-shape-codex",
       "source": "config/workflow/phases/shape.md",
       "targets": [

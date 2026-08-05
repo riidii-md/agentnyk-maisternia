@@ -37,7 +37,8 @@ The repository contains the first safe configurator foundation:
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
-  Codex-compatibility, and Codex resource-lab presets;
+  harness-profile, session-audit, harness-improvement, Codex-compatibility, and
+  Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -68,6 +69,13 @@ depends on the planned structured settings merge; see
 The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
 `/work-speed-loop` for dependency-safe concurrent execution. See
 [Parallel work and the speed loop](docs/PARALLEL-WORK.md).
+
+The retrospective presets add read-only harness profiling, evidence-backed run
+audits, and proposal-only improvement with held-out replay and human approval.
+`/work-session-analysis` provides the direct end-of-session bottleneck review
+for token cost, repetition, skills, user friction, setup, commands, and
+delegated subagents.
+See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
 
 ## Installation
 
@@ -229,6 +237,7 @@ go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
 go run ./cmd/agentctl preset show parallel-work
+go run ./cmd/agentctl preset show harness-improvement
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
@@ -303,6 +312,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
 - [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
+- [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event-driven workflow](docs/EVENT-WORKFLOW.md)

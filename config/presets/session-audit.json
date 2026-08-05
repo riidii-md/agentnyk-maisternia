@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "session-audit",
+  "name": "Session Audit",
+  "description": "Evidence-backed post-run audit of correctness, observable trajectory efficiency, process and safety, and measured cost.",
+  "pipelines": [
+    {
+      "id": "audit",
+      "name": "Audit",
+      "entry_phases": ["intake"],
+      "phases": [
+        "intake", "redact", "dispatch", "token_cost", "repetition", "skills",
+        "user_friction", "setup", "commands", "delegation", "synthesize",
+        "report"
+      ],
+      "edges": [
+        {"from": "intake", "to": "redact"},
+        {"from": "redact", "to": "dispatch"},
+        {"from": "dispatch", "to": "token_cost"},
+        {"from": "dispatch", "to": "repetition"},
+        {"from": "dispatch", "to": "skills"},
+        {"from": "dispatch", "to": "user_friction"},
+        {"from": "dispatch", "to": "setup"},
+        {"from": "dispatch", "to": "commands"},
+        {"from": "dispatch", "to": "delegation"},
+        {"from": "token_cost", "to": "synthesize"},
+        {"from": "repetition", "to": "synthesize"},
+        {"from": "skills", "to": "synthesize"},
+        {"from": "user_friction", "to": "synthesize"},
+        {"from": "setup", "to": "synthesize"},
+        {"from": "commands", "to": "synthesize"},
+        {"from": "delegation", "to": "synthesize"},
+        {"from": "synthesize", "to": "report"}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-audit", "work-session-analysis"],
+    "prompts": [],
+    "skills": ["session-retrospective-skill"],
+    "hooks": [],
+    "settings": ["retrospective-policy", "retrospective-record-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}
