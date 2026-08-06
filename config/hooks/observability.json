@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "id": "observability",
+  "name": "Local Observability",
+  "description": "Record redacted local metrics for tool reliability, retries, delegation, duration, and session cost without retaining prompts, outputs, or secrets.",
+  "default_scope": "user",
+  "supported_scopes": ["user", "project"],
+  "activation": "global",
+  "override_policy": "merge",
+  "rules": [
+    {
+      "id": "tool-outcome",
+      "description": "Record tool category, duration, exit status, retry count, and provider while excluding arguments and output bodies.",
+      "operation": "record-tool-outcome",
+      "trigger": "after_tool",
+      "effect": "record",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 1000,
+      "authority": "local_state_write",
+      "network_access": "none",
+      "data_access": ["event_metadata", "usage_metrics"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PostToolUse"},
+        "claude": {"event": "PostToolUse"},
+        "antigravity": {"event": "AfterTool"},
+        "hermes": {"event": "post_tool_call"}
+      }
+    },
+    {
+      "id": "session-profile",
+      "description": "Record bounded session duration, token or cost counters when available, tool failures, and delegation totals.",
+      "operation": "record-session-profile",
+      "trigger": "session_end",
+      "effect": "record",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 2000,
+      "authority": "local_state_write",
+      "network_access": "none",
+      "data_access": ["event_metadata", "session_metadata", "usage_metrics"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "SessionEnd"},
+        "claude": {"event": "SessionEnd"},
+        "antigravity": {"event": "SessionEnd"},
+        "hermes": {"event": "on_session_end"}
+      }
+    }
+  ]
+}

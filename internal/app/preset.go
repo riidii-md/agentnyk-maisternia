@@ -29,6 +29,8 @@ Options:
   --repo <dir>         Configuration repository root (default: current directory)
   --manifest <path>    Manifest path relative to repository
   --home <dir>         Target home directory (plan and apply)
+  --scope <scope>      user or project (plan and apply; default: user)
+  --project <dir>      Project root for project scope (default: current directory)
   --target <agent>     all, codex, claude, antigravity (agy), or hermes
   --output <dir>       Staging directory (render)
   --name <name>        Preset display name (create, copy, and edit)
@@ -59,6 +61,8 @@ type presetOptions struct {
 	repo        string
 	manifest    string
 	home        string
+	scope       string
+	project     string
 	target      string
 	output      string
 	name        optionalString
@@ -116,6 +120,8 @@ func parsePresetOptions(
 		repo:      ".",
 		manifest:  "config/manifest.json",
 		home:      home,
+		scope:     string(configurator.ScopeUser),
+		project:   ".",
 		target:    "all",
 		conflicts: string(configurator.ConflictAbort),
 	}
@@ -129,6 +135,8 @@ func parsePresetOptions(
 	switch command {
 	case "plan", "apply":
 		flags.StringVar(&options.home, "home", options.home, "target home directory")
+		flags.StringVar(&options.scope, "scope", options.scope, "installation scope: user or project")
+		flags.StringVar(&options.project, "project", options.project, "project root for project scope")
 		flags.StringVar(&options.target, "target", options.target, "target agent")
 	case "render":
 		flags.StringVar(&options.target, "target", options.target, "target agent")
@@ -156,6 +164,12 @@ func parsePresetOptions(
 	if err := flags.Parse(args); err != nil {
 		return presetOptions{}, 2
 	}
+	if (command == "plan" || command == "apply") &&
+		options.scope != string(configurator.ScopeUser) &&
+		options.scope != string(configurator.ScopeProject) {
+		fmt.Fprintf(stderr, "error: invalid --scope value %q; use user or project\n", options.scope)
+		return presetOptions{}, 2
+	}
 	options.args = flags.Args()
 	if command == "apply" {
 		if _, valid := conflictPolicy(options.conflicts); !valid {
@@ -178,6 +192,22 @@ func parsePresetOptions(
 		if err != nil {
 			fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
 			return presetOptions{}, 1
+		}
+		options.project, err = filepath.Abs(options.project)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: resolve project path: %v\n", err)
+			return presetOptions{}, 1
+		}
+		if options.scope == string(configurator.ScopeProject) {
+			info, inspectErr := os.Lstat(options.project)
+			if inspectErr != nil {
+				fmt.Fprintf(stderr, "error: inspect project path: %v\n", inspectErr)
+				return presetOptions{}, 1
+			}
+			if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+				fmt.Fprintln(stderr, "error: project path must be a regular directory")
+				return presetOptions{}, 1
+			}
 		}
 	}
 	if options.output != "" {
@@ -397,16 +427,18 @@ func runPresetInstallation(
 
 	switch command {
 	case "plan":
-		plan, err := configurator.BuildPlan(
+		plan, err := configurator.BuildPlanForScope(
 			options.repo,
-			options.home,
+			options.installRoot(),
 			selectedManifest,
 			options.target,
+			configurator.InstallScope(options.scope),
 		)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
+		printInstallScope(stdout, options)
 		printPlan(stdout, plan)
 		if plan.HasConflicts() {
 			return 1
@@ -433,16 +465,18 @@ func runPresetInstallation(
 		return 0
 
 	case "apply":
-		plan, err := configurator.BuildPlan(
+		plan, err := configurator.BuildPlanForScope(
 			options.repo,
-			options.home,
+			options.installRoot(),
 			selectedManifest,
 			options.target,
+			configurator.InstallScope(options.scope),
 		)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
+		printInstallScope(stdout, options)
 		printPlan(stdout, plan)
 		policy, _ := conflictPolicy(options.conflicts)
 		if plan.HasConflicts() && policy == configurator.ConflictAbort {
@@ -466,10 +500,27 @@ func runPresetInstallation(
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "applied preset %s\n", preset.ID)
+		fmt.Fprintf(
+			stdout,
+			"applied preset %s at %s scope (%s)\n",
+			preset.ID,
+			options.scope,
+			options.installRoot(),
+		)
 		return 0
 	}
 	return 2
+}
+
+func printInstallScope(output io.Writer, options presetOptions) {
+	fmt.Fprintf(output, "installation: %s scope (%s)\n", options.scope, options.installRoot())
+}
+
+func (o presetOptions) installRoot() string {
+	if o.scope == string(configurator.ScopeProject) {
+		return o.project
+	}
+	return o.home
 }
 
 func presetNotFound(id string, stderr io.Writer) int {

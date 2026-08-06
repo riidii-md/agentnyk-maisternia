@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "id": "quality",
+  "name": "Repository Quality",
+  "description": "Repository-opt-in reminders and gates that select checks from repository-owned configuration instead of hard-coding language or framework commands.",
+  "default_scope": "project",
+  "supported_scopes": ["user", "project"],
+  "activation": "repository_opt_in",
+  "override_policy": "merge",
+  "rules": [
+    {
+      "id": "changed-area-check",
+      "description": "Identify affected repository areas after writes and surface their configured formatting, lint, typecheck, or test commands.",
+      "operation": "detect-changed-area-checks",
+      "trigger": "after_tool",
+      "effect": "notify",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 1500,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PostToolUse", "matcher": "Write|Edit|ApplyPatch"},
+        "claude": {"event": "PostToolUse", "matcher": "Write|Edit|MultiEdit"},
+        "antigravity": {"event": "AfterTool", "matcher": "write_file|replace"},
+        "hermes": {"event": "post_tool_call", "matcher": "write_file|patch"}
+      }
+    },
+    {
+      "id": "work-boundary-check",
+      "description": "At the end of a turn, report missing repository-defined verification evidence without starting an unbounded retry loop.",
+      "operation": "check-work-boundary",
+      "trigger": "turn_end",
+      "effect": "notify",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 2000,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "session_metadata", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "Stop"},
+        "claude": {"event": "Stop"},
+        "antigravity": {"event": "AfterAgent"},
+        "hermes": {"event": "post_llm_call"}
+      }
+    }
+  ]
+}

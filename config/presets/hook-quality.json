@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "hook-quality",
+  "name": "Hook Quality",
+  "description": "Repository-opt-in changed-area checks and verification reminders driven by repository-owned commands.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [],
+    "prompts": [],
+    "skills": [],
+    "hooks": ["hook-pack-quality"],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

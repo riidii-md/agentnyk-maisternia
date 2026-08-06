@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "delegation",
+  "name": "Controlled Delegation",
+  "description": "Require an explicit delegation contract and retain bounded outcome metadata for subagent work.",
+  "default_scope": "user",
+  "supported_scopes": ["user", "project"],
+  "activation": "global",
+  "override_policy": "merge",
+  "rules": [
+    {
+      "id": "delegation-contract",
+      "description": "Require provider or model, authority, budget, task boundary, and expected output before dispatching delegated work.",
+      "operation": "validate-delegation-contract",
+      "trigger": "before_delegation",
+      "effect": "ask",
+      "blocking": true,
+      "failure_mode": "closed",
+      "timeout_ms": 1500,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PreToolUse", "matcher": "Agent"},
+        "claude": {"event": "PreToolUse", "matcher": "Agent|Task"},
+        "antigravity": {"event": "BeforeTool", "matcher": "delegate_to_agent"},
+        "hermes": {"event": "pre_tool_call", "matcher": "delegate_task"}
+      }
+    },
+    {
+      "id": "delegation-outcome",
+      "description": "Record delegated task identity, duration, outcome, and verification status without storing the complete subagent transcript.",
+      "operation": "record-delegation-outcome",
+      "trigger": "after_delegation",
+      "effect": "record",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 1500,
+      "authority": "local_state_write",
+      "network_access": "none",
+      "data_access": ["event_metadata", "session_metadata", "usage_metrics"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "SubagentStop"},
+        "claude": {"event": "SubagentStop"},
+        "hermes": {"event": "subagent_stop"}
+      }
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/kagi-labs/agentctl/internal/buildinfo"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/hookpacks"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/workflow"
 )
@@ -20,6 +21,7 @@ Usage:
   agentctl version
   agentctl admin [options]
   agentctl config <command> [options]
+  agentctl hook <command> [options]
   agentctl preset <command> [options]
   agentctl doctor [options]
   agentctl inventory [options]
@@ -81,6 +83,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runAdminCommand(args[1:], stdin, stdout, stderr)
 	case "config":
 		return runConfigCommand(args[1:], stdout, stderr)
+	case "hook":
+		return runHookCommand(args[1:], stdout, stderr)
 	case "preset":
 		return runPresetCommand(args[1:], stdout, stderr)
 	case "event":
@@ -130,6 +134,19 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			}
 		}
 		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(library.Presets))
+
+		hooks, err := hookpacks.LoadLibrary(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		for _, pack := range hooks.Packs {
+			if err := hookpacks.Validate(pack); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+		}
+		fmt.Fprintf(stdout, "hook pack library valid: %d packs\n", len(hooks.Packs))
 
 		present, err := workflow.PolicyPresent(options.repo)
 		if err != nil {

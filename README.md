@@ -14,6 +14,7 @@ It provides one version-controlled source of truth for:
 - MCP references and neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
+- reusable hook packs with explicit user or project installation scope;
 - model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
 
@@ -42,6 +43,9 @@ The repository contains the first safe configurator foundation:
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
+- six validated hook packs and eight hook presets spanning safety, continuity,
+  quality, delegation, maintenance, and redacted local observability;
+- user-global and repository-local plan/apply with isolated state and backups;
 - a complete initial work-phase catalog;
 - complete Claude-to-Codex command adapters with explicit authority boundaries;
 - direct Codex aliases for the canonical phases;
@@ -55,9 +59,10 @@ The repository contains the first safe configurator foundation:
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
-Structured TOML and JSON settings merging, structured preset-content and DAG
-editing, broader provider-native rendering, existing provider-file
-classification, and configuration import are planned next.
+Structured TOML, JSON, and YAML settings merging, native hook activation,
+structured preset-content and DAG editing, broader provider-native rendering,
+existing provider-file classification, and configuration import are planned
+next.
 Runtime dispatch is intentionally out of scope; existing harnesses run the
 rendered commands.
 
@@ -237,6 +242,25 @@ go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
 
+Inspect hook packs and preview a user-global or repository-local installation:
+
+```bash
+go run ./cmd/agentctl hook list
+go run ./cmd/agentctl hook show safety
+go run ./cmd/agentctl hook validate all
+go run ./cmd/agentctl hook plan --scope user --target codex hook-standard
+go run ./cmd/agentctl hook plan \
+  --scope project \
+  --project /path/to/repository \
+  --target claude \
+  hook-quality
+```
+
+Hook apply uses the normal explicit confirmation and conflict controls. The
+current implementation installs managed, provider-neutral definitions. It does
+not yet modify provider settings to activate native hooks; that requires the
+planned structured settings merger.
+
 Plan or stage only the files selected by one preset:
 
 ```bash
@@ -306,6 +330,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
+- [Hook packs and installation scopes](docs/HOOKS.md)
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)

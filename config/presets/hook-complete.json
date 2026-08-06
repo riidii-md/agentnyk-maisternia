@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "hook-complete",
+  "name": "Hook Complete",
+  "description": "All managed hook definitions; repository-opt-in packs stay dormant until a repository enables them.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [],
+    "prompts": [],
+    "skills": [],
+    "hooks": [
+      "hook-pack-safety",
+      "hook-pack-continuity",
+      "hook-pack-quality",
+      "hook-pack-delegation",
+      "hook-pack-maintenance",
+      "hook-pack-observability"
+    ],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

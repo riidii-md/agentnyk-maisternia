@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "safety",
+  "name": "Safety Guards",
+  "description": "Deterministic guards for destructive actions, policy bypasses, and sensitive-file reads. This is a guardrail, not a replacement for provider sandboxing or approvals.",
+  "default_scope": "user",
+  "supported_scopes": ["user", "project"],
+  "activation": "global",
+  "override_policy": "tighten_only",
+  "rules": [
+    {
+      "id": "dangerous-action",
+      "description": "Reject clearly destructive shell and version-control operations before execution.",
+      "operation": "guard-dangerous-action",
+      "trigger": "before_tool",
+      "effect": "deny",
+      "blocking": true,
+      "failure_mode": "closed",
+      "timeout_ms": 1000,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PreToolUse", "matcher": "Bash"},
+        "claude": {"event": "PreToolUse", "matcher": "Bash"},
+        "antigravity": {"event": "BeforeTool", "matcher": "run_shell_command"},
+        "hermes": {"event": "pre_tool_call", "matcher": "terminal"}
+      }
+    },
+    {
+      "id": "policy-bypass",
+      "description": "Reject attempts to bypass hooks, verification, signatures, or established approval controls.",
+      "operation": "guard-policy-bypass",
+      "trigger": "before_tool",
+      "effect": "deny",
+      "blocking": true,
+      "failure_mode": "closed",
+      "timeout_ms": 1000,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PreToolUse", "matcher": "Bash"},
+        "claude": {"event": "PreToolUse", "matcher": "Bash"},
+        "antigravity": {"event": "BeforeTool", "matcher": "run_shell_command"},
+        "hermes": {"event": "pre_tool_call", "matcher": "terminal"}
+      }
+    },
+    {
+      "id": "sensitive-read",
+      "description": "Require an explicit decision before tools read likely credentials, tokens, private keys, or raw environment files.",
+      "operation": "guard-sensitive-read",
+      "trigger": "before_tool",
+      "effect": "ask",
+      "blocking": true,
+      "failure_mode": "closed",
+      "timeout_ms": 1000,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PreToolUse", "matcher": "Read|Bash"},
+        "claude": {"event": "PreToolUse", "matcher": "Read|Bash"},
+        "antigravity": {"event": "BeforeTool", "matcher": "read_file|run_shell_command"},
+        "hermes": {"event": "pre_tool_call", "matcher": "read_file|terminal"}
+      }
+    }
+  ]
+}
