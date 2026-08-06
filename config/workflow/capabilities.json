@@ -49,6 +49,12 @@
       "optional": ["repository.test"],
       "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
     },
+    "plan-review": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": ["documentation.search", "repository.test", "subagent.spawn"],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
     "handoff": {
       "authority": "artifact_write",
       "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
@@ -67,11 +73,23 @@
       "optional": ["filesystem.workspace_write"],
       "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
     },
-    "review": {
+    "review-intake": {
       "authority": "read_only",
       "required": ["filesystem.read", "repository.read"],
-      "optional": ["repository.test"],
+      "optional": ["repository.test", "subagent.spawn"],
       "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "review": {
+      "authority": "workspace_write",
+      "required": ["filesystem.read", "filesystem.workspace_write", "repository.read", "repository.test"],
+      "optional": ["documentation.search", "subagent.spawn"],
+      "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
+    },
+    "delegated-review": {
+      "authority": "workspace_write",
+      "required": ["filesystem.read", "filesystem.workspace_write", "repository.read", "repository.test"],
+      "optional": ["documentation.search", "output.structured", "runner.safe_headless", "subagent.spawn"],
+      "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
     },
     "pr": {
       "authority": "explicit_approval",

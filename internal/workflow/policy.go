@@ -19,7 +19,7 @@ const (
 
 var (
 	namePattern       = regexp.MustCompile(`^[a-z][a-z0-9_.-]{0,127}$`)
-	phasePattern      = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
+	phasePattern      = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,63}$`)
 	capabilityPattern = regexp.MustCompile(`^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$`)
 	validAuthorities  = map[string]bool{
 		"read_only":         true,

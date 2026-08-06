@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "multi-lens-review",
+  "name": "Multi-Lens Review",
+  "description": "Plan and implementation review with independent lenses, adversarial finding verification, applied fixes, domain-aware checks, and optional cross-provider delegation.",
+  "pipelines": [
+    {
+      "id": "review-loop",
+      "name": "Review Loop",
+      "entry_phases": ["resolve"],
+      "phases": [
+        "resolve", "inspect", "dispatch", "verify-findings", "report",
+        "apply", "verify-fixes", "final"
+      ],
+      "edges": [
+        {"from": "resolve", "to": "inspect"},
+        {"from": "inspect", "to": "dispatch"},
+        {"from": "dispatch", "to": "verify-findings"},
+        {"from": "verify-findings", "to": "report"},
+        {"from": "report", "to": "apply", "condition": "confirmed findings"},
+        {"from": "report", "to": "final", "condition": "no confirmed findings"},
+        {"from": "apply", "to": "verify-fixes"},
+        {"from": "verify-fixes", "to": "dispatch", "condition": "material behavior changed", "loop": true},
+        {"from": "verify-fixes", "to": "apply", "condition": "confirmed fix incomplete", "loop": true},
+        {"from": "verify-fixes", "to": "final", "condition": "all confirmed fixes applied and checks pass"}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-plan-review", "work-review", "work-delegated-review"],
+    "prompts": [],
+    "skills": ["multi-lens-review-skill"],
+    "hooks": [],
+    "settings": ["review-policy", "review-report-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}
