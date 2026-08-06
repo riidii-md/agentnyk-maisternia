@@ -37,8 +37,8 @@ The repository contains the first safe configurator foundation:
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
-  harness-profile, session-audit, harness-improvement, Codex-compatibility, and
-  Codex resource-lab presets;
+  multi-lens-review, harness-profile, session-audit, harness-improvement,
+  Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -76,6 +76,11 @@ audits, and proposal-only improvement with held-out replay and human approval.
 for token cost, repetition, skills, user friction, setup, commands, and
 delegated subagents.
 See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
+
+The `multi-lens-review` preset adds separate plan and implementation gates,
+independent review lenses, per-finding refutation, coordinator-applied fixes,
+and explicit cross-provider delegation. See
+[Multi-lens review workflow](docs/REVIEW-WORKFLOW.md).
 
 ## Installation
 
@@ -312,6 +317,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
 - [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
+- [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md)
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
@@ -339,7 +345,9 @@ Neutral commands describe the work:
 /work-plan
 /work-research
 /work-run
+/work-plan-review
 /work-review
+/work-delegated-review
 ```
 
 Provider aliases force a runner:

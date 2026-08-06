@@ -34,6 +34,8 @@ The repository starts with:
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution
   waves with isolated writes, integration barriers, and sequential fallback;
+- `multi-lens-review`: plan and implementation review with independent lenses,
+  per-finding refutation, applied fixes, and optional provider delegation;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
 - `session-audit`: evidence-backed correctness, trajectory, process/safety, and
   cost review plus delegated bottleneck analysis for one completed run;
@@ -50,6 +52,7 @@ agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
 agentctl preset show parallel-work
+agentctl preset show multi-lens-review
 agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
 agentctl preset validate all
@@ -178,3 +181,7 @@ fallback, and speed/cost reporting.
 
 See [Session retrospectives and harness improvement](RETROSPECTIVES.md) for the
 profiling, audit, post-run artifact, replay, and human-approval contracts.
+
+See [Multi-lens review workflow](REVIEW-WORKFLOW.md) for plan and implementation
+gates, evidence rules, verifier/refutation passes, applied fixes, domain lenses,
+and controlled cross-provider delegation.

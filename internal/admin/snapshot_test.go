@@ -50,8 +50,8 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	if snapshot.Config.ActionCount == 0 || snapshot.Config.Counts.Create == 0 {
 		t.Fatalf("config summary = %#v, want create actions", snapshot.Config)
 	}
-	if len(snapshot.Presets) != 9 {
-		t.Fatalf("presets = %d, want 9", len(snapshot.Presets))
+	if len(snapshot.Presets) != 10 {
+		t.Fatalf("presets = %d, want 10", len(snapshot.Presets))
 	}
 	for _, preset := range snapshot.Presets {
 		if preset.Config.ActionCount == 0 {
