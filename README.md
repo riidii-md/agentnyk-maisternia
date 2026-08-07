@@ -14,6 +14,8 @@ It provides one version-controlled source of truth for:
 - MCP references and neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
+- reusable hook packs with explicit user or project installation scope;
+- a provider-neutral allow, ask, and deny approval policy;
 - model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
 
@@ -42,6 +44,11 @@ The repository contains the first safe configurator foundation:
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
+- six validated hook packs and eight hook presets spanning safety, continuity,
+  quality, delegation, maintenance, and redacted local observability;
+- a strict human-only approval policy definition with bounded grants, deny
+  precedence, CLI explanation, and a standalone installation preset;
+- user-global and repository-local plan/apply with isolated state and backups;
 - a complete initial work-phase catalog;
 - complete Claude-to-Codex command adapters with explicit authority boundaries;
 - direct Codex aliases for the canonical phases;
@@ -55,9 +62,10 @@ The repository contains the first safe configurator foundation:
 - cross-platform CI snapshot builds and tag-based releases;
 - persistent configuration-repository discovery for system installations.
 
-Structured TOML and JSON settings merging, structured preset-content and DAG
-editing, broader provider-native rendering, existing provider-file
-classification, and configuration import are planned next.
+Structured TOML, JSON, and YAML settings merging, native hook and approval
+activation, structured preset-content and DAG editing, broader provider-native
+rendering, existing provider-file classification, and configuration import are
+planned next.
 Runtime dispatch is intentionally out of scope; existing harnesses run the
 rendered commands.
 
@@ -175,9 +183,9 @@ Hermes:      work-shape skill
 Antigravity: provider-native prompt/command mapping
 ```
 
-Those harnesses own their own sessions, histories, approvals, and execution
-loops. `agentctl` may validate and render configuration for them, but it must not
-become a controller or observer of live runs.
+Those harnesses own their own sessions, histories, live approval prompts, and
+execution loops. `agentctl` may define approval policy and render configuration
+for them, but it must not become a controller or observer of live runs.
 
 The current `event`, `task`, `work next`, and `pipeline start/transition`
 commands are retained as experimental state-model fixtures while the
@@ -246,6 +254,38 @@ go run ./cmd/agentctl preset show harness-improvement
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
+
+Inspect hook packs and preview a user-global or repository-local installation:
+
+```bash
+go run ./cmd/agentctl hook list
+go run ./cmd/agentctl hook show safety
+go run ./cmd/agentctl hook validate all
+go run ./cmd/agentctl hook plan --scope user --target codex hook-standard
+go run ./cmd/agentctl hook plan \
+  --scope project \
+  --project /path/to/repository \
+  --target claude \
+  hook-quality
+```
+
+Hook apply uses the normal explicit confirmation and conflict controls. The
+current implementation installs managed, provider-neutral definitions. It does
+not yet modify provider settings to activate native hooks; that requires the
+planned structured settings merger.
+
+Inspect and install the standard approval definition:
+
+```bash
+go run ./cmd/agentctl approval list
+go run ./cmd/agentctl approval explain git.push
+go run ./cmd/agentctl approval validate
+go run ./cmd/agentctl approval plan --scope user --target codex
+```
+
+The current implementation installs a managed policy input; it does not yet
+activate native enforcement. See [Approval policy](docs/APPROVAL-POLICY.md) and
+the [hook and approval roadmap](docs/HOOK-APPROVAL-ROADMAP.md).
 
 Plan or stage only the files selected by one preset:
 
@@ -318,6 +358,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 - [Preset library](docs/PRESETS.md)
 - [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
 - [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md)
+- [Hook packs and installation scopes](docs/HOOKS.md)
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)

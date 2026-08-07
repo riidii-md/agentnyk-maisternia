@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "hook-observability",
+  "name": "Hook Observability",
+  "description": "Local redacted reliability, duration, delegation, and usage metrics without prompt or output retention.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [],
+    "prompts": [],
+    "skills": [],
+    "hooks": ["hook-pack-observability"],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

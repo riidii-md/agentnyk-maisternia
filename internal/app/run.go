@@ -8,8 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kagi-labs/agentctl/internal/approvals"
 	"github.com/kagi-labs/agentctl/internal/buildinfo"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/hookpacks"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/workflow"
 )
@@ -19,7 +21,9 @@ const usage = `agentctl manages declarative configuration and workflows for CLI 
 Usage:
   agentctl version
   agentctl admin [options]
+  agentctl approval <command> [options]
   agentctl config <command> [options]
+  agentctl hook <command> [options]
   agentctl preset <command> [options]
   agentctl doctor [options]
   agentctl inventory [options]
@@ -79,8 +83,12 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "admin":
 		return runAdminCommand(args[1:], stdin, stdout, stderr)
+	case "approval":
+		return runApprovalCommand(args[1:], stdout, stderr)
 	case "config":
 		return runConfigCommand(args[1:], stdout, stderr)
+	case "hook":
+		return runHookCommand(args[1:], stdout, stderr)
 	case "preset":
 		return runPresetCommand(args[1:], stdout, stderr)
 	case "event":
@@ -118,6 +126,20 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 
 	switch command {
 	case "doctor":
+		approvalPresent, err := approvals.Present(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		if approvalPresent {
+			approvalPolicy, err := approvals.Load(options.repo)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			fmt.Fprintf(stdout, "approval policy valid: %d rules\n", len(approvalPolicy.Rules))
+		}
+
 		library, err := presets.LoadLibrary(options.repo)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
@@ -130,6 +152,19 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			}
 		}
 		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(library.Presets))
+
+		hooks, err := hookpacks.LoadLibrary(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		for _, pack := range hooks.Packs {
+			if err := hookpacks.Validate(pack); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+		}
+		fmt.Fprintf(stdout, "hook pack library valid: %d packs\n", len(hooks.Packs))
 
 		present, err := workflow.PolicyPresent(options.repo)
 		if err != nil {

@@ -43,7 +43,15 @@ The repository starts with:
   held-out replay, and human-approved installation;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
-  prompt, skill, hook, and settings resource.
+  prompt, skill, hook, and settings resource;
+- `approval-standard`: the provider-neutral least-privilege allow, ask, and
+  deny policy with human-only grants;
+- `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
+  `hook-maintenance`, and `hook-observability`: focused hook definitions;
+- `hook-standard`: the recommended safety, continuity, and repository-quality
+  bundle, including the approval policy;
+- `hook-complete`: all six hook packs plus the approval policy for explicit
+  inspection and selection.
 
 Inspect them:
 
@@ -55,6 +63,8 @@ agentctl preset show parallel-work
 agentctl preset show multi-lens-review
 agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
+agentctl preset show approval-standard
+agentctl preset show hook-standard
 agentctl preset validate all
 ```
 
@@ -141,6 +151,14 @@ agentctl preset render \
 
 agentctl preset apply --target codex --yes standard-work
 
+# Install a preset into one repository instead of the provider user home.
+agentctl preset apply \
+  --scope project \
+  --project /path/to/repository \
+  --target codex \
+  --yes \
+  hook-quality
+
 # Preserve customized target files and apply everything else.
 agentctl preset apply \
   --target codex \
@@ -160,6 +178,12 @@ These commands select only the manifest resources declared by the preset. They
 delegate to the same configurator used by full-manifest operations, preserving
 target allowlists, symlink checks, managed install state, drift detection,
 conflict detection, backups, atomic writes, and explicit confirmation.
+
+`--scope user` is the default and resolves targets under `--home`. Its managed
+state and backups live under `~/.config/agentctl`. `--scope project` resolves
+targets under `--project`; its local managed state and backups live under
+`<project>/.agentctl`. State from one scope is never used to claim ownership in
+the other scope.
 
 Conflict handling defaults to `abort`. `keep` records the exact source and
 target checksums behind the decision, so the target is reported as `IGNORED`
@@ -185,3 +209,10 @@ profiling, audit, post-run artifact, replay, and human-approval contracts.
 See [Multi-lens review workflow](REVIEW-WORKFLOW.md) for plan and implementation
 gates, evidence rules, verifier/refutation passes, applied fixes, domain lenses,
 and controlled cross-provider delegation.
+
+See [Hook packs and installation scopes](HOOKS.md) for hook policy,
+provider-layer mappings, and the native activation boundary.
+
+See [Approval policy](APPROVAL-POLICY.md) for the operation matrix and bounded
+grant rules, and [Hook and approval roadmap](HOOK-APPROVAL-ROADMAP.md) for the
+native enforcement plan.

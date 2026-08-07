@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/hook-pack.schema.json",
+  "title": "agentctl hook pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "id", "name", "description", "default_scope",
+    "supported_scopes", "activation", "override_policy", "rules"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 128},
+    "description": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "default_scope": {"enum": ["user", "project"]},
+    "supported_scopes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"enum": ["user", "project"]}
+    },
+    "activation": {"enum": ["global", "repository_opt_in"]},
+    "override_policy": {"enum": ["merge", "tighten_only"]},
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/rule"}
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "description", "operation", "trigger", "effect", "blocking",
+        "failure_mode", "timeout_ms", "authority", "network_access",
+        "data_access", "cost_class", "recursion_guard", "provider_events"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "operation": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+        "trigger": {
+          "enum": [
+            "before_tool", "after_tool", "session_start", "session_end",
+            "before_compact", "before_delegation", "after_delegation", "turn_end"
+          ]
+        },
+        "effect": {"enum": ["deny", "ask", "notify", "record", "run"]},
+        "blocking": {"type": "boolean"},
+        "failure_mode": {"enum": ["open", "closed"]},
+        "timeout_ms": {"type": "integer", "minimum": 100, "maximum": 300000},
+        "authority": {"enum": ["read_only", "local_state_write", "workspace_write"]},
+        "network_access": {"enum": ["none", "optional", "required"]},
+        "data_access": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "event_metadata", "tool_input", "tool_output", "session_metadata",
+              "repository_state", "usage_metrics"
+            ]
+          }
+        },
+        "cost_class": {"enum": ["none", "local", "model"]},
+        "recursion_guard": {"type": "boolean"},
+        "provider_events": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "codex": {"$ref": "#/$defs/providerEvent"},
+            "claude": {"$ref": "#/$defs/providerEvent"},
+            "antigravity": {"$ref": "#/$defs/providerEvent"},
+            "hermes": {"$ref": "#/$defs/providerEvent"}
+          }
+        }
+      }
+    },
+    "providerEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event"],
+      "properties": {
+        "event": {"type": "string", "minLength": 1, "maxLength": 128},
+        "matcher": {"type": "string", "maxLength": 256}
+      }
+    }
+  }
+}

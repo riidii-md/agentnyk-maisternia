@@ -20,8 +20,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 10 {
-		t.Fatalf("preset count = %d, want 10", len(library.Presets))
+	if len(library.Presets) != 19 {
+		t.Fatalf("preset count = %d, want 19", len(library.Presets))
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -203,6 +203,33 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if len(resourceLab.Contents.Commands) != 0 {
 		t.Fatalf("codex-resource-lab commands = %v, want none", resourceLab.Contents.Commands)
 	}
+	hookStandard, found := library.Get("hook-standard")
+	if !found {
+		t.Fatal("hook-standard preset missing")
+	}
+	if got := hookStandard.Contents.Hooks; len(got) != 3 {
+		t.Fatalf("hook-standard hooks = %v, want 3", got)
+	}
+	if got := hookStandard.Targets; len(got) != 4 {
+		t.Fatalf("hook-standard targets = %v, want all four providers", got)
+	}
+	hookComplete, found := library.Get("hook-complete")
+	if !found {
+		t.Fatal("hook-complete preset missing")
+	}
+	if got := hookComplete.Contents.Hooks; len(got) != 6 {
+		t.Fatalf("hook-complete hooks = %v, want 6", got)
+	}
+	if got := hookComplete.Contents.Settings; len(got) != 1 || got[0] != "approval-policy" {
+		t.Fatalf("hook-complete settings = %v, want approval-policy", got)
+	}
+	approvalStandard, found := library.Get("approval-standard")
+	if !found {
+		t.Fatal("approval-standard preset missing")
+	}
+	if got := approvalStandard.Contents.Settings; len(got) != 1 || got[0] != "approval-policy" {
+		t.Fatalf("approval-standard settings = %v, want approval-policy", got)
+	}
 
 	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
 	if err != nil {
@@ -307,6 +334,19 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resource := range improvementManifest.Resources {
 		if got := resource.Targets; len(got) != 4 {
 			t.Fatalf("harness-improvement resource %q targets = %v, want 4", resource.ID, got)
+		}
+	}
+
+	hookManifest, err := SelectManifest(hookComplete, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(hook-complete) error = %v", err)
+	}
+	if len(hookManifest.Resources) != 7 {
+		t.Fatalf("hook-complete resource count = %d, want 7", len(hookManifest.Resources))
+	}
+	for _, resource := range hookManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("hook resource %q targets = %v, want 4", resource.ID, got)
 		}
 	}
 }

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "id": "maintenance",
+  "name": "Repository Maintenance",
+  "description": "Repository-opt-in documentation impact and local index maintenance that remains advisory and nonblocking.",
+  "default_scope": "project",
+  "supported_scopes": ["user", "project"],
+  "activation": "repository_opt_in",
+  "override_policy": "merge",
+  "rules": [
+    {
+      "id": "documentation-impact",
+      "description": "Detect edits that may require repository documentation updates and identify the relevant owned documents.",
+      "operation": "check-documentation-impact",
+      "trigger": "after_tool",
+      "effect": "notify",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 1500,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PostToolUse", "matcher": "Write|Edit|ApplyPatch"},
+        "claude": {"event": "PostToolUse", "matcher": "Write|Edit|MultiEdit"},
+        "antigravity": {"event": "AfterTool", "matcher": "write_file|replace"},
+        "hermes": {"event": "post_tool_call", "matcher": "write_file|patch"}
+      }
+    },
+    {
+      "id": "repository-index",
+      "description": "Refresh an explicitly configured local repository index after meaningful branch or source changes.",
+      "operation": "refresh-repository-index",
+      "trigger": "after_tool",
+      "effect": "run",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 3000,
+      "authority": "local_state_write",
+      "network_access": "none",
+      "data_access": ["event_metadata", "tool_input", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PostToolUse", "matcher": "Bash|Write|Edit|ApplyPatch"},
+        "claude": {"event": "PostToolUse", "matcher": "Bash|Write|Edit|MultiEdit"},
+        "antigravity": {"event": "AfterTool", "matcher": "run_shell_command|write_file|replace"},
+        "hermes": {"event": "post_tool_call", "matcher": "terminal|write_file|patch"}
+      }
+    }
+  ]
+}

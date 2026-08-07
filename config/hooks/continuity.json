@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "id": "continuity",
+  "name": "Session Continuity",
+  "description": "Restore concise working context and persist bounded status at durable session boundaries without storing raw transcripts or secrets.",
+  "default_scope": "user",
+  "supported_scopes": ["user", "project"],
+  "activation": "global",
+  "override_policy": "merge",
+  "rules": [
+    {
+      "id": "restore-brief",
+      "description": "Load the latest redacted ticket brief and unresolved decisions when a session starts or resumes.",
+      "operation": "restore-session-brief",
+      "trigger": "session_start",
+      "effect": "run",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 2000,
+      "authority": "read_only",
+      "network_access": "none",
+      "data_access": ["event_metadata", "session_metadata", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "SessionStart"},
+        "claude": {"event": "SessionStart"},
+        "antigravity": {"event": "SessionStart"},
+        "hermes": {"event": "on_session_start"}
+      }
+    },
+    {
+      "id": "checkpoint-before-compact",
+      "description": "Persist current status, decisions, blockers, and next action before context compression.",
+      "operation": "checkpoint-session",
+      "trigger": "before_compact",
+      "effect": "run",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 2000,
+      "authority": "local_state_write",
+      "network_access": "none",
+      "data_access": ["event_metadata", "session_metadata", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "PreCompact"},
+        "claude": {"event": "PreCompact"},
+        "antigravity": {"event": "PreCompress"}
+      }
+    },
+    {
+      "id": "capture-session-status",
+      "description": "Write a bounded end-of-session status record suitable for the next brief and retrospective.",
+      "operation": "capture-session-status",
+      "trigger": "session_end",
+      "effect": "record",
+      "blocking": false,
+      "failure_mode": "open",
+      "timeout_ms": 3000,
+      "authority": "local_state_write",
+      "network_access": "none",
+      "data_access": ["event_metadata", "session_metadata", "repository_state"],
+      "cost_class": "local",
+      "recursion_guard": true,
+      "provider_events": {
+        "codex": {"event": "SessionEnd"},
+        "claude": {"event": "SessionEnd"},
+        "antigravity": {"event": "SessionEnd"},
+        "hermes": {"event": "on_session_end"}
+      }
+    }
+  ]
+}

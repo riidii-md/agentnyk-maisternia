@@ -610,6 +610,76 @@
       "targets": [
         {"agent": "codex", "path": ".codex/agentctl-toolbox.config.toml"}
       ]
+    },
+    {
+      "id": "hook-pack-safety",
+      "source": "config/hooks/safety.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/hook-packs/safety.json"},
+        {"agent": "claude", "path": ".claude/agentctl/hook-packs/safety.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/safety.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/safety.json"}
+      ]
+    },
+    {
+      "id": "hook-pack-continuity",
+      "source": "config/hooks/continuity.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/hook-packs/continuity.json"},
+        {"agent": "claude", "path": ".claude/agentctl/hook-packs/continuity.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/continuity.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/continuity.json"}
+      ]
+    },
+    {
+      "id": "hook-pack-quality",
+      "source": "config/hooks/quality.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/hook-packs/quality.json"},
+        {"agent": "claude", "path": ".claude/agentctl/hook-packs/quality.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/quality.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/quality.json"}
+      ]
+    },
+    {
+      "id": "hook-pack-delegation",
+      "source": "config/hooks/delegation.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/hook-packs/delegation.json"},
+        {"agent": "claude", "path": ".claude/agentctl/hook-packs/delegation.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/delegation.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/delegation.json"}
+      ]
+    },
+    {
+      "id": "hook-pack-maintenance",
+      "source": "config/hooks/maintenance.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/hook-packs/maintenance.json"},
+        {"agent": "claude", "path": ".claude/agentctl/hook-packs/maintenance.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/maintenance.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/maintenance.json"}
+      ]
+    },
+    {
+      "id": "hook-pack-observability",
+      "source": "config/hooks/observability.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/hook-packs/observability.json"},
+        {"agent": "claude", "path": ".claude/agentctl/hook-packs/observability.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/observability.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/observability.json"}
+      ]
+    },
+    {
+      "id": "approval-policy",
+      "source": "config/policy/approval.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/policy/approval.json"},
+        {"agent": "claude", "path": ".claude/agentctl/policy/approval.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/policy/approval.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/policy/approval.json"}
+      ]
     }
   ]
 }
