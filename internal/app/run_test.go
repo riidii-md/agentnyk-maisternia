@@ -682,10 +682,13 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 		t.Fatalf("preset list code = %d, stderr = %s", code, stderr.String())
 	}
 	for _, presetID := range []string{
+		"approval-standard",
 		"codex-compatibility",
 		"codex-resource-lab",
 		"harness-improvement",
 		"harness-profile",
+		"hook-complete",
+		"hook-standard",
 		"idea-shaping",
 		"session-audit",
 		"standard-work",
@@ -720,8 +723,175 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "8 presets valid") {
+	if !strings.Contains(stdout.String(), "17 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
+	}
+}
+
+func TestRunHookLibraryCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"hook", "list", "--repo", repo}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("hook list code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, value := range []string{"safety", "continuity", "repository_opt_in", "hermes"} {
+		if !strings.Contains(stdout.String(), value) {
+			t.Errorf("hook list output = %q, missing %q", stdout.String(), value)
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{"hook", "show", "--repo", repo, "safety"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("hook show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"override_policy": "tighten_only"`) ||
+		!strings.Contains(stdout.String(), `"effect": "deny"`) {
+		t.Fatalf("hook show output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{"hook", "validate", "--repo", repo, "all"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("hook validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "6 hook packs valid") {
+		t.Fatalf("hook validate output = %q", stdout.String())
+	}
+}
+
+func TestRunApprovalCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{"approval", "validate", "--repo", repo}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("approval validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "approval policy valid: 20 rules") {
+		t.Fatalf("approval validate output = %q", stdout.String())
+	}
+
+	tests := []struct {
+		operation string
+		want      []string
+	}{
+		{operation: "repository.read", want: []string{"decision: allow", "rule: workspace-discovery", "if requirements are unmet: ask"}},
+		{operation: "git.push", want: []string{"decision: ask", "rule: git-publication", "approval: once scope"}},
+		{operation: "approval.self_grant", want: []string{"decision: deny", "rule: approval-self-modification"}},
+		{operation: "unknown.operation", want: []string{"decision: ask", "rule: default"}},
+	}
+	for _, test := range tests {
+		stdout.Reset()
+		stderr.Reset()
+		code = Run(
+			[]string{"approval", "explain", "--repo", repo, test.operation},
+			&stdout,
+			&stderr,
+		)
+		if code != 0 {
+			t.Errorf("approval explain %s code = %d, stderr = %s", test.operation, code, stderr.String())
+			continue
+		}
+		for _, want := range test.want {
+			if !strings.Contains(stdout.String(), want) {
+				t.Errorf("approval explain %s output = %q, missing %q", test.operation, stdout.String(), want)
+			}
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	home := t.TempDir()
+	code = Run([]string{
+		"approval", "plan",
+		"--repo", repo,
+		"--home", home,
+		"--target", "claude",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("approval plan code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "installation: user scope") ||
+		!strings.Contains(stdout.String(), ".claude/agentctl/policy/approval.json") {
+		t.Fatalf("approval plan output = %q", stdout.String())
+	}
+}
+
+func TestRunHookRejectsNonHookPreset(t *testing.T) {
+	t.Parallel()
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"hook", "plan", "standard-work"}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("hook plan code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr.String(), "hook preset id") {
+		t.Fatalf("hook plan stderr = %q", stderr.String())
+	}
+}
+
+func TestHookApplySupportsProjectScope(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	project := t.TempDir()
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"hook", "apply",
+		"--repo", repo,
+		"--home", home,
+		"--scope", "project",
+		"--project", project,
+		"--target", "codex",
+		"--yes",
+		"hook-safety",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("project apply code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "at project scope") {
+		t.Fatalf("project apply output = %q", stdout.String())
+	}
+	if _, err := os.Stat(filepath.Join(
+		project,
+		".codex",
+		"agentctl",
+		"hook-packs",
+		"safety.json",
+	)); err != nil {
+		t.Fatalf("project hook pack missing: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(project, ".agentctl", "install-state.json")); err != nil {
+		t.Fatalf("project install state missing: %v", err)
+	}
+	if _, err := os.Stat(configurator.StatePath(home)); !os.IsNotExist(err) {
+		t.Fatalf("project apply wrote user state, stat error = %v", err)
+	}
+}
+
+func TestPresetPlanRejectsInvalidScope(t *testing.T) {
+	t.Parallel()
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "plan",
+		"--scope", "workspace",
+		"hook-safety",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("preset plan code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr.String(), "invalid --scope") {
+		t.Fatalf("preset plan stderr = %q", stderr.String())
 	}
 }
 

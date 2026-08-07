@@ -15,13 +15,27 @@ import (
 )
 
 func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Plan, error) {
+	return BuildPlanForScope(repoRoot, home, manifest, targetAgent, ScopeUser)
+}
+
+func BuildPlanForScope(
+	repoRoot,
+	targetRoot string,
+	manifest Manifest,
+	targetAgent string,
+	scope InstallScope,
+) (Plan, error) {
 	repoRoot, err := filepath.Abs(repoRoot)
 	if err != nil {
 		return Plan{}, fmt.Errorf("resolve repository root: %w", err)
 	}
-	home, err = filepath.Abs(home)
+	targetRoot, err = filepath.Abs(targetRoot)
 	if err != nil {
-		return Plan{}, fmt.Errorf("resolve home: %w", err)
+		return Plan{}, fmt.Errorf("resolve target root: %w", err)
+	}
+	scope, err = normalizeInstallScope(scope)
+	if err != nil {
+		return Plan{}, err
 	}
 	if err := ValidateManifest(repoRoot, manifest); err != nil {
 		return Plan{}, err
@@ -30,12 +44,12 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 		return Plan{}, err
 	}
 
-	state, err := loadState(home)
+	state, err := loadStateForScope(targetRoot, scope)
 	if err != nil {
 		return Plan{}, err
 	}
 
-	plan := Plan{Home: home}
+	plan := Plan{Home: targetRoot, Scope: scope}
 	for _, resource := range manifest.Resources {
 		sourceRelative, _ := cleanRelativePath(resource.Source)
 		sourcePath := filepath.Join(repoRoot, sourceRelative)
@@ -50,7 +64,7 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 			}
 			canonicalAgent, _ := providers.CanonicalID(target.Agent)
 			targetRelative, _ := cleanRelativePath(target.Path)
-			destination := filepath.Join(home, targetRelative)
+			destination := filepath.Join(targetRoot, targetRelative)
 			action := Action{
 				ResourceID:      resource.ID,
 				Agent:           canonicalAgent,
@@ -60,7 +74,7 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 				SourceChecksum:  sourceChecksum,
 			}
 
-			if symlinkPath, found, err := firstSymlink(home, destination); err != nil {
+			if symlinkPath, found, err := firstSymlink(targetRoot, destination); err != nil {
 				return Plan{}, err
 			} else if found {
 				action.State = ActionConflict
@@ -140,7 +154,14 @@ func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Pl
 }
 
 func StatePath(home string) string {
-	return filepath.Join(home, ".config", "agentctl", "install-state.json")
+	return StatePathForScope(home, ScopeUser)
+}
+
+func StatePathForScope(root string, scope InstallScope) string {
+	if scope == ScopeProject {
+		return filepath.Join(root, ".agentctl", "install-state.json")
+	}
+	return filepath.Join(root, ".config", "agentctl", "install-state.json")
 }
 
 func legacyStatePath(home string) string {
@@ -148,12 +169,16 @@ func legacyStatePath(home string) string {
 }
 
 func loadState(home string) (installState, error) {
+	return loadStateForScope(home, ScopeUser)
+}
+
+func loadStateForScope(root string, scope InstallScope) (installState, error) {
 	state := installState{
 		SchemaVersion: StateSchemaVersion,
 		Resources:     make(map[string]installedResource),
 		Resolutions:   make(map[string]conflictResolution),
 	}
-	path, err := stateReadPath(home)
+	path, err := stateReadPathForScope(root, scope)
 	if err != nil {
 		return installState{}, fmt.Errorf("open install state: %w", err)
 	}
@@ -185,7 +210,15 @@ func loadState(home string) (installState, error) {
 }
 
 func stateReadPath(home string) (string, error) {
-	for _, path := range []string{StatePath(home), legacyStatePath(home)} {
+	return stateReadPathForScope(home, ScopeUser)
+}
+
+func stateReadPathForScope(root string, scope InstallScope) (string, error) {
+	paths := []string{StatePathForScope(root, scope)}
+	if scope == ScopeUser {
+		paths = append(paths, legacyStatePath(root))
+	}
+	for _, path := range paths {
 		info, err := os.Lstat(path)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
@@ -196,14 +229,26 @@ func stateReadPath(home string) (string, error) {
 		if !info.Mode().IsRegular() {
 			return "", fmt.Errorf("install state is not a regular file")
 		}
-		if symlinkPath, found, err := firstSymlink(home, path); err != nil {
+		if symlinkPath, found, err := firstSymlink(root, path); err != nil {
 			return "", fmt.Errorf("inspect install state path: %w", err)
 		} else if found {
 			return "", fmt.Errorf("install state path traverses symlink %s", symlinkPath)
 		}
 		return path, nil
 	}
-	return StatePath(home), nil
+	return StatePathForScope(root, scope), nil
+}
+
+func normalizeInstallScope(scope InstallScope) (InstallScope, error) {
+	if scope == "" {
+		return ScopeUser, nil
+	}
+	switch scope {
+	case ScopeUser, ScopeProject:
+		return scope, nil
+	default:
+		return "", fmt.Errorf("unsupported install scope %q", scope)
+	}
 }
 
 func fileChecksum(path string) (string, error) {

@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "id": "standard",
+  "name": "Standard Human Approval",
+  "description": "Least-privilege approval policy for agent work. Unknown operations ask by default; explicit denies cannot be weakened by repository policy or delegated agents.",
+  "default_decision": "ask",
+  "unmet_requirement_decision": "ask",
+  "precedence": ["deny", "ask", "allow"],
+  "grant_policy": {
+    "reviewer": "human",
+    "model_review": false,
+    "delegable": false,
+    "default_ttl_seconds": 900,
+    "max_ttl_seconds": 3600,
+    "default_max_uses": 1,
+    "bind_to": ["operation", "target", "repository", "worktree", "task", "policy_digest"],
+    "invalidate_on": [
+      "operation_change",
+      "target_change",
+      "repository_change",
+      "worktree_change",
+      "task_change",
+      "scope_change",
+      "policy_change",
+      "timeout",
+      "use_limit"
+    ],
+    "record": true
+  },
+  "rules": [
+    {
+      "id": "workspace-discovery",
+      "description": "Allow non-sensitive reads and repository inspection inside a trusted workspace.",
+      "operations": [
+        "filesystem.read",
+        "repository.read",
+        "repository.status",
+        "configuration.inspect"
+      ],
+      "decision": "allow",
+      "risk": "low",
+      "requirements": ["trusted_repository", "inside_workspace", "non_sensitive_target"]
+    },
+    {
+      "id": "public-research",
+      "description": "Allow read-only public documentation and web research without authentication or external mutation.",
+      "operations": ["documentation.search", "web.search"],
+      "decision": "allow",
+      "risk": "low",
+      "requirements": ["public_source_only", "no_authentication"]
+    },
+    {
+      "id": "local-verification",
+      "description": "Allow repository-declared deterministic checks inside the workspace without network access.",
+      "operations": [
+        "repository.format",
+        "repository.lint",
+        "repository.typecheck",
+        "repository.test",
+        "repository.build"
+      ],
+      "decision": "allow",
+      "risk": "low",
+      "requirements": [
+        "trusted_repository",
+        "inside_workspace",
+        "repository_declared_command",
+        "network_disabled"
+      ]
+    },
+    {
+      "id": "approved-workspace-change",
+      "description": "Allow workspace edits only after the human-approved task scope or handoff is recorded.",
+      "operations": ["filesystem.workspace_write", "repository.modify"],
+      "decision": "allow",
+      "risk": "medium",
+      "requirements": ["approved_task_scope", "inside_workspace", "non_sensitive_target"]
+    },
+    {
+      "id": "local-agent-state",
+      "description": "Allow bounded local status and metrics records that exclude prompts, outputs, credentials, and secrets.",
+      "operations": ["agentctl.state_write", "agentctl.metrics_write"],
+      "decision": "allow",
+      "risk": "low",
+      "requirements": ["redacted_record", "local_only"]
+    },
+    {
+      "id": "read-only-delegation",
+      "description": "Allow bounded read-only delegation when provider, authority, budget, task boundary, and output are explicit.",
+      "operations": ["delegation.read_only"],
+      "decision": "allow",
+      "risk": "low",
+      "requirements": ["delegation_contract", "bounded_budget"]
+    },
+    {
+      "id": "implementation-gate",
+      "description": "Require human approval to begin implementation or expand an already approved task scope.",
+      "operations": ["implementation.begin", "workspace.scope_expand"],
+      "decision": "ask",
+      "risk": "medium",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "task",
+        "ttl_seconds": 3600,
+        "max_uses": 1000,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "permission-escalation",
+      "description": "Require a fresh decision for broader filesystem, network, MCP, sandbox, or tool authority.",
+      "operations": [
+        "permission.escalate",
+        "filesystem.outside_workspace",
+        "network.access",
+        "mcp.enable",
+        "sandbox.weaken",
+        "tool.enable_privileged"
+      ],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "sensitive-access",
+      "description": "Require a fresh decision before reading secrets or using credentials for a bounded operation.",
+      "operations": ["secret.read", "credential.use"],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "supply-chain-change",
+      "description": "Require review before changing dependencies, executable hooks, security policy, CI, or persistent agent configuration.",
+      "operations": [
+        "dependency.add",
+        "dependency.update",
+        "hook.activate",
+        "configuration.security_change",
+        "ci.modify",
+        "agent.configuration_modify"
+      ],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 900,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "git-publication",
+      "description": "Require a preview and explicit decision for commits, pushes, and pull-request mutations.",
+      "operations": ["git.commit", "git.push", "pull_request.create", "pull_request.update"],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 900,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "external-write",
+      "description": "Require an exact-target decision before changing tickets, messages, APIs, or other external systems.",
+      "operations": ["issue.update", "external.write", "notification.send", "deploy.preview"],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 600,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "destructive-local-change",
+      "description": "Require a fresh decision for bounded destructive operations inside the approved workspace.",
+      "operations": [
+        "filesystem.delete",
+        "git.destructive",
+        "migration.destructive",
+        "cleanup.destructive"
+      ],
+      "decision": "ask",
+      "risk": "critical",
+      "requirements": ["human_present", "inside_workspace"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "production-access",
+      "description": "Require a fresh exact-target decision for read-only production access or a reversible production deployment.",
+      "operations": ["production.read", "production.deploy_reversible"],
+      "decision": "ask",
+      "risk": "critical",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "write-capable-delegation",
+      "description": "Require human approval before a delegated agent receives workspace-write or external-write authority.",
+      "operations": ["delegation.workspace_write", "delegation.external_write"],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["delegation_contract", "bounded_budget", "isolated_worktree", "human_present"],
+      "approval": {
+        "scope": "task",
+        "ttl_seconds": 1800,
+        "max_uses": 100,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "safety-bypass",
+      "description": "Deny attempts to disable approval, hook, sandbox, or policy enforcement on the host.",
+      "operations": ["approval.disable", "hook.bypass", "policy.bypass", "sandbox.disable"],
+      "decision": "deny",
+      "risk": "critical",
+      "requirements": []
+    },
+    {
+      "id": "credential-exfiltration",
+      "description": "Deny exporting credentials, secrets, private keys, tokens, or raw environment values.",
+      "operations": ["credential.export", "secret.export", "private_key.read", "environment.export_raw"],
+      "decision": "deny",
+      "risk": "critical",
+      "requirements": []
+    },
+    {
+      "id": "unbounded-destructive-action",
+      "description": "Deny destructive actions outside the approved workspace, remote history rewriting, and destructive production changes.",
+      "operations": [
+        "filesystem.root_delete",
+        "filesystem.outside_workspace_destructive",
+        "git.remote_history_rewrite",
+        "production.destructive",
+        "production.credential_change"
+      ],
+      "decision": "deny",
+      "risk": "critical",
+      "requirements": []
+    },
+    {
+      "id": "approval-self-modification",
+      "description": "Deny agents and delegated agents from granting, delegating, widening, or rewriting their own approvals.",
+      "operations": [
+        "approval.self_grant",
+        "approval.delegate",
+        "approval.widen",
+        "approval.record_modify"
+      ],
+      "decision": "deny",
+      "risk": "critical",
+      "requirements": []
+    },
+    {
+      "id": "wildcard-authority",
+      "description": "Deny unrestricted filesystem, tool, network, MCP, or external-system grants on the host.",
+      "operations": ["permission.wildcard", "network.unrestricted", "mcp.unrestricted", "tool.unrestricted"],
+      "decision": "deny",
+      "risk": "critical",
+      "requirements": []
+    }
+  ]
+}

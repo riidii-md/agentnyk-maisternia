@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "approval-standard",
+  "name": "Standard Approval Policy",
+  "description": "Provider-neutral least-privilege allow, ask, and deny policy with human-bound approval grants.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": [],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": ["approval-policy"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

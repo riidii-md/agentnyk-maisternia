@@ -51,6 +51,13 @@ const (
 	ConflictReplace ConflictPolicy = "replace"
 )
 
+type InstallScope string
+
+const (
+	ScopeUser    InstallScope = "user"
+	ScopeProject InstallScope = "project"
+)
+
 type Action struct {
 	ResourceID      string
 	Agent           string
@@ -65,6 +72,7 @@ type Action struct {
 
 type Plan struct {
 	Home    string
+	Scope   InstallScope
 	Actions []Action
 }
 

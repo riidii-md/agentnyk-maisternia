@@ -12,6 +12,10 @@ import (
 )
 
 func Apply(plan Plan, options ApplyOptions) error {
+	scope, err := normalizeInstallScope(plan.Scope)
+	if err != nil {
+		return err
+	}
 	policy := options.ConflictPolicy
 	if policy == "" {
 		policy = ConflictAbort
@@ -33,13 +37,16 @@ func Apply(plan Plan, options ApplyOptions) error {
 	}
 	appliedAt := now().UTC()
 
-	if symlinkPath, found, err := firstSymlink(plan.Home, StatePath(plan.Home)); err != nil {
+	if symlinkPath, found, err := firstSymlink(
+		plan.Home,
+		StatePathForScope(plan.Home, scope),
+	); err != nil {
 		return fmt.Errorf("%w: inspect state path: %v", ErrPlanStale, err)
 	} else if found {
 		return fmt.Errorf("%w: state path traverses symlink %s", ErrPlanStale, symlinkPath)
 	}
 
-	state, err := loadState(plan.Home)
+	state, err := loadStateForScope(plan.Home, scope)
 	if err != nil {
 		return err
 	}
@@ -73,7 +80,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 				recordConflictResolution(state, action, appliedAt)
 				continue
 			}
-			if err := backupTarget(plan.Home, action, appliedAt); err != nil {
+			if err := backupTarget(plan.Home, scope, action, appliedAt); err != nil {
 				return err
 			}
 			if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
@@ -89,7 +96,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 			return err
 		}
 		if action.State == ActionUpdate {
-			if err := backupTarget(plan.Home, action, appliedAt); err != nil {
+			if err := backupTarget(plan.Home, scope, action, appliedAt); err != nil {
 				return err
 			}
 		}
@@ -99,7 +106,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 		recordInstalledResource(state, action, appliedAt)
 	}
 
-	if err := writeState(plan.Home, state); err != nil {
+	if err := writeStateForScope(plan.Home, scope, state); err != nil {
 		return err
 	}
 	return nil
@@ -183,12 +190,18 @@ func verifyActionStillValid(home string, action Action) error {
 	}
 }
 
-func backupTarget(home string, action Action, timestamp time.Time) error {
+func backupTarget(
+	root string,
+	scope InstallScope,
+	action Action,
+	timestamp time.Time,
+) error {
+	backupRoot := filepath.Join(root, ".config", "agentctl", "backups")
+	if scope == ScopeProject {
+		backupRoot = filepath.Join(root, ".agentctl", "backups")
+	}
 	backupPath := filepath.Join(
-		home,
-		".config",
-		"agentctl",
-		"backups",
+		backupRoot,
 		timestamp.Format("20060102T150405Z"),
 		filepath.FromSlash(action.TargetPath),
 	)
@@ -245,6 +258,10 @@ func atomicCopy(source, destination string) error {
 }
 
 func writeState(home string, state installState) error {
+	return writeStateForScope(home, ScopeUser, state)
+}
+
+func writeStateForScope(root string, scope InstallScope, state installState) error {
 	state.SchemaVersion = StateSchemaVersion
 	if state.Resources == nil {
 		state.Resources = make(map[string]installedResource)
@@ -258,7 +275,7 @@ func writeState(home string, state installState) error {
 	}
 	data = append(data, '\n')
 
-	path := StatePath(home)
+	path := StatePathForScope(root, scope)
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return fmt.Errorf("create state directory: %w", err)
 	}
