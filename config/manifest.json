@@ -559,6 +559,16 @@
         {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/observability.json"},
         {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/observability.json"}
       ]
+    },
+    {
+      "id": "approval-policy",
+      "source": "config/policy/approval.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/agentctl/policy/approval.json"},
+        {"agent": "claude", "path": ".claude/agentctl/policy/approval.json"},
+        {"agent": "antigravity", "path": ".config/agy/agentctl/policy/approval.json"},
+        {"agent": "hermes", "path": ".hermes/agentctl/policy/approval.json"}
+      ]
     }
   ]
 }

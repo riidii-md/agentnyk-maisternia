@@ -39,12 +39,15 @@ The repository starts with:
   held-out replay, and human-approved installation;
 - `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
-  prompt, skill, hook, and settings resource.
+  prompt, skill, hook, and settings resource;
+- `approval-standard`: the provider-neutral least-privilege allow, ask, and
+  deny policy with human-only grants;
 - `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
   `hook-maintenance`, and `hook-observability`: focused hook definitions;
 - `hook-standard`: the recommended safety, continuity, and repository-quality
-  bundle;
-- `hook-complete`: all six hook packs for explicit inspection and selection.
+  bundle, including the approval policy;
+- `hook-complete`: all six hook packs plus the approval policy for explicit
+  inspection and selection.
 
 Inspect them:
 
@@ -54,6 +57,7 @@ agentctl preset show idea-shaping
 agentctl preset show scored-experiment
 agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
+agentctl preset show approval-standard
 agentctl preset show hook-standard
 agentctl preset validate all
 ```
@@ -194,3 +198,7 @@ profiling, audit, post-run artifact, replay, and human-approval contracts.
 
 See [Hook packs and installation scopes](HOOKS.md) for hook policy,
 provider-layer mappings, and the native activation boundary.
+
+See [Approval policy](APPROVAL-POLICY.md) for the operation matrix and bounded
+grant rules, and [Hook and approval roadmap](HOOK-APPROVAL-ROADMAP.md) for the
+native enforcement plan.

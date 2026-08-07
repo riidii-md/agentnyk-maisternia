@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/approval-policy.schema.json",
+  "title": "agentctl approval policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "id", "name", "description", "default_decision",
+    "unmet_requirement_decision", "precedence", "grant_policy", "rules"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 128},
+    "description": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "default_decision": {"const": "ask"},
+    "unmet_requirement_decision": {"const": "ask"},
+    "precedence": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "deny"},
+        {"const": "ask"},
+        {"const": "allow"}
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "grant_policy": {"$ref": "#/$defs/grantPolicy"},
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/rule"}
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+    },
+    "grantPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer", "model_review", "delegable", "default_ttl_seconds",
+        "max_ttl_seconds", "default_max_uses", "bind_to", "invalidate_on", "record"
+      ],
+      "properties": {
+        "reviewer": {"const": "human"},
+        "model_review": {"const": false},
+        "delegable": {"const": false},
+        "default_ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "max_ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "default_max_uses": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "bind_to": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["operation", "target", "repository", "worktree", "task", "policy_digest"]
+          }
+        },
+        "invalidate_on": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "operation_change", "target_change", "repository_change",
+              "worktree_change", "task_change", "scope_change", "policy_change",
+              "timeout", "use_limit"
+            ]
+          }
+        },
+        "record": {"const": true}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "operations", "decision", "risk", "requirements"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/operation"}
+        },
+        "decision": {"enum": ["allow", "ask", "deny"]},
+        "risk": {"enum": ["low", "medium", "high", "critical"]},
+        "requirements": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "trusted_repository", "inside_workspace", "non_sensitive_target",
+              "approved_task_scope", "repository_declared_command", "network_disabled",
+              "public_source_only", "no_authentication", "redacted_record", "local_only",
+              "delegation_contract", "bounded_budget", "isolated_worktree", "human_present"
+            ]
+          }
+        },
+        "approval": {"$ref": "#/$defs/approvalRequirement"}
+      }
+    },
+    "approvalRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "ttl_seconds", "max_uses", "require_preview", "require_reason"],
+      "properties": {
+        "scope": {"enum": ["once", "session", "task"]},
+        "ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "max_uses": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "require_preview": {"const": true},
+        "require_reason": {"const": true}
+      }
+    }
+  }
+}

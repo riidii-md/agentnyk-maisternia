@@ -682,6 +682,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 		t.Fatalf("preset list code = %d, stderr = %s", code, stderr.String())
 	}
 	for _, presetID := range []string{
+		"approval-standard",
 		"codex-compatibility",
 		"codex-resource-lab",
 		"harness-improvement",
@@ -722,7 +723,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "16 presets valid") {
+	if !strings.Contains(stdout.String(), "17 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
 }
@@ -761,6 +762,66 @@ func TestRunHookLibraryCommands(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "6 hook packs valid") {
 		t.Fatalf("hook validate output = %q", stdout.String())
+	}
+}
+
+func TestRunApprovalCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{"approval", "validate", "--repo", repo}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("approval validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "approval policy valid: 20 rules") {
+		t.Fatalf("approval validate output = %q", stdout.String())
+	}
+
+	tests := []struct {
+		operation string
+		want      []string
+	}{
+		{operation: "repository.read", want: []string{"decision: allow", "rule: workspace-discovery", "if requirements are unmet: ask"}},
+		{operation: "git.push", want: []string{"decision: ask", "rule: git-publication", "approval: once scope"}},
+		{operation: "approval.self_grant", want: []string{"decision: deny", "rule: approval-self-modification"}},
+		{operation: "unknown.operation", want: []string{"decision: ask", "rule: default"}},
+	}
+	for _, test := range tests {
+		stdout.Reset()
+		stderr.Reset()
+		code = Run(
+			[]string{"approval", "explain", "--repo", repo, test.operation},
+			&stdout,
+			&stderr,
+		)
+		if code != 0 {
+			t.Errorf("approval explain %s code = %d, stderr = %s", test.operation, code, stderr.String())
+			continue
+		}
+		for _, want := range test.want {
+			if !strings.Contains(stdout.String(), want) {
+				t.Errorf("approval explain %s output = %q, missing %q", test.operation, stdout.String(), want)
+			}
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	home := t.TempDir()
+	code = Run([]string{
+		"approval", "plan",
+		"--repo", repo,
+		"--home", home,
+		"--target", "claude",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("approval plan code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "installation: user scope") ||
+		!strings.Contains(stdout.String(), ".claude/agentctl/policy/approval.json") {
+		t.Fatalf("approval plan output = %q", stdout.String())
 	}
 }
 

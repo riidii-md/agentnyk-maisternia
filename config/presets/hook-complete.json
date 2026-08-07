@@ -17,7 +17,7 @@
       "hook-pack-maintenance",
       "hook-pack-observability"
     ],
-    "settings": []
+    "settings": ["approval-policy"]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }

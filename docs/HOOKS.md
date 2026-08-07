@@ -27,9 +27,11 @@ wording, paths, model policy, or project conventions.
 | `maintenance` | project | repository opt-in | Detect documentation impact and refresh explicitly configured local indexes |
 | `observability` | user | global | Record redacted tool/session metrics without prompts or output bodies |
 
-`hook-standard` combines safety, continuity, and quality. `hook-complete`
-contains all six packs for users who want to inspect and select the complete
-surface. Each focused pack also has a matching `hook-<pack>` preset.
+`hook-standard` combines safety, continuity, quality, and the standard approval
+policy. `hook-complete` contains all six packs plus that policy for users who
+want to inspect and select the complete surface. Safety and delegation presets
+also install the policy because their rules reference the same authority
+boundary. Each focused pack has a matching `hook-<pack>` preset.
 
 ## Inspect And Validate
 
@@ -37,6 +39,8 @@ surface. Each focused pack also has a matching `hook-<pack>` preset.
 agentctl hook list
 agentctl hook show safety
 agentctl hook validate all
+agentctl approval validate
+agentctl approval explain git.push
 agentctl doctor
 ```
 
@@ -153,7 +157,18 @@ provider-specific paths:
 ```
 
 These files are inspectable configuration inputs, not active native hooks yet.
-Activating them safely requires a structured JSON, TOML, and YAML merger that:
+The related approval definition is installed under:
+
+```text
+.codex/agentctl/policy/approval.json
+.claude/agentctl/policy/approval.json
+.config/agy/agentctl/policy/approval.json
+.hermes/agentctl/policy/approval.json
+```
+
+These policy files are also inputs, not active provider permission settings.
+Activating hooks and policy safely requires a structured JSON, TOML, and YAML
+merger that:
 
 1. preserves unmanaged provider settings;
 2. registers one stable `agentctl hook run` dispatcher per provider and scope;
@@ -171,3 +186,8 @@ agent configuration.
 Project-managed `.agentctl` state is local operational metadata. Repositories
 should ignore it unless a future team-state format explicitly separates
 shareable policy from machine-specific ownership and backups.
+
+See [Approval policy](APPROVAL-POLICY.md) for the portable decision and grant
+model. See [Hook and approval roadmap](HOOK-APPROVAL-ROADMAP.md) for the
+researched implementation order, native compiler, dispatcher, simulator, and
+TUI requirements.

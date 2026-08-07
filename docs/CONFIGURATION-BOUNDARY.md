@@ -7,6 +7,7 @@
 - A local library of reusable presets.
 - Provider-neutral workflow/pipeline DAG definitions inside those presets.
 - Phase prompt/command templates, MCP references, hooks, skills, and settings bundles.
+- Provider-neutral approval policy definitions and native compilation plans.
 - Provider adapter metadata.
 - Render previews and staging trees.
 - Safe apply, backups, conflict checks, and drift checks.
@@ -20,7 +21,7 @@
 - Live task observation.
 - Runtime phase transitions.
 - Agent-session history.
-- Approval queues.
+- Live approval queues and provider-owned approval prompts.
 - Commit, push, PR, or release actions.
 
 If the TUI observes live work, it becomes a controller. Keep it focused on
@@ -96,6 +97,8 @@ The first preset-library implementation provides:
 - preset-scoped plan, staging render, and guarded apply;
 - user-global and repository-local plan/apply with separate install state;
 - validated provider-neutral hook packs and installable hook presets;
+- a strict provider-neutral approval policy with inspect, explain, validate,
+  plan, and apply commands;
 - a Presets TUI backed by the same library and planner, with guarded apply.
 
 Structured editing of contents and DAGs is still file-based. TUI authoring,

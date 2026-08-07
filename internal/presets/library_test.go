@@ -19,8 +19,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 16 {
-		t.Fatalf("preset count = %d, want 16", len(library.Presets))
+	if len(library.Presets) != 17 {
+		t.Fatalf("preset count = %d, want 17", len(library.Presets))
 	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
@@ -128,6 +128,16 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if got := hookComplete.Contents.Hooks; len(got) != 6 {
 		t.Fatalf("hook-complete hooks = %v, want 6", got)
 	}
+	if got := hookComplete.Contents.Settings; len(got) != 1 || got[0] != "approval-policy" {
+		t.Fatalf("hook-complete settings = %v, want approval-policy", got)
+	}
+	approvalStandard, found := library.Get("approval-standard")
+	if !found {
+		t.Fatal("approval-standard preset missing")
+	}
+	if got := approvalStandard.Contents.Settings; len(got) != 1 || got[0] != "approval-policy" {
+		t.Fatalf("approval-standard settings = %v, want approval-policy", got)
+	}
 
 	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
 	if err != nil {
@@ -207,8 +217,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(hook-complete) error = %v", err)
 	}
-	if len(hookManifest.Resources) != 6 {
-		t.Fatalf("hook-complete resource count = %d, want 6", len(hookManifest.Resources))
+	if len(hookManifest.Resources) != 7 {
+		t.Fatalf("hook-complete resource count = %d, want 7", len(hookManifest.Resources))
 	}
 	for _, resource := range hookManifest.Resources {
 		if got := resource.Targets; len(got) != 4 {

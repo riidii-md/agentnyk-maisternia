@@ -10,7 +10,7 @@
     "prompts": [],
     "skills": [],
     "hooks": ["hook-pack-safety"],
-    "settings": []
+    "settings": ["approval-policy"]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }
