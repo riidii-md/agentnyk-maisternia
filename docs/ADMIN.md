@@ -172,8 +172,11 @@ server or hook.
 | Left/Right or `h`/`l` | Switch views |
 | Up/Down or `j`/`k` | Move selection |
 | `g`, `G` | First or last item |
-| `Enter` | Inspect a preset's prompt/resource source |
-| `a` | Review/apply a preset, or open the first preset with conflicts |
+| `Enter` | Inspect a preset's prompt/resource source, or accept an installer choice |
+| `i` (`a` remains an alias) | Install the selected preset for one provider and scope |
+| `/` | Search presets by ID, name, description, target, or resource |
+| `f` | Cycle preset resource filters and groups |
+| `u`, `p` | Choose user-global or project-folder scope in the installer |
 | `k` | Keep existing files in the apply decision panel |
 | `x` | Replace conflicts from the preset in the apply decision panel |
 | `y` | Confirm the reviewed preset apply |
@@ -189,8 +192,11 @@ session.
 ## Current Boundary
 
 The TUI is a configuration studio. Runtime automation is deliberately outside
-its scope. The preset library, DAG browser, source preview, provider inspection,
-conflict explanation, and guarded preset apply are implemented.
+its scope. The preset library, resource search/filter/grouping, DAG browser,
+source preview, provider inspection, conflict explanation, and guarded scoped
+preset install are implemented. Installation always chooses one provider and
+either user-global or an explicit existing project folder before building the
+plan. Conflict decisions affect only that scoped plan.
 
 Pipeline and step editing should be delivered in a separate change because it
 introduces writes. That editor should:

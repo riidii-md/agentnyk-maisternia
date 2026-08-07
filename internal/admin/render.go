@@ -134,8 +134,16 @@ func (m Model) renderFooter(width int) string {
 	if m.applyDialog.Stage != "" {
 		var keys string
 		switch m.applyDialog.Stage {
+		case applyTarget:
+			keys = "j/k provider  enter next  esc cancel"
+		case applyScope:
+			keys = "j/k scope  u user  p project  enter next  b back  esc cancel"
+		case applyProject:
+			keys = "type folder  enter plan  ctrl+u clear  esc cancel"
+		case applyPlanning:
+			keys = "building scoped plan..."
 		case applyChoose:
-			keys = "k keep existing  x replace from preset  esc cancel"
+			keys = "k keep existing  x replace from preset  b back  esc cancel"
 		case applyConfirm:
 			keys = "y apply  b back  esc cancel"
 		case applyRunning:
@@ -145,6 +153,12 @@ func (m Model) renderFooter(width int) string {
 		}
 		return mutedStyle.Render(truncate(keys, width))
 	}
+	if m.presetSearchEditing {
+		return mutedStyle.Render(truncate(
+			"type search  enter done  ctrl+u clear  esc close  ctrl+c quit",
+			width,
+		))
+	}
 	if m.presetPreview {
 		return mutedStyle.Render(truncate(
 			"j/k resource  pgup/pgdn scroll prompt  esc back  ? help  q quit",
@@ -153,20 +167,20 @@ func (m Model) renderFooter(width int) string {
 	}
 	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
-		keys = "a apply  enter inspect  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+		keys = "i install  / search  f filter  enter inspect  ←/→ switch  j/k select  ? help  q quit"
 	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 		m.snapshot.Config.Counts.Conflict > 0 &&
 		m.firstConflictingPreset() >= 0 {
-		keys = "a resolve  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
+		keys = "i scoped install  1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	}
 	if width < 72 {
 		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
-			keys = "a apply  enter inspect  1-4 view  j/k select  r refresh  q quit"
+			keys = "i install  / search  f filter  enter inspect  j/k select  q quit"
 		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 			m.snapshot.Config.Counts.Conflict > 0 &&
 			m.firstConflictingPreset() >= 0 {
-			keys = "a resolve  1-4 view  j/k select  r refresh  q quit"
+			keys = "i scoped install  1-4 view  j/k select  r refresh  q quit"
 		}
 	}
 	return mutedStyle.Render(truncate(keys, width))
@@ -225,12 +239,12 @@ func (m Model) renderOverview(width int) string {
 	}
 	if counts.Conflict > 0 {
 		message := fmt.Sprintf(
-			"%d configuration conflicts. Open Config for details.",
+			"%d configuration conflicts. Open Presets to install by provider and scope.",
 			counts.Conflict,
 		)
 		if m.firstConflictingPreset() >= 0 {
 			message = fmt.Sprintf(
-				"%d configuration conflicts. Press a to review and apply a preset.",
+				"%d configuration conflicts. Press i to start a scoped preset install.",
 				counts.Conflict,
 			)
 		}
@@ -254,22 +268,51 @@ func (m Model) renderPipelines(width int) string {
 		}, width)
 	}
 
+	visible := m.visiblePresetIndexes()
+	search := m.presetSearch
+	if search == "" {
+		search = "none"
+	}
+	discovery := fmt.Sprintf(
+		"Filter: %s  Search: %s  (/ search, f next filter)",
+		presetFilters[m.presetFilter],
+		search,
+	)
+	if len(visible) == 0 {
+		return strings.Join([]string{
+			section("PRESET LIBRARY", []string{
+				truncate(discovery, width),
+				mutedStyle.Render("No presets match the current search and filter."),
+			}, width),
+		}, "\n\n")
+	}
+
 	index := m.cursor[TabPipelines]
-	start, end := window(index, len(m.snapshot.Presets), 5)
+	start, end := window(index, len(visible), 5)
 	var rows []string
+	lastGroup := ""
 	for rowIndex := start; rowIndex < end; rowIndex++ {
-		status := m.snapshot.Presets[rowIndex]
+		status := m.snapshot.Presets[visible[rowIndex]]
+		group := m.presetDisplayGroup(status.Preset)
+		if group != lastGroup {
+			label := strings.ToUpper(group)
+			if len(rows) == 0 {
+				label += "  " + discovery
+			}
+			rows = append(rows, activeStyle.Render(truncate(label, width)))
+			lastGroup = group
+		}
 		line := fmt.Sprintf(
-			"%-22s %-26s %d DAG  %d resources",
+			"%-22s %-25s %-18s %d resources",
 			truncate(status.Preset.ID, 21),
-			truncate(status.Preset.Name, 25),
-			len(status.Preset.Pipelines),
+			truncate(status.Preset.Name, 24),
+			truncate(presetKindSummary(status.Preset), 17),
 			len(status.Preset.Contents.ResourceIDs()),
 		)
 		rows = append(rows, selectable(line, rowIndex == index, width))
 	}
 
-	selected := m.snapshot.Presets[index]
+	selected := m.snapshot.Presets[visible[index]]
 	preset := selected.Preset
 	details := []string{
 		metric("Description", preset.Description, width),
@@ -297,7 +340,6 @@ func (m Model) renderPipelines(width int) string {
 	details = append(
 		details,
 		metric("Resources", strings.Join(preset.Contents.ResourceIDs(), ", "), width),
-		metric("Plan", actionCountSummary(selected.Config.Counts), width),
 	)
 	if width >= 90 {
 		details = append(details, metric(
@@ -312,7 +354,7 @@ func (m Model) renderPipelines(width int) string {
 	}
 	if width >= 90 {
 		sections = append(sections, section("ACTIONS", []string{
-			"a  Apply preset",
+			"i  Install preset for one provider and scope",
 			"Enter  Inspect prompt/resource source",
 		}, width))
 	}
@@ -347,13 +389,12 @@ func (m Model) renderPipelines(width int) string {
 }
 
 func (m Model) renderPresetResourcePreview(width int) string {
-	presetIndex := m.cursor[TabPipelines]
-	if presetIndex < 0 || presetIndex >= len(m.snapshot.Presets) {
+	status, found := m.selectedPreset()
+	if !found {
 		return section("PRESET PROMPTS / RESOURCES", []string{
 			mutedStyle.Render("No preset selected."),
 		}, width)
 	}
-	status := m.snapshot.Presets[presetIndex]
 	if len(status.Resources) == 0 {
 		return section("PRESET PROMPTS / RESOURCES", []string{
 			mutedStyle.Render("This preset has no readable resources."),
@@ -432,6 +473,35 @@ func presetContentSummary(contents presets.Contents) string {
 	)
 }
 
+func presetKindSummary(preset presets.Preset) string {
+	var kinds []string
+	if len(preset.Contents.Commands) > 0 {
+		kinds = append(kinds, "commands")
+	}
+	if len(preset.Contents.Hooks) > 0 {
+		kinds = append(kinds, "hooks")
+	}
+	if len(preset.Contents.Skills) > 0 {
+		kinds = append(kinds, "skills")
+	}
+	if len(preset.Contents.Prompts) > 0 {
+		kinds = append(kinds, "prompts")
+	}
+	if len(preset.Contents.Settings) > 0 {
+		kinds = append(kinds, "settings")
+	}
+	if len(preset.Contents.MCPRefs) > 0 {
+		kinds = append(kinds, "MCP")
+	}
+	if len(preset.Pipelines) > 0 {
+		kinds = append(kinds, "pipelines")
+	}
+	if len(kinds) == 0 {
+		return "other"
+	}
+	return strings.Join(kinds, ",")
+}
+
 func actionCountSummary(counts ActionCounts) string {
 	return fmt.Sprintf(
 		"%d unchanged, %d create, %d update, %d kept, %d conflict",
@@ -447,11 +517,78 @@ func (m Model) renderPresetApplyDialog(width int) string {
 	dialog := m.applyDialog
 	summary := []string{
 		metric("Preset", dialog.Name+" ("+dialog.PresetID+")", width),
-		metric("Targets", strings.Join(dialog.Targets, ", "), width),
-		metric("Plan", actionCountSummary(dialog.Counts), width),
+	}
+	if dialog.Request.Target != "" {
+		summary = append(summary, metric(
+			"Provider",
+			m.providerDisplayName(dialog.Request.Target)+" ("+dialog.Request.Target+")",
+			width,
+		))
+	}
+	if dialog.Request.Scope != "" {
+		scope := "user-global"
+		root := "configured user home"
+		if dialog.Request.Scope == configurator.ScopeProject {
+			scope = "project"
+			root = dialog.Request.Project
+		}
+		summary = append(summary,
+			metric("Scope", scope, width),
+			metric("Destination root", root, width),
+		)
+	}
+	if dialog.Stage == applyChoose || dialog.Stage == applyConfirm ||
+		dialog.Stage == applyRunning || dialog.Stage == applyComplete {
+		summary = append(summary, metric("Plan", actionCountSummary(dialog.Counts), width))
+		if dialog.StatePath != "" {
+			summary = append(summary, metric("Install state", dialog.StatePath, width))
+		}
 	}
 	var action []string
 	switch dialog.Stage {
+	case applyTarget:
+		action = []string{
+			"Install this preset into exactly one provider/harness:",
+		}
+		for index, target := range dialog.Targets {
+			line := fmt.Sprintf(
+				"%s (%s)",
+				m.providerDisplayName(target),
+				target,
+			)
+			action = append(action, selectable(line, index == dialog.TargetCursor, width))
+		}
+		action = append(action, "", mutedStyle.Render("Enter continues; no files change yet."))
+	case applyScope:
+		choices := []string{
+			"User-global — install under the selected provider home",
+			"Specific project folder — install repository-local configuration",
+		}
+		for index, choice := range choices {
+			action = append(action, selectable(choice, index == dialog.ScopeCursor, width))
+		}
+		action = append(action, "", mutedStyle.Render(
+			"Use u or p as a shortcut. A scoped plan is shown before apply.",
+		))
+	case applyProject:
+		value := dialog.ProjectInput
+		if value == "" {
+			value = mutedStyle.Render("<absolute or relative project folder>")
+		} else {
+			value = truncate(sanitizeTerminalText(value), maximum(1, width-2))
+		}
+		action = []string{
+			"Enter the exact project folder that should receive the preset:",
+			activeStyle.Render("> ") + value,
+			"",
+			mutedStyle.Render("The folder must already exist and cannot be a symlink."),
+			mutedStyle.Render("Enter builds the scoped plan; Esc cancels without changes."),
+		}
+	case applyPlanning:
+		action = []string{
+			activeStyle.Render("Building scoped install plan..."),
+			mutedStyle.Render("Only the selected preset, provider, and scope are inspected."),
+		}
 	case applyChoose:
 		action = []string{
 			warningStyle.Render(truncate(fmt.Sprintf(
@@ -471,6 +608,25 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			)),
 			"",
 			"Esc  Cancel without changing files",
+		}
+		if len(dialog.Conflicts) > 0 {
+			action = append(action, "", activeStyle.Render("CONFLICTS IN THIS INSTALL"))
+			for index, conflict := range dialog.Conflicts {
+				if index == 5 {
+					action = append(action, mutedStyle.Render(fmt.Sprintf(
+						"… %d more conflicts",
+						len(dialog.Conflicts)-index,
+					)))
+					break
+				}
+				action = append(action, truncate(fmt.Sprintf(
+					"%s  %s  %s — %s",
+					conflict.Agent,
+					conflict.ResourceID,
+					conflict.TargetPath,
+					conflict.Reason,
+				), width))
+			}
 		}
 	case applyConfirm:
 		decision := "APPLY READY CHANGES"
@@ -509,7 +665,7 @@ func (m Model) renderPresetApplyDialog(width int) string {
 	case applyComplete:
 		if dialog.Err != nil {
 			action = []string{
-				errorStyle.Render("Preset apply failed"),
+				errorStyle.Render("Preset install failed"),
 				truncate(dialog.Err.Error(), width),
 				mutedStyle.Render(truncate(
 					"Review the error and refresh before retrying.",
@@ -523,8 +679,39 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			}
 		}
 	}
-	return section("APPLY PRESET", summary, width) + "\n\n" +
-		section("DECISION", action, width)
+	title := "DECISION"
+	switch dialog.Stage {
+	case applyTarget:
+		title = "CHOOSE PROVIDER"
+	case applyScope:
+		title = "CHOOSE INSTALLATION SCOPE"
+	case applyProject:
+		title = "PROJECT FOLDER"
+	case applyPlanning:
+		title = "SCOPED PLAN"
+	}
+	return section("INSTALL PRESET", summary, width) + "\n\n" +
+		section(title, action, width)
+}
+
+func (m Model) providerDisplayName(providerID string) string {
+	for _, inspection := range m.snapshot.Providers {
+		if inspection.ProviderID == providerID && inspection.DisplayName != "" {
+			return inspection.DisplayName
+		}
+	}
+	switch providerID {
+	case providers.Codex:
+		return "Codex"
+	case providers.Claude:
+		return "Claude"
+	case providers.Antigravity:
+		return "Antigravity"
+	case providers.Hermes:
+		return "Hermes"
+	default:
+		return providerID
+	}
 }
 
 func renderPresetPhaseChain(pipeline presets.Pipeline, width int) []string {
@@ -722,7 +909,7 @@ func (m Model) renderConfig(width int) string {
 	if presetIndex := m.firstConflictingPreset(); presetIndex >= 0 {
 		preset := m.snapshot.Presets[presetIndex]
 		resolution = []string{
-			activeStyle.Render("a  Review and apply ") +
+			activeStyle.Render("i  Open scoped installer for ") +
 				truncate(
 					fmt.Sprintf(
 						"%s (%d conflicts)",
@@ -732,7 +919,7 @@ func (m Model) renderConfig(width int) string {
 					maximum(1, width-20),
 				),
 			mutedStyle.Render(truncate(
-				"Keep preserves customized files; replace backs them up before installing.",
+				"Choose one provider and user-global or project scope before resolving conflicts.",
 				width,
 			)),
 		}
@@ -763,7 +950,7 @@ func (m Model) renderConfig(width int) string {
 		section("CONFIGURATION", summary, width),
 	}
 	if len(resolution) > 0 {
-		sections = append(sections, section("RESOLVE CONFLICTS", resolution, width))
+		sections = append(sections, section("INSTALL SCOPED PRESET", resolution, width))
 	}
 	sections = append(
 		sections,
@@ -794,7 +981,10 @@ func (m Model) renderHelp(width int) string {
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
 		"enter            inspect preset prompt/resource source",
-		"a                apply a preset or resolve conflicts",
+		"i (or a)         install preset for one provider and scope",
+		"/                search presets",
+		"f                filter/group presets by resource type",
+		"u / p            choose user or project install scope",
 		"pgup / pgdown    scroll prompt/resource source",
 		"r                refresh configuration state",
 		"? / esc          toggle or close help",

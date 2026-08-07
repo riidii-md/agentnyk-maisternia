@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -11,6 +13,21 @@ import (
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
 )
+
+func TestRunLoadsAndQuitsWithoutAlternateScreen(t *testing.T) {
+	t.Parallel()
+
+	var output bytes.Buffer
+	err := Run(RunOptions{
+		Input:     strings.NewReader("q"),
+		Output:    &output,
+		Loader:    func() Snapshot { return adminFixture() },
+		AltScreen: false,
+	})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+}
 
 func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	t.Parallel()
@@ -188,17 +205,34 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	t.Parallel()
 
 	fixture := adminFixture()
-	fixture.Presets[0].Config.Counts.Conflict = 2
-	fixture.Presets[0].Config.ActionCount += 2
-	var appliedPreset string
+	project := "/workspaces/beta-customer-project"
+	var plannedRequest PresetInstallRequest
+	var appliedRequest PresetInstallRequest
 	var appliedPolicy configurator.ConflictPolicy
 
 	model := NewModel(func() Snapshot { return fixture })
+	model.planPreset = func(request PresetInstallRequest) (ConfigStatus, error) {
+		plannedRequest = request
+		return ConfigStatus{
+			Counts: ActionCounts{Create: 4, Conflict: 2},
+			Conflicts: []configurator.Action{
+				{
+					ResourceID: "work-brief",
+					Agent:      "claude",
+					TargetPath: ".claude/commands/work-brief.md",
+					State:      configurator.ActionConflict,
+					Reason:     "existing target is not managed by agentctl",
+				},
+			},
+			ActionCount: 6,
+			StatePath:   filepath.Join(project, ".agentctl", "install-state.json"),
+		}, nil
+	}
 	model.applyPreset = func(
-		presetID string,
+		request PresetInstallRequest,
 		policy configurator.ConflictPolicy,
 	) error {
-		appliedPreset = presetID
+		appliedRequest = request
 		appliedPolicy = policy
 		return nil
 	}
@@ -208,28 +242,76 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	updated, _ = model.Update(tea.WindowSizeMsg{Width: 100, Height: 32})
 	model = updated.(Model)
 
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
 	model = updated.(Model)
 	view := model.View()
 	for _, expected := range []string{
-		"APPLY PRESET",
+		"INSTALL PRESET",
+		"CHOOSE PROVIDER",
+		"Codex (codex)",
+		"Claude (claude)",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("provider choice missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyDown})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	if view = model.View(); !strings.Contains(view, "CHOOSE INSTALLATION SCOPE") ||
+		!strings.Contains(view, "User-global") ||
+		!strings.Contains(view, "Specific project folder") {
+		t.Fatalf("scope choice missing:\n%s", view)
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	model = updated.(Model)
+	if view = model.View(); !strings.Contains(view, "PROJECT FOLDER") {
+		t.Fatalf("project input missing:\n%s", view)
+	}
+	for _, value := range project {
+		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{value}})
+		model = updated.(Model)
+	}
+	updated, command := model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	if command == nil {
+		t.Fatal("project scope selection returned no plan command")
+	}
+	updated, _ = model.Update(command())
+	model = updated.(Model)
+	if plannedRequest != (PresetInstallRequest{
+		PresetID: "standard-work",
+		Target:   "claude",
+		Scope:    configurator.ScopeProject,
+		Project:  project,
+	}) {
+		t.Fatalf("planned request = %#v", plannedRequest)
+	}
+	view = model.View()
+	for _, expected := range []string{
 		"2 unresolved conflicts",
+		"claude",
+		project,
+		"work-brief",
 		"k  Keep existing",
 		"x  Replace from preset",
 	} {
 		if !strings.Contains(view, expected) {
-			t.Fatalf("apply choice missing %q:\n%s", expected, view)
+			t.Fatalf("scoped conflict choice missing %q:\n%s", expected, view)
 		}
 	}
 
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
 	model = updated.(Model)
-	if view = model.View(); !strings.Contains(view, "KEEP EXISTING") ||
+	if view = model.View(); !strings.Contains(view, "REPLACE FROM PRESET") ||
 		!strings.Contains(view, "Press y to apply") {
-		t.Fatalf("keep confirmation missing:\n%s", view)
+		t.Fatalf("replace confirmation missing:\n%s", view)
 	}
 
-	updated, command := model.Update(tea.KeyMsg{
+	updated, command = model.Update(tea.KeyMsg{
 		Type:  tea.KeyRunes,
 		Runes: []rune{'y'},
 	})
@@ -239,8 +321,8 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	}
 	updated, _ = model.Update(command())
 	model = updated.(Model)
-	if appliedPreset != "standard-work" || appliedPolicy != configurator.ConflictKeep {
-		t.Fatalf("apply = %q %q", appliedPreset, appliedPolicy)
+	if appliedRequest != plannedRequest || appliedPolicy != configurator.ConflictReplace {
+		t.Fatalf("apply = %#v %q", appliedRequest, appliedPolicy)
 	}
 	if view = model.View(); !strings.Contains(view, "Preset applied") {
 		t.Fatalf("apply result missing:\n%s", view)
@@ -252,9 +334,294 @@ func TestPresetViewExposesApplyAction(t *testing.T) {
 
 	model := loadedAdminModel(t, TabPipelines, 100, 32)
 	view := model.View()
-	for _, expected := range []string{"ACTIONS", "a  Apply preset"} {
+	for _, expected := range []string{"ACTIONS", "i  Install preset"} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("preset actions missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestPresetLibrarySearchFilterAndResourceGroups(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets = append(fixture.Presets, PresetStatus{
+		Preset: presets.Preset{
+			SchemaVersion: presets.SchemaVersion,
+			ID:            "hook-standard",
+			Name:          "Hook Standard",
+			Description:   "Safety and quality hooks.",
+			Contents: presets.Contents{
+				Hooks:    []string{"hook-pack-safety", "hook-pack-quality"},
+				Settings: []string{"approval-policy"},
+			},
+			Targets: []string{"codex", "claude"},
+		},
+	})
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 110, Height: 36})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{"COMMANDS", "HOOKS", "Filter: all", "/ search"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("preset discovery missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("safety")})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	view = model.View()
+	if !strings.Contains(view, "hook-standard") || strings.Contains(view, "standard-work") {
+		t.Fatalf("search did not narrow presets:\n%s", view)
+	}
+
+	model = NewModel(func() Snapshot { return fixture })
+	updated, _ = model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	for range 2 {
+		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'f'}})
+		model = updated.(Model)
+	}
+	view = model.View()
+	if !strings.Contains(view, "Filter: hooks") ||
+		!strings.Contains(view, "hook-standard") ||
+		strings.Contains(view, "standard-work") {
+		t.Fatalf("hook filter did not narrow presets:\n%s", view)
+	}
+}
+
+func TestPresetInstallerUserScopeCanReturnToScopeWithoutStalePlan(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	var requests []PresetInstallRequest
+	model := NewModel(func() Snapshot { return fixture })
+	model.planPreset = func(request PresetInstallRequest) (ConfigStatus, error) {
+		requests = append(requests, request)
+		return ConfigStatus{
+			Counts:      ActionCounts{Create: 4},
+			ActionCount: 4,
+			StatePath:   "/home/user/.config/agentctl/install-state.json",
+		}, nil
+	}
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+
+	for _, key := range []tea.KeyMsg{
+		{Type: tea.KeyRunes, Runes: []rune{'i'}},
+		{Type: tea.KeyEnter},
+		{Type: tea.KeyRunes, Runes: []rune{'u'}},
+	} {
+		var command tea.Cmd
+		updated, command = model.Update(key)
+		model = updated.(Model)
+		if command != nil {
+			updated, _ = model.Update(command())
+			model = updated.(Model)
+		}
+	}
+	if len(requests) != 1 || requests[0] != (PresetInstallRequest{
+		PresetID: "standard-work",
+		Target:   "codex",
+		Scope:    configurator.ScopeUser,
+	}) {
+		t.Fatalf("user plan requests = %#v", requests)
+	}
+	if view := model.View(); !strings.Contains(view, "APPLY READY CHANGES") ||
+		!strings.Contains(view, "user-global") {
+		t.Fatalf("user-scope confirmation missing:\n%s", view)
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'b'}})
+	model = updated.(Model)
+	view := model.View()
+	if !strings.Contains(view, "CHOOSE INSTALLATION SCOPE") ||
+		strings.Contains(view, "Destination root") ||
+		strings.Contains(view, "APPLY READY CHANGES") {
+		t.Fatalf("back retained stale scoped plan:\n%s", view)
+	}
+}
+
+func TestPresetSearchEditingSupportsCorrectionAndClear(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 100, 32)
+	for _, key := range []tea.KeyMsg{
+		{Type: tea.KeyRunes, Runes: []rune{'/'}},
+		{Type: tea.KeyRunes, Runes: []rune("standardx")},
+		{Type: tea.KeyBackspace},
+	} {
+		updated, _ := model.Update(key)
+		model = updated.(Model)
+	}
+	if view := model.View(); !strings.Contains(view, "standard-work") {
+		t.Fatalf("corrected search did not restore preset:\n%s", view)
+	}
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyCtrlU})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	model = updated.(Model)
+	if model.presetSearch != "" || model.presetSearchEditing {
+		t.Fatalf("search state = %q editing=%v", model.presetSearch, model.presetSearchEditing)
+	}
+}
+
+func TestPresetAndProjectInputsRejectControlsAndEnforceLimits(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 100, 32)
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: append([]rune(strings.Repeat("s", maxPresetSearchRunes+20)), '\n'),
+	})
+	model = updated.(Model)
+	if len([]rune(model.presetSearch)) != maxPresetSearchRunes ||
+		strings.ContainsRune(model.presetSearch, '\n') {
+		t.Fatalf("unsafe search input retained: len=%d value=%q", len([]rune(model.presetSearch)), model.presetSearch)
+	}
+
+	model = loadedAdminModel(t, TabPipelines, 100, 32)
+	for _, key := range []tea.KeyMsg{
+		{Type: tea.KeyRunes, Runes: []rune{'i'}},
+		{Type: tea.KeyEnter},
+		{Type: tea.KeyRunes, Runes: []rune{'p'}},
+		{Type: tea.KeyRunes, Runes: append([]rune(strings.Repeat("p", maxProjectPathRunes+20)), '\n')},
+	} {
+		updated, _ = model.Update(key)
+		model = updated.(Model)
+	}
+	if len([]rune(model.applyDialog.ProjectInput)) != maxProjectPathRunes ||
+		strings.ContainsRune(model.applyDialog.ProjectInput, '\n') {
+		t.Fatalf(
+			"unsafe project input retained: len=%d",
+			len([]rune(model.applyDialog.ProjectInput)),
+		)
+	}
+}
+
+func TestPresetResourceFiltersCoverEveryResourceKind(t *testing.T) {
+	t.Parallel()
+
+	preset := presets.Preset{
+		Pipelines: []presets.Pipeline{{ID: "delivery"}},
+		Contents: presets.Contents{
+			MCPRefs:  []string{"mcp"},
+			Commands: []string{"command"},
+			Prompts:  []string{"prompt"},
+			Skills:   []string{"skill"},
+			Hooks:    []string{"hook"},
+			Settings: []string{"setting"},
+		},
+	}
+	for _, filter := range presetFilters {
+		if !presetMatchesFilter(preset, filter) {
+			t.Errorf("preset did not match %q", filter)
+		}
+	}
+	if presetMatchesFilter(preset, "unknown") {
+		t.Fatal("preset matched unknown filter")
+	}
+	for _, expected := range []string{
+		"commands", "hooks", "skills", "prompts", "settings", "MCP", "pipelines",
+	} {
+		if summary := presetKindSummary(preset); !strings.Contains(summary, expected) {
+			t.Errorf("kind summary %q missing %q", summary, expected)
+		}
+	}
+}
+
+func TestPresetInstallerReportsUnavailablePlanningAndApply(t *testing.T) {
+	t.Parallel()
+
+	startInstall := func(model Model) (Model, tea.Cmd) {
+		model.tab = TabPipelines
+		updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+		model = updated.(Model)
+		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+		model = updated.(Model)
+		updated, command := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'u'}})
+		return updated.(Model), command
+	}
+
+	model := loadedAdminModel(t, TabPipelines, 100, 32)
+	model, command := startInstall(model)
+	if command == nil {
+		t.Fatal("missing planner did not return a command")
+	}
+	updated, _ := model.Update(command())
+	model = updated.(Model)
+	if view := model.View(); !strings.Contains(view, "preset planning is not configured") {
+		t.Fatalf("missing planner error absent:\n%s", view)
+	}
+
+	model = loadedAdminModel(t, TabPipelines, 100, 32)
+	model.planPreset = func(PresetInstallRequest) (ConfigStatus, error) {
+		return ConfigStatus{Counts: ActionCounts{Create: 1}, ActionCount: 1}, nil
+	}
+	model, command = startInstall(model)
+	updated, _ = model.Update(command())
+	model = updated.(Model)
+	updated, command = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	model = updated.(Model)
+	if command == nil {
+		t.Fatal("missing apply callback did not return a command")
+	}
+	updated, _ = model.Update(command())
+	model = updated.(Model)
+	if view := model.View(); !strings.Contains(view, "preset apply is not configured") {
+		t.Fatalf("missing apply error absent:\n%s", view)
+	}
+}
+
+func TestHelpIncludesPresetDiscoveryAndScopedInstallKeys(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 100, 32)
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	model = updated.(Model)
+	view := model.View()
+	for _, expected := range []string{
+		"install preset for one provider and scope",
+		"search presets",
+		"filter/group presets by resource type",
+		"choose user or project install scope",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("help missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestTabStringAndWindowBoundaries(t *testing.T) {
+	t.Parallel()
+
+	if TabPipelines.String() != "Presets" || Tab(99).String() != "Tab(99)" {
+		t.Fatalf("tab strings = %q, %q", TabPipelines.String(), Tab(99).String())
+	}
+	for _, test := range []struct {
+		index, total, size int
+		start, end         int
+	}{
+		{index: 0, total: 0, size: 5, start: 0, end: 0},
+		{index: 0, total: 10, size: 5, start: 0, end: 5},
+		{index: 9, total: 10, size: 5, start: 5, end: 10},
+		{index: 4, total: 10, size: 5, start: 2, end: 7},
+	} {
+		start, end := window(test.index, test.total, test.size)
+		if start != test.start || end != test.end {
+			t.Errorf("window(%d,%d,%d) = %d,%d", test.index, test.total, test.size, start, end)
 		}
 	}
 }
@@ -373,8 +740,8 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 
 	view := model.View()
 	for _, expected := range []string{
-		"RESOLVE CONFLICTS",
-		"a  Review and apply",
+		"INSTALL SCOPED PRESET",
+		"i  Open scoped installer",
 		"Agentctl preserves conflicts instead of overwriting them.",
 		"SELECTED CONFLICT",
 		"existing target is not managed by agentctl",
@@ -386,7 +753,7 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 	}
 }
 
-func TestConflictActionOpensFirstConflictingPreset(t *testing.T) {
+func TestConflictActionOpensFirstConflictingPresetInstaller(t *testing.T) {
 	t.Parallel()
 
 	fixture := adminFixture()
@@ -399,17 +766,18 @@ func TestConflictActionOpensFirstConflictingPreset(t *testing.T) {
 
 	updated, _ = model.Update(tea.KeyMsg{
 		Type:  tea.KeyRunes,
-		Runes: []rune{'a'},
+		Runes: []rune{'i'},
 	})
 	model = updated.(Model)
-	if view := model.View(); !strings.Contains(view, "APPLY PRESET") ||
+	if view := model.View(); !strings.Contains(view, "INSTALL PRESET") ||
+		!strings.Contains(view, "CHOOSE PROVIDER") ||
 		!strings.Contains(view, "Idea Shaping") {
-		t.Fatalf("conflict shortcut did not open preset apply:\n%s", view)
+		t.Fatalf("conflict shortcut did not open scoped preset installer:\n%s", view)
 	}
 	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	model = updated.(Model)
-	if model.ActiveTab() != TabConfig {
-		t.Fatalf("cancel returned to %s, want Config", model.ActiveTab())
+	if model.ActiveTab() != TabPipelines {
+		t.Fatalf("cancel returned to %s, want Presets", model.ActiveTab())
 	}
 }
 
@@ -427,7 +795,7 @@ func TestConflictActionIsVisibleAtCommonTerminalSize(t *testing.T) {
 	model = updated.(Model)
 
 	view := model.View()
-	for _, expected := range []string{"RESOLVE CONFLICTS", "a  Review and apply"} {
+	for _, expected := range []string{"INSTALL SCOPED PRESET", "i  Open scoped installer"} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("compact config view missing %q:\n%s", expected, view)
 		}

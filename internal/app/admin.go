@@ -21,9 +21,9 @@ Options:
 Repository resolution:
   --repo, AGENTCTL_REPO, saved settings, then current-directory ancestors.
 
-The admin interface can apply a selected preset after an explicit conflict
-decision and confirmation. It cannot dispatch agents, commit, push, or manage
-runtime sessions.
+The admin interface installs a selected preset for one provider at user or
+project scope after a scoped plan, explicit conflict decision, and confirmation.
+It cannot dispatch agents, commit, push, or manage runtime sessions.
 `
 
 func runAdminCommand(
@@ -76,6 +76,7 @@ func runAdminCommand(
 		Input:       stdin,
 		Output:      stdout,
 		Loader:      loader.Load,
+		PlanPreset:  loader.PlanPreset,
 		ApplyPreset: loader.ApplyPreset,
 		AltScreen:   !noAltScreen,
 	}); err != nil {

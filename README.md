@@ -151,11 +151,13 @@ agentctl admin
 
 Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
 for all keys. The current TUI browses preset-library entries, their workflow
-DAGs and contents, provider health, preset-scoped plans, drift, and conflicts.
-On a selected preset, press `a` to review and apply it. Overview and Config also
-offer `a resolve` when a preset has conflicts. Conflicts require an explicit
-keep-existing or replace-from-preset decision followed by confirmation. The TUI
-must not run, observe, dispatch, commit, or push.
+DAGs and contents, provider health, drift, and conflicts. In Presets, use `/` to
+search and `f` to filter/group by resource type. On a selected preset, press `i`
+to install it, choose one provider, then choose user-global or a specific project
+folder scope. Only that scoped plan is inspected; any conflicts require an
+explicit keep-existing or replace-from-preset decision followed by confirmation.
+Overview and Config can open the same scoped installer for a conflicting preset.
+The TUI must not run, observe, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
