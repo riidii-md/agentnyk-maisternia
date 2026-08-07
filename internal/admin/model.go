@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/presets"
 )
 
 type Tab int
@@ -26,19 +28,56 @@ var tabNames = []string{
 	"Config",
 }
 
+var presetFilters = []string{
+	"all",
+	"commands",
+	"hooks",
+	"skills",
+	"prompts",
+	"settings",
+	"MCP",
+	"pipelines",
+}
+
+const (
+	maxPresetSearchRunes = 256
+	maxProjectPathRunes  = 4096
+)
+
+var presetGroupOrder = []string{
+	"commands",
+	"hooks",
+	"skills",
+	"prompts",
+	"settings",
+	"MCP",
+	"pipelines",
+	"other",
+}
+
 type loadSnapshotMsg struct {
 	snapshot Snapshot
 }
 
 type applyPresetMsg struct {
-	presetID string
+	request  PresetInstallRequest
 	snapshot Snapshot
 	err      error
+}
+
+type planPresetMsg struct {
+	request PresetInstallRequest
+	config  ConfigStatus
+	err     error
 }
 
 type applyStage string
 
 const (
+	applyTarget   applyStage = "target"
+	applyScope    applyStage = "scope"
+	applyProject  applyStage = "project"
+	applyPlanning applyStage = "planning"
 	applyChoose   applyStage = "choose"
 	applyConfirm  applyStage = "confirm"
 	applyRunning  applyStage = "running"
@@ -46,18 +85,25 @@ const (
 )
 
 type presetApplyDialog struct {
-	Stage    applyStage
-	PresetID string
-	Name     string
-	Targets  []string
-	Counts   ActionCounts
-	Policy   configurator.ConflictPolicy
-	Err      error
+	Stage        applyStage
+	PresetID     string
+	Name         string
+	Targets      []string
+	TargetCursor int
+	ScopeCursor  int
+	Request      PresetInstallRequest
+	ProjectInput string
+	Counts       ActionCounts
+	Conflicts    []configurator.Action
+	StatePath    string
+	Policy       configurator.ConflictPolicy
+	Err          error
 }
 
 type Model struct {
 	loader      func() Snapshot
-	applyPreset func(string, configurator.ConflictPolicy) error
+	planPreset  func(PresetInstallRequest) (ConfigStatus, error)
+	applyPreset func(PresetInstallRequest, configurator.ConflictPolicy) error
 	snapshot    Snapshot
 	tab         Tab
 	cursor      map[Tab]int
@@ -70,18 +116,23 @@ type Model struct {
 	presetPreview        bool
 	presetResourceCursor int
 	presetContentOffset  int
+	presetSearchEditing  bool
+	presetSearch         string
+	presetFilter         int
 }
 
 type RunOptions struct {
 	Input       io.Reader
 	Output      io.Writer
 	Loader      func() Snapshot
-	ApplyPreset func(string, configurator.ConflictPolicy) error
+	PlanPreset  func(PresetInstallRequest) (ConfigStatus, error)
+	ApplyPreset func(PresetInstallRequest, configurator.ConflictPolicy) error
 	AltScreen   bool
 }
 
 func Run(options RunOptions) error {
 	model := NewModel(options.Loader)
+	model.planPreset = options.PlanPreset
 	model.applyPreset = options.ApplyPreset
 	programOptions := []tea.ProgramOption{
 		tea.WithInput(options.Input),
@@ -117,8 +168,29 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.clampCursor()
 		return m, nil
+	case planPresetMsg:
+		if m.applyDialog.Request != message.request ||
+			m.applyDialog.Stage != applyPlanning {
+			return m, nil
+		}
+		if message.err != nil {
+			m.applyDialog.Stage = applyComplete
+			m.applyDialog.Err = message.err
+			return m, nil
+		}
+		m.applyDialog.Counts = message.config.Counts
+		m.applyDialog.Conflicts = append(
+			[]configurator.Action(nil),
+			message.config.Conflicts...,
+		)
+		m.applyDialog.StatePath = message.config.StatePath
+		m.applyDialog.Stage = applyConfirm
+		if message.config.Counts.Conflict > 0 {
+			m.applyDialog.Stage = applyChoose
+		}
+		return m, nil
 	case applyPresetMsg:
-		if m.applyDialog.PresetID != message.presetID {
+		if m.applyDialog.Request != message.request {
 			return m, nil
 		}
 		m.applyDialog.Stage = applyComplete
@@ -131,6 +203,9 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if m.applyDialog.Stage != "" {
 			return m.updateApplyDialog(message)
+		}
+		if m.presetSearchEditing {
+			return m.updatePresetSearch(message)
 		}
 		switch message.String() {
 		case "ctrl+c", "q":
@@ -153,12 +228,22 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.presetResourceCursor = 0
 				m.presetContentOffset = 0
 			}
-		case "a":
+		case "i", "a":
 			if m.tab == TabPipelines && !m.presetPreview {
 				m.openPresetApply()
 			} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 				m.snapshot.Config.Counts.Conflict > 0 {
 				m.openFirstConflictingPreset()
+			}
+		case "/":
+			if m.tab == TabPipelines && !m.presetPreview {
+				m.presetSearchEditing = true
+			}
+		case "f":
+			if m.tab == TabPipelines && !m.presetPreview {
+				m.presetFilter = (m.presetFilter + 1) % len(presetFilters)
+				m.cursor[TabPipelines] = 0
+				m.clampCursor()
 			}
 		case "r":
 			if !m.loading {
@@ -167,16 +252,19 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "tab", "right", "l":
 			m.help = false
+			m.presetSearchEditing = false
 			m.closePresetPreview()
 			m.tab = (m.tab + 1) % tabCount
 			m.clampCursor()
 		case "shift+tab", "left", "h":
 			m.help = false
+			m.presetSearchEditing = false
 			m.closePresetPreview()
 			m.tab = (m.tab + tabCount - 1) % tabCount
 			m.clampCursor()
 		case "1", "2", "3", "4":
 			m.help = false
+			m.presetSearchEditing = false
 			m.closePresetPreview()
 			m.tab = Tab(int(message.Runes[0] - '1'))
 			m.clampCursor()
@@ -230,23 +318,90 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 	key := message.String()
-	if m.applyDialog.Stage == applyRunning {
+	if m.applyDialog.Stage == applyRunning || m.applyDialog.Stage == applyPlanning {
+		if key == "ctrl+c" {
+			return m, tea.Quit
+		}
 		return m, nil
 	}
-	if key == "ctrl+c" || key == "q" {
+	if key == "ctrl+c" {
 		return m, tea.Quit
 	}
 	if m.applyDialog.Stage == applyComplete {
+		if key == "q" {
+			return m, tea.Quit
+		}
 		if key == "enter" || key == "esc" {
 			m.applyDialog = presetApplyDialog{}
 		}
 		return m, nil
 	}
-	if key == "esc" || key == "n" {
+	if key == "esc" {
 		m.applyDialog = presetApplyDialog{}
 		return m, nil
 	}
 	switch m.applyDialog.Stage {
+	case applyTarget:
+		switch key {
+		case "up", "k":
+			if m.applyDialog.TargetCursor > 0 {
+				m.applyDialog.TargetCursor--
+			}
+		case "down", "j":
+			if m.applyDialog.TargetCursor < len(m.applyDialog.Targets)-1 {
+				m.applyDialog.TargetCursor++
+			}
+		case "enter":
+			if len(m.applyDialog.Targets) == 0 {
+				return m, nil
+			}
+			m.applyDialog.Request.Target =
+				m.applyDialog.Targets[m.applyDialog.TargetCursor]
+			m.applyDialog.Stage = applyScope
+		}
+	case applyScope:
+		switch key {
+		case "up", "k", "down", "j":
+			m.applyDialog.ScopeCursor = 1 - m.applyDialog.ScopeCursor
+		case "u":
+			m.applyDialog.ScopeCursor = 0
+			return m.beginPresetPlan(configurator.ScopeUser, "")
+		case "p":
+			m.applyDialog.ScopeCursor = 1
+			m.applyDialog.Stage = applyProject
+		case "b":
+			m.resetPresetPlan()
+			m.applyDialog.Request.Target = ""
+			m.applyDialog.Stage = applyTarget
+		case "enter":
+			if m.applyDialog.ScopeCursor == 0 {
+				return m.beginPresetPlan(configurator.ScopeUser, "")
+			}
+			m.applyDialog.Stage = applyProject
+		}
+	case applyProject:
+		switch key {
+		case "backspace", "delete":
+			runes := []rune(m.applyDialog.ProjectInput)
+			if len(runes) > 0 {
+				m.applyDialog.ProjectInput = string(runes[:len(runes)-1])
+			}
+		case "ctrl+u":
+			m.applyDialog.ProjectInput = ""
+		case "enter":
+			project := strings.TrimSpace(m.applyDialog.ProjectInput)
+			if project != "" {
+				return m.beginPresetPlan(configurator.ScopeProject, project)
+			}
+		default:
+			if message.Type == tea.KeyRunes {
+				m.applyDialog.ProjectInput = appendPrintableLimited(
+					m.applyDialog.ProjectInput,
+					message.Runes,
+					maxProjectPathRunes,
+				)
+			}
+		}
 	case applyChoose:
 		switch key {
 		case "k":
@@ -255,11 +410,19 @@ func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case "x":
 			m.applyDialog.Policy = configurator.ConflictReplace
 			m.applyDialog.Stage = applyConfirm
+		case "b":
+			m.resetPresetPlan()
+			m.applyDialog.Stage = applyScope
 		}
 	case applyConfirm:
-		if key == "b" && m.applyDialog.Counts.Conflict > 0 {
-			m.applyDialog.Stage = applyChoose
-			m.applyDialog.Policy = configurator.ConflictAbort
+		if key == "b" {
+			if m.applyDialog.Counts.Conflict > 0 {
+				m.applyDialog.Stage = applyChoose
+				m.applyDialog.Policy = configurator.ConflictAbort
+			} else {
+				m.resetPresetPlan()
+				m.applyDialog.Stage = applyScope
+			}
 			return m, nil
 		}
 		if key == "y" {
@@ -270,23 +433,41 @@ func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m *Model) resetPresetPlan() {
+	m.applyDialog.Request.Scope = ""
+	m.applyDialog.Request.Project = ""
+	m.applyDialog.Counts = ActionCounts{}
+	m.applyDialog.Conflicts = nil
+	m.applyDialog.StatePath = ""
+	m.applyDialog.Policy = configurator.ConflictAbort
+	m.applyDialog.Err = nil
+}
+
+func (m Model) beginPresetPlan(
+	scope configurator.InstallScope,
+	project string,
+) (tea.Model, tea.Cmd) {
+	m.applyDialog.Request.Scope = scope
+	m.applyDialog.Request.Project = project
+	m.applyDialog.Stage = applyPlanning
+	m.applyDialog.Err = nil
+	return m, m.planPresetCommand()
+}
+
 func (m *Model) openPresetApply() {
-	index := m.cursor[TabPipelines]
-	if index < 0 || index >= len(m.snapshot.Presets) {
+	status, found := m.selectedPreset()
+	if !found {
 		return
 	}
-	status := m.snapshot.Presets[index]
-	stage := applyConfirm
-	if status.Config.Counts.Conflict > 0 {
-		stage = applyChoose
-	}
 	m.applyDialog = presetApplyDialog{
-		Stage:    stage,
+		Stage:    applyTarget,
 		PresetID: status.Preset.ID,
 		Name:     status.Preset.Name,
 		Targets:  append([]string(nil), status.Preset.Targets...),
-		Counts:   status.Config.Counts,
-		Policy:   configurator.ConflictAbort,
+		Request: PresetInstallRequest{
+			PresetID: status.Preset.ID,
+		},
+		Policy: configurator.ConflictAbort,
 	}
 }
 
@@ -295,7 +476,10 @@ func (m *Model) openFirstConflictingPreset() {
 	if index < 0 {
 		return
 	}
-	m.cursor[TabPipelines] = index
+	m.tab = TabPipelines
+	m.presetSearch = ""
+	m.presetFilter = 0
+	m.cursor[TabPipelines] = m.presetCursorForSnapshotIndex(index)
 	m.closePresetPreview()
 	m.openPresetApply()
 }
@@ -310,28 +494,43 @@ func (m Model) firstConflictingPreset() int {
 }
 
 func (m Model) applyPresetCommand() tea.Cmd {
-	presetID := m.applyDialog.PresetID
+	request := m.applyDialog.Request
 	policy := m.applyDialog.Policy
 	applyPreset := m.applyPreset
 	loader := m.loader
 	return func() tea.Msg {
 		if applyPreset == nil {
 			return applyPresetMsg{
-				presetID: presetID,
-				err:      fmt.Errorf("preset apply is not configured"),
+				request: request,
+				err:     fmt.Errorf("preset apply is not configured"),
 			}
 		}
-		if err := applyPreset(presetID, policy); err != nil {
-			return applyPresetMsg{presetID: presetID, err: err}
+		if err := applyPreset(request, policy); err != nil {
+			return applyPresetMsg{request: request, err: err}
 		}
 		var snapshot Snapshot
 		if loader != nil {
 			snapshot = loader()
 		}
 		return applyPresetMsg{
-			presetID: presetID,
+			request:  request,
 			snapshot: snapshot,
 		}
+	}
+}
+
+func (m Model) planPresetCommand() tea.Cmd {
+	request := m.applyDialog.Request
+	planPreset := m.planPreset
+	return func() tea.Msg {
+		if planPreset == nil {
+			return planPresetMsg{
+				request: request,
+				err:     fmt.Errorf("preset planning is not configured"),
+			}
+		}
+		config, err := planPreset(request)
+		return planPresetMsg{request: request, config: config, err: err}
 	}
 }
 
@@ -349,6 +548,47 @@ func (m Model) View() string {
 
 func (m Model) Snapshot() Snapshot {
 	return m.snapshot
+}
+
+func (m Model) updatePresetSearch(message tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch message.String() {
+	case "ctrl+c":
+		return m, tea.Quit
+	case "enter", "esc":
+		m.presetSearchEditing = false
+	case "backspace", "delete":
+		runes := []rune(m.presetSearch)
+		if len(runes) > 0 {
+			m.presetSearch = string(runes[:len(runes)-1])
+		}
+	case "ctrl+u":
+		m.presetSearch = ""
+	default:
+		if message.Type == tea.KeyRunes {
+			m.presetSearch = appendPrintableLimited(
+				m.presetSearch,
+				message.Runes,
+				maxPresetSearchRunes,
+			)
+		}
+	}
+	m.cursor[TabPipelines] = 0
+	m.clampCursor()
+	return m, nil
+}
+
+func appendPrintableLimited(current string, values []rune, limit int) string {
+	result := []rune(current)
+	for _, value := range values {
+		if len(result) >= limit {
+			break
+		}
+		if unicode.IsControl(value) {
+			continue
+		}
+		result = append(result, value)
+	}
+	return string(result)
 }
 
 func (m Model) ActiveTab() Tab {
@@ -420,17 +660,107 @@ func (m *Model) closePresetPreview() {
 }
 
 func (m Model) selectedPresetResources() []ResourcePreview {
-	index := m.cursor[TabPipelines]
-	if index < 0 || index >= len(m.snapshot.Presets) {
+	status, found := m.selectedPreset()
+	if !found {
 		return nil
 	}
-	return m.snapshot.Presets[index].Resources
+	return status.Resources
+}
+
+func (m Model) selectedPreset() (PresetStatus, bool) {
+	indexes := m.visiblePresetIndexes()
+	index := m.cursor[TabPipelines]
+	if index < 0 || index >= len(indexes) {
+		return PresetStatus{}, false
+	}
+	return m.snapshot.Presets[indexes[index]], true
+}
+
+func (m Model) visiblePresetIndexes() []int {
+	filter := presetFilters[m.presetFilter]
+	indexes := make([]int, 0, len(m.snapshot.Presets))
+	for _, group := range presetGroupOrder {
+		for index, status := range m.snapshot.Presets {
+			if !presetMatchesFilter(status.Preset, filter) ||
+				!presetMatchesSearch(status.Preset, m.presetSearch) ||
+				m.presetDisplayGroup(status.Preset) != group {
+				continue
+			}
+			indexes = append(indexes, index)
+		}
+	}
+	return indexes
+}
+
+func (m Model) presetDisplayGroup(preset presets.Preset) string {
+	filter := presetFilters[m.presetFilter]
+	if filter != "all" {
+		return filter
+	}
+	return presetPrimaryGroup(preset)
+}
+
+func (m Model) presetCursorForSnapshotIndex(snapshotIndex int) int {
+	for cursor, index := range m.visiblePresetIndexes() {
+		if index == snapshotIndex {
+			return cursor
+		}
+	}
+	return 0
+}
+
+func presetMatchesFilter(preset presets.Preset, filter string) bool {
+	switch filter {
+	case "all":
+		return true
+	case "commands":
+		return len(preset.Contents.Commands) > 0
+	case "hooks":
+		return len(preset.Contents.Hooks) > 0
+	case "skills":
+		return len(preset.Contents.Skills) > 0
+	case "prompts":
+		return len(preset.Contents.Prompts) > 0
+	case "settings":
+		return len(preset.Contents.Settings) > 0
+	case "MCP":
+		return len(preset.Contents.MCPRefs) > 0
+	case "pipelines":
+		return len(preset.Pipelines) > 0
+	default:
+		return false
+	}
+}
+
+func presetMatchesSearch(preset presets.Preset, query string) bool {
+	query = strings.ToLower(strings.TrimSpace(query))
+	if query == "" {
+		return true
+	}
+	haystack := strings.ToLower(strings.Join([]string{
+		preset.ID,
+		preset.Name,
+		preset.Description,
+		strings.Join(preset.Targets, " "),
+		strings.Join(preset.Contents.ResourceIDs(), " "),
+		presetContentSummary(preset.Contents),
+	}, " "))
+	return strings.Contains(haystack, query)
+}
+
+func presetPrimaryGroup(preset presets.Preset) string {
+	for _, group := range presetGroupOrder[:len(presetGroupOrder)-1] {
+		if presetMatchesFilter(preset, group) {
+			return group
+		}
+	}
+	return "other"
 }
 
 func (m Model) itemCount() int {
 	switch m.tab {
 	case TabPipelines:
-		return len(m.snapshot.Presets)
+		return len(m.visiblePresetIndexes())
 	case TabProviders:
 		return len(m.snapshot.Providers)
 	case TabConfig:

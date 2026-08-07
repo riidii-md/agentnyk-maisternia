@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
 	"github.com/kagi-labs/agentctl/internal/presets"
@@ -72,6 +74,13 @@ type PresetStatus struct {
 	Preset    presets.Preset
 	Config    ConfigStatus
 	Resources []ResourcePreview
+}
+
+type PresetInstallRequest struct {
+	PresetID string
+	Target   string
+	Scope    configurator.InstallScope
+	Project  string
 }
 
 type Snapshot struct {
@@ -146,7 +155,7 @@ func (l Loader) Load() Snapshot {
 		if err != nil {
 			snapshot.addIssue(SeverityError, "config", err)
 		} else {
-			snapshot.Config = summarizePlan(plan, l.Home)
+			snapshot.Config = summarizePlan(plan)
 		}
 
 		library, err := presets.LoadLibrary(selection.Path)
@@ -202,7 +211,7 @@ func (l Loader) Load() Snapshot {
 					snapshot.Presets = append(snapshot.Presets, status)
 					continue
 				}
-				status.Config = summarizePlan(plan, l.Home)
+				status.Config = summarizePlan(plan)
 				snapshot.Presets = append(snapshot.Presets, status)
 			}
 		}
@@ -248,42 +257,19 @@ func (l Loader) Load() Snapshot {
 	return snapshot
 }
 
+func (l Loader) PlanPreset(request PresetInstallRequest) (ConfigStatus, error) {
+	plan, err := l.buildPresetPlan(request)
+	if err != nil {
+		return ConfigStatus{}, err
+	}
+	return summarizePlan(plan), nil
+}
+
 func (l Loader) ApplyPreset(
-	presetID string,
+	request PresetInstallRequest,
 	policy configurator.ConflictPolicy,
 ) error {
-	selection, err := l.resolveRepository()
-	if err != nil {
-		return err
-	}
-	if selection.Path == "" {
-		return errors.New("repository is not configured")
-	}
-	manifest, err := configurator.LoadManifest(
-		selection.Path,
-		"config/manifest.json",
-	)
-	if err != nil {
-		return err
-	}
-	library, err := presets.LoadLibrary(selection.Path)
-	if err != nil {
-		return err
-	}
-	preset, exists := library.Get(presetID)
-	if !exists {
-		return fmt.Errorf("preset %q does not exist", presetID)
-	}
-	selected, err := presets.SelectManifest(preset, manifest)
-	if err != nil {
-		return err
-	}
-	plan, err := configurator.BuildPlan(
-		selection.Path,
-		l.Home,
-		selected,
-		"all",
-	)
+	plan, err := l.buildPresetPlan(request)
 	if err != nil {
 		return err
 	}
@@ -291,6 +277,111 @@ func (l Loader) ApplyPreset(
 		Confirmed:      true,
 		ConflictPolicy: policy,
 	})
+}
+
+func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan, error) {
+	selection, err := l.resolveRepository()
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	if selection.Path == "" {
+		return configurator.Plan{}, errors.New("repository is not configured")
+	}
+	manifest, err := configurator.LoadManifest(
+		selection.Path,
+		"config/manifest.json",
+	)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	library, err := presets.LoadLibrary(selection.Path)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	preset, exists := library.Get(request.PresetID)
+	if !exists {
+		return configurator.Plan{}, fmt.Errorf(
+			"preset %q does not exist",
+			request.PresetID,
+		)
+	}
+	target, valid := providers.CanonicalID(request.Target)
+	if !valid {
+		return configurator.Plan{}, fmt.Errorf(
+			"unknown provider %q",
+			request.Target,
+		)
+	}
+	if !slices.Contains(preset.Targets, target) {
+		return configurator.Plan{}, fmt.Errorf(
+			"preset %q does not support provider %q",
+			preset.ID,
+			target,
+		)
+	}
+	selected, err := presets.SelectManifest(preset, manifest)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	root, err := l.installRoot(request)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	plan, err := configurator.BuildPlanForScope(
+		selection.Path,
+		root,
+		selected,
+		target,
+		request.Scope,
+	)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	return plan, nil
+}
+
+func (l Loader) installRoot(request PresetInstallRequest) (string, error) {
+	switch request.Scope {
+	case configurator.ScopeUser:
+		return l.Home, nil
+	case configurator.ScopeProject:
+		value := request.Project
+		if strings.IndexFunc(value, unicode.IsControl) >= 0 {
+			return "", errors.New("project path contains control characters")
+		}
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return "", errors.New("project path is required for project scope")
+		}
+		if len([]rune(value)) > maxProjectPathRunes {
+			return "", fmt.Errorf("project path exceeds %d characters", maxProjectPathRunes)
+		}
+		cwd := l.Cwd
+		if strings.TrimSpace(cwd) == "" {
+			var err error
+			cwd, err = os.Getwd()
+			if err != nil {
+				return "", fmt.Errorf("resolve current directory: %w", err)
+			}
+		}
+		if !filepath.IsAbs(value) {
+			value = filepath.Join(cwd, value)
+		}
+		value, err := filepath.Abs(value)
+		if err != nil {
+			return "", fmt.Errorf("resolve project path: %w", err)
+		}
+		info, err := os.Lstat(value)
+		if err != nil {
+			return "", fmt.Errorf("inspect project path: %w", err)
+		}
+		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return "", errors.New("project path must be a real directory")
+		}
+		return value, nil
+	default:
+		return "", fmt.Errorf("unsupported installation scope %q", request.Scope)
+	}
 }
 
 func (l Loader) resolveRepository() (RepositorySelection, error) {
@@ -372,9 +463,12 @@ func absoluteFrom(cwd, value string) (string, error) {
 	return path, nil
 }
 
-func summarizePlan(plan configurator.Plan, home string) ConfigStatus {
+func summarizePlan(plan configurator.Plan) ConfigStatus {
 	status := ConfigStatus{
-		StatePath:   configurator.StatePath(home),
+		StatePath: configurator.StatePathForScope(
+			plan.Home,
+			plan.Scope,
+		),
 		ActionCount: len(plan.Actions),
 		Actions:     append([]configurator.Action(nil), plan.Actions...),
 	}
