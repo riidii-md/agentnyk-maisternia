@@ -38,9 +38,9 @@ The repository contains the first safe configurator foundation:
 - drift detection using install checksums;
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
-- reusable standard-work, idea-shaping, scored-experiment, harness-profile,
-  session-audit, harness-improvement, Codex-compatibility, and Codex
-  resource-lab presets;
+- reusable standard-work, idea-shaping, scored-experiment, parallel-work,
+  multi-lens-review, harness-profile, session-audit, harness-improvement,
+  Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -74,12 +74,21 @@ workflow and capability contract. Native Stop/tool-guard hook rendering still
 depends on the planned structured settings merge; see
 [Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
 
+The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
+`/work-speed-loop` for dependency-safe concurrent execution. See
+[Parallel work and the speed loop](docs/PARALLEL-WORK.md).
+
 The retrospective presets add read-only harness profiling, evidence-backed run
 audits, and proposal-only improvement with held-out replay and human approval.
 `/work-session-analysis` provides the direct end-of-session bottleneck review
 for token cost, repetition, skills, user friction, setup, commands, and
 delegated subagents.
 See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
+
+The `multi-lens-review` preset adds separate plan and implementation gates,
+independent review lenses, per-finding refutation, coordinator-applied fixes,
+and explicit cross-provider delegation. See
+[Multi-lens review workflow](docs/REVIEW-WORKFLOW.md).
 
 ## Installation
 
@@ -240,6 +249,7 @@ Inspect and validate the preset library:
 go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
+go run ./cmd/agentctl preset show parallel-work
 go run ./cmd/agentctl preset show harness-improvement
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
@@ -346,6 +356,8 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
+- [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
+- [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md)
 - [Hook packs and installation scopes](docs/HOOKS.md)
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
@@ -374,7 +386,9 @@ Neutral commands describe the work:
 /work-plan
 /work-research
 /work-run
+/work-plan-review
 /work-review
+/work-delegated-review
 ```
 
 Provider aliases force a runner:

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "max_parallel_reviewers": 8,
+  "modes": ["plan", "plan-delta", "implementation"],
+  "implementation_lenses": [
+    "correctness",
+    "consistency",
+    "completeness-edge-cases",
+    "security",
+    "architecture",
+    "simplicity-dry",
+    "diff-analysis",
+    "dependency-currency",
+    "tests-verification"
+  ],
+  "plan_lenses": [
+    "correctness-vs-code",
+    "internal-consistency",
+    "completeness-edge-cases",
+    "architecture-simplicity",
+    "best-practices",
+    "acceptance-testability"
+  ],
+  "domain_lenses": {
+    "accessibility": "user interface or user interaction changes",
+    "privacy-pii-soc2": "personal, sensitive, regulated, audit, or access-control data",
+    "performance-scalability": "latency, throughput, memory, storage, or concurrency risk",
+    "migration-safety": "schema, data, protocol, dependency, rollout, or compatibility changes"
+  },
+  "evidence": {
+    "required": true,
+    "accepted": ["file-line", "verbatim-quote", "test", "command", "authoritative-document"],
+    "actual_code_required": true
+  },
+  "verification": {
+    "one_verifier_per_candidate": true,
+    "verifier_must_attempt_refutation": true,
+    "keep_only_when": ["is_real", "grounded"],
+    "deduplicate_after_verification": true
+  },
+  "application": {
+    "reviewers_are_read_only": true,
+    "coordinator_applies_fixes": true,
+    "apply_all_confirmed": true,
+    "critical_high_blocking": true,
+    "rerun_affected_checks": true,
+    "unresolved_requires_gate_failure": true
+  },
+  "delegation": {
+    "native_subagents_allowed": true,
+    "cross_provider_requires_explicit_selection": true,
+    "cross_provider_requires_disclosure_summary": true,
+    "redact_secrets_before_dispatch": true,
+    "minimum_context": true,
+    "prefer_different_provider_for_verification": true,
+    "providers": {
+      "codex": {"automatic_read_only": true, "structured_output": true},
+      "claude": {"automatic_read_only": true, "structured_output": true},
+      "antigravity": {"automatic_read_only": true, "structured_output": false},
+      "hermes": {
+        "automatic_read_only": false,
+        "structured_output": false,
+        "reason": "The current Hermes one-shot runner bypasses approvals and is not safe for unattended headless dispatch."
+      }
+    }
+  },
+  "artifacts": {
+    "directory": ".agent-runs/reviews/<run-id>",
+    "markdown": "review.md",
+    "json": "review.json"
+  }
+}

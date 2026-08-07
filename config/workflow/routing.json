@@ -9,10 +9,13 @@
     "ready": {"strategy": "independent_balanced", "authority": "read_only"},
     "plan": {"strategy": "strong_reasoning", "authority": "read_only"},
     "prove": {"strategy": "strong_reasoning", "authority": "read_only"},
+    "plan-review": {"strategy": "multi_lens_different_from_planner", "authority": "artifact_write"},
     "handoff": {"strategy": "strong_reasoning", "authority": "artifact_write"},
     "run": {"strategy": "coding", "authority": "workspace_write"},
     "verify": {"strategy": "deterministic_first", "authority": "controlled"},
-    "review": {"strategy": "different_from_builder", "authority": "read_only"},
+    "review-intake": {"strategy": "multi_lens_read_only_intake", "authority": "read_only"},
+    "review": {"strategy": "multi_lens_different_from_builder", "authority": "workspace_write"},
+    "delegated-review": {"strategy": "cross_provider_multi_lens", "authority": "workspace_write"},
     "pr": {"strategy": "provider_aware", "authority": "explicit_approval"}
   }
 }

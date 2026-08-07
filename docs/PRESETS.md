@@ -32,6 +32,10 @@ The repository starts with:
   decision, and planning;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
+- `parallel-work`: dependency-aware parallel planning and bounded execution
+  waves with isolated writes, integration barriers, and sequential fallback;
+- `multi-lens-review`: plan and implementation review with independent lenses,
+  per-finding refutation, applied fixes, and optional provider delegation;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
 - `session-audit`: evidence-backed correctness, trajectory, process/safety, and
   cost review plus delegated bottleneck analysis for one completed run;
@@ -55,6 +59,8 @@ Inspect them:
 agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
+agentctl preset show parallel-work
+agentctl preset show multi-lens-review
 agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
 agentctl preset show approval-standard
@@ -193,8 +199,16 @@ See [Provider-native experiment loops](PROVIDER-NATIVE-EXPERIMENTS.md) for the
 scored experiment contract, provider mappings, safety model, and boundary with
 Kaji.
 
+See [Parallel work and the speed loop](PARALLEL-WORK.md) for dependency-aware
+planning, write isolation, execution waves, integration barriers, provider
+fallback, and speed/cost reporting.
+
 See [Session retrospectives and harness improvement](RETROSPECTIVES.md) for the
 profiling, audit, post-run artifact, replay, and human-approval contracts.
+
+See [Multi-lens review workflow](REVIEW-WORKFLOW.md) for plan and implementation
+gates, evidence rules, verifier/refutation passes, applied fixes, domain lenses,
+and controlled cross-provider delegation.
 
 See [Hook packs and installation scopes](HOOKS.md) for hook policy,
 provider-layer mappings, and the native activation boundary.

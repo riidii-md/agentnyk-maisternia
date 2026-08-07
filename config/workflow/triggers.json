@@ -17,7 +17,7 @@
       "approval_required": false
     },
     "pull_request.opened": {
-      "initial_phase": "review",
+      "initial_phase": "review-intake",
       "authority": "read_only",
       "approval_required": false
     },

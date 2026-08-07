@@ -53,11 +53,14 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 	expectedLoopCapabilities := map[string][]string{
 		Codex: {
 			"safety.tool_guard",
+			"subagent.spawn",
 			"workflow.goal",
 			"workflow.stop_continue",
+			"worktree.isolation",
 		},
 		Claude: {
 			"safety.tool_guard",
+			"subagent.spawn",
 			"workflow.goal",
 			"workflow.scheduled_loop",
 			"workflow.stop_continue",
@@ -68,6 +71,7 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 		},
 		Antigravity: {
 			"safety.tool_guard",
+			"subagent.spawn",
 			"workflow.stop_continue",
 		},
 	}
@@ -77,6 +81,19 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 			if !contains(adapter.Capabilities, capability) {
 				t.Errorf("%s is missing capability %q", providerID, capability)
 			}
+		}
+	}
+	for _, providerID := range []string{Codex, Claude, Antigravity} {
+		adapter, _ := registry.Resolve(providerID)
+		if !adapter.Runner.SafeHeadless || !contains(adapter.Runner.Authorities, "read_only") {
+			t.Errorf(
+				"%s cannot be used for safe automatic read-only delegation: %#v",
+				providerID,
+				adapter.Runner,
+			)
+		}
+		if !contains(adapter.Capabilities, "subagent.spawn") {
+			t.Errorf("%s is missing subagent.spawn", providerID)
 		}
 	}
 }

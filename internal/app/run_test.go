@@ -690,6 +690,8 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 		"hook-complete",
 		"hook-standard",
 		"idea-shaping",
+		"multi-lens-review",
+		"parallel-work",
 		"session-audit",
 		"standard-work",
 	} {
@@ -723,7 +725,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "17 presets valid") {
+	if !strings.Contains(stdout.String(), "19 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
 }

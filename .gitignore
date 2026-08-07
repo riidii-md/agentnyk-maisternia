@@ -3,6 +3,7 @@
 /build/
 /dist/
 /.agent-runs/
+/.worktrees/
 /coverage.out
 /.DS_Store
 *.tmp

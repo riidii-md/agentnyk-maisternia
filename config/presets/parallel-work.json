@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "parallel-work",
+  "name": "Parallel Work",
+  "description": "Dependency-aware planning and bounded parallel implementation waves with isolated writes, integration barriers, verification, and sequential fallback.",
+  "pipelines": [
+    {
+      "id": "speed-loop",
+      "name": "Speed Loop",
+      "entry_phases": ["intake"],
+      "phases": [
+        "intake", "decompose", "validate", "approve", "dispatch", "integrate",
+        "verify", "decide", "final"
+      ],
+      "edges": [
+        {"from": "intake", "to": "decompose"},
+        {"from": "decompose", "to": "validate"},
+        {"from": "validate", "to": "approve", "condition": "safe plan"},
+        {"from": "validate", "to": "decompose", "condition": "unsafe decomposition", "loop": true},
+        {"from": "approve", "to": "dispatch", "condition": "human approves"},
+        {"from": "approve", "to": "final", "condition": "human rejects"},
+        {"from": "dispatch", "to": "integrate", "condition": "wave complete"},
+        {"from": "integrate", "to": "verify"},
+        {"from": "verify", "to": "dispatch", "condition": "more ready tasks", "loop": true},
+        {"from": "verify", "to": "decompose", "condition": "plan invalidated", "loop": true},
+        {"from": "verify", "to": "decide", "condition": "all tasks complete"},
+        {"from": "decide", "to": "dispatch", "condition": "repair tasks", "loop": true},
+        {"from": "decide", "to": "final", "condition": "acceptance met"}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-parallel-plan", "work-parallel-run", "work-speed-loop"],
+    "prompts": [],
+    "skills": ["parallel-work-skill"],
+    "hooks": [],
+    "settings": ["parallel-work-policy", "parallel-plan-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

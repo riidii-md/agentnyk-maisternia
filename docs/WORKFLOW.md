@@ -84,7 +84,10 @@ preset:
     default:
       dag:
         scout: [plan]
-        plan: [run]
+        plan: [prove]
+        prove: [plan-review]
+        plan-review: [handoff, plan]
+        handoff: [run]
         run: [verify]
         verify: [review, run]
         review: []
@@ -94,6 +97,7 @@ preset:
   commands:
     - /work-scout
     - /work-plan
+    - /work-plan-review
     - /work-run
     - /work-verify
     - /work-review
@@ -123,10 +127,12 @@ Canonical commands use the `/work-*` namespace:
 /work-ready
 /work-plan
 /work-prove
+/work-plan-review
 /work-handoff
 /work-run
 /work-verify
 /work-review
+/work-delegated-review
 /work-pr
 /work-showcase
 /work-cleanup

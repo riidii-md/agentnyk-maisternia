@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kagi-labs/agentctl/config/schema/parallel-plan.schema.json",
+  "title": "agentctl parallel implementation plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "objective",
+    "repository",
+    "base_ref",
+    "constraints",
+    "tasks",
+    "waves",
+    "integration",
+    "final_verification",
+    "approval"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
+    "objective": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "repository": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "base_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+    "constraints": {"$ref": "#/$defs/constraints"},
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/task"}
+    },
+    "waves": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/wave"}
+    },
+    "integration": {"$ref": "#/$defs/integration"},
+    "final_verification": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+    },
+    "approval": {"$ref": "#/$defs/approval"}
+  },
+  "$defs": {
+    "pathList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_parallelism",
+        "authority",
+        "editable_paths",
+        "protected_paths",
+        "write_isolation",
+        "max_wall_time_minutes",
+        "token_budget"
+      ],
+      "properties": {
+        "max_parallelism": {"type": "integer", "minimum": 1, "maximum": 16},
+        "authority": {
+          "enum": ["read_only", "artifact_write", "workspace_write"]
+        },
+        "editable_paths": {"$ref": "#/$defs/pathList"},
+        "protected_paths": {"$ref": "#/$defs/pathList"},
+        "write_isolation": {
+          "enum": ["required", "optional", "not-available"]
+        },
+        "max_wall_time_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "token_budget": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "objective",
+        "kind",
+        "depends_on",
+        "read_paths",
+        "write_paths",
+        "authority",
+        "isolation",
+        "acceptance",
+        "verification",
+        "handoff",
+        "estimated_minutes",
+        "status"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 256},
+        "objective": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "kind": {
+          "enum": [
+            "research", "implementation", "test", "documentation", "review",
+            "integration", "migration", "verification"
+          ]
+        },
+        "depends_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"}
+        },
+        "read_paths": {"$ref": "#/$defs/pathList"},
+        "write_paths": {"$ref": "#/$defs/pathList"},
+        "authority": {
+          "enum": ["read_only", "artifact_write", "workspace_write"]
+        },
+        "isolation": {
+          "enum": ["worktree", "isolated-artifact", "shared-read-only", "serialized"]
+        },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "handoff": {
+          "enum": ["patch", "local-commit", "artifact", "report", "none"]
+        },
+        "estimated_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "status": {
+          "enum": ["pending", "ready", "running", "complete", "failed", "parked", "blocked"]
+        }
+      }
+    },
+    "wave": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "task_ids", "barrier", "verification"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
+        "task_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"}
+        },
+        "barrier": {"enum": ["all-complete", "all-verified"]},
+        "verification": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "owner_task_id", "order", "conflict_policy"],
+      "properties": {
+        "strategy": {
+          "enum": ["patch", "cherry-pick", "merge", "serialized", "artifact-only"]
+        },
+        "owner_task_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+        },
+        "order": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"}
+        },
+        "conflict_policy": {"const": "stop"}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "approved_by", "approved_at"],
+      "properties": {
+        "status": {"enum": ["draft", "approved", "rejected"]},
+        "approved_by": {"type": ["string", "null"], "maxLength": 256},
+        "approved_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
@@ -19,8 +20,47 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 17 {
-		t.Fatalf("preset count = %d, want 17", len(library.Presets))
+	if len(library.Presets) != 19 {
+		t.Fatalf("preset count = %d, want 19", len(library.Presets))
+	}
+	standard, found := library.Get("standard-work")
+	if !found {
+		t.Fatal("standard-work preset missing")
+	}
+	if len(standard.Pipelines) != 1 || standard.Pipelines[0].ID != "delivery" {
+		t.Fatalf("standard-work pipelines = %#v", standard.Pipelines)
+	}
+	delivery := standard.Pipelines[0]
+	if !slices.Contains(delivery.Phases, "plan-review") {
+		t.Fatalf("standard-work phases = %v, want plan-review", delivery.Phases)
+	}
+	wantPlanReviewEdges := map[string]bool{
+		"prove:plan-review":   false,
+		"plan-review:handoff": false,
+		"plan-review:plan":    false,
+	}
+	for _, edge := range delivery.Edges {
+		key := edge.From + ":" + edge.To
+		if _, exists := wantPlanReviewEdges[key]; exists {
+			wantPlanReviewEdges[key] = true
+		}
+	}
+	for edge, found := range wantPlanReviewEdges {
+		if !found {
+			t.Errorf("standard-work is missing edge %s", edge)
+		}
+	}
+	for _, resourceID := range []string{
+		"work-plan-review",
+		"work-review",
+		"work-delegated-review",
+	} {
+		if !slices.Contains(standard.Contents.Commands, resourceID) {
+			t.Errorf("standard-work commands are missing %q", resourceID)
+		}
+	}
+	if !slices.Contains(standard.Contents.Skills, "multi-lens-review-skill") {
+		t.Error("standard-work is missing the multi-lens review skill")
 	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
@@ -43,6 +83,58 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := experiment.Targets; len(got) != 4 {
 		t.Fatalf("scored-experiment targets = %v, want all four providers", got)
+	}
+	parallel, found := library.Get("parallel-work")
+	if !found {
+		t.Fatal("parallel-work preset missing")
+	}
+	if len(parallel.Pipelines) != 1 ||
+		parallel.Pipelines[0].ID != "speed-loop" {
+		t.Fatalf("parallel-work pipelines = %#v", parallel.Pipelines)
+	}
+	if got := parallel.Contents.Commands; len(got) != 3 ||
+		got[0] != "work-parallel-plan" ||
+		got[1] != "work-parallel-run" ||
+		got[2] != "work-speed-loop" {
+		t.Fatalf("parallel-work commands = %v", got)
+	}
+	if got := parallel.Contents.Skills; len(got) != 1 ||
+		got[0] != "parallel-work-skill" {
+		t.Fatalf("parallel-work skills = %v", got)
+	}
+	if got := parallel.Contents.Settings; len(got) != 2 ||
+		got[0] != "parallel-work-policy" ||
+		got[1] != "parallel-plan-schema" {
+		t.Fatalf("parallel-work settings = %v", got)
+	}
+	if got := parallel.Targets; len(got) != 4 {
+		t.Fatalf("parallel-work targets = %v, want all four providers", got)
+	}
+	multiReview, found := library.Get("multi-lens-review")
+	if !found {
+		t.Fatal("multi-lens-review preset missing")
+	}
+	if len(multiReview.Pipelines) != 1 ||
+		multiReview.Pipelines[0].ID != "review-loop" {
+		t.Fatalf("multi-lens-review pipelines = %#v", multiReview.Pipelines)
+	}
+	if got := multiReview.Contents.Commands; len(got) != 3 ||
+		got[0] != "work-plan-review" ||
+		got[1] != "work-review" ||
+		got[2] != "work-delegated-review" {
+		t.Fatalf("multi-lens-review commands = %v", got)
+	}
+	if got := multiReview.Contents.Skills; len(got) != 1 ||
+		got[0] != "multi-lens-review-skill" {
+		t.Fatalf("multi-lens-review skills = %v", got)
+	}
+	if got := multiReview.Contents.Settings; len(got) != 2 ||
+		got[0] != "review-policy" ||
+		got[1] != "review-report-schema" {
+		t.Fatalf("multi-lens-review settings = %v", got)
+	}
+	if got := multiReview.Targets; len(got) != 4 {
+		t.Fatalf("multi-lens-review targets = %v, want all four providers", got)
 	}
 	profile, found := library.Get("harness-profile")
 	if !found {
@@ -197,6 +289,38 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("scored-experiment rendered targets = %v, want 4", got)
 	}
 
+	parallelManifest, err := SelectManifest(parallel, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(parallel-work) error = %v", err)
+	}
+	if len(parallelManifest.Resources) != 6 {
+		t.Fatalf(
+			"parallel-work resource count = %d, want 6",
+			len(parallelManifest.Resources),
+		)
+	}
+	for _, resource := range parallelManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("parallel-work resource %q targets = %v, want 4", resource.ID, got)
+		}
+	}
+
+	multiReviewManifest, err := SelectManifest(multiReview, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(multi-lens-review) error = %v", err)
+	}
+	if len(multiReviewManifest.Resources) != 6 {
+		t.Fatalf(
+			"multi-lens-review resource count = %d, want 6",
+			len(multiReviewManifest.Resources),
+		)
+	}
+	for _, resource := range multiReviewManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("multi-lens-review resource %q targets = %v, want 4", resource.ID, got)
+		}
+	}
+
 	improvementManifest, err := SelectManifest(improvement, manifest)
 	if err != nil {
 		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
@@ -224,6 +348,109 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		if got := resource.Targets; len(got) != 4 {
 			t.Fatalf("hook resource %q targets = %v, want 4", resource.ID, got)
 		}
+	}
+}
+
+func TestRepositoryMultiLensReviewContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	paths := []string{
+		"config/schema/review-report.schema.json",
+		"config/workflow/review-policy.json",
+	}
+	for _, relative := range paths {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var document map[string]any
+		if err := json.Unmarshal(content, &document); err != nil {
+			t.Fatalf("parse %s: %v", relative, err)
+		}
+	}
+	policyContent, err := os.ReadFile(filepath.Join(root, "config", "workflow", "review-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		Verification struct {
+			OneVerifierPerCandidate bool     `json:"one_verifier_per_candidate"`
+			KeepOnlyWhen            []string `json:"keep_only_when"`
+		} `json:"verification"`
+		Application struct {
+			ApplyAllConfirmed    bool `json:"apply_all_confirmed"`
+			CriticalHighBlocking bool `json:"critical_high_blocking"`
+		} `json:"application"`
+		Delegation struct {
+			CrossProviderRequiresExplicitSelection bool `json:"cross_provider_requires_explicit_selection"`
+			Providers                              map[string]struct {
+				AutomaticReadOnly bool `json:"automatic_read_only"`
+			} `json:"providers"`
+		} `json:"delegation"`
+	}
+	if err := json.Unmarshal(policyContent, &policy); err != nil {
+		t.Fatal(err)
+	}
+	if !policy.Verification.OneVerifierPerCandidate ||
+		!slices.Equal(policy.Verification.KeepOnlyWhen, []string{"is_real", "grounded"}) {
+		t.Fatalf("review verification policy = %#v", policy.Verification)
+	}
+	if !policy.Application.ApplyAllConfirmed || !policy.Application.CriticalHighBlocking {
+		t.Fatalf("review application policy = %#v", policy.Application)
+	}
+	if !policy.Delegation.CrossProviderRequiresExplicitSelection ||
+		policy.Delegation.Providers["hermes"].AutomaticReadOnly {
+		t.Fatalf("review delegation policy = %#v", policy.Delegation)
+	}
+
+	contracts := map[string][]string{
+		"config/workflow/phases/plan-review.md": {
+			"correctness-vs-code", "plan-delta", "is_real", "grounded",
+		},
+		"config/workflow/phases/review.md": {
+			"dependency-currency", "diff-analysis", "is_real", "grounded",
+		},
+		"config/workflow/phases/delegated-review.md": {
+			"codex", "claude", "antigravity", "hermes", "cross-provider",
+		},
+		"config/workflow/skills/multi-lens-review.md": {
+			"Critical", "High", "refuted", "Apply every confirmed fix",
+		},
+		"config/adapters/claude/codex-review.md": {
+			"plan-delta", "--ephemeral", "is_real && grounded", "applies every confirmed fix",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+}
+
+func TestRepositoryParallelWorkPolicyIsValidJSON(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	content, err := os.ReadFile(filepath.Join(root, "config", "workflow", "parallel-work-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		SchemaVersion  int `json:"schema_version"`
+		MaxParallelism int `json:"max_parallelism"`
+	}
+	if err := json.Unmarshal(content, &policy); err != nil {
+		t.Fatalf("parse parallel-work policy: %v", err)
+	}
+	if policy.SchemaVersion != 1 || policy.MaxParallelism != 4 {
+		t.Fatalf("parallel-work policy = %#v", policy)
 	}
 }
 
