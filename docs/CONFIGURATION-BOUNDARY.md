@@ -7,6 +7,10 @@
 - A local library of reusable presets.
 - Provider-neutral workflow/pipeline DAG definitions inside those presets.
 - Phase prompt/command templates, MCP references, hooks, skills, and settings bundles.
+- Strict environment requirement definitions and read-only presence plans for
+  external tools referenced by presets.
+- Explicit typed environment installation through a separately confirmed CLI
+  command.
 - Provider-neutral approval policy definitions and native compilation plans.
 - Provider adapter metadata.
 - Render previews and staging trees.
@@ -23,6 +27,8 @@
 - Agent-session history.
 - Live approval queues and provider-owned approval prompts.
 - Commit, push, PR, or release actions.
+- Arbitrary repository shell scripts, remote pipe-to-shell installers, or
+  implicit package execution during preset apply.
 
 If the TUI observes live work, it becomes a controller. Keep it focused on
 authoring and applying configuration.
@@ -42,7 +48,9 @@ workflow in its own environment.
 
 ```text
 agentctl preset
-  -> workflow DAG + MCP/config bundles
+  -> workflow DAG + MCP/config bundles + environment references
+  -> read-only external-tool presence plan
+  -> optional, separately confirmed typed environment install
   -> provider render plan
   -> staged files
   -> explicit apply
@@ -99,7 +107,9 @@ The first preset-library implementation provides:
 - validated provider-neutral hook packs and installable hook presets;
 - a strict provider-neutral approval policy with inspect, explain, validate,
   plan, and apply commands;
-- a Presets TUI backed by the same library and planner, with guarded apply.
+- a Presets TUI backed by the same library and planner, with guarded apply;
+- strict environment packs referenced by presets, with typed installer choices
+  plus read-only planning and separately confirmed CLI installation.
 
 Structured editing of contents and DAGs is still file-based. TUI authoring,
 provider-file classification/import, structured settings merges, and native

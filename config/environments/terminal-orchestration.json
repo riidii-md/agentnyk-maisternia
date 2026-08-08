@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "id": "terminal-orchestration",
+  "name": "Terminal Orchestration",
+  "description": "Terminal workspace and agent-multiplexer tools used by the parallel-work workflow.",
+  "requirements": [
+    {
+      "id": "zellij",
+      "name": "Zellij",
+      "description": "Terminal multiplexer used for persistent tabs and panes.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["terminal-multiplexer"],
+      "depends_on": [],
+      "detect": {"command": "zellij"},
+      "installers": [
+        {
+          "id": "homebrew",
+          "kind": "homebrew",
+          "platforms": ["darwin", "linux"],
+          "package": "zellij"
+        },
+        {
+          "id": "official-guide",
+          "kind": "manual",
+          "platforms": ["darwin", "linux", "windows"],
+          "url": "https://zellij.dev/documentation/installation.html",
+          "instructions": "Choose an official package, release binary, or Cargo installation method."
+        }
+      ]
+    },
+    {
+      "id": "tatami",
+      "name": "Tatami",
+      "description": "Workspace manager with Zellij-backed tab and pane layouts.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["workspace-manager"],
+      "depends_on": ["zellij"],
+      "detect": {"command": "tatami"},
+      "installers": [
+        {
+          "id": "homebrew",
+          "kind": "homebrew",
+          "platforms": ["darwin", "linux"],
+          "tap": "OleksandrBesan/tap",
+          "package": "tatami"
+        },
+        {
+          "id": "go",
+          "kind": "go-install",
+          "platforms": ["darwin", "linux", "windows"],
+          "module": "github.com/OleksandrBesan/tatami/cmd/tatami",
+          "version": "v0.2.0"
+        }
+      ]
+    },
+    {
+      "id": "herdr",
+      "name": "Herdr",
+      "description": "Agent-aware terminal multiplexer and orchestration surface.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["agent-multiplexer"],
+      "depends_on": [],
+      "detect": {"command": "herdr"},
+      "installers": [
+        {
+          "id": "homebrew",
+          "kind": "homebrew",
+          "platforms": ["darwin", "linux"],
+          "package": "herdr"
+        },
+        {
+          "id": "official-guide",
+          "kind": "manual",
+          "platforms": ["darwin", "linux", "windows"],
+          "url": "https://herdr.dev/docs/install/",
+          "instructions": "Use an official package or release binary; remote pipe-to-shell installation is not executed by agentctl."
+        }
+      ]
+    },
+    {
+      "id": "mdmaid",
+      "name": "Mdmaid",
+      "description": "Markdown and Mermaid presentation surface for workflow artifacts.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["artifact-presentation"],
+      "depends_on": [],
+      "detect": {"command": "mdmaid"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "mdmaid",
+          "version": "0.1.14"
+        }
+      ]
+    },
+    {
+      "id": "herdr-hail",
+      "name": "Herdr Hail",
+      "description": "Slack and Discord bridge for blocked-agent notifications and replies.",
+      "kind": "host-plugin",
+      "required": true,
+      "provides": ["remote-agent-notifications"],
+      "depends_on": ["herdr"],
+      "detect": {"command": "herdr", "plugin_id": "hail"},
+      "installers": [
+        {
+          "id": "herdr",
+          "kind": "host-plugin",
+          "platforms": ["darwin", "linux"],
+          "host": "herdr",
+          "repository": "natori-hrj/herdr-hail",
+          "ref": "9f7120be96cfcc511548eb446ee4ca8b52519b31"
+        }
+      ]
+    },
+    {
+      "id": "herdr-automatic-rename",
+      "name": "Herdr Automatic Rename",
+      "description": "Automatically names and numbers Herdr workspaces, tabs, and agents.",
+      "kind": "host-plugin",
+      "required": true,
+      "provides": ["automatic-terminal-naming"],
+      "depends_on": ["herdr"],
+      "detect": {"command": "herdr", "plugin_id": "herdr-automatic-rename"},
+      "installers": [
+        {
+          "id": "herdr",
+          "kind": "host-plugin",
+          "platforms": ["darwin", "linux"],
+          "host": "herdr",
+          "repository": "qu8n/herdr-automatic-rename",
+          "ref": "31406e377d3c0b5b29ad3e4ff031bdcffe08d12d"
+        }
+      ]
+    },
+    {
+      "id": "herdr-bar",
+      "name": "Herdr Bar",
+      "description": "Fuzzy navigation across Herdr tabs, agents, repositories, and branches.",
+      "kind": "host-plugin",
+      "required": true,
+      "provides": ["terminal-quick-navigation"],
+      "depends_on": ["herdr"],
+      "detect": {"command": "herdr", "plugin_id": "herdr-bar"},
+      "installers": [
+        {
+          "id": "herdr",
+          "kind": "host-plugin",
+          "platforms": ["darwin", "linux"],
+          "host": "herdr",
+          "repository": "jeffarese/herdr-bar",
+          "ref": "01cc0620ec743ee7a62a561551b59d9be81bd563"
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/mattn/go-runewidth"
@@ -318,6 +319,13 @@ func (m Model) renderPipelines(width int) string {
 		metric("Description", preset.Description, width),
 		metric("Targets", strings.Join(preset.Targets, ", "), width),
 	}
+	if len(preset.EnvironmentPacks) > 0 {
+		details = append(details, metric(
+			"Environment",
+			strings.Join(preset.EnvironmentPacks, ", "),
+			width,
+		))
+	}
 	if width >= 90 {
 		details = append(
 			details,
@@ -358,6 +366,21 @@ func (m Model) renderPipelines(width int) string {
 			"Enter  Inspect prompt/resource source",
 		}, width))
 	}
+	if len(selected.Environments) > 0 {
+		lines := []string{
+			mutedStyle.Render("Environment detection is read-only; no installer command is executed."),
+		}
+		for _, plan := range selected.Environments {
+			lines = append(lines, activeStyle.Render(plan.PackName))
+			lines = append(lines, mutedStyle.Render(
+				"agentctl environment install --yes "+plan.PackID,
+			))
+			for _, requirement := range plan.Requirements {
+				lines = append(lines, renderEnvironmentRequirement(requirement, width))
+			}
+		}
+		sections = append(sections, section("ENVIRONMENT REQUIREMENTS", lines, width))
+	}
 
 	if len(preset.Pipelines) == 0 {
 		sections = append(sections, section(
@@ -386,6 +409,40 @@ func (m Model) renderPipelines(width int) string {
 		))
 	}
 	return strings.Join(sections, "\n\n")
+}
+
+func renderEnvironmentRequirement(
+	requirement environment.PlannedRequirement,
+	width int,
+) string {
+	marker := "○"
+	style := warningStyle
+	if requirement.State == environment.StateSatisfied {
+		marker = "✓"
+		style = goodStyle
+	} else if requirement.State == environment.StateBlocked ||
+		requirement.State == environment.StateUnsupported {
+		marker = "!"
+		style = errorStyle
+	}
+	detail := requirement.Reason
+	if requirement.Path != "" {
+		detail = requirement.Path
+	} else if installer, exists := requirement.SuggestedInstaller(); exists {
+		if len(installer.Commands) > 0 {
+			detail = strings.Join(installer.Commands[0], " ")
+		} else if installer.Instructions != "" {
+			detail = installer.Instructions
+		}
+	}
+	line := fmt.Sprintf(
+		"%s %-18s %-11s %s",
+		marker,
+		requirement.Name,
+		requirement.State,
+		detail,
+	)
+	return style.Render(truncate(line, width))
 }
 
 func (m Model) renderPresetResourcePreview(width int) string {

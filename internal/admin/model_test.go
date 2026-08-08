@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -664,6 +665,60 @@ func TestPresetContentsRemainVisibleAtCommonTerminalWidth(t *testing.T) {
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("compact preset contents missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestPresetViewShowsReadOnlyEnvironmentRequirements(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets[0].Preset.EnvironmentPacks = []string{"terminal-orchestration"}
+	fixture.Presets[0].Environments = []environment.Plan{{
+		PackID:   "terminal-orchestration",
+		PackName: "Terminal Orchestration",
+		Requirements: []environment.PlannedRequirement{
+			{
+				ID:       "zellij",
+				Name:     "Zellij",
+				Required: true,
+				State:    environment.StateSatisfied,
+				Path:     "/opt/homebrew/bin/zellij",
+			},
+			{
+				ID:       "tatami",
+				Name:     "Tatami",
+				Required: true,
+				State:    environment.StateMissing,
+				Installers: []environment.PlannedInstaller{{
+					ID:       "brew",
+					Kind:     environment.InstallerHomebrew,
+					Commands: [][]string{{"brew", "install", "tatami"}},
+				}},
+			},
+		},
+	}}
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 110, Height: 38})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"ENVIRONMENT REQUIREMENTS",
+		"Terminal Orchestration",
+		"Zellij",
+		"satisfied",
+		"Tatami",
+		"missing",
+		"brew install tatami",
+		"read-only",
+		"agentctl environment install --yes terminal-orchestration",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("preset environment view missing %q:\n%s", expected, view)
 		}
 	}
 }

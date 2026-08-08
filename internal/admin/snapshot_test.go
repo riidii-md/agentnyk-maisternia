@@ -2,6 +2,7 @@ package admin
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/settings"
 )
@@ -32,6 +34,12 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 			return loadedAt
 		},
 		InspectProvider: healthyInspection,
+		LookPath: func(command string) (string, error) {
+			if command == "zellij" {
+				return "/usr/local/bin/zellij", nil
+			}
+			return "", exec.ErrNotFound
+		},
 	}
 	snapshot := loader.Load()
 
@@ -73,12 +81,52 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 			}
 		}
 	}
+	parallel := presetStatusByID(t, snapshot.Presets, "parallel-work")
+	if len(parallel.Environments) != 1 {
+		t.Fatalf("parallel-work environments = %#v", parallel.Environments)
+	}
+	plan := parallel.Environments[0]
+	if plan.PackID != "terminal-orchestration" || len(plan.Requirements) != 7 {
+		t.Fatalf("parallel-work environment plan = %#v", plan)
+	}
+	if got := plannedRequirementByID(t, plan.Requirements, "zellij"); got.State != environment.StateSatisfied {
+		t.Fatalf("zellij state = %s", got.State)
+	}
+	if got := plannedRequirementByID(t, plan.Requirements, "tatami"); got.State != environment.StateMissing {
+		t.Fatalf("tatami state = %s", got.State)
+	}
 	if !snapshot.LoadedAt.Equal(loadedAt) {
 		t.Fatalf("loaded at = %s, want %s", snapshot.LoadedAt, loadedAt)
 	}
 	if len(snapshot.Issues) != 0 {
 		t.Fatalf("issues = %#v, want none", snapshot.Issues)
 	}
+}
+
+func presetStatusByID(t *testing.T, values []PresetStatus, id string) PresetStatus {
+	t.Helper()
+	for _, value := range values {
+		if value.Preset.ID == id {
+			return value
+		}
+	}
+	t.Fatalf("preset %q not found", id)
+	return PresetStatus{}
+}
+
+func plannedRequirementByID(
+	t *testing.T,
+	values []environment.PlannedRequirement,
+	id string,
+) environment.PlannedRequirement {
+	t.Helper()
+	for _, value := range values {
+		if value.ID == id {
+			return value
+		}
+	}
+	t.Fatalf("requirement %q not found", id)
+	return environment.PlannedRequirement{}
 }
 
 func TestLoaderPlansAndAppliesPresetForOneProviderAndProject(t *testing.T) {

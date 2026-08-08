@@ -17,11 +17,18 @@ Each file declares:
 - zero or more workflow DAGs;
 - managed resource references grouped as MCPs, commands, prompts, skills,
   hooks, and settings;
+- optional environment-pack references for tools the workflow needs outside
+  provider configuration directories;
 - canonical provider targets.
 
 Every content value is a resource ID from `config/manifest.json`. The manifest
 remains the source of truth for source files and provider-native target paths.
 This keeps presets compositional without duplicating file ownership rules.
+
+Environment-pack references resolve against `config/environments`. They model
+machine or shared tooling such as Zellij, Tatami, Herdr, and documented host
+plugins; they are not provider target paths and are not copied into every
+harness home.
 
 ## Included Presets
 
@@ -178,6 +185,13 @@ These commands select only the manifest resources declared by the preset. They
 delegate to the same configurator used by full-manifest operations, preserving
 target allowlists, symlink checks, managed install state, drift detection,
 conflict detection, backups, atomic writes, and explicit confirmation.
+
+When a preset references environment packs, `preset plan` and the admin Presets
+view also show a read-only environment plan. Detection checks whether each
+declared command exists on `PATH`; it does not run tools or installers. Missing
+requirements do not cause preset apply to install packages implicitly. Run the
+separate, guarded `agentctl environment install --yes <pack>` command after
+reviewing its exact plan. See [Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
 
 `--scope user` is the default and resolves targets under `--home`. Its managed
 state and backups live under `~/.config/agentctl`. `--scope project` resolves

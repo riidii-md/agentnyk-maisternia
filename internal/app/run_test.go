@@ -728,6 +728,102 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if !strings.Contains(stdout.String(), "19 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"preset", "show", "--repo", repo, "parallel-work"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("parallel-work show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"environment_packs": [`) ||
+		!strings.Contains(stdout.String(), `"terminal-orchestration"`) {
+		t.Fatalf("parallel-work show output = %q", stdout.String())
+	}
+}
+
+func TestRunEnvironmentCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{"environment", "list", "--repo", repo}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("environment list code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "terminal-orchestration") ||
+		!strings.Contains(stdout.String(), "7") {
+		t.Fatalf("environment list output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "show", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("environment show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"id": "terminal-orchestration"`) ||
+		!strings.Contains(stdout.String(), `"command": "zellij"`) {
+		t.Fatalf("environment show output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "validate", "--repo", repo, "all"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("environment validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "1 environment packs valid") {
+		t.Fatalf("environment validate output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "plan", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("environment plan code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{
+		"read-only environment plan",
+		"zellij",
+		"tatami",
+		"herdr",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("environment plan output missing %q: %s", expected, stdout.String())
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "install", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 2 {
+		t.Fatalf("environment install without --yes code = %d, want 2", code)
+	}
+	if !strings.Contains(stdout.String(), "environment install plan") ||
+		!strings.Contains(stderr.String(), "--yes") {
+		t.Fatalf("environment install output = %q, stderr = %q", stdout.String(), stderr.String())
+	}
 }
 
 func TestRunHookLibraryCommands(t *testing.T) {
@@ -1015,6 +1111,35 @@ func TestRunPresetPlanRenderAndApply(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "--yes") {
 		t.Fatalf("preset apply stderr = %q, want --yes instruction", stderr.String())
+	}
+}
+
+func TestPresetPlanIncludesReferencedEnvironmentPlan(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "plan",
+		"--repo", repo,
+		"--home", home,
+		"--target", "codex",
+		"parallel-work",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset plan code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{
+		"environment requirements (read-only)",
+		"terminal-orchestration",
+		"zellij",
+		"tatami",
+		"herdr",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("preset plan missing %q: %s", expected, stdout.String())
+		}
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/providers"
 )
 
@@ -49,6 +50,16 @@ func Validate(preset Preset) error {
 	if err := validateContents(preset); err != nil {
 		return err
 	}
+	environments := make(map[string]struct{}, len(preset.EnvironmentPacks))
+	for _, packID := range preset.EnvironmentPacks {
+		if !presetIDPattern.MatchString(packID) {
+			return fmt.Errorf("preset %q has invalid environment pack %q", preset.ID, packID)
+		}
+		if _, exists := environments[packID]; exists {
+			return fmt.Errorf("preset %q repeats environment pack %q", preset.ID, packID)
+		}
+		environments[packID] = struct{}{}
+	}
 
 	pipelines := make(map[string]struct{}, len(preset.Pipelines))
 	for _, pipeline := range preset.Pipelines {
@@ -68,6 +79,22 @@ func Validate(preset Preset) error {
 		}
 		if err := validatePipeline(preset.ID, pipeline); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func ValidateEnvironmentReferences(preset Preset, library environment.Library) error {
+	if err := Validate(preset); err != nil {
+		return err
+	}
+	for _, packID := range preset.EnvironmentPacks {
+		if _, exists := library.Get(packID); !exists {
+			return fmt.Errorf(
+				"preset %q references unknown environment pack %q",
+				preset.ID,
+				packID,
+			)
 		}
 	}
 	return nil

@@ -11,6 +11,7 @@ running or observing agent work. It brings together:
 - configuration repository health;
 - provider installation and configuration health;
 - the preset library and each preset's workflow/pipeline DAGs;
+- external environment requirements referenced by presets;
 - MCP references, commands, prompts, skills, hooks, settings, and provider targets inside presets;
 - existing Claude, Codex, Hermes, Antigravity, Kaji, and future-harness configuration;
 - managed configuration drift and conflicts;
@@ -81,8 +82,20 @@ Which presets exist?
 Which workflow DAGs/pipelines are inside this preset?
 Which MCPs, commands, prompts, skills, hooks, and settings belong to it?
 Which provider targets are declared?
+Which external commands are satisfied, missing, blocked, or unsupported?
 What will change if this preset is applied?
 ```
+
+Environment detection is path-only and read-only. The Presets view may display
+a typed installation command or an official manual link, but opening or
+refreshing the view never runs a tool, package manager, plugin host, or remote
+installer. It also shows the separate guarded command:
+
+```bash
+agentctl environment install --yes <pack>
+```
+
+Package execution remains outside the TUI write boundary.
 
 Press `Enter` to open the preset's managed prompt/resource source browser.
 Use `j`/`k` to move between resources and `Page Up`/`Page Down` to scroll

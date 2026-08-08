@@ -6,13 +6,14 @@ const (
 )
 
 type Preset struct {
-	SchemaVersion int        `json:"schema_version"`
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	Description   string     `json:"description"`
-	Pipelines     []Pipeline `json:"pipelines"`
-	Contents      Contents   `json:"contents"`
-	Targets       []string   `json:"targets"`
+	SchemaVersion    int        `json:"schema_version"`
+	ID               string     `json:"id"`
+	Name             string     `json:"name"`
+	Description      string     `json:"description"`
+	Pipelines        []Pipeline `json:"pipelines"`
+	Contents         Contents   `json:"contents"`
+	Targets          []string   `json:"targets"`
+	EnvironmentPacks []string   `json:"environment_packs,omitempty"`
 }
 
 type Pipeline struct {

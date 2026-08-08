@@ -37,5 +37,6 @@
     "hooks": [],
     "settings": ["parallel-work-policy", "parallel-plan-schema"]
   },
-  "targets": ["codex", "claude", "antigravity", "hermes"]
+  "targets": ["codex", "claude", "antigravity", "hermes"],
+  "environment_packs": ["terminal-orchestration"]
 }

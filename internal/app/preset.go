@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 )
 
@@ -280,6 +281,11 @@ func runPresetInspection(
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
+		environments, err := environment.LoadLibrary(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
 		selected := library.Presets
 		if len(options.args) == 1 && options.args[0] != "all" {
 			preset, exists := library.Get(options.args[0])
@@ -290,6 +296,10 @@ func runPresetInspection(
 		}
 		for _, preset := range selected {
 			if err := presets.ValidateAgainstManifest(preset, manifest); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			if err := presets.ValidateEnvironmentReferences(preset, environments); err != nil {
 				fmt.Fprintf(stderr, "error: %v\n", err)
 				return 1
 			}
@@ -424,6 +434,21 @@ func runPresetInstallation(
 		fmt.Fprintf(stderr, "error: %v\n", err)
 		return 1
 	}
+	environmentLibrary, err := environment.LoadLibrary(options.repo)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	if err := presets.ValidateEnvironmentReferences(preset, environmentLibrary); err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	if command != "render" {
+		if err := printPresetEnvironmentPlans(stdout, preset, environmentLibrary); err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+	}
 
 	switch command {
 	case "plan":
@@ -510,6 +535,25 @@ func runPresetInstallation(
 		return 0
 	}
 	return 2
+}
+
+func printPresetEnvironmentPlans(
+	output io.Writer,
+	preset presets.Preset,
+	library environment.Library,
+) error {
+	for _, packID := range preset.EnvironmentPacks {
+		pack, exists := library.Get(packID)
+		if !exists {
+			continue
+		}
+		plan, err := environment.BuildPlan(pack, environment.PlanOptions{})
+		if err != nil {
+			return fmt.Errorf("plan environment pack %q: %w", packID, err)
+		}
+		printEnvironmentPlan(output, "environment requirements (read-only)", plan)
+	}
+	return nil
 }
 
 func printInstallScope(output io.Writer, options presetOptions) {
