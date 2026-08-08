@@ -8,6 +8,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 )
 
@@ -62,9 +63,11 @@ type loadSnapshotMsg struct {
 }
 
 type applyPresetMsg struct {
-	request  PresetInstallRequest
-	snapshot Snapshot
-	err      error
+	request           PresetInstallRequest
+	snapshot          Snapshot
+	refreshSnapshot   bool
+	environmentOutput string
+	err               error
 }
 
 type planPresetMsg struct {
@@ -99,21 +102,25 @@ type presetApplyDialog struct {
 	Conflicts    []configurator.Action
 	StatePath    string
 	Policy       configurator.ConflictPolicy
+	Environment  bool
+	Plans        []environment.Plan
+	Output       string
 	Err          error
 }
 
 type Model struct {
-	loader      func() Snapshot
-	planPreset  func(PresetInstallRequest) (ConfigStatus, error)
-	applyPreset func(PresetInstallRequest, configurator.ConflictPolicy) error
-	snapshot    Snapshot
-	tab         Tab
-	cursor      map[Tab]int
-	width       int
-	height      int
-	loading     bool
-	help        bool
-	applyDialog presetApplyDialog
+	loader             func() Snapshot
+	planPreset         func(PresetInstallRequest) (ConfigStatus, error)
+	applyPreset        func(PresetInstallRequest, configurator.ConflictPolicy) error
+	installEnvironment func(EnvironmentInstallRequest) (string, error)
+	snapshot           Snapshot
+	tab                Tab
+	cursor             map[Tab]int
+	width              int
+	height             int
+	loading            bool
+	help               bool
+	applyDialog        presetApplyDialog
 
 	presetPreview        bool
 	presetResourceCursor int
@@ -124,18 +131,20 @@ type Model struct {
 }
 
 type RunOptions struct {
-	Input       io.Reader
-	Output      io.Writer
-	Loader      func() Snapshot
-	PlanPreset  func(PresetInstallRequest) (ConfigStatus, error)
-	ApplyPreset func(PresetInstallRequest, configurator.ConflictPolicy) error
-	AltScreen   bool
+	Input              io.Reader
+	Output             io.Writer
+	Loader             func() Snapshot
+	PlanPreset         func(PresetInstallRequest) (ConfigStatus, error)
+	ApplyPreset        func(PresetInstallRequest, configurator.ConflictPolicy) error
+	InstallEnvironment func(EnvironmentInstallRequest) (string, error)
+	AltScreen          bool
 }
 
 func Run(options RunOptions) error {
 	model := NewModel(options.Loader)
 	model.planPreset = options.PlanPreset
 	model.applyPreset = options.ApplyPreset
+	model.installEnvironment = options.InstallEnvironment
 	programOptions := []tea.ProgramOption{
 		tea.WithInput(options.Input),
 		tea.WithOutput(options.Output),
@@ -197,7 +206,8 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.applyDialog.Stage = applyComplete
 		m.applyDialog.Err = message.err
-		if message.err == nil {
+		m.applyDialog.Output = message.environmentOutput
+		if message.refreshSnapshot || message.err == nil {
 			m.snapshot = message.snapshot
 			m.clampCursor()
 		}
@@ -418,6 +428,10 @@ func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case applyConfirm:
 		if key == "b" {
+			if m.applyDialog.Environment {
+				m.applyDialog = presetApplyDialog{}
+				return m, nil
+			}
 			if m.applyDialog.Counts.Conflict > 0 {
 				m.applyDialog.Stage = applyChoose
 				m.applyDialog.Policy = configurator.ConflictAbort
@@ -458,7 +472,20 @@ func (m Model) beginPresetPlan(
 
 func (m *Model) openPresetApply() {
 	status, found := m.selectedPreset()
-	if !found || status.Preset.IsEnvironmentOnly() {
+	if !found {
+		return
+	}
+	if status.Preset.IsEnvironmentOnly() {
+		m.applyDialog = presetApplyDialog{
+			Stage:       applyConfirm,
+			PresetID:    status.Preset.ID,
+			Name:        status.Preset.Name,
+			Environment: true,
+			Plans:       append([]environment.Plan(nil), status.Environments...),
+			Request: PresetInstallRequest{
+				PresetID: status.Preset.ID,
+			},
+		}
 		return
 	}
 	m.applyDialog = presetApplyDialog{
@@ -499,7 +526,32 @@ func (m Model) applyPresetCommand() tea.Cmd {
 	request := m.applyDialog.Request
 	policy := m.applyDialog.Policy
 	applyPreset := m.applyPreset
+	installEnvironment := m.installEnvironment
 	loader := m.loader
+	if m.applyDialog.Environment {
+		return func() tea.Msg {
+			if installEnvironment == nil {
+				return applyPresetMsg{
+					request: request,
+					err:     fmt.Errorf("environment install is not configured"),
+				}
+			}
+			output, err := installEnvironment(EnvironmentInstallRequest{
+				PresetID: request.PresetID,
+				Plans:    append([]environment.Plan(nil), m.applyDialog.Plans...),
+			})
+			message := applyPresetMsg{
+				request:           request,
+				environmentOutput: output,
+				err:               err,
+			}
+			if loader != nil {
+				message.snapshot = loader()
+				message.refreshSnapshot = true
+			}
+			return message
+		}
+	}
 	return func() tea.Msg {
 		if applyPreset == nil {
 			return applyPresetMsg{

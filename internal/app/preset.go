@@ -424,15 +424,6 @@ func runPresetInstallation(
 	if !exists {
 		return presetNotFound(options.args[0], stderr)
 	}
-	if command == "apply" && preset.IsEnvironmentOnly() {
-		fmt.Fprintf(
-			stderr,
-			"preset %q contains environment requirements only; run agentctl environment install --yes %s\n",
-			preset.ID,
-			preset.EnvironmentPacks[0],
-		)
-		return 2
-	}
 	environmentLibrary, err := environment.LoadLibrary(options.repo)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)
@@ -449,7 +440,27 @@ func runPresetInstallation(
 		}
 	}
 	if preset.IsEnvironmentOnly() {
-		if command == "plan" {
+		switch command {
+		case "plan":
+			return 0
+		case "apply":
+			if !options.yes {
+				fmt.Fprintln(stderr, "preset apply requires --yes after reviewing the environment plan")
+				return 2
+			}
+			for _, packID := range preset.EnvironmentPacks {
+				pack, _ := environmentLibrary.Get(packID)
+				if err := environment.Install(pack, environment.InstallOptions{
+					Confirmed: true,
+					Stdout:    stdout,
+					Stderr:    stderr,
+				}); err != nil {
+					fmt.Fprintf(stderr, "error: install environment pack %q: %v\n", packID, err)
+					return 1
+				}
+				fmt.Fprintf(stdout, "installed environment pack %s\n", packID)
+			}
+			fmt.Fprintf(stdout, "applied environment preset %s\n", preset.ID)
 			return 0
 		}
 		fmt.Fprintf(

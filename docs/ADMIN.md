@@ -88,20 +88,22 @@ Which external commands are satisfied, missing, blocked, or unsupported?
 What will change if this preset is applied?
 ```
 
-Environment detection is path-only and read-only. The Presets view may display
-a typed installation command or an official manual link, but opening or
-refreshing the view never runs a tool, package manager, plugin host, or remote
-installer. It also shows the separate guarded command:
+Environment detection is path-only and read-only. Opening or refreshing the
+Presets view never runs a tool, package manager, plugin host, or remote
+installer. The view displays typed installation commands or official manual
+links before any install is confirmed. The same pack can also be installed by
+the guarded CLI command:
 
 ```bash
 agentctl environment install --yes <pack>
 ```
 
-Package execution remains outside the TUI write boundary.
-
 Environment presets are searchable and grouped under `environments`. They show
-the guarded CLI install command and do not expose the provider/scope apply
-dialog.
+the guarded install command. Press `i` (or `a`) to review the exact environment
+plan, then `y` to run it. This environment-specific flow does not ask for a
+provider or project scope because its target is the local machine. Satisfied
+requirements are skipped, command output is bounded and filtered, and status is
+refreshed after completion or partial failure.
 
 Press `Enter` to open the preset's managed prompt/resource source browser.
 Use `j`/`k` to move between resources and `Page Up`/`Page Down` to scroll
@@ -193,13 +195,13 @@ server or hook.
 | Up/Down or `j`/`k` | Move selection |
 | `g`, `G` | First or last item |
 | `Enter` | Inspect a preset's prompt/resource source, or accept an installer choice |
-| `i` (`a` remains an alias) | Install the selected preset for one provider and scope |
+| `i` (`a` remains an alias) | Install the selected configuration or environment preset |
 | `/` | Search presets by ID, name, description, target, or resource |
 | `f` | Cycle preset resource filters and groups |
 | `u`, `p` | Choose user-global or project-folder scope in the installer |
 | `k` | Keep existing files in the apply decision panel |
 | `x` | Replace conflicts from the preset in the apply decision panel |
-| `y` | Confirm the reviewed preset apply |
+| `y` | Confirm the reviewed configuration apply or environment install |
 | `Page Up`, `Page Down` | Scroll prompt/resource source |
 | `r` | Refresh all read-only state |
 | `?`, `Esc` | Open or close help |

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -110,6 +111,83 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	}
 	if len(snapshot.Issues) != 0 {
 		t.Fatalf("issues = %#v, want none", snapshot.Issues)
+	}
+}
+
+func TestLoaderInstallsEnvironmentOnlyPreset(t *testing.T) {
+	t.Parallel()
+
+	loader := Loader{
+		Repo: repositoryRoot(t),
+		Home: t.TempDir(),
+		Cwd:  t.TempDir(),
+		LookPath: func(command string) (string, error) {
+			return "/test/bin/" + command, nil
+		},
+		InspectEnvironmentPlugin: func(string, string) (bool, error) {
+			return true, nil
+		},
+		RunEnvironmentCommand: func([]string, io.Writer, io.Writer) error {
+			t.Fatal("satisfied environment requirements should not run installers")
+			return nil
+		},
+	}
+	library, err := environment.LoadLibrary(loader.Repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pack, found := library.Get("terminal-orchestration")
+	if !found {
+		t.Fatal("terminal-orchestration environment pack missing")
+	}
+	plan, err := environment.BuildPlan(pack, environment.PlanOptions{
+		LookPath: loader.LookPath,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := EnvironmentInstallRequest{
+		PresetID: "terminal-orchestration",
+		Plans:    []environment.Plan{plan},
+	}
+	output, err := loader.InstallEnvironmentPreset(request)
+	if err != nil {
+		t.Fatalf("InstallEnvironmentPreset() error = %v", err)
+	}
+	for _, requirementID := range []string{
+		"zellij", "tatami", "herdr", "mdmaid", "herdr-hail",
+		"herdr-automatic-rename", "herdr-bar",
+	} {
+		if !strings.Contains(output, "satisfied "+requirementID) {
+			t.Fatalf("install output missing %q: %s", requirementID, output)
+		}
+	}
+	if _, err := loader.InstallEnvironmentPreset(EnvironmentInstallRequest{
+		PresetID: "parallel-work",
+	}); err == nil ||
+		!strings.Contains(err.Error(), "not environment-only") {
+		t.Fatalf("parallel-work install error = %v", err)
+	}
+	if _, err := loader.InstallEnvironmentPreset(EnvironmentInstallRequest{
+		PresetID: "terminal-orchestration",
+	}); err == nil || !strings.Contains(err.Error(), "plan changed") {
+		t.Fatalf("stale environment plan error = %v", err)
+	}
+}
+
+func TestEnvironmentInstallOutputIsBounded(t *testing.T) {
+	t.Parallel()
+
+	output := newCappedInstallOutput(4)
+	written, err := output.Write([]byte("abcdef"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if written != 6 {
+		t.Fatalf("Write() = %d, want caller-visible length 6", written)
+	}
+	if got := output.String(); got != "abcd\n… installer output truncated\n" {
+		t.Fatalf("bounded output = %q", got)
 	}
 }
 

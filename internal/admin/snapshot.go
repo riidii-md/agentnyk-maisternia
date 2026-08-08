@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -86,6 +87,11 @@ type PresetInstallRequest struct {
 	Project  string
 }
 
+type EnvironmentInstallRequest struct {
+	PresetID string
+	Plans    []environment.Plan
+}
+
 type Snapshot struct {
 	LoadedAt   time.Time
 	Repository RepositoryStatus
@@ -112,7 +118,10 @@ type Loader struct {
 		string,
 		providers.InspectOptions,
 	) (providers.Inspection, error)
-	LookPath func(string) (string, error)
+	LookPath                 func(string) (string, error)
+	EnvironmentGOOS          string
+	InspectEnvironmentPlugin func(host, pluginID string) (bool, error)
+	RunEnvironmentCommand    func(command []string, stdout, stderr io.Writer) error
 }
 
 func (l Loader) Load() Snapshot {

@@ -22,8 +22,8 @@ Each file declares:
 - canonical provider targets.
 
 An environment-only preset has no provider targets or managed manifest
-resources. It references an environment pack and uses the separate guarded
-environment installer.
+resources. It references an environment pack and uses the guarded environment
+installer when the preset is applied.
 
 Every content value is a resource ID from `config/manifest.json`. The manifest
 remains the source of truth for source files and provider-native target paths.
@@ -197,9 +197,10 @@ When a preset references environment packs, `preset plan` and the admin Presets
 view also show a read-only environment plan. Detection checks whether each
 declared command exists on `PATH`; it does not run tools or installers. Missing
 requirements do not cause configuration-preset apply to install packages
-implicitly. Environment-only presets have no provider/scope apply action; run
-the separate, guarded `agentctl environment install --yes <pack>` command after
-reviewing its exact plan. See [Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
+implicitly. Applying an environment-only preset skips provider/scope selection,
+shows the exact environment plan, and requires confirmation. The direct
+`agentctl environment install --yes <pack>` command remains available. See
+[Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
 
 `--scope user` is the default and resolves targets under `--home`. Its managed
 state and backups live under `~/.config/agentctl`. `--scope project` resolves

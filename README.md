@@ -280,11 +280,13 @@ the tools or any suggested installer.
 After reviewing that plan, install missing requirements explicitly:
 
 ```bash
+go run ./cmd/agentctl preset apply --yes terminal-orchestration
+# Equivalent direct pack command:
 go run ./cmd/agentctl environment install --yes terminal-orchestration
 ```
 
 Environment install uses typed commands only, verifies each requirement, and
-never runs as part of `preset apply` without a separate command.
+runs only after explicit confirmation in the CLI or Admin install review.
 
 Inspect hook packs and preview a user-global or repository-local installation:
 

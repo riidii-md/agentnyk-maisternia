@@ -71,7 +71,7 @@ one part of a configuration preset: the workflow DAG or phase graph.
 Configuration presets may also include MCP server/tool configuration, command
 aliases, prompts, skills, hooks, provider settings, and target mappings.
 Environment-only presets reference provider-neutral machine tooling and use the
-separate guarded environment installer.
+guarded environment installer.
 
 A pipeline in `agentctl` is not a running job. It is a declarative workflow graph
 that can be rendered into one or more provider harnesses as part of a preset.

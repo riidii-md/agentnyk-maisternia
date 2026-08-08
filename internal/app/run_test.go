@@ -1158,7 +1158,7 @@ func TestPresetPlanIncludesReferencedEnvironmentPlan(t *testing.T) {
 	}
 }
 
-func TestEnvironmentOnlyPresetDirectsApplyToEnvironmentInstall(t *testing.T) {
+func TestEnvironmentOnlyPresetApplyRequiresConfirmation(t *testing.T) {
 	t.Parallel()
 
 	repo := appRepositoryRoot(t)
@@ -1167,17 +1167,94 @@ func TestEnvironmentOnlyPresetDirectsApplyToEnvironmentInstall(t *testing.T) {
 		"preset", "apply",
 		"--repo", repo,
 		"--home", t.TempDir(),
-		"--yes",
 		"terminal-orchestration",
 	}, &stdout, &stderr)
 	if code != 2 {
 		t.Fatalf("environment-only preset apply code = %d, want 2", code)
 	}
-	if !strings.Contains(
-		stderr.String(),
-		"agentctl environment install --yes terminal-orchestration",
-	) {
+	if !strings.Contains(stderr.String(), "requires --yes") {
 		t.Fatalf("environment-only preset apply stderr = %q", stderr.String())
+	}
+}
+
+func TestEnvironmentOnlyPresetApplyInstallsSatisfiedRequirements(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	for _, directory := range []string{
+		filepath.Join(repo, "config", "presets"),
+		filepath.Join(repo, "config", "environments"),
+	} {
+		if err := os.MkdirAll(directory, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	preset := `{
+  "schema_version": 1,
+  "id": "test-environment",
+  "name": "Test Environment",
+  "description": "Safe satisfied-only environment fixture.",
+  "pipelines": [],
+  "contents": {"mcp_refs": [], "commands": [], "prompts": [], "skills": [], "hooks": [], "settings": []},
+  "targets": [],
+  "environment_packs": ["test-environment"]
+}`
+	pack := `{
+  "schema_version": 1,
+  "id": "test-environment",
+  "name": "Test Environment",
+  "description": "Safe satisfied-only environment fixture.",
+  "requirements": [{
+    "id": "shell",
+    "name": "Shell",
+    "description": "Existing test command.",
+    "kind": "binary",
+    "required": true,
+    "provides": ["shell"],
+    "depends_on": [],
+    "detect": {"command": "sh"},
+    "installers": [{
+      "id": "manual",
+      "kind": "manual",
+      "platforms": ["darwin", "linux", "windows"],
+      "url": "https://example.invalid/shell",
+      "instructions": "Install a shell."
+    }]
+  }]
+}`
+	if err := os.WriteFile(
+		filepath.Join(repo, "config", "presets", "test-environment.json"),
+		[]byte(preset),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(repo, "config", "environments", "test-environment.json"),
+		[]byte(pack),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "apply",
+		"--repo", repo,
+		"--yes",
+		"test-environment",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("environment-only preset apply code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{
+		"satisfied shell",
+		"installed environment pack test-environment",
+		"applied environment preset test-environment",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("environment-only preset apply missing %q: %s", expected, stdout.String())
+		}
 	}
 }
 

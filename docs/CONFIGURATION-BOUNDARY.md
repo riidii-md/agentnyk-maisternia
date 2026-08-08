@@ -10,7 +10,7 @@
 - Strict environment requirement definitions and read-only presence plans for
   external tools referenced by presets.
 - Explicit typed environment installation through a separately confirmed CLI
-  command.
+  command or Admin preset action.
 - Provider-neutral approval policy definitions and native compilation plans.
 - Provider adapter metadata.
 - Render previews and staging trees.
@@ -109,7 +109,7 @@ The first preset-library implementation provides:
   plan, and apply commands;
 - a Presets TUI backed by the same library and planner, with guarded apply;
 - strict environment packs referenced by presets, with typed installer choices
-  plus read-only planning and separately confirmed CLI installation.
+  plus read-only planning and separately confirmed CLI or Admin installation.
 
 Structured editing of contents and DAGs is still file-based. TUI authoring,
 provider-file classification/import, structured settings merges, and native

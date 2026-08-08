@@ -71,8 +71,8 @@ Each requirement is reported as:
 
 Environment results do not silently expand a configuration-preset apply.
 Provider configuration and machine setup remain separately reviewed
-operations. Applying an environment-only preset points to the explicit
-environment install command instead of opening a provider/scope installer.
+operations. Applying an environment-only preset opens or prints its environment
+plan instead of asking for a provider or project scope.
 
 ## Install
 
@@ -80,6 +80,8 @@ After reviewing the plan, install the missing requirements explicitly:
 
 ```bash
 agentctl environment plan terminal-orchestration
+agentctl preset apply --yes terminal-orchestration
+# Equivalent direct pack command:
 agentctl environment install --yes terminal-orchestration
 ```
 
@@ -95,9 +97,9 @@ command. With confirmation, agentctl:
 
 Already-satisfied requirements are skipped. Failure stops the remaining work
 and reports the requirement and command; package-manager changes already made
-before a failure are not transactionally rolled back. The TUI remains
-read-only for environment setup, and `preset apply` never installs packages
-implicitly.
+before a failure are not transactionally rolled back. In Admin, `i` opens the
+same environment review and `y` explicitly confirms installation. A
+configuration-preset apply never installs packages implicitly.
 
 ## Typed Installer Choices
 

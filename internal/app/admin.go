@@ -21,9 +21,10 @@ Options:
 Repository resolution:
   --repo, AGENTCTL_REPO, saved settings, then current-directory ancestors.
 
-The admin interface installs a selected preset for one provider at user or
-project scope after a scoped plan, explicit conflict decision, and confirmation.
-It cannot dispatch agents, commit, push, or manage runtime sessions.
+The admin interface installs configuration presets for one provider at user or
+project scope, and installs environment presets for the local machine. Both
+paths show a plan and require explicit confirmation. It cannot dispatch agents,
+commit, push, or manage runtime sessions.
 `
 
 func runAdminCommand(
@@ -73,12 +74,13 @@ func runAdminCommand(
 		Cwd:  cwd,
 	}
 	if err := admin.Run(admin.RunOptions{
-		Input:       stdin,
-		Output:      stdout,
-		Loader:      loader.Load,
-		PlanPreset:  loader.PlanPreset,
-		ApplyPreset: loader.ApplyPreset,
-		AltScreen:   !noAltScreen,
+		Input:              stdin,
+		Output:             stdout,
+		Loader:             loader.Load,
+		PlanPreset:         loader.PlanPreset,
+		ApplyPreset:        loader.ApplyPreset,
+		InstallEnvironment: loader.InstallEnvironmentPreset,
+		AltScreen:          !noAltScreen,
 	}); err != nil {
 		fmt.Fprintf(stderr, "error: run admin interface: %v\n", err)
 		return 1
