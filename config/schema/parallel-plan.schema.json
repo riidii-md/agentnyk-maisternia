@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/parallel-plan.schema.json",
-  "title": "agentctl parallel implementation plan",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/parallel-plan.schema.json",
+  "title": "AgentnykMaisternia parallel implementation plan",
   "type": "object",
   "additionalProperties": false,
   "required": [

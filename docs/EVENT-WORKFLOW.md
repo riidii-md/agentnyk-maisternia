@@ -1,14 +1,14 @@
 # Event-Driven Workflow
 
 > **Experimental State Fixture:** This document describes an earlier local
-> state-machine slice. It is not the `agentctl` product runtime. Do not expand
+> state-machine slice. It is not the `maisternia` product runtime. Do not expand
 > it into live observation, phase control, approval queues, or agent dispatch;
-> `agentctl` should configure external harnesses, not run them.
+> `maisternia` should configure external harnesses, not run them.
 
 ## Status
 
-`agentctl` can now validate normalized events and turn them into durable,
-inspectable task state. This is an experimental local state fixture, not the target agentctl product boundary.
+`maisternia` can now validate normalized events and turn them into durable,
+inspectable task state. This is an experimental local state fixture, not the target maisternia product boundary.
 
 It does not:
 
@@ -37,13 +37,13 @@ flowchart LR
 Validate a normalized event without creating task state:
 
 ```bash
-agentctl event validate ./examples/events/issue-opened.json
+maisternia event validate ./examples/events/issue-opened.json
 ```
 
 Create or update a task:
 
 ```bash
-agentctl event ingest ./examples/events/issue-opened.json
+maisternia event ingest ./examples/events/issue-opened.json
 ```
 
 Repeated ingestion of the same event ID and content returns the existing task.
@@ -52,10 +52,10 @@ Reusing an event ID with different content is rejected.
 Inspect the registry:
 
 ```bash
-agentctl task list
-agentctl task show <task-id>
-agentctl task context <task-id>
-agentctl work next <task-id>
+maisternia task list
+maisternia task show <task-id>
+maisternia task context <task-id>
+maisternia work next <task-id>
 ```
 
 `work next` reports the prepared phase, authority, approval state, routing
@@ -66,8 +66,8 @@ Use `--repo` to select the configuration repository and `--home` to isolate the
 task registry:
 
 ```bash
-agentctl event ingest \
-  --repo /path/to/agentctl \
+maisternia event ingest \
+  --repo /path/to/agentnyk-maisternia \
   --home /path/to/test-home \
   ./event.json
 ```
@@ -157,7 +157,7 @@ filename.
 
 `source-events.jsonl` stores normalized untrusted source events.
 
-`events.jsonl` stores minimal agentctl lifecycle events. The context envelope
+`events.jsonl` stores minimal maisternia lifecycle events. The context envelope
 does not copy the source event summary, so external text is kept separate from
 runner instructions.
 

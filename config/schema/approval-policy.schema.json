@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/approval-policy.schema.json",
-  "title": "agentctl approval policy",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/approval-policy.schema.json",
+  "title": "AgentnykMaisternia approval policy",
   "type": "object",
   "additionalProperties": false,
   "required": [

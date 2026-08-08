@@ -17,21 +17,21 @@ Before asking anything:
 Record it with:
 
 ```text
-agentctl grill ask --category <category> --why "<reason>" [--critical] \
+maisternia grill ask --category <category> --why "<reason>" [--critical] \
   <task-id> "<question>"
 ```
 
 Then present only the next question:
 
 ```text
-agentctl grill next <task-id>
+maisternia grill next <task-id>
 ```
 
 Explain why the answer matters. Accept `answer`, `defer`, `unknown`,
 `research`, or `reject` as explicit response actions and record the response:
 
 ```text
-agentctl grill answer --action <action> [--text "<answer>"] \
+maisternia grill answer --action <action> [--text "<answer>"] \
   <task-id> <question-id>
 ```
 

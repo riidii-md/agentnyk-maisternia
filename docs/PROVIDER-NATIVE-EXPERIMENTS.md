@@ -2,13 +2,13 @@
 
 ## Decision
 
-`agentctl` configures experiment workflows. It does not run them.
+`maisternia` configures experiment workflows. It does not run them.
 
 The selected harness owns the live session, tool calls, approvals, native
 continuation loop, and completion decision:
 
 ```text
-agentctl preset apply --target codex --yes scored-experiment
+maisternia preset apply --target codex --yes scored-experiment
         |
         v
 start Codex normally
@@ -95,7 +95,7 @@ the contract above structured and project-configurable.
 
 ```mermaid
 flowchart LR
-    A[agentctl apply] --> B[Provider-native configuration]
+    A[maisternia apply] --> B[Provider-native configuration]
     B --> C[User starts normal harness session]
     C --> D[/work-experiment objective]
     D --> E[Run baseline]
@@ -109,7 +109,7 @@ flowchart LR
 ```
 
 A generated provider hook may run the scorer and inspect state. That hook is
-part of the installed provider configuration. It does not make `agentctl` a
+part of the installed provider configuration. It does not make `maisternia` a
 daemon, runner, scheduler, or owner of the session.
 
 ## Provider Compilation
@@ -237,7 +237,7 @@ The normal path remains autonomous inside a narrow sandbox. The final
 deliverable is the best diff, score history, failed approaches, and stop
 reason, not only an agent summary.
 
-## Agentctl Work
+## AgentnykMaisternia Work
 
 The implementation should proceed in layers:
 
@@ -251,8 +251,8 @@ The implementation should proceed in layers:
 7. Feed the experiment ledger into `/work-brief`, `/work-showcase`, and the
    admin TUI.
 
-Generated hooks should be self-contained. They must not call an `agentctl`
-runtime service or require `agentctl` to remain running.
+Generated hooks should be self-contained. They must not call an `maisternia`
+runtime service or require `maisternia` to remain running.
 
 ## Kaji Boundary
 

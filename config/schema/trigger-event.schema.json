@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/trigger-event.schema.json",
-  "title": "agentctl normalized trigger event",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/trigger-event.schema.json",
+  "title": "AgentnykMaisternia normalized trigger event",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "event_id", "source", "type", "occurred_at", "repository", "subject", "payload"],

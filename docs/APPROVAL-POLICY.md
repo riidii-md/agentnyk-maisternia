@@ -3,7 +3,7 @@
 ## Purpose
 
 Agent approval must be a deterministic policy decision, not a model judgment.
-The standard agentctl policy classifies a provider-neutral operation as:
+The standard maisternia policy classifies a provider-neutral operation as:
 
 - `allow`: execute automatically only when every declared requirement holds;
 - `ask`: require an explicit human decision for a bounded operation;
@@ -37,20 +37,20 @@ decisions.
 Use the CLI to inspect the exact operation list and rationale:
 
 ```bash
-agentctl approval list
-agentctl approval explain repository.read
-agentctl approval explain git.push
-agentctl approval explain approval.self_grant
-agentctl approval validate
+maisternia approval list
+maisternia approval explain repository.read
+maisternia approval explain git.push
+maisternia approval explain approval.self_grant
+maisternia approval validate
 ```
 
 Install the managed definition for one provider at user or project scope:
 
 ```bash
-agentctl approval plan --scope user --target codex
-agentctl approval apply --scope user --target codex --yes
+maisternia approval plan --scope user --target codex
+maisternia approval apply --scope user --target codex --yes
 
-agentctl approval plan \
+maisternia approval plan \
   --scope project \
   --project /path/to/repository \
   --target claude
@@ -88,7 +88,7 @@ The portable policy is stricter than a prompt, but it is not yet active native
 configuration. Each renderer must compile only guarantees supported by the
 selected provider and report any gap.
 
-| Provider | Native controls to use | Required agentctl stance |
+| Provider | Native controls to use | Required maisternia stance |
 | --- | --- | --- |
 | Codex | sandbox profile plus approval policy, including granular categories | Keep durable approval human-only; never let automatic review mint or widen a grant |
 | Claude Code | deny/ask/allow rules, permission modes, managed policy, and `PreToolUse` hooks | Preserve deny precedence and disable modes that bypass or automatically approve protected actions |
@@ -109,7 +109,7 @@ Primary references:
 
 This change validates, explains, plans, and installs the provider-neutral
 policy. It does not yet edit a provider's native settings or intercept tool
-calls. A managed file under `agentctl/policy` is therefore a policy input, not
+calls. A managed file under `maisternia/policy` is therefore a policy input, not
 proof of enforcement.
 
 Activation requires the settings merger, capability compiler, native renderer,

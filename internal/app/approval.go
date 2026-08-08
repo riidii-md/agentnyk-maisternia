@@ -8,16 +8,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/approvals"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/approvals"
 )
 
 const approvalUsage = `Usage:
-  agentctl approval list [--repo <dir>]
-  agentctl approval show [--repo <dir>]
-  agentctl approval validate [--repo <dir>]
-  agentctl approval explain [--repo <dir>] <operation>
-  agentctl approval plan [options]
-  agentctl approval apply [options] --yes
+  maisternia approval list [--repo <dir>]
+  maisternia approval show [--repo <dir>]
+  maisternia approval validate [--repo <dir>]
+  maisternia approval explain [--repo <dir>] <operation>
+  maisternia approval plan [options]
+  maisternia approval apply [options] --yes
 
 Install options:
   --scope <scope>      user or project (default: user)

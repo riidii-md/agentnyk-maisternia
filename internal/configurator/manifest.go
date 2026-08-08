@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
 
 func LoadManifest(repoRoot, manifestPath string) (Manifest, error) {

@@ -3,8 +3,8 @@ package presets
 import (
 	"fmt"
 
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
 
 func SelectManifest(

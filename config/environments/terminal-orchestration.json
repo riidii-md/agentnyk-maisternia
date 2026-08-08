@@ -76,7 +76,7 @@
           "kind": "manual",
           "platforms": ["darwin", "linux", "windows"],
           "url": "https://herdr.dev/docs/install/",
-          "instructions": "Use an official package or release binary; remote pipe-to-shell installation is not executed by agentctl."
+          "instructions": "Use an official package or release binary; remote pipe-to-shell installation is not executed by maisternia."
         }
       ]
     },

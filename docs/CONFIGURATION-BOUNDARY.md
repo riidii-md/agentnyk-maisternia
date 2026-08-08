@@ -1,6 +1,6 @@
 # Configuration Boundary
 
-`agentctl` is a preset and pipeline configurator, not a workflow runtime.
+`maisternia` is a preset and pipeline configurator, not a workflow runtime.
 
 ## Owns
 
@@ -42,12 +42,12 @@ A pipeline is one part of a preset: the workflow DAG or phase graph. The same
 preset may also include MCP server/tool configuration, command aliases, prompts,
 skills, hooks, provider settings, and target mappings.
 
-A pipeline in `agentctl` is therefore not a running job. It describes what
+A pipeline in `maisternia` is therefore not a running job. It describes what
 provider-native files should be generated so an external harness can run the
 workflow in its own environment.
 
 ```text
-agentctl preset
+maisternia preset
   -> workflow DAG + MCP/config bundles + environment references
   -> read-only external-tool presence plan
   -> optional, separately confirmed typed environment install
@@ -60,11 +60,11 @@ agentctl preset
 ## Installation Scopes
 
 User scope installs managed files under the selected provider home and stores
-ownership state under `~/.config/agentctl`. Project scope installs the same
+ownership state under `~/.config/maisternia`. Project scope installs the same
 provider-native relative paths under a selected repository and stores ownership
-state under `<project>/.agentctl`.
+state under `<project>/.maisternia`.
 
-Agentctl's intended global and repository policy merge is asymmetric.
+AgentnykMaisternia's intended global and repository policy merge is asymmetric.
 Repository configuration may add behavior or make a global safety rule
 stricter, but must not disable a user-level deny. This rule is represented in
 hook pack metadata now. The future native settings merger must reject activation
@@ -76,22 +76,22 @@ where the selected harness can discover repository configuration.
 ## Harness Relationship
 
 Claude Code, Codex CLI, Hermes, Antigravity, Kaji, and future tools are
-harnesses. `agentctl` may render configuration for them, but it should not
+harnesses. `maisternia` may render configuration for them, but it should not
 duplicate their runtime loops.
 
 ## Existing Provider Configuration
 
-`agentctl` should also have an inspection surface for existing Claude, Codex,
+`maisternia` should also have an inspection surface for existing Claude, Codex,
 Hermes, Antigravity, Kaji, and future-harness configuration. This is separate
 from the preset library:
 
-- **Preset library:** what `agentctl` can create, edit, preview, and apply.
+- **Preset library:** what `maisternia` can create, edit, preview, and apply.
 - **Existing provider config:** what is already installed in each harness home.
 
 The inspection surface should classify files as managed, unmanaged, conflicting,
 or unknown. It should help the user decide what to import or overwrite, but it
 should not treat provider runtime caches, sessions, transcripts, or histories as
-agentctl-owned configuration.
+maisternia-owned configuration.
 
 ## Implemented Slice
 

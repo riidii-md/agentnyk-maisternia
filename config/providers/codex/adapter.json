@@ -34,7 +34,7 @@
     "native_doctor": {
       "args": ["doctor", "--json"],
       "safe": true,
-      "note": "Produces a local diagnostic report without dispatching a model run; agentctl still keeps native doctor execution explicit."
+      "note": "Produces a local diagnostic report without dispatching a model run; maisternia still keeps native doctor execution explicit."
     }
   },
   "runner": {

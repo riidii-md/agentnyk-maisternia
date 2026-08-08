@@ -1,4 +1,4 @@
-# Reviewable MCP fragment. Agentctl does not merge this into config.toml yet.
+# Reviewable MCP fragment. AgentnykMaisternia does not merge this into config.toml yet.
 # Copy or merge it only after reviewing the command and package version.
 
 [mcp_servers.context7]

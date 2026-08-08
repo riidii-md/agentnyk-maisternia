@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
 )
 
 const maxEnvironmentInstallOutput = 1 << 20

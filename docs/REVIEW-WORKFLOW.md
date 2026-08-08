@@ -7,7 +7,7 @@ decision deltas, diffs, pull requests, and implementations. It separates
 candidate generation from finding verification and separates read-only review
 workers from the coordinator that applies fixes.
 
-`agentctl` installs this workflow. The selected CLI agent harness owns runtime
+`maisternia` installs this workflow. The selected CLI agent harness owns runtime
 subagents, provider calls, permissions, edits, and verification.
 
 ## Commands
@@ -192,11 +192,11 @@ refutation determine whether a finding survives.
 Inspect and apply only the review bundle:
 
 ```bash
-agentctl preset show multi-lens-review
-agentctl preset plan --target all multi-lens-review
-agentctl preset apply --target codex --yes multi-lens-review
+maisternia preset show multi-lens-review
+maisternia preset plan --target all multi-lens-review
+maisternia preset apply --target codex --yes multi-lens-review
 ```
 
 Applying may surface a conflict for an existing personal `lens-review` skill.
-Use the normal agentctl conflict decision flow to inspect and explicitly keep or
+Use the normal maisternia conflict decision flow to inspect and explicitly keep or
 replace it.

@@ -17,7 +17,7 @@ func TestProjectScopeKeepsStateSeparateFromUserScope(t *testing.T) {
 	manifest := validManifest(
 		"config/hook.json",
 		"codex",
-		".codex/agentctl/hook-packs/sample.json",
+		".codex/maisternia/hook-packs/sample.json",
 	)
 	plan, err := BuildPlanForScope(repo, project, manifest, "codex", ScopeProject)
 	if err != nil {
@@ -31,7 +31,7 @@ func TestProjectScopeKeepsStateSeparateFromUserScope(t *testing.T) {
 	}
 	assertFileContents(
 		t,
-		filepath.Join(project, ".codex", "agentctl", "hook-packs", "sample.json"),
+		filepath.Join(project, ".codex", "maisternia", "hook-packs", "sample.json"),
 		`{"hook":true}`,
 	)
 	if _, err := os.Stat(StatePathForScope(project, ScopeProject)); err != nil {
@@ -48,13 +48,13 @@ func TestProjectScopeStoresReplacementBackupsLocally(t *testing.T) {
 	repo := t.TempDir()
 	project := t.TempDir()
 	source := filepath.Join(repo, "config", "hook.json")
-	destination := filepath.Join(project, ".codex", "agentctl", "hook.json")
+	destination := filepath.Join(project, ".codex", "maisternia", "hook.json")
 	writeFile(t, source, `{"version":"preset"}`)
 	writeFile(t, destination, `{"version":"project"}`)
 	manifest := validManifest(
 		"config/hook.json",
 		"codex",
-		".codex/agentctl/hook.json",
+		".codex/maisternia/hook.json",
 	)
 	plan, err := BuildPlanForScope(repo, project, manifest, "codex", ScopeProject)
 	if err != nil {
@@ -75,16 +75,16 @@ func TestProjectScopeStoresReplacementBackupsLocally(t *testing.T) {
 		t,
 		filepath.Join(
 			project,
-			".agentctl",
+			".maisternia",
 			"backups",
 			"20260806T120000Z",
 			".codex",
-			"agentctl",
+			"maisternia",
 			"hook.json",
 		),
 		`{"version":"project"}`,
 	)
-	if _, err := os.Stat(filepath.Join(project, ".config", "agentctl", "backups")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(project, ".config", "maisternia", "backups")); !os.IsNotExist(err) {
 		t.Fatalf("project apply wrote user-scope backup root, stat error = %v", err)
 	}
 }

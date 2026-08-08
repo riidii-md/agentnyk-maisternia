@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/shape-source.schema.json",
-  "title": "agentctl shape source snapshot",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/shape-source.schema.json",
+  "title": "AgentnykMaisternia shape source snapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -1,4 +1,4 @@
-# Releasing agentctl
+# Releasing AgentnykMaisternia
 
 ## Continuous Integration Builds
 
@@ -12,7 +12,7 @@ The `Build release archives` job uses `.goreleaser.yml` to produce:
 - Windows archives for `amd64` and `arm64`;
 - `checksums.txt`.
 
-GitHub stores the archives as the `agentctl-<commit>` workflow artifact for 14
+GitHub stores the archives as the `maisternia-<commit>` workflow artifact for 14
 days. CI snapshots are downloadable test builds, not releases, and do not
 publish to GitHub Releases or Homebrew.
 
@@ -48,7 +48,7 @@ Create it as a private repository with a `main` branch and a `Casks/`
 directory.
 
 Create a fine-grained GitHub token that has repository contents write access to
-`kagi-labs/homebrew-tap`. Add it to the `kagi-labs/agentctl` Actions secrets as:
+`kagi-labs/homebrew-tap`. Add it to the `kagi-labs/agentnyk-maisternia` Actions secrets as:
 
 ```text
 HOMEBREW_TAP_TOKEN
@@ -76,7 +76,7 @@ make release-snapshot
 Inspect `dist/` and verify a generated binary:
 
 ```bash
-./dist/agentctl_darwin_arm64_v8.0/agentctl --version
+./dist/maisternia_darwin_arm64_v8.0/maisternia --version
 ```
 
 The exact internal build directory may vary between GoReleaser versions. The
@@ -104,8 +104,8 @@ not create or push tags.
 ## Post-Release Checks
 
 1. Confirm all six platform archives and `checksums.txt` exist.
-2. Download an archive and run `agentctl --version`.
-3. Confirm `Casks/agentctl.rb` was updated in the tap.
+2. Download an archive and run `maisternia --version`.
+3. Confirm `Casks/maisternia.rb` was updated in the tap.
 4. Test a Homebrew install using a GitHub token with read access.
-5. Run `agentctl doctor` from the installed binary.
+5. Run `maisternia doctor` from the installed binary.
 6. Confirm no configuration was applied during installation.

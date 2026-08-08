@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
 func TestRunDoctorAndPlan(t *testing.T) {
@@ -85,7 +85,7 @@ func TestRunVersion(t *testing.T) {
 		if code != 0 {
 			t.Fatalf("Run(%v) code = %d, stderr = %s", args, code, stderr.String())
 		}
-		if !strings.HasPrefix(stdout.String(), "agentctl ") {
+		if !strings.HasPrefix(stdout.String(), "maisternia ") {
 			t.Fatalf("Run(%v) output = %q", args, stdout.String())
 		}
 	}
@@ -303,7 +303,7 @@ func TestRunAdminHelpDoesNotStartTUI(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("RunWithIO(admin --help) code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stderr.String(), "agentctl admin") {
+	if !strings.Contains(stderr.String(), "maisternia admin") {
 		t.Fatalf("admin help = %q, want usage", stderr.String())
 	}
 }
@@ -492,7 +492,7 @@ func TestRunShapeSourceAndGrillCommands(t *testing.T) {
 		"--home", home,
 		"--task-id", "shape-cli-test",
 		"--title", "Improve idea development",
-		"--repository", "kagi-labs/agentctl",
+		"--repository", "kagi-labs/agentnyk-maisternia",
 	}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("pipeline start code = %d, stderr = %s", code, stderr.String())
@@ -933,7 +933,7 @@ func TestRunApprovalCommands(t *testing.T) {
 		t.Fatalf("approval plan code = %d, stderr = %s", code, stderr.String())
 	}
 	if !strings.Contains(stdout.String(), "installation: user scope") ||
-		!strings.Contains(stdout.String(), ".claude/agentctl/policy/approval.json") {
+		!strings.Contains(stdout.String(), ".claude/maisternia/policy/approval.json") {
 		t.Fatalf("approval plan output = %q", stdout.String())
 	}
 }
@@ -977,13 +977,13 @@ func TestHookApplySupportsProjectScope(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(
 		project,
 		".codex",
-		"agentctl",
+		"maisternia",
 		"hook-packs",
 		"safety.json",
 	)); err != nil {
 		t.Fatalf("project hook pack missing: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(project, ".agentctl", "install-state.json")); err != nil {
+	if _, err := os.Stat(filepath.Join(project, ".maisternia", "install-state.json")); err != nil {
 		t.Fatalf("project install state missing: %v", err)
 	}
 	if _, err := os.Stat(configurator.StatePath(home)); !os.IsNotExist(err) {
@@ -1345,7 +1345,7 @@ func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
 		backups, err := filepath.Glob(filepath.Join(
 			home,
 			".config",
-			"agentctl",
+			"maisternia",
 			"backups",
 			"*",
 			targetRelative,

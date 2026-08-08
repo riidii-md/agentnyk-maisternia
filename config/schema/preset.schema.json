@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/preset.schema.json",
-  "title": "agentctl preset",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/preset.schema.json",
+  "title": "AgentnykMaisternia preset",
   "type": "object",
   "additionalProperties": false,
   "required": [

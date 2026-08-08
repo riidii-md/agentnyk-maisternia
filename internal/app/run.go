@@ -8,43 +8,43 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/approvals"
-	"github.com/kagi-labs/agentctl/internal/buildinfo"
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/hookpacks"
-	"github.com/kagi-labs/agentctl/internal/presets"
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/approvals"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
-const usage = `agentctl manages declarative configuration and workflows for CLI agents.
+const usage = `AgentnykMaisternia manages declarative configuration and workflows for CLI agents.
 
 Usage:
-  agentctl version
-  agentctl admin [options]
-  agentctl approval <command> [options]
-  agentctl config <command> [options]
-  agentctl environment <command> [options]
-  agentctl hook <command> [options]
-  agentctl preset <command> [options]
-  agentctl doctor [options]
-  agentctl inventory [options]
-  agentctl plan [options]
-  agentctl render [options] --output <dir>
-  agentctl apply [options] --yes
-  agentctl event validate [options] <event.json>
-  agentctl event ingest [options] <event.json>
-  agentctl pipeline start shape [options]
-  agentctl source <command> [options]
-  agentctl grill <command> [options]
-  agentctl provider list [options]
-  agentctl provider inspect [options] <provider>
-  agentctl provider doctor [options] [provider|all]
-  agentctl provider capabilities [options] <provider>
-  agentctl task list [options]
-  agentctl task show [options] <task-id>
-  agentctl task context [options] <task-id>
-  agentctl work next [options] <task-id>
+  maisternia version
+  maisternia admin [options]
+  maisternia approval <command> [options]
+  maisternia config <command> [options]
+  maisternia environment <command> [options]
+  maisternia hook <command> [options]
+  maisternia preset <command> [options]
+  maisternia doctor [options]
+  maisternia inventory [options]
+  maisternia plan [options]
+  maisternia render [options] --output <dir>
+  maisternia apply [options] --yes
+  maisternia event validate [options] <event.json>
+  maisternia event ingest [options] <event.json>
+  maisternia pipeline start shape [options]
+  maisternia source <command> [options]
+  maisternia grill <command> [options]
+  maisternia provider list [options]
+  maisternia provider inspect [options] <provider>
+  maisternia provider doctor [options] [provider|all]
+  maisternia provider capabilities [options] <provider>
+  maisternia task list [options]
+  maisternia task show [options] <task-id>
+  maisternia task context [options] <task-id>
+  maisternia work next [options] <task-id>
 
 Common options:
   --repo <dir>       Configuration repository root (default: current directory)

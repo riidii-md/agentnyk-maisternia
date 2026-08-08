@@ -1,4 +1,4 @@
-module github.com/kagi-labs/agentctl
+module github.com/kagi-labs/agentnyk-maisternia
 
 go 1.25.8
 

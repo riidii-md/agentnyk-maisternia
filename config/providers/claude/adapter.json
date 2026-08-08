@@ -33,7 +33,7 @@
     "native_doctor": {
       "args": ["doctor"],
       "safe": false,
-      "note": "May initialize configured integrations, including stdio MCP servers; agentctl reports availability but does not run it automatically."
+      "note": "May initialize configured integrations, including stdio MCP servers; maisternia reports availability but does not run it automatically."
     }
   },
   "runner": {

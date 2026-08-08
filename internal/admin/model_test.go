@@ -8,11 +8,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/presets"
-	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
 func TestRunLoadsAndQuitsWithoutAlternateScreen(t *testing.T) {
@@ -222,11 +222,11 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 					Agent:      "claude",
 					TargetPath: ".claude/commands/work-brief.md",
 					State:      configurator.ActionConflict,
-					Reason:     "existing target is not managed by agentctl",
+					Reason:     "existing target is not managed by maisternia",
 				},
 			},
 			ActionCount: 6,
-			StatePath:   filepath.Join(project, ".agentctl", "install-state.json"),
+			StatePath:   filepath.Join(project, ".maisternia", "install-state.json"),
 		}, nil
 	}
 	model.applyPreset = func(
@@ -411,7 +411,7 @@ func TestPresetInstallerUserScopeCanReturnToScopeWithoutStalePlan(t *testing.T) 
 		return ConfigStatus{
 			Counts:      ActionCounts{Create: 4},
 			ActionCount: 4,
-			StatePath:   "/home/user/.config/agentctl/install-state.json",
+			StatePath:   "/home/user/.config/maisternia/install-state.json",
 		}, nil
 	}
 	updated, _ := model.Update(model.Init()())
@@ -738,7 +738,7 @@ func TestPresetViewShowsReadOnlyEnvironmentRequirements(t *testing.T) {
 		"missing",
 		"brew install tatami",
 		"read-only",
-		"agentctl environment install --yes terminal-orchestration",
+		"maisternia environment install --yes terminal-orchestration",
 		"environment requirements only",
 	} {
 		if !strings.Contains(view, expected) {
@@ -849,10 +849,10 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 		ResourceID:      "codex-brief",
 		Agent:           "claude",
 		TargetPath:      ".claude/commands/codex-brief.md",
-		SourcePath:      "/workspace/agentctl/config/workflow/codex-brief.md",
+		SourcePath:      "/workspace/agentnyk-maisternia/config/workflow/codex-brief.md",
 		DestinationPath: "/home/user/.claude/commands/codex-brief.md",
 		State:           configurator.ActionConflict,
-		Reason:          "existing target is not managed by agentctl",
+		Reason:          "existing target is not managed by maisternia",
 	}}
 	fixture.Config.Counts.Conflict = 1
 	fixture.Presets[0].Config.Counts.Conflict = 1
@@ -868,9 +868,9 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 	for _, expected := range []string{
 		"INSTALL SCOPED PRESET",
 		"i  Open scoped installer",
-		"Agentctl preserves conflicts instead of overwriting them.",
+		"AgentnykMaisternia preserves conflicts instead of overwriting them.",
 		"SELECTED CONFLICT",
-		"existing target is not managed by agentctl",
+		"existing target is not managed by maisternia",
 		"/home/user/.claude/commands/codex-brief.md",
 	} {
 		if !strings.Contains(view, expected) {
@@ -980,7 +980,7 @@ func TestTruncateRemovesTerminalControlSequences(t *testing.T) {
 func adminFixture() Snapshot {
 	return Snapshot{
 		Repository: RepositoryStatus{
-			Path:      "/workspace/agentctl",
+			Path:      "/workspace/agentnyk-maisternia",
 			Source:    "settings",
 			Ready:     true,
 			Resources: 24,
@@ -1148,7 +1148,7 @@ func adminFixture() Snapshot {
 				Update:    2,
 			},
 			ActionCount: 72,
-			StatePath:   "/home/user/.config/agentctl/install-state.json",
+			StatePath:   "/home/user/.config/maisternia/install-state.json",
 			ByProvider: []ProviderPlan{
 				{
 					Provider: "codex",

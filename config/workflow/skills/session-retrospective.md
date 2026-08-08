@@ -25,4 +25,4 @@ not hidden reasoning. Redact sensitive input before delegating review.
 
 Repeated findings may justify a proposal. They do not authorize installation.
 Never edit durable configuration, activate hooks, publish transcripts, or apply
-an `agentctl` preset without explicit human approval.
+an `maisternia` preset without explicit human approval.

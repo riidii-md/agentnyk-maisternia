@@ -153,7 +153,7 @@ func (s *Store) StartShape(input ShapeTaskInput) (IngestResult, error) {
 	occurredAt := now.Format(time.RFC3339)
 	trigger := EventReference{
 		EventID: "pipeline:" + taskID,
-		Source:  "agentctl",
+		Source:  "maisternia",
 		Type:    "pipeline.started",
 	}
 	approval := Approval{Required: false, Status: "not_required"}
@@ -231,7 +231,7 @@ func (s *Store) StartShape(input ShapeTaskInput) (IngestResult, error) {
 		TaskID:        taskID,
 		Type:          "pipeline.started",
 		OccurredAt:    occurredAt,
-		Actor:         "agentctl",
+		Actor:         "maisternia",
 		SourceEventID: trigger.EventID,
 		Details: TaskEventDetails{
 			Source:      trigger.Source,
@@ -533,7 +533,7 @@ func (s *Store) AskQuestion(taskID string, input QuestionInput) (QuestionRecord,
 	now := s.now().UTC().Format(time.RFC3339)
 	actor := strings.TrimSpace(input.Actor)
 	if actor == "" {
-		actor = "agentctl"
+		actor = "maisternia"
 	}
 	question := QuestionRecord{
 		SchemaVersion: SchemaVersion,

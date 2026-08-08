@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/presets"
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -41,7 +41,7 @@ func (m Model) render(width, height int) string {
 			Width(maximum(1, width)).
 			Height(maximum(1, height)).
 			Align(lipgloss.Center, lipgloss.Center).
-			Render("agentctl admin\nterminal needs at least 48 x 12")
+			Render("AgentnykMaisternia\nterminal needs at least 48 x 12")
 	}
 
 	header := m.renderHeader(width)
@@ -86,7 +86,7 @@ func (m Model) render(width, height int) string {
 }
 
 func (m Model) renderHeader(width int) string {
-	left := brandStyle.Render("agentctl admin")
+	left := brandStyle.Render("AgentnykMaisternia")
 	status := "config"
 	if m.loading {
 		status = "refreshing"
@@ -274,7 +274,7 @@ func (m Model) renderPipelines(width int) string {
 	if len(m.snapshot.Presets) == 0 {
 		return section("PRESET LIBRARY", []string{
 			mutedStyle.Render("No presets found under config/presets."),
-			mutedStyle.Render("Create one with agentctl preset create."),
+			mutedStyle.Render("Create one with maisternia preset create."),
 		}, width)
 	}
 
@@ -391,7 +391,7 @@ func (m Model) renderPipelines(width int) string {
 		for _, plan := range selected.Environments {
 			lines = append(lines, activeStyle.Render(plan.PackName))
 			lines = append(lines, mutedStyle.Render(
-				"agentctl environment install --yes "+plan.PackID,
+				"maisternia environment install --yes "+plan.PackID,
 			))
 			for _, requirement := range plan.Requirements {
 				lines = append(lines, renderEnvironmentRequirement(requirement, width))
@@ -1007,7 +1007,7 @@ func (m Model) renderConfig(width int) string {
 		return section("CONFIGURATION", []string{
 			warningStyle.Render("Repository is not configured."),
 			"Run:",
-			activeStyle.Render("agentctl config set-repository /path/to/agentctl"),
+			activeStyle.Render("maisternia config set-repository /path/to/agentnyk-maisternia"),
 			"Then press r to refresh.",
 		}, width)
 	}
@@ -1073,7 +1073,7 @@ func (m Model) renderConfig(width int) string {
 		conflicts = []string{goodStyle.Render("✓ No conflicts")}
 	} else {
 		conflicts = append(conflicts, mutedStyle.Render(truncate(
-			"Agentctl preserves conflicts instead of overwriting them.",
+			"AgentnykMaisternia preserves conflicts instead of overwriting them.",
 			width,
 		)))
 		index := m.cursor[TabConfig]
@@ -1296,7 +1296,7 @@ func (m Model) renderProviderTargets(providerID string, width int) []string {
 		lines = append(lines, mutedStyle.Render("No existing manifest targets for this provider."))
 	} else if total > shown {
 		lines = append(lines, mutedStyle.Render(fmt.Sprintf(
-			"%d more existing targets; use agentctl plan --target %s for the full list.",
+			"%d more existing targets; use maisternia plan --target %s for the full list.",
 			total-shown,
 			providerID,
 		)))

@@ -47,7 +47,7 @@ checked-in adapter. Safe baseline intent is equivalent to:
 - Hermes: an explicitly supervised interactive session only.
 
 Do not use dangerous bypass flags. Runtime invocation remains the harness's
-responsibility; `agentctl` installs this contract but does not dispatch agents.
+responsibility; `maisternia` installs this contract but does not dispatch agents.
 
 ## Prepare Minimal Review Packets
 

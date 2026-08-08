@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/shape-question.schema.json",
-  "title": "agentctl shape grill question snapshot",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/shape-question.schema.json",
+  "title": "AgentnykMaisternia shape grill question snapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [

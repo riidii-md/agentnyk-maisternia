@@ -2,11 +2,11 @@
 
 ## Purpose
 
-`agentctl admin` is a terminal configuration surface for the local
-agentctl installation. It is primarily a read-only browser for configuration
-and plans, with one guarded write path: applying the selected preset after an
-explicit conflict decision and final confirmation. It is not a surface for
-running or observing agent work. It brings together:
+`maisternia admin` is AgentnykMaisternia's terminal configuration surface. It
+is primarily a read-only browser for configuration and plans, with one guarded
+write path: applying the selected preset after an explicit conflict decision
+and final confirmation. It is not a surface for running or observing agent
+work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
@@ -26,41 +26,41 @@ preview, conflict-decision, and confirmation operation.
 Save the configuration repository once:
 
 ```bash
-agentctl config set-repository /path/to/agentctl
+maisternia config set-repository /path/to/agentnyk-maisternia
 ```
 
 Inspect the saved value:
 
 ```bash
-agentctl config show
+maisternia config show
 ```
 
 After that, launch the interface from any directory:
 
 ```bash
-agentctl admin
+maisternia admin
 ```
 
 Repository resolution order is:
 
 1. `--repo`;
-2. `AGENTCTL_REPO`;
-3. `~/.config/agentctl/settings.json`;
+2. `MAISTERNIA_REPO`;
+3. `~/.config/maisternia/settings.json`;
 4. the current directory and its ancestors.
 
 An explicit one-time override does not change saved settings:
 
 ```bash
-agentctl admin --repo /path/to/another/agentctl
+maisternia admin --repo /path/to/another/agentnyk-maisternia
 ```
 
 Clear the saved value:
 
 ```bash
-agentctl config clear-repository
+maisternia config clear-repository
 ```
 
-Settings are stored with mode `0600` under a mode `0700` agentctl directory.
+Settings are stored with mode `0600` under a mode `0700` maisternia directory.
 The settings file contains only the repository path and schema version.
 
 ## Views
@@ -95,7 +95,7 @@ links before any install is confirmed. The same pack can also be installed by
 the guarded CLI command:
 
 ```bash
-agentctl environment install --yes <pack>
+maisternia environment install --yes <pack>
 ```
 
 Environment presets are searchable and grouped under `environments`. They show
@@ -119,7 +119,7 @@ plan has conflicts, choose:
 - `Esc` cancels without writing.
 
 After choosing, press `y` for final confirmation. Abort remains the default;
-agentctl never chooses keep or replace automatically.
+maisternia never chooses keep or replace automatically.
 
 It must not present a preset pipeline as a live run, mark phases active, choose
 the next agent, or dispatch work.
@@ -133,7 +133,7 @@ configuration roots, render capabilities, inspection issues, and the current
 unchanged/update/conflict classification of existing manifest targets. It does
 not recursively enumerate or copy provider runtime caches, sessions, transcripts,
 histories, credentials, or secrets. Refresh runs the same bounded, read-only
-inspection used by `agentctl provider doctor` and configuration planning.
+inspection used by `maisternia provider doctor` and configuration planning.
 
 ### Config
 
@@ -144,31 +144,31 @@ apply, the refreshed plan shows whether another preset still needs a decision.
 Presets can also be applied through:
 
 ```bash
-agentctl plan
-agentctl apply --yes
-agentctl apply --conflicts keep --yes
-agentctl apply --conflicts replace --yes
+maisternia plan
+maisternia apply --yes
+maisternia apply --conflicts keep --yes
+maisternia apply --conflicts replace --yes
 ```
 
 For a single preset, use:
 
 ```bash
-agentctl preset plan standard-work
-agentctl preset apply --yes standard-work
-agentctl preset apply --conflicts keep --yes codex-compatibility
+maisternia preset plan standard-work
+maisternia preset apply --yes standard-work
+maisternia preset apply --conflicts keep --yes codex-compatibility
 ```
 
 An unmanaged conflict means a file already exists at a declared target but
-agentctl has no install-state ownership record for it. A changed managed conflict
-means agentctl previously installed the file and its current checksum no longer
+maisternia has no install-state ownership record for it. A changed managed conflict
+means maisternia previously installed the file and its current checksum no longer
 matches that record. Both are preserved until the user explicitly resolves the
 difference.
 
 A keep-existing decision records both source and target checksums. It appears as
 `IGNORED`/kept rather than a conflict on later plans. If the repository source or
-customized target changes, agentctl marks that decision stale and asks again.
+customized target changes, maisternia marks that decision stale and asks again.
 Replace decisions create timestamped backups under
-`~/.config/agentctl/backups/`.
+`~/.config/maisternia/backups/`.
 
 The `codex-resource-lab` preset provides one visible example of every Codex
 resource category:
@@ -180,7 +180,7 @@ resource category:
 - an opt-in named settings profile.
 
 The prompt, skill, and named profile use their provider-native paths. MCP and
-hook examples are installed under `.codex/agentctl/fragments/` for review
+hook examples are installed under `.codex/maisternia/fragments/` for review
 because structured merge into active `config.toml` and `hooks.json` files is not
 implemented yet. Applying the preset therefore cannot silently activate a
 server or hook.

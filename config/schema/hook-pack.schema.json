@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/hook-pack.schema.json",
-  "title": "agentctl hook pack",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/hook-pack.schema.json",
+  "title": "AgentnykMaisternia hook pack",
   "type": "object",
   "additionalProperties": false,
   "required": [

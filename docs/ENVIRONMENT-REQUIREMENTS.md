@@ -5,7 +5,7 @@ directory. A workflow can need a terminal multiplexer, workspace manager,
 agent multiplexer, or host plugin before its installed
 commands are useful.
 
-`agentctl` represents those dependencies as environment packs. Dedicated
+`maisternia` represents those dependencies as environment packs. Dedicated
 environment-only presets keep machine setup separate from provider files and
 from workflow presets.
 
@@ -46,16 +46,16 @@ shell hook remains an explicit shell configuration choice.
 List and inspect the library:
 
 ```bash
-agentctl environment list
-agentctl environment show terminal-orchestration
-agentctl environment validate all
+maisternia environment list
+maisternia environment show terminal-orchestration
+maisternia environment validate all
 ```
 
 Build a plan for the current machine:
 
 ```bash
-agentctl environment plan terminal-orchestration
-agentctl preset plan terminal-orchestration
+maisternia environment plan terminal-orchestration
+maisternia preset plan terminal-orchestration
 ```
 
 Planning only calls the operating system's executable lookup. It does not run
@@ -79,14 +79,14 @@ plan instead of asking for a provider or project scope.
 After reviewing the plan, install the missing requirements explicitly:
 
 ```bash
-agentctl environment plan terminal-orchestration
-agentctl preset apply --yes terminal-orchestration
+maisternia environment plan terminal-orchestration
+maisternia preset apply --yes terminal-orchestration
 # Equivalent direct pack command:
-agentctl environment install --yes terminal-orchestration
+maisternia environment install --yes terminal-orchestration
 ```
 
 Without `--yes`, `install` prints the exact plan and exits without running a
-command. With confirmation, agentctl:
+command. With confirmation, maisternia:
 
 1. checks each requirement and its declared dependencies;
 2. selects the first platform-compatible typed installer whose executable is

@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/settings"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
 )
 
 func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
@@ -255,9 +255,9 @@ func TestLoaderPlansAndAppliesPresetForOneProviderAndProject(t *testing.T) {
 		t.Fatalf("ApplyPreset() error = %v", err)
 	}
 	for _, relative := range []string{
-		".codex/agentctl/hook-packs/safety.json",
-		".codex/agentctl/policy/approval.json",
-		".agentctl/install-state.json",
+		".codex/maisternia/hook-packs/safety.json",
+		".codex/maisternia/policy/approval.json",
+		".maisternia/install-state.json",
 	} {
 		if _, err := os.Stat(filepath.Join(project, filepath.FromSlash(relative))); err != nil {
 			t.Fatalf("project install missing %s: %v", relative, err)
@@ -408,7 +408,7 @@ func TestLoaderRepositoryPrecedence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if selection.Path != environment || selection.Source != "AGENTCTL_REPO" {
+	if selection.Path != environment || selection.Source != "MAISTERNIA_REPO" {
 		t.Fatalf("environment selection = %#v", selection)
 	}
 }

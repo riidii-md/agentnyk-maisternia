@@ -69,4 +69,4 @@ installed retrospective record schema.
 Finish with one decision request: `accept`, `reject`, `revise`, or `collect more
 evidence`. Do not install, push, publish, or mutate provider configuration until
 the user explicitly accepts the reviewed proposal. After acceptance, use the
-normal `agentctl` plan, conflict-resolution, backup, apply, and rollback flow.
+normal `maisternia` plan, conflict-resolution, backup, apply, and rollback flow.

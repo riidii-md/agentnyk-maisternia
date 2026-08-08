@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`agentctl` needs one provider-neutral workflow while still respecting the
+`maisternia` needs one provider-neutral workflow while still respecting the
 different configuration layouts, execution modes, output protocols, and safety
 behavior of each CLI agent.
 
@@ -35,23 +35,23 @@ the executable name.
 List providers and inspect local health:
 
 ```bash
-agentctl provider list
-agentctl provider inspect antigravity
-agentctl provider inspect --json agy
+maisternia provider list
+maisternia provider inspect antigravity
+maisternia provider inspect --json agy
 ```
 
-Run agentctl's own provider checks:
+Run maisternia's own provider checks:
 
 ```bash
-agentctl provider doctor all
-agentctl provider doctor codex
+maisternia provider doctor all
+maisternia provider doctor codex
 ```
 
 Inspect the declared contract without requiring the executable:
 
 ```bash
-agentctl provider capabilities claude
-agentctl provider capabilities --json hermes
+maisternia provider capabilities claude
+maisternia provider capabilities --json hermes
 ```
 
 The commands are read-only. They do not dispatch a model, edit provider
@@ -101,7 +101,7 @@ Antigravity starts read-only because its bounded write behavior has not yet been
 proven by the adapter test suite.
 
 Hermes one-shot mode bypasses dangerous-operation approvals. Therefore
-`agentctl` declares `headless=true` but `safe_headless=false`, exposes no
+`maisternia` declares `headless=true` but `safe_headless=false`, exposes no
 automated authority mode, and does not advertise it as an eligible dispatcher.
 Safe mode alone is not evidence that unattended one-shot execution preserves
 approval boundaries.
@@ -123,9 +123,9 @@ credentials, sessions, or caches.
 
 Roots are marked with ownership:
 
-- `managed`: agentctl may own the rendered content;
+- `managed`: maisternia may own the rendered content;
 - `mixed`: stable user configuration and provider runtime content coexist;
-- `runtime`: the provider owns the directory and agentctl only inspects it.
+- `runtime`: the provider owns the directory and maisternia only inspects it.
 
 Missing optional roots produce a degraded health result. Missing executables,
 required roots, non-directory roots, or symlink traversal produce errors.
@@ -139,7 +139,7 @@ The existing workflow manifest still renders phase prompts under:
 ```
 
 This is retained to avoid silently relocating existing managed files. It is not
-listed as an Antigravity-owned configuration root, and `agentctl` does not claim
+listed as an Antigravity-owned configuration root, and `maisternia` does not claim
 that the current Antigravity CLI consumes it.
 
 The next renderer increment should:
@@ -153,7 +153,7 @@ The next renderer increment should:
 
 ## Native Doctors
 
-The adapter records native doctor metadata separately from agentctl inspection.
+The adapter records native doctor metadata separately from maisternia inspection.
 
 Current policy:
 
@@ -166,7 +166,7 @@ Current policy:
 
 Claude and Hermes native doctors may initialize integrations or perform broader
 dependency checks. Codex's JSON doctor is marked safe in the contract, but still
-requires an explicit future command before agentctl may invoke it.
+requires an explicit future command before maisternia may invoke it.
 
 ## Next Increment
 
@@ -179,5 +179,5 @@ The next useful implementation step is renderer mapping:
 3. support structured settings merge with key ownership;
 4. render all output to staging before apply;
 5. add provider-specific validation fixtures;
-6. keep runtime dispatch out of `agentctl`; provider execution belongs to the
+6. keep runtime dispatch out of `maisternia`; provider execution belongs to the
    external harness after configuration is rendered and applied.

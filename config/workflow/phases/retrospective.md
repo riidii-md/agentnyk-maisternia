@@ -6,7 +6,7 @@ version: 0.1.0
 
 # /work-retrospective - Post-Run Improvement Workflow
 
-Run a controlled retrospective after a completed task. `agentctl` configures
+Run a controlled retrospective after a completed task. `maisternia` configures
 this workflow; the current Codex, Claude, Antigravity, or Hermes harness executes
 it.
 

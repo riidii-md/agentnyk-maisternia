@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/outcome.schema.json",
-  "title": "agentctl phase outcome",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/outcome.schema.json",
+  "title": "AgentnykMaisternia phase outcome",
   "type": "object",
   "additionalProperties": false,
   "required": [

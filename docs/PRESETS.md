@@ -69,22 +69,22 @@ The repository starts with:
 Inspect them:
 
 ```bash
-agentctl preset list
-agentctl preset show idea-shaping
-agentctl preset show scored-experiment
-agentctl preset show parallel-work
-agentctl preset show terminal-orchestration
-agentctl preset show multi-lens-review
-agentctl preset show harness-improvement
-agentctl preset show codex-resource-lab
-agentctl preset show approval-standard
-agentctl preset show hook-standard
-agentctl preset validate all
+maisternia preset list
+maisternia preset show idea-shaping
+maisternia preset show scored-experiment
+maisternia preset show parallel-work
+maisternia preset show terminal-orchestration
+maisternia preset show multi-lens-review
+maisternia preset show harness-improvement
+maisternia preset show codex-resource-lab
+maisternia preset show approval-standard
+maisternia preset show hook-standard
+maisternia preset validate all
 ```
 
 `codex-resource-lab` makes all six content counters testable in the TUI. Its
 prompt and skill install to provider-native locations. Its MCP and hook files
-are review fragments, not active configuration, because agentctl does not yet
+are review fragments, not active configuration, because maisternia does not yet
 merge structured TOML or JSON. Its settings resource is an opt-in named Codex
 profile and does not replace the user's main `config.toml`.
 
@@ -98,7 +98,7 @@ loop edges.
 Create an empty preset:
 
 ```bash
-agentctl preset create \
+maisternia preset create \
   --name "Team Workflow" \
   --description "Shared delivery configuration" \
   team-work
@@ -107,7 +107,7 @@ agentctl preset create \
 Copy an existing preset when a working bundle is a better starting point:
 
 ```bash
-agentctl preset copy \
+maisternia preset copy \
   --name "Team Standard Work" \
   standard-work team-standard-work
 ```
@@ -115,7 +115,7 @@ agentctl preset copy \
 Metadata can be changed without rewriting the file manually:
 
 ```bash
-agentctl preset edit \
+maisternia preset edit \
   --description "Delivery workflow for the platform team" \
   team-standard-work
 ```
@@ -124,13 +124,13 @@ Structured content and DAG editing is not yet exposed as a command. Edit the
 JSON file, then run:
 
 ```bash
-agentctl preset validate team-standard-work
+maisternia preset validate team-standard-work
 ```
 
 Deletion is intentionally explicit:
 
 ```bash
-agentctl preset delete --yes team-work
+maisternia preset delete --yes team-work
 ```
 
 ## DAG Rules
@@ -149,24 +149,24 @@ declared as a loop:
 ```
 
 Conditions and loops describe configuration that an external harness may use.
-They do not make `agentctl` a runtime and do not cause it to execute phases.
+They do not make `maisternia` a runtime and do not cause it to execute phases.
 
 ## Plan, Render, Apply
 
 Use preset-scoped operations when only one bundle should be considered:
 
 ```bash
-agentctl preset plan --target hermes idea-shaping
+maisternia preset plan --target hermes idea-shaping
 
-agentctl preset render \
+maisternia preset render \
   --target codex \
   --output ./build/rendered-standard-work \
   standard-work
 
-agentctl preset apply --target codex --yes standard-work
+maisternia preset apply --target codex --yes standard-work
 
 # Install a preset into one repository instead of the provider user home.
-agentctl preset apply \
+maisternia preset apply \
   --scope project \
   --project /path/to/repository \
   --target codex \
@@ -174,14 +174,14 @@ agentctl preset apply \
   hook-quality
 
 # Preserve customized target files and apply everything else.
-agentctl preset apply \
+maisternia preset apply \
   --target codex \
   --conflicts keep \
   --yes \
   codex-compatibility
 
 # Back up customized files and replace them with preset versions.
-agentctl preset apply \
+maisternia preset apply \
   --target codex \
   --conflicts replace \
   --yes \
@@ -199,22 +199,22 @@ declared command exists on `PATH`; it does not run tools or installers. Missing
 requirements do not cause configuration-preset apply to install packages
 implicitly. Applying an environment-only preset skips provider/scope selection,
 shows the exact environment plan, and requires confirmation. The direct
-`agentctl environment install --yes <pack>` command remains available. See
+`maisternia environment install --yes <pack>` command remains available. See
 [Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
 
 `--scope user` is the default and resolves targets under `--home`. Its managed
-state and backups live under `~/.config/agentctl`. `--scope project` resolves
+state and backups live under `~/.config/maisternia`. `--scope project` resolves
 targets under `--project`; its local managed state and backups live under
-`<project>/.agentctl`. State from one scope is never used to claim ownership in
+`<project>/.maisternia`. State from one scope is never used to claim ownership in
 the other scope.
 
 Conflict handling defaults to `abort`. `keep` records the exact source and
 target checksums behind the decision, so the target is reported as `IGNORED`
 instead of blocking later applies. If either side changes, the decision becomes
-stale and agentctl requires a new decision. `replace` backs up each target before
+stale and maisternia requires a new decision. `replace` backs up each target before
 installing and managing the preset version.
 
-`agentctl` stops after rendering or installing configuration. Claude Code,
+`maisternia` stops after rendering or installing configuration. Claude Code,
 Codex CLI, Hermes, and Antigravity own execution, sessions, approvals, history,
 and runtime loops.
 

@@ -142,7 +142,7 @@ func TestBuildPlanClassifiesCreateUnchangedAndConflict(t *testing.T) {
 	if !plan.HasConflicts() {
 		t.Fatal("HasConflicts() = false, want true")
 	}
-	if got := plan.Actions[0].Reason; got != "existing target is not managed by agentctl" {
+	if got := plan.Actions[0].Reason; got != "existing target is not managed by maisternia" {
 		t.Fatalf("conflict reason = %q", got)
 	}
 }
@@ -258,7 +258,7 @@ func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 	backup := filepath.Join(
 		home,
 		".config",
-		"agentctl",
+		"maisternia",
 		"backups",
 		"20260726T120000Z",
 		".codex",
@@ -387,7 +387,7 @@ func TestApplyReplacesConflictAfterBackup(t *testing.T) {
 		filepath.Join(
 			home,
 			".config",
-			"agentctl",
+			"maisternia",
 			"backups",
 			"20260729T200000Z",
 			".codex",
@@ -478,7 +478,7 @@ func TestApplyPreflightsCompletePlanBeforeWriting(t *testing.T) {
 	}
 }
 
-func TestStatePathUsesAgentctlAndLoadsLegacyState(t *testing.T) {
+func TestStatePathUsesMaisterniaAndLoadsLegacyState(t *testing.T) {
 	t.Parallel()
 
 	repo := t.TempDir()
@@ -488,7 +488,7 @@ func TestStatePathUsesAgentctlAndLoadsLegacyState(t *testing.T) {
 	writeFile(t, source, "version two")
 	writeFile(t, destination, "version one")
 
-	wantStatePath := filepath.Join(home, ".config", "agentctl", "install-state.json")
+	wantStatePath := filepath.Join(home, ".config", "maisternia", "install-state.json")
 	if got := StatePath(home); got != wantStatePath {
 		t.Fatalf("StatePath() = %q, want %q", got, wantStatePath)
 	}
@@ -869,7 +869,7 @@ func TestApplyRejectsStaleSourceAndTarget(t *testing.T) {
 		if err := Apply(plan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrPlanStale) {
 			t.Fatalf("Apply() error = %v, want ErrPlanStale", err)
 		}
-		if _, err := os.Stat(filepath.Join(outside, "agentctl")); !errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(filepath.Join(outside, "maisternia")); !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("apply wrote state through symlink, stat error = %v", err)
 		}
 	})

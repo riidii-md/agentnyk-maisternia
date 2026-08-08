@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 )
 
 const environmentUsage = `Usage:
-  agentctl environment list [options]
-  agentctl environment show [options] <pack>
-  agentctl environment validate [options] [pack|all]
-  agentctl environment plan [options] <pack>
-  agentctl environment install [options] --yes <pack>
+  maisternia environment list [options]
+  maisternia environment show [options] <pack>
+  maisternia environment validate [options] [pack|all]
+  maisternia environment plan [options] <pack>
+  maisternia environment install [options] --yes <pack>
 
 Options:
   --repo <dir>  Configuration repository root (default: current directory)

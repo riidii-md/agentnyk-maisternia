@@ -7,7 +7,7 @@ version: 0.1.0
 # /work-experiment - Scored Improvement Loop
 
 Run a long, evidence-driven experiment loop inside the current agent harness.
-`agentctl` configures this workflow but does not execute or supervise it.
+`maisternia` configures this workflow but does not execute or supervise it.
 
 Input:
 
@@ -41,7 +41,7 @@ scorer, or treat a model judgment as a substitute for a deterministic metric.
    Stop-hook, or scheduled-loop mechanism.
 8. Stop for review when the target or a safety limit is reached.
 
-Do not use an `agentctl` runtime command to continue the loop. Codex, Claude
+Do not use an `maisternia` runtime command to continue the loop. Codex, Claude
 Code, Hermes, or Antigravity owns the live session and continuation behavior.
 
 ## Stop Conditions

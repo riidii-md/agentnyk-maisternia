@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/task-state.schema.json",
-  "title": "agentctl durable task state",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/task-state.schema.json",
+  "title": "AgentnykMaisternia durable task state",
   "type": "object",
   "additionalProperties": false,
   "required": [
