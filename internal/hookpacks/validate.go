@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
 
 var hookIDPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)

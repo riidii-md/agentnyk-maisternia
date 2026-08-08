@@ -1,15 +1,15 @@
 version: 2
 
-project_name: agentctl
+project_name: maisternia
 
 before:
   hooks:
     - go mod verify
 
 builds:
-  - id: agentctl
-    main: ./cmd/agentctl
-    binary: agentctl
+  - id: maisternia
+    main: ./cmd/maisternia
+    binary: maisternia
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,14 +25,14 @@ builds:
     ldflags:
       - >-
         -s -w
-        -X github.com/kagi-labs/agentctl/internal/buildinfo.Version={{ .Version }}
-        -X github.com/kagi-labs/agentctl/internal/buildinfo.Commit={{ .Commit }}
-        -X github.com/kagi-labs/agentctl/internal/buildinfo.Date={{ .CommitDate }}
+        -X github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo.Version={{ .Version }}
+        -X github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo.Commit={{ .Commit }}
+        -X github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo.Date={{ .CommitDate }}
 
 archives:
   - id: release
     ids:
-      - agentctl
+      - maisternia
     formats:
       - tar.gz
     format_overrides:
@@ -66,23 +66,23 @@ release:
   prerelease: auto
 
 homebrew_casks:
-  - name: agentctl
+  - name: maisternia
     ids:
       - release
     binaries:
-      - agentctl
+      - maisternia
     repository:
       owner: kagi-labs
       name: homebrew-tap
       token: '{{ envOrDefault "HOMEBREW_TAP_TOKEN" "" }}'
     directory: Casks
-    homepage: https://github.com/kagi-labs/agentctl
-    description: Provider-neutral pipeline configurator for CLI coding agent harnesses
+    homepage: https://github.com/kagi-labs/agentnyk-maisternia
+    description: Opinionated, provider-neutral workshop for coding-agent harnesses
     skip_upload: '{{ if eq (envOrDefault "HOMEBREW_TAP_TOKEN" "") "" }}true{{ else }}auto{{ end }}'
     custom_block: |
       require "download_strategy"
 
-      class AgentctlGitHubPrivateRepositoryReleaseDownloadStrategy < CurlDownloadStrategy
+      class MaisterniaGitHubPrivateRepositoryReleaseDownloadStrategy < CurlDownloadStrategy
         def initialize(url, name, version, **meta)
           @url = url
           parse_url_pattern
@@ -122,6 +122,6 @@ homebrew_casks:
         end
       end
     url:
-      template: "https://github.com/kagi-labs/agentctl/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-      using: AgentctlGitHubPrivateRepositoryReleaseDownloadStrategy
-      verified: github.com/kagi-labs/agentctl/
+      template: "https://github.com/kagi-labs/agentnyk-maisternia/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      using: MaisterniaGitHubPrivateRepositoryReleaseDownloadStrategy
+      verified: github.com/kagi-labs/agentnyk-maisternia/

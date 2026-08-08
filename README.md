@@ -1,11 +1,10 @@
-# agentctl
+# AgentnykMaisternia
 
-[![CI](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentctl/actions/workflows/ci.yml)
+[![CI](https://github.com/kagi-labs/agentnyk-maisternia/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentnyk-maisternia/actions/workflows/ci.yml)
 
-`agentctl` is a provider-neutral preset and pipeline configurator for
-command-line coding agent harnesses.
-
-It provides one version-controlled source of truth for:
+**AgentnykMaisternia** is an opinionated, provider-neutral workshop for
+configuring command-line coding-agent harnesses. Its `maisternia` CLI provides
+one version-controlled source of truth for:
 
 - shared work phases;
 - Codex, Claude, Antigravity, and Hermes provider adapters;
@@ -19,6 +18,16 @@ It provides one version-controlled source of truth for:
 - a provider-neutral allow, ask, and deny approval policy;
 - model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
+
+## Naming
+
+**AgentnykMaisternia** is the product brand, **Maisternia** is its short name,
+`maisternia` is the executable and local state namespace, and
+`agentnyk-maisternia` is the repository slug. *Maisternia* transliterates the
+Ukrainian `майстерня`: a workshop where things are made, assembled, and tuned.
+That workshop metaphor covers the project's curation, composition,
+configuration, rendering, and guarded installation responsibilities without
+implying that it controls agent runtimes.
 
 ## Status
 
@@ -106,15 +115,15 @@ one-time private tap setup described in
 
 ### Homebrew
 
-`agentctl` is currently distributed from private GitHub repositories. Authenticate
-Git and provide a GitHub token to Homebrew:
+AgentnykMaisternia is currently distributed from private GitHub repositories.
+Authenticate Git and provide a GitHub token to Homebrew:
 
 ```bash
 gh auth login
 gh auth setup-git
 brew tap kagi-labs/tap
 HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" \
-  brew install --cask kagi-labs/tap/agentctl
+  brew install --cask kagi-labs/tap/maisternia
 ```
 
 ### Go
@@ -122,21 +131,21 @@ HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" \
 ```bash
 gh auth setup-git
 GOPRIVATE=github.com/kagi-labs/* \
-  go install github.com/kagi-labs/agentctl/cmd/agentctl@latest
+  go install github.com/kagi-labs/agentnyk-maisternia/cmd/maisternia@latest
 ```
 
 ### Build From Source
 
 ```bash
-git clone git@github.com:kagi-labs/agentctl.git
-cd agentctl
+git clone git@github.com:kagi-labs/agentnyk-maisternia.git
+cd agentnyk-maisternia
 make install
 ```
 
 Verify any installation:
 
 ```bash
-agentctl --version
+maisternia --version
 ```
 
 See [Installation](docs/INSTALLATION.md) for upgrades, release downloads, and
@@ -147,13 +156,13 @@ uninstallation.
 Point the system installation at this configuration repository once:
 
 ```bash
-agentctl config set-repository /path/to/agentctl
+maisternia config set-repository /path/to/agentnyk-maisternia
 ```
 
 Then open the admin interface from any directory:
 
 ```bash
-agentctl admin
+maisternia admin
 ```
 
 Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
@@ -171,7 +180,7 @@ controls, and configuration boundaries.
 
 ## Pipeline Configuration
 
-`agentctl` owns the preset and pipeline configuration layer:
+`maisternia` owns the preset and pipeline configuration layer:
 
 - reusable preset-library entries;
 - provider-neutral workflow/pipeline DAGs and phase definitions inside presets;
@@ -182,7 +191,7 @@ controls, and configuration boundaries.
 - configuration inspection through the CLI and TUI.
 
 It does **not** own runtime execution, task observation, agent dispatch, phase
-control, or harness approvals. After `agentctl` renders and installs a pipeline,
+control, or harness approvals. After `maisternia` renders and installs a pipeline,
 run it inside the harness you choose:
 
 ```text
@@ -193,7 +202,7 @@ Antigravity: provider-native prompt/command mapping
 ```
 
 Those harnesses own their own sessions, histories, live approval prompts, and
-execution loops. `agentctl` may define approval policy and render configuration
+execution loops. `maisternia` may define approval policy and render configuration
 for them, but it must not become a controller or observer of live runs.
 
 The current `event`, `task`, `work next`, and `pipeline start/transition`
@@ -228,15 +237,15 @@ GoReleaser, and updates the Homebrew tap when its token is configured.
 Validate the repository:
 
 ```bash
-go run ./cmd/agentctl doctor
+go run ./cmd/maisternia doctor
 ```
 
 Inspect what would happen without writing:
 
 ```bash
-go run ./cmd/agentctl plan --target codex
-go run ./cmd/agentctl plan --target claude
-go run ./cmd/agentctl plan --target antigravity
+go run ./cmd/maisternia plan --target codex
+go run ./cmd/maisternia plan --target claude
+go run ./cmd/maisternia plan --target antigravity
 ```
 
 `agy` remains accepted as a permanent compatibility alias for `antigravity`.
@@ -244,10 +253,10 @@ go run ./cmd/agentctl plan --target antigravity
 Inspect the installed provider CLIs without executing an agent:
 
 ```bash
-go run ./cmd/agentctl provider list
-go run ./cmd/agentctl provider inspect agy
-go run ./cmd/agentctl provider doctor all
-go run ./cmd/agentctl provider capabilities hermes
+go run ./cmd/maisternia provider list
+go run ./cmd/maisternia provider inspect agy
+go run ./cmd/maisternia provider doctor all
+go run ./cmd/maisternia provider capabilities hermes
 ```
 
 Provider doctor never invokes a provider's native doctor command.
@@ -255,23 +264,23 @@ Provider doctor never invokes a provider's native doctor command.
 Inspect and validate the preset library:
 
 ```bash
-go run ./cmd/agentctl preset list
-go run ./cmd/agentctl preset show idea-shaping
-go run ./cmd/agentctl preset show scored-experiment
-go run ./cmd/agentctl preset show parallel-work
-go run ./cmd/agentctl preset show terminal-orchestration
-go run ./cmd/agentctl preset show harness-improvement
-go run ./cmd/agentctl preset show codex-resource-lab
-go run ./cmd/agentctl preset validate all
+go run ./cmd/maisternia preset list
+go run ./cmd/maisternia preset show idea-shaping
+go run ./cmd/maisternia preset show scored-experiment
+go run ./cmd/maisternia preset show parallel-work
+go run ./cmd/maisternia preset show terminal-orchestration
+go run ./cmd/maisternia preset show harness-improvement
+go run ./cmd/maisternia preset show codex-resource-lab
+go run ./cmd/maisternia preset validate all
 ```
 
 Inspect the external tools referenced by presets without running installers:
 
 ```bash
-go run ./cmd/agentctl environment list
-go run ./cmd/agentctl environment show terminal-orchestration
-go run ./cmd/agentctl environment plan terminal-orchestration
-go run ./cmd/agentctl preset plan terminal-orchestration
+go run ./cmd/maisternia environment list
+go run ./cmd/maisternia environment show terminal-orchestration
+go run ./cmd/maisternia environment plan terminal-orchestration
+go run ./cmd/maisternia preset plan terminal-orchestration
 ```
 
 Environment detection only checks command presence on `PATH`; it does not run
@@ -280,9 +289,9 @@ the tools or any suggested installer.
 After reviewing that plan, install missing requirements explicitly:
 
 ```bash
-go run ./cmd/agentctl preset apply --yes terminal-orchestration
+go run ./cmd/maisternia preset apply --yes terminal-orchestration
 # Equivalent direct pack command:
-go run ./cmd/agentctl environment install --yes terminal-orchestration
+go run ./cmd/maisternia environment install --yes terminal-orchestration
 ```
 
 Environment install uses typed commands only, verifies each requirement, and
@@ -291,11 +300,11 @@ runs only after explicit confirmation in the CLI or Admin install review.
 Inspect hook packs and preview a user-global or repository-local installation:
 
 ```bash
-go run ./cmd/agentctl hook list
-go run ./cmd/agentctl hook show safety
-go run ./cmd/agentctl hook validate all
-go run ./cmd/agentctl hook plan --scope user --target codex hook-standard
-go run ./cmd/agentctl hook plan \
+go run ./cmd/maisternia hook list
+go run ./cmd/maisternia hook show safety
+go run ./cmd/maisternia hook validate all
+go run ./cmd/maisternia hook plan --scope user --target codex hook-standard
+go run ./cmd/maisternia hook plan \
   --scope project \
   --project /path/to/repository \
   --target claude \
@@ -310,10 +319,10 @@ planned structured settings merger.
 Inspect and install the standard approval definition:
 
 ```bash
-go run ./cmd/agentctl approval list
-go run ./cmd/agentctl approval explain git.push
-go run ./cmd/agentctl approval validate
-go run ./cmd/agentctl approval plan --scope user --target codex
+go run ./cmd/maisternia approval list
+go run ./cmd/maisternia approval explain git.push
+go run ./cmd/maisternia approval validate
+go run ./cmd/maisternia approval plan --scope user --target codex
 ```
 
 The current implementation installs a managed policy input; it does not yet
@@ -323,8 +332,8 @@ the [hook and approval roadmap](docs/HOOK-APPROVAL-ROADMAP.md).
 Plan or stage only the files selected by one preset:
 
 ```bash
-go run ./cmd/agentctl preset plan --target hermes idea-shaping
-go run ./cmd/agentctl preset render \
+go run ./cmd/maisternia preset plan --target hermes idea-shaping
+go run ./cmd/maisternia preset render \
   --target codex \
   --output ./build/standard-work \
   standard-work
@@ -334,8 +343,8 @@ Preset apply uses the same conflict, drift, backup, and managed-state checks as
 the full manifest apply, and still requires explicit confirmation:
 
 ```bash
-go run ./cmd/agentctl preset apply --target codex --yes standard-work
-go run ./cmd/agentctl preset apply \
+go run ./cmd/maisternia preset apply --target codex --yes standard-work
+go run ./cmd/maisternia preset apply \
   --conflicts keep \
   --yes \
   codex-compatibility
@@ -344,7 +353,7 @@ go run ./cmd/agentctl preset apply \
 Render a staging tree:
 
 ```bash
-go run ./cmd/agentctl render \
+go run ./cmd/maisternia render \
   --target all \
   --output ./build/rendered
 ```
@@ -354,9 +363,9 @@ Choose `keep` to preserve customized files and remember that decision, or
 `replace` to back them up and install the repository version:
 
 ```bash
-go run ./cmd/agentctl apply --target codex --yes
-go run ./cmd/agentctl apply --target codex --conflicts keep --yes
-go run ./cmd/agentctl apply --target codex --conflicts replace --yes
+go run ./cmd/maisternia apply --target codex --yes
+go run ./cmd/maisternia apply --target codex --conflicts keep --yes
+go run ./cmd/maisternia apply --target codex --conflicts replace --yes
 ```
 
 Do not run `apply` against a real home directory until the displayed plan has
@@ -368,11 +377,11 @@ The repository still contains earlier state-machine commands for event
 validation, manual ingestion, task inspection, and idea-shaping transitions:
 
 ```bash
-go run ./cmd/agentctl event validate ./examples/events/issue-opened.json
-go run ./cmd/agentctl event ingest ./examples/events/issue-opened.json
-go run ./cmd/agentctl task list
-go run ./cmd/agentctl work next <task-id>
-agentctl pipeline start shape --title "Improve agent workflow"
+go run ./cmd/maisternia event validate ./examples/events/issue-opened.json
+go run ./cmd/maisternia event ingest ./examples/events/issue-opened.json
+go run ./cmd/maisternia task list
+go run ./cmd/maisternia work next <task-id>
+maisternia pipeline start shape --title "Improve agent workflow"
 ```
 
 Treat these as experimental schema fixtures, not the product runtime. They are
@@ -382,7 +391,7 @@ MCP/config bundle editing, existing provider-configuration inspection,
 provider-native rendering, configuration previews, drift/conflict handling, and
 explicit apply.
 
-`agentctl` should not expand these commands into live observation, phase
+`maisternia` should not expand these commands into live observation, phase
 control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 ## Documentation

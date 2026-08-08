@@ -2,8 +2,8 @@
 
 ## Scope
 
-This repository owns the provider-neutral workflow definitions and the
-`agentctl` installer.
+This repository owns AgentnykMaisternia's provider-neutral workflow definitions
+and the `maisternia` installer.
 
 ## Development
 
@@ -25,14 +25,14 @@ go vet ./...
 go test ./...
 go test -race ./...
 go test -coverprofile=coverage.out ./...
-go build ./cmd/agentctl
+go build ./cmd/maisternia
 ```
 
 Also run:
 
 ```bash
-go run ./cmd/agentctl doctor
-go run ./cmd/agentctl render --target all --output ./build/rendered
+go run ./cmd/maisternia doctor
+go run ./cmd/maisternia render --target all --output ./build/rendered
 ```
 
 ## Safety

@@ -1,4 +1,4 @@
-# Opt-in profile. Use with: codex --profile agentctl-toolbox
+# Opt-in profile. Use with: codex --profile maisternia-toolbox
 # It does not replace ~/.codex/config.toml.
 
 model_reasoning_effort = "high"

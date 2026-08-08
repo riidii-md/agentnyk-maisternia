@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted direction. The workflow project is named `agentctl`, and the
+Accepted direction. The workflow product is branded **AgentnykMaisternia**, its
+repository is `agentnyk-maisternia`, its CLI is `maisternia`, and the
 presentation service starts as the separate `mdmaid-show` repository.
 
 ## Decision Direction
@@ -200,13 +201,15 @@ mdmaid show list --task PROJECT-123
 Using a separate executable initially avoids coupling the `mdmaid` and
 `mdmaid.show` release cycles. The main `mdmaid` CLI can delegate later.
 
-### `agentctl`
+### AgentnykMaisternia
 
-The workflow product and repository are named `agentctl`.
+The workflow product is branded **AgentnykMaisternia**, with **Maisternia** as
+the short name.
 
 ```text
-Product/repository: agentctl
-CLI:                agentctl
+Product brand:      AgentnykMaisternia
+Repository:         agentnyk-maisternia
+CLI/state namespace: maisternia
 Workflow commands:  /work-brief, /work-plan, /work-run
 Presentation:       mdmaid.show
 ```
@@ -235,7 +238,7 @@ mdmaid.show
 mdmaid.nvim
   Optional Neovim client for mdmaid.show
 
-agentctl
+maisternia
   Provider-neutral workflow, configuration, state, routing, and approvals
 ```
 

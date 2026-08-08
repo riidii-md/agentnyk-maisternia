@@ -9,22 +9,22 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
 )
 
 const presetUsage = `Usage:
-  agentctl preset list [options]
-  agentctl preset show [options] <preset>
-  agentctl preset validate [options] [preset|all]
-  agentctl preset create [options] --name <name> <preset>
-  agentctl preset copy [options] [--name <name>] <source> <preset>
-  agentctl preset edit [options] [--name <name>] [--description <text>] <preset>
-  agentctl preset delete [options] --yes <preset>
-  agentctl preset plan [options] <preset>
-  agentctl preset render [options] --output <dir> <preset>
-  agentctl preset apply [options] --yes <preset>
+  maisternia preset list [options]
+  maisternia preset show [options] <preset>
+  maisternia preset validate [options] [preset|all]
+  maisternia preset create [options] --name <name> <preset>
+  maisternia preset copy [options] [--name <name>] <source> <preset>
+  maisternia preset edit [options] [--name <name>] [--description <text>] <preset>
+  maisternia preset delete [options] --yes <preset>
+  maisternia preset plan [options] <preset>
+  maisternia preset render [options] --output <dir> <preset>
+  maisternia preset apply [options] --yes <preset>
 
 Options:
   --repo <dir>         Configuration repository root (default: current directory)

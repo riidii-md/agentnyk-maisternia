@@ -9,15 +9,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/hookpacks"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
 )
 
 const hookUsage = `Usage:
-  agentctl hook list [--repo <dir>]
-  agentctl hook show [--repo <dir>] <hook-pack>
-  agentctl hook validate [--repo <dir>] [hook-pack|all]
-  agentctl hook plan [options] <hook-preset>
-  agentctl hook apply [options] --yes <hook-preset>
+  maisternia hook list [--repo <dir>]
+  maisternia hook show [--repo <dir>] <hook-pack>
+  maisternia hook validate [--repo <dir>] [hook-pack|all]
+  maisternia hook plan [options] <hook-preset>
+  maisternia hook apply [options] --yes <hook-preset>
 
 Install options:
   --scope <scope>      user or project (default: user)

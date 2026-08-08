@@ -9,8 +9,8 @@ harness over time. They address three related questions:
 2. What was correct, inefficient, unsafe, or unverifiable in this run?
 3. Which repeated findings justify a measured configuration change?
 
-`agentctl` installs the workflow into Codex, Claude, Antigravity, or Hermes. The
-selected harness runs it. `agentctl` does not become a session observer, model
+`maisternia` installs the workflow into Codex, Claude, Antigravity, or Hermes. The
+selected harness runs it. `maisternia` does not become a session observer, model
 runner, or autonomous prompt optimizer.
 
 Codex, Claude, and Hermes use the repository's existing provider mappings.
@@ -124,7 +124,7 @@ Even when invocation becomes automatic, mutation remains proposal-only:
 - each run may create a profile and audit;
 - repeated findings may create an improvement proposal;
 - a candidate must be replayed on held-out tasks;
-- installation still requires explicit human approval and normal `agentctl`
+- installation still requires explicit human approval and normal `maisternia`
   conflict handling.
 
 ## Run Artifacts
@@ -236,14 +236,14 @@ human-reviewed runs before treating them as measurements.
 Inspect the complete preset:
 
 ```bash
-agentctl preset show harness-improvement
-agentctl preset plan --target codex harness-improvement
+maisternia preset show harness-improvement
+maisternia preset plan --target codex harness-improvement
 ```
 
 Apply it after reviewing the plan:
 
 ```bash
-agentctl preset apply --target codex --yes harness-improvement
+maisternia preset apply --target codex --yes harness-improvement
 ```
 
 Then invoke this inside the configured harness after a completed task:

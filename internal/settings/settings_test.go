@@ -6,6 +6,16 @@ import (
 	"testing"
 )
 
+func TestPathUsesMaisterniaNamespace(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	want := filepath.Join(home, ".config", "maisternia", "settings.json")
+	if got := Path(home); got != want {
+		t.Fatalf("Path() = %q, want %q", got, want)
+	}
+}
+
 func TestLoadMissingReturnsDefault(t *testing.T) {
 	t.Parallel()
 

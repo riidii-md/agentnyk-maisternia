@@ -104,20 +104,20 @@
       "id": "parallel-work-policy",
       "source": "config/workflow/parallel-work-policy.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/parallel-work-policy.json"},
-        {"agent": "claude", "path": ".claude/agentctl/parallel-work-policy.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/parallel-work-policy.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/parallel-work-policy.json"}
+        {"agent": "codex", "path": ".codex/maisternia/parallel-work-policy.json"},
+        {"agent": "claude", "path": ".claude/maisternia/parallel-work-policy.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/parallel-work-policy.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/parallel-work-policy.json"}
       ]
     },
     {
       "id": "parallel-plan-schema",
       "source": "config/schema/parallel-plan.schema.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/parallel-plan.schema.json"},
-        {"agent": "claude", "path": ".claude/agentctl/parallel-plan.schema.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/parallel-plan.schema.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/parallel-plan.schema.json"}
+        {"agent": "codex", "path": ".codex/maisternia/parallel-plan.schema.json"},
+        {"agent": "claude", "path": ".claude/maisternia/parallel-plan.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/parallel-plan.schema.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/parallel-plan.schema.json"}
       ]
     },
     {
@@ -174,20 +174,20 @@
       "id": "retrospective-policy",
       "source": "config/workflow/retrospective-policy.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/retrospective-policy.json"},
-        {"agent": "claude", "path": ".claude/agentctl/retrospective-policy.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/retrospective-policy.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/retrospective-policy.json"}
+        {"agent": "codex", "path": ".codex/maisternia/retrospective-policy.json"},
+        {"agent": "claude", "path": ".claude/maisternia/retrospective-policy.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/retrospective-policy.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/retrospective-policy.json"}
       ]
     },
     {
       "id": "retrospective-record-schema",
       "source": "config/schema/retrospective-record.schema.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/retrospective-record.schema.json"},
-        {"agent": "claude", "path": ".claude/agentctl/retrospective-record.schema.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/retrospective-record.schema.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/retrospective-record.schema.json"}
+        {"agent": "codex", "path": ".codex/maisternia/retrospective-record.schema.json"},
+        {"agent": "claude", "path": ".claude/maisternia/retrospective-record.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/retrospective-record.schema.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/retrospective-record.schema.json"}
       ]
     },
     {
@@ -357,20 +357,20 @@
       "id": "review-policy",
       "source": "config/workflow/review-policy.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/review-policy.json"},
-        {"agent": "claude", "path": ".claude/agentctl/review-policy.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/review-policy.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/review-policy.json"}
+        {"agent": "codex", "path": ".codex/maisternia/review-policy.json"},
+        {"agent": "claude", "path": ".claude/maisternia/review-policy.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/review-policy.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/review-policy.json"}
       ]
     },
     {
       "id": "review-report-schema",
       "source": "config/schema/review-report.schema.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/review-report.schema.json"},
-        {"agent": "claude", "path": ".claude/agentctl/review-report.schema.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/review-report.schema.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/review-report.schema.json"}
+        {"agent": "codex", "path": ".codex/maisternia/review-report.schema.json"},
+        {"agent": "claude", "path": ".claude/maisternia/review-report.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/review-report.schema.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/review-report.schema.json"}
       ]
     },
     {
@@ -580,105 +580,105 @@
       "id": "codex-lab-mcp-context7",
       "source": "config/codex/resource-lab/mcp-context7.toml",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/fragments/mcp-context7.toml"}
+        {"agent": "codex", "path": ".codex/maisternia/fragments/mcp-context7.toml"}
       ]
     },
     {
       "id": "codex-lab-prompt-plan",
       "source": "config/codex/resource-lab/prompt-plan.md",
       "targets": [
-        {"agent": "codex", "path": ".codex/prompts/agentctl-plan.md"}
+        {"agent": "codex", "path": ".codex/prompts/maisternia-plan.md"}
       ]
     },
     {
       "id": "codex-lab-skill-status",
       "source": "config/codex/resource-lab/status-skill.md",
       "targets": [
-        {"agent": "codex", "path": ".codex/skills/agentctl-status/SKILL.md"}
+        {"agent": "codex", "path": ".codex/skills/maisternia-status/SKILL.md"}
       ]
     },
     {
       "id": "codex-lab-hook-example",
       "source": "config/codex/resource-lab/hooks.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/fragments/hooks.json"}
+        {"agent": "codex", "path": ".codex/maisternia/fragments/hooks.json"}
       ]
     },
     {
       "id": "codex-lab-settings-profile",
       "source": "config/codex/resource-lab/toolbox.config.toml",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl-toolbox.config.toml"}
+        {"agent": "codex", "path": ".codex/maisternia-toolbox.config.toml"}
       ]
     },
     {
       "id": "hook-pack-safety",
       "source": "config/hooks/safety.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/hook-packs/safety.json"},
-        {"agent": "claude", "path": ".claude/agentctl/hook-packs/safety.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/safety.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/safety.json"}
+        {"agent": "codex", "path": ".codex/maisternia/hook-packs/safety.json"},
+        {"agent": "claude", "path": ".claude/maisternia/hook-packs/safety.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/hook-packs/safety.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/hook-packs/safety.json"}
       ]
     },
     {
       "id": "hook-pack-continuity",
       "source": "config/hooks/continuity.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/hook-packs/continuity.json"},
-        {"agent": "claude", "path": ".claude/agentctl/hook-packs/continuity.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/continuity.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/continuity.json"}
+        {"agent": "codex", "path": ".codex/maisternia/hook-packs/continuity.json"},
+        {"agent": "claude", "path": ".claude/maisternia/hook-packs/continuity.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/hook-packs/continuity.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/hook-packs/continuity.json"}
       ]
     },
     {
       "id": "hook-pack-quality",
       "source": "config/hooks/quality.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/hook-packs/quality.json"},
-        {"agent": "claude", "path": ".claude/agentctl/hook-packs/quality.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/quality.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/quality.json"}
+        {"agent": "codex", "path": ".codex/maisternia/hook-packs/quality.json"},
+        {"agent": "claude", "path": ".claude/maisternia/hook-packs/quality.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/hook-packs/quality.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/hook-packs/quality.json"}
       ]
     },
     {
       "id": "hook-pack-delegation",
       "source": "config/hooks/delegation.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/hook-packs/delegation.json"},
-        {"agent": "claude", "path": ".claude/agentctl/hook-packs/delegation.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/delegation.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/delegation.json"}
+        {"agent": "codex", "path": ".codex/maisternia/hook-packs/delegation.json"},
+        {"agent": "claude", "path": ".claude/maisternia/hook-packs/delegation.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/hook-packs/delegation.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/hook-packs/delegation.json"}
       ]
     },
     {
       "id": "hook-pack-maintenance",
       "source": "config/hooks/maintenance.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/hook-packs/maintenance.json"},
-        {"agent": "claude", "path": ".claude/agentctl/hook-packs/maintenance.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/maintenance.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/maintenance.json"}
+        {"agent": "codex", "path": ".codex/maisternia/hook-packs/maintenance.json"},
+        {"agent": "claude", "path": ".claude/maisternia/hook-packs/maintenance.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/hook-packs/maintenance.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/hook-packs/maintenance.json"}
       ]
     },
     {
       "id": "hook-pack-observability",
       "source": "config/hooks/observability.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/hook-packs/observability.json"},
-        {"agent": "claude", "path": ".claude/agentctl/hook-packs/observability.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/hook-packs/observability.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/hook-packs/observability.json"}
+        {"agent": "codex", "path": ".codex/maisternia/hook-packs/observability.json"},
+        {"agent": "claude", "path": ".claude/maisternia/hook-packs/observability.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/hook-packs/observability.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/hook-packs/observability.json"}
       ]
     },
     {
       "id": "approval-policy",
       "source": "config/policy/approval.json",
       "targets": [
-        {"agent": "codex", "path": ".codex/agentctl/policy/approval.json"},
-        {"agent": "claude", "path": ".claude/agentctl/policy/approval.json"},
-        {"agent": "antigravity", "path": ".config/agy/agentctl/policy/approval.json"},
-        {"agent": "hermes", "path": ".hermes/agentctl/policy/approval.json"}
+        {"agent": "codex", "path": ".codex/maisternia/policy/approval.json"},
+        {"agent": "claude", "path": ".claude/maisternia/policy/approval.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/policy/approval.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/policy/approval.json"}
       ]
     }
   ]

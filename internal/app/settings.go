@@ -7,18 +7,18 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/settings"
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
 const configUsage = `Usage:
-  agentctl config show [--home <dir>]
-  agentctl config set-repository [--home <dir>] <path>
-  agentctl config clear-repository [--home <dir>]
+  maisternia config show [--home <dir>]
+  maisternia config set-repository [--home <dir>] <path>
+  maisternia config clear-repository [--home <dir>]
 
-The saved repository is used by agentctl admin when --repo and AGENTCTL_REPO
+The saved repository is used by maisternia admin when --repo and MAISTERNIA_REPO
 are not provided.
 `
 

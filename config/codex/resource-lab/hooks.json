@@ -1,5 +1,5 @@
 {
-  "description": "Inactive agentctl hook example. Review and move into an active Codex config layer before trusting it.",
+  "description": "Inactive maisternia hook example. Review and move into an active Codex config layer before trusting it.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,9 +7,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "agentctl version",
+            "command": "maisternia version",
             "timeout": 3,
-            "statusMessage": "Checking agentctl installation"
+            "statusMessage": "Checking maisternia installation"
           }
         ]
       }

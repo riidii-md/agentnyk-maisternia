@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/trigger-config.schema.json",
-  "title": "agentctl trigger configuration",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/trigger-config.schema.json",
+  "title": "AgentnykMaisternia trigger configuration",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "triggers"],

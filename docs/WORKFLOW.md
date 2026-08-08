@@ -2,14 +2,14 @@
 
 ## Status
 
-This document defines the configuration workflow for `agentctl`. The first
+This document defines the configuration workflow for `maisternia`. The first
 preset-library, scoped render/apply, and guarded-apply TUI slice is implemented;
 structured DAG/content editing remains in progress.
 
-`agentctl` is a preset and pipeline configurator for existing command-line agent
+`maisternia` is a preset and pipeline configurator for existing command-line agent
 harnesses. It defines a reusable library of presets. Each preset can contain
 workflow/pipeline DAGs, MCP references, command templates, prompts, skills,
-hooks, provider settings, and target mappings. `agentctl` renders those presets
+hooks, provider settings, and target mappings. `maisternia` renders those presets
 into provider-native files.
 
 Runtime dispatch and live observation are out of scope. Claude Code, Codex CLI,
@@ -18,13 +18,13 @@ sessions, approvals, histories, and runtime state.
 
 ## Purpose
 
-`agentctl` should let a user manage many providers and harnesses without having
+`maisternia` should let a user manage many providers and harnesses without having
 to remember:
 
 - which reusable presets exist;
 - which workflow/pipeline DAGs, phases, MCPs, commands, prompts, skills, hooks, and settings each preset contains;
 - which provider mappings are installed, missing, or drifting;
-- which Claude, Codex, Hermes, Antigravity, or Kaji configuration already exists outside agentctl;
+- which Claude, Codex, Hermes, Antigravity, or Kaji configuration already exists outside maisternia;
 - which generated files would change before apply;
 - which authority boundary a generated command asks the harness to preserve.
 
@@ -35,7 +35,7 @@ chosen harness.
 
 ## Product Boundary
 
-### `agentctl` owns
+### `maisternia` owns
 
 - A local library of reusable presets.
 - Provider-neutral workflow/pipeline DAG definitions inside presets.
@@ -47,7 +47,7 @@ chosen harness.
 - Explicit preview/apply flows.
 - A TUI for designing and reviewing configuration.
 
-### `agentctl` does not own
+### `maisternia` does not own
 
 - Running Claude, Codex, Hermes, Antigravity, Kaji, or other harnesses.
 - Watching live agent runs.
@@ -73,7 +73,7 @@ aliases, prompts, skills, hooks, provider settings, and target mappings.
 Environment-only presets reference provider-neutral machine tooling and use the
 guarded environment installer.
 
-A pipeline in `agentctl` is not a running job. It is a declarative workflow graph
+A pipeline in `maisternia` is not a running job. It is a declarative workflow graph
 that can be rendered into one or more provider harnesses as part of a preset.
 
 Example shape:
@@ -163,12 +163,12 @@ should not generate every possible provider/phase combination by default.
 
 ### Rendered Files Are Configuration, Not Runtime State
 
-`agentctl` owns declarative pipeline definitions and rendered provider files it
+`maisternia` owns declarative pipeline definitions and rendered provider files it
 manages. It should not become the source of truth for live runs, phase progress,
 approvals, or agent session history.
 
 Provider runtime directories contain mixed user configuration, caches, sessions,
-and generated artifacts. `agentctl` must manage only the files it rendered and
+and generated artifacts. `maisternia` must manage only the files it rendered and
 must preserve conflict, drift, backup, path, and symlink protections.
 
 ### Authority Never Expands Silently
@@ -189,7 +189,7 @@ silently broaden:
 ```mermaid
 flowchart TD
     L[Preset library] --> D[Workflow DAGs + MCP/config bundles]
-    D --> C[agentctl configurator]
+    D --> C[maisternia configurator]
     E[Existing provider configuration] --> C
     A[Provider adapters] --> C
     C --> P[Preview render plan]
@@ -215,7 +215,7 @@ preset library + existing provider configuration + provider adapters
   -> run inside the chosen external harness
 ```
 
-`agentctl` stops at configuration. The external harness owns running, observing,
+`maisternia` stops at configuration. The external harness owns running, observing,
 pausing, resuming, approving, and recording live work.
 
 ## TUI Role
@@ -244,18 +244,18 @@ It should not:
 ## Relationship To Kaji
 
 Kaji is an execution harness: it can run multi-agent spec-driven loops. Under the
-`agentctl` boundary, Kaji is a possible render target or downstream harness, not
-logic to duplicate inside `agentctl`.
+`maisternia` boundary, Kaji is a possible render target or downstream harness, not
+logic to duplicate inside `maisternia`.
 
 Clean split:
 
 ```text
-agentctl = define, render, validate, install configuration
+maisternia = define, render, validate, install configuration
 kaji     = execute multi-agent pipelines when chosen as the harness
 ```
 
 If Claude Code, Codex CLI, Hermes, or Antigravity can run a pipeline from their
-own native configuration, `agentctl` should configure those harnesses directly
+own native configuration, `maisternia` should configure those harnesses directly
 instead of introducing a new runner.
 
 ## Current Experimental State Commands
@@ -294,4 +294,4 @@ Next:
    settings from presets.
 4. Improve structured settings merge and key ownership.
 5. Improve render previews, conflict explanations, and drift explanations.
-6. Keep runtime dispatch and live observation out of `agentctl`.
+6. Keep runtime dispatch and live observation out of `maisternia`.

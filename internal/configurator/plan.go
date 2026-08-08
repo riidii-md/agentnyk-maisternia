@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
 
 func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Plan, error) {
@@ -137,7 +137,7 @@ func BuildPlanForScope(
 				} else if managed {
 					action.Reason = "managed target changed since the last apply"
 				} else {
-					action.Reason = "existing target is not managed by agentctl"
+					action.Reason = "existing target is not managed by maisternia"
 				}
 			}
 			plan.Actions = append(plan.Actions, action)
@@ -159,9 +159,9 @@ func StatePath(home string) string {
 
 func StatePathForScope(root string, scope InstallScope) string {
 	if scope == ScopeProject {
-		return filepath.Join(root, ".agentctl", "install-state.json")
+		return filepath.Join(root, ".maisternia", "install-state.json")
 	}
-	return filepath.Join(root, ".config", "agentctl", "install-state.json")
+	return filepath.Join(root, ".config", "maisternia", "install-state.json")
 }
 
 func legacyStatePath(home string) string {

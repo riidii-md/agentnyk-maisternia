@@ -7,7 +7,7 @@ version: 0.1.0
 # /work-parallel-run - Execute An Approved Parallel Plan
 
 Execute a schema-valid, human-approved parallel plan. The current provider
-harness owns workers and continuation; `agentctl` only installed this command.
+harness owns workers and continuation; `maisternia` only installed this command.
 
 Input:
 

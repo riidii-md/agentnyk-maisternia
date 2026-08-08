@@ -13,12 +13,12 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/kagi-labs/agentctl/internal/configurator"
-	"github.com/kagi-labs/agentctl/internal/environment"
-	"github.com/kagi-labs/agentctl/internal/presets"
-	"github.com/kagi-labs/agentctl/internal/providers"
-	"github.com/kagi-labs/agentctl/internal/settings"
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
 type Severity string
@@ -464,12 +464,12 @@ func (l Loader) resolveRepository() (RepositorySelection, error) {
 	if l.Getenv != nil {
 		getenv = l.Getenv
 	}
-	if value := strings.TrimSpace(getenv("AGENTCTL_REPO")); value != "" {
+	if value := strings.TrimSpace(getenv("MAISTERNIA_REPO")); value != "" {
 		path, err := absoluteFrom(cwd, value)
 		if err != nil {
 			return RepositorySelection{}, err
 		}
-		return RepositorySelection{Path: path, Source: "AGENTCTL_REPO"}, nil
+		return RepositorySelection{Path: path, Source: "MAISTERNIA_REPO"}, nil
 	}
 	value, err := settings.Load(l.Home)
 	if err != nil {

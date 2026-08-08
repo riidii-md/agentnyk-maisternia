@@ -563,7 +563,7 @@ func newTaskEvent(taskID string, source TriggerEvent, occurredAt string) TaskEve
 		TaskID:        taskID,
 		Type:          "trigger.ingested",
 		OccurredAt:    occurredAt,
-		Actor:         "agentctl",
+		Actor:         "maisternia",
 		SourceEventID: source.EventID,
 		Details: TaskEventDetails{
 			Source:      source.Source,
@@ -714,7 +714,7 @@ func writeAtomicJSON(root, path string, value any) error {
 	if err := ensurePrivateDirectory(root, directory); err != nil {
 		return err
 	}
-	temp, err := os.CreateTemp(directory, ".agentctl-*")
+	temp, err := os.CreateTemp(directory, ".maisternia-*")
 	if err != nil {
 		return err
 	}

@@ -181,8 +181,8 @@ Recommended workspace record:
 
 ```yaml
 schema_version: 1
-id: agentctl
-name: agentctl
+id: agentnyk-maisternia
+name: AgentnykMaisternia
 root: /absolute/path/to/repository
 artifact_roots:
   - /absolute/path/to/repository/docs
@@ -204,7 +204,7 @@ The catalog should store metadata, not document contents.
 ```yaml
 schema_version: 1
 id: project-123-plan
-workspace_id: agentctl
+workspace_id: maisternia
 task_id: PROJECT-123
 kind: plan
 title: PROJECT-123 implementation plan
@@ -266,7 +266,7 @@ The producer calls mdmaid immediately after writing a file:
 
 ```bash
 mdmaid register path/to/plan.md \
-  --workspace agentctl \
+  --workspace maisternia \
   --task PROJECT-123 \
   --kind plan \
   --attention approval
@@ -355,7 +355,7 @@ Registration request:
 ```json
 {
   "path": "/absolute/path/to/plan.md",
-  "workspace_id": "agentctl",
+  "workspace_id": "maisternia",
   "task_id": "PROJECT-123",
   "kind": "plan",
   "attention": "approval"
@@ -605,7 +605,7 @@ The daemon should:
 Workflow state remains responsible for writer leases. Mdmaid is not the
 authority for task concurrency.
 
-## Integration With agentctl
+## Integration With AgentnykMaisternia
 
 The configurator should eventually provide an optional mdmaid profile:
 

@@ -36,12 +36,12 @@ boundary. Each focused pack has a matching `hook-<pack>` preset.
 ## Inspect And Validate
 
 ```bash
-agentctl hook list
-agentctl hook show safety
-agentctl hook validate all
-agentctl approval validate
-agentctl approval explain git.push
-agentctl doctor
+maisternia hook list
+maisternia hook show safety
+maisternia hook validate all
+maisternia approval validate
+maisternia approval explain git.push
+maisternia doctor
 ```
 
 Hook pack files are strict JSON under `config/hooks`. Unknown fields, invalid
@@ -54,12 +54,12 @@ rejected.
 Install globally for one provider user:
 
 ```bash
-agentctl hook plan \
+maisternia hook plan \
   --scope user \
   --target codex \
   hook-standard
 
-agentctl hook apply \
+maisternia hook apply \
   --scope user \
   --target codex \
   --yes \
@@ -69,13 +69,13 @@ agentctl hook apply \
 Install into a specific repository:
 
 ```bash
-agentctl hook plan \
+maisternia hook plan \
   --scope project \
   --project /path/to/repository \
   --target claude \
   hook-quality
 
-agentctl hook apply \
+maisternia hook apply \
   --scope project \
   --project /path/to/repository \
   --target claude \
@@ -84,18 +84,18 @@ agentctl hook apply \
 ```
 
 User scope resolves target paths below `--home` and stores state and backups in
-`~/.config/agentctl`. Project scope resolves target paths below `--project` and
-stores state and backups in `<project>/.agentctl`. The planner always prints the
+`~/.config/maisternia`. Project scope resolves target paths below `--project` and
+stores state and backups in `<project>/.maisternia`. The planner always prints the
 resolved scope and root before file actions.
 
 The same conflict policy applies in both scopes:
 
 ```bash
 # Leave customized target files in place and remember that decision.
-agentctl hook apply --conflicts keep --yes hook-standard
+maisternia hook apply --conflicts keep --yes hook-standard
 
 # Back up customized target files and replace them.
-agentctl hook apply --conflicts replace --yes hook-standard
+maisternia hook apply --conflicts replace --yes hook-standard
 ```
 
 ## Inheritance
@@ -106,13 +106,13 @@ User-global and repository-local policy are merged conceptually:
 effective hooks = user-global hooks + repository hooks
 ```
 
-Agentctl's policy merge is asymmetric for safety. Repository policy may add
+AgentnykMaisternia's policy merge is asymmetric for safety. Repository policy may add
 rules or tighten a user-global restriction, but it must not remove or weaken a
 global deny. Advisory packs use normal additive merge behavior.
 Repository-opt-in packs stay dormant unless the repository explicitly installs
 or enables them.
 
-This is a desired agentctl invariant, not a blanket claim about native provider
+This is a desired maisternia invariant, not a blanket claim about native provider
 precedence. Some providers let project configuration disable user hooks, and
 some treat a failed hook process as nonblocking. The native renderer must check
 those capabilities and either use a stronger managed/system layer, preserve the
@@ -150,20 +150,20 @@ The current implementation validates and installs managed hook definitions at
 provider-specific paths:
 
 ```text
-.codex/agentctl/hook-packs/<pack>.json
-.claude/agentctl/hook-packs/<pack>.json
-.config/agy/agentctl/hook-packs/<pack>.json
-.hermes/agentctl/hook-packs/<pack>.json
+.codex/maisternia/hook-packs/<pack>.json
+.claude/maisternia/hook-packs/<pack>.json
+.config/agy/maisternia/hook-packs/<pack>.json
+.hermes/maisternia/hook-packs/<pack>.json
 ```
 
 These files are inspectable configuration inputs, not active native hooks yet.
 The related approval definition is installed under:
 
 ```text
-.codex/agentctl/policy/approval.json
-.claude/agentctl/policy/approval.json
-.config/agy/agentctl/policy/approval.json
-.hermes/agentctl/policy/approval.json
+.codex/maisternia/policy/approval.json
+.claude/maisternia/policy/approval.json
+.config/agy/maisternia/policy/approval.json
+.hermes/maisternia/policy/approval.json
 ```
 
 These policy files are also inputs, not active provider permission settings.
@@ -171,19 +171,19 @@ Activating hooks and policy safely requires a structured JSON, TOML, and YAML
 merger that:
 
 1. preserves unmanaged provider settings;
-2. registers one stable `agentctl hook run` dispatcher per provider and scope;
+2. registers one stable `maisternia hook run` dispatcher per provider and scope;
 3. resolves the current repository from the hook working directory;
 4. merges global and repository policy with tighten-only safety semantics;
 5. generates provider-native event/matcher entries;
 6. verifies that native precedence and failure behavior satisfy each rule;
 7. supports plan, conflict resolution, backup, rollback, and doctor checks.
 
-Until that renderer exists, `agentctl` does not silently edit native provider
+Until that renderer exists, `maisternia` does not silently edit native provider
 settings or imply that copied definitions execute. This boundary keeps the
 first feature useful for authoring and inspection without risking existing
 agent configuration.
 
-Project-managed `.agentctl` state is local operational metadata. Repositories
+Project-managed `.maisternia` state is local operational metadata. Repositories
 should ignore it unless a future team-state format explicitly separates
 shareable policy from machine-specific ownership and backups.
 

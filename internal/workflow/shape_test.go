@@ -23,7 +23,7 @@ func TestStoreStartsShapeTask(t *testing.T) {
 	result, err := store.StartShape(ShapeTaskInput{
 		TaskID:     "shape-agent-workflow",
 		Title:      "Improve the agent workflow",
-		Repository: "kagi-labs/agentctl",
+		Repository: "kagi-labs/agentnyk-maisternia",
 	})
 	if err != nil {
 		t.Fatalf("StartShape() error = %v", err)

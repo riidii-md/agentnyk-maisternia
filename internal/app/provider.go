@@ -9,14 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
 
 const providerUsage = `Usage:
-  agentctl provider list [options]
-  agentctl provider inspect [options] <provider>
-  agentctl provider doctor [options] [provider|all]
-  agentctl provider capabilities [options] <provider>
+  maisternia provider list [options]
+  maisternia provider inspect [options] <provider>
+  maisternia provider doctor [options] [provider|all]
+  maisternia provider capabilities [options] <provider>
 
 Options:
   --repo <dir>  Configuration repository root (default: current directory)

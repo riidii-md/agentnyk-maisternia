@@ -286,7 +286,7 @@ func TestDefaultCommandAndPluginInspectionFailuresAreBounded(t *testing.T) {
 	if err := runCommand([]string{"go", "version"}, &stdout, &stderr); err != nil {
 		t.Fatalf("runCommand(go version) error = %v, stderr = %s", err, stderr.String())
 	}
-	if _, err := inspectHerdrPlugin("agentctl-command-that-does-not-exist", "hail"); err == nil {
+	if _, err := inspectHerdrPlugin("maisternia-command-that-does-not-exist", "hail"); err == nil {
 		t.Fatal("inspectHerdrPlugin() accepted a missing host")
 	}
 }

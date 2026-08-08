@@ -274,7 +274,7 @@ func (l Library) writeExisting(preset Preset) error {
 	if err != nil {
 		return err
 	}
-	temp, err := os.CreateTemp(l.directory(), ".agentctl-preset-*")
+	temp, err := os.CreateTemp(l.directory(), ".maisternia-preset-*")
 	if err != nil {
 		return err
 	}

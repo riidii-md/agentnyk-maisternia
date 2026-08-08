@@ -1,15 +1,15 @@
 # Idea-Shaping Pipeline
 
 > **Experimental State Fixture:** This document describes an earlier local
-> state-machine slice. It is not the `agentctl` product runtime. Do not expand
+> state-machine slice. It is not the `maisternia` product runtime. Do not expand
 > it into live observation, phase control, approval queues, or agent dispatch;
-> `agentctl` should configure external harnesses, not run them.
+> `maisternia` should configure external harnesses, not run them.
 
 Status: First runtime slice implemented
 
 ## Executive Summary
 
-`agentctl` should add a dedicated pipeline for turning incomplete ideas into
+`maisternia` should add a dedicated pipeline for turning incomplete ideas into
 evidence-backed decisions and implementation plans.
 
 The proposed canonical pipeline is named `shape`:
@@ -41,12 +41,12 @@ The pipeline combines:
 
 The first runtime slice now includes:
 
-- `agentctl pipeline start shape`;
+- `maisternia pipeline start shape`;
 - guarded phase transitions and explicit finalization;
 - a three-cycle default loop budget;
 - append-only source records with classification;
 - append-only grill questions and answers;
-- shape preset topology and managed resources in `agentctl admin`;
+- shape preset topology and managed resources in `maisternia admin`;
 - `/work-shape`, `/work-source`, `/work-grill`, and `/work-brainstorm` for
   Codex, Claude, Antigravity, and Hermes;
 - `/codex-shape` as a compatibility alias.
@@ -147,10 +147,10 @@ finalization should offer an explicit `reopen` or `start new revision` action.
 ### Proposed commands
 
 ```text
-agentctl source add <task-id> <url-or-file>
-agentctl source note <task-id>
-agentctl source list <task-id>
-agentctl source show <task-id> <source-id>
+maisternia source add <task-id> <url-or-file>
+maisternia source note <task-id>
+maisternia source list <task-id>
+maisternia source show <task-id> <source-id>
 ```
 
 Provider commands can expose aliases such as `/work-source`, but the durable
@@ -229,8 +229,8 @@ Proposed entry points:
 
 ```text
 /work-grill
-agentctl grill next <task-id>
-agentctl grill answer <task-id>
+maisternia grill next <task-id>
+maisternia grill answer <task-id>
 ```
 
 ## Brainstorm and Challenge
@@ -338,7 +338,7 @@ changes, or perform external writes.
 | Capability | Default |
 | --- | --- |
 | Read repository and approved sources | Allowed |
-| Write agentctl task state | Allowed |
+| Write maisternia task state | Allowed |
 | Write generated Markdown artifacts | Allowed |
 | Fetch explicitly supplied URLs | Policy-controlled |
 | Crawl additional sources | Disabled in the first version |
@@ -353,7 +353,7 @@ own authority envelope and approval gates.
 ## TUI Experience
 
 The following task-oriented screen is historical design material for a separate
-runtime harness. `agentctl admin` now shows only preset topology and
+runtime harness. `maisternia admin` now shows only preset topology and
 configuration; it must not add live task observation.
 
 ```text
@@ -395,7 +395,7 @@ Recommended canonical names:
 
 ```text
 Pipeline:       shape
-Start command:  agentctl pipeline start shape
+Start command:  maisternia pipeline start shape
 Agent alias:    /work-shape
 Phase aliases:  /work-source
                 /work-grill

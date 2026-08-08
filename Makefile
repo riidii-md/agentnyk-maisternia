@@ -1,8 +1,8 @@
 .PHONY: build clean doctor format install release-check release-snapshot test uninstall verify
 
 GO ?= go
-BINARY := agentctl
-BUILDINFO := github.com/kagi-labs/agentctl/internal/buildinfo
+BINARY := maisternia
+BUILDINFO := github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || echo unknown)
@@ -16,10 +16,10 @@ INSTALL_BIN := $(shell $(GO) env GOPATH)/bin
 endif
 
 build:
-	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/agentctl
+	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/maisternia
 
 install:
-	$(GO) install -trimpath -ldflags "$(LDFLAGS)" ./cmd/agentctl
+	$(GO) install -trimpath -ldflags "$(LDFLAGS)" ./cmd/maisternia
 	@echo "installed $(BINARY) to $(INSTALL_BIN)/$(BINARY)"
 
 uninstall:
@@ -30,7 +30,7 @@ clean:
 	rm -rf dist
 
 doctor:
-	$(GO) run ./cmd/agentctl doctor
+	$(GO) run ./cmd/maisternia doctor
 
 format:
 	gofmt -w cmd internal
@@ -50,4 +50,4 @@ verify:
 	$(GO) test ./...
 	$(GO) test -race ./...
 	$(GO) test -coverprofile=coverage.out ./internal/...
-	$(GO) build ./cmd/agentctl
+	$(GO) build ./cmd/maisternia

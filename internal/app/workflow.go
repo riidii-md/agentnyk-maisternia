@@ -9,25 +9,25 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
 const eventUsage = `Usage:
-  agentctl event validate [--repo <dir>] <event.json>
-  agentctl event ingest [--repo <dir>] [--home <dir>] <event.json>
+  maisternia event validate [--repo <dir>] <event.json>
+  maisternia event ingest [--repo <dir>] [--home <dir>] <event.json>
 
 Events are validated as untrusted data. Ingestion prepares task state and
 context but does not execute an agent or grant write authority.
 `
 
 const taskUsage = `Usage:
-  agentctl task list [--home <dir>]
-  agentctl task show [--home <dir>] <task-id>
-  agentctl task context [--home <dir>] <task-id>
+  maisternia task list [--home <dir>]
+  maisternia task show [--home <dir>] <task-id>
+  maisternia task context [--home <dir>] <task-id>
 `
 
 const workUsage = `Usage:
-  agentctl work next [--home <dir>] <task-id>
+  maisternia work next [--home <dir>] <task-id>
 
 This command reports the prepared phase, policy, and context. It does not
 dispatch an agent.

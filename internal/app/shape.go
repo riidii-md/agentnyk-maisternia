@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentctl/internal/workflow"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
 const pipelineUsage = `Usage:
-  agentctl pipeline start shape [options]
-  agentctl pipeline transition [options] <task-id> <next-phase>
+  maisternia pipeline start shape [options]
+  maisternia pipeline transition [options] <task-id> <next-phase>
 
 Start options:
   --home <dir>        Task registry home directory
@@ -32,11 +32,11 @@ durable private state but does not dispatch an agent.
 `
 
 const sourceUsage = `Usage:
-  agentctl source add [options] <task-id> <url-or-file>
-  agentctl source note [options] <task-id>
-  agentctl source list [options] <task-id>
-  agentctl source show [options] <task-id> <source-id>
-  agentctl source classify [options] <task-id> <source-id> <classification>
+  maisternia source add [options] <task-id> <url-or-file>
+  maisternia source note [options] <task-id>
+  maisternia source list [options] <task-id>
+  maisternia source show [options] <task-id> <source-id>
+  maisternia source classify [options] <task-id> <source-id> <classification>
 
 Options:
   --home <dir>   Task registry home directory
@@ -48,10 +48,10 @@ Classifications:
 `
 
 const grillUsage = `Usage:
-  agentctl grill ask [options] <task-id> <question>
-  agentctl grill next [options] <task-id>
-  agentctl grill list [options] <task-id>
-  agentctl grill answer [options] <task-id> <question-id>
+  maisternia grill ask [options] <task-id> <question>
+  maisternia grill next [options] <task-id>
+  maisternia grill list [options] <task-id>
+  maisternia grill answer [options] <task-id> <question-id>
 
 Ask options:
   --home <dir>       Task registry home directory
@@ -400,7 +400,7 @@ func runGrillCommand(
 			Prompt:   positional[1],
 			Why:      why,
 			Critical: critical,
-			Actor:    "agentctl",
+			Actor:    "maisternia",
 		})
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)

@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kagi-labs/agentctl/internal/admin"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/admin"
 )
 
 const adminUsage = `Usage:
-  agentctl admin [options]
+  maisternia admin [options]
 
 Options:
   --repo <dir>       Configuration repository override
@@ -19,7 +19,7 @@ Options:
   --no-alt-screen    Render without the terminal alternate screen
 
 Repository resolution:
-  --repo, AGENTCTL_REPO, saved settings, then current-directory ancestors.
+  --repo, MAISTERNIA_REPO, saved settings, then current-directory ancestors.
 
 The admin interface installs configuration presets for one provider at user or
 project scope, and installs environment presets for the local machine. Both

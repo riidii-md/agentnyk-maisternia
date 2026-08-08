@@ -1,9 +1,9 @@
 ---
-description: Inspect an agentctl preset plan without applying it
+description: Inspect a Maisternia preset plan without applying it
 argument-hint: PRESET=<preset-id> [TARGET=codex]
 ---
 
-Run `agentctl preset plan --target $TARGET $PRESET`.
+Run `maisternia preset plan --target $TARGET $PRESET`.
 
 Summarize:
 

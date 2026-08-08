@@ -1,7 +1,7 @@
 # /codex-shape - Use Codex to Shape an Idea
 
 Run the canonical `/work-shape` workflow through Codex while preserving the
-same durable agentctl task state and read-only target-project authority.
+same durable maisternia task state and read-only target-project authority.
 
 ## Input
 
@@ -12,7 +12,7 @@ source ledger summary, open grill questions, existing artifacts, repository
 rules, and the user's request.
 
 Run Codex in the current repository with a read-only sandbox. Ask it to perform
-only the current shape phase, use agentctl for durable source, question, and
+only the current shape phase, use maisternia for durable source, question, and
 transition state, and return the generated Markdown artifact or next human
 question.
 

@@ -7,7 +7,7 @@ independent implementation tasks concurrently. It does not make every plan
 parallel and does not replace dependency ordering, isolation, integration, or
 verification.
 
-`agentctl` installs the plan and execution contracts. Codex, Claude,
+`maisternia` installs the plan and execution contracts. Codex, Claude,
 Antigravity, or Hermes executes them using its native capabilities.
 
 ## Commands
@@ -197,14 +197,14 @@ keeps those tradeoffs separate.
 Inspect and plan the preset:
 
 ```bash
-agentctl preset show parallel-work
-agentctl preset plan --target codex parallel-work
+maisternia preset show parallel-work
+maisternia preset plan --target codex parallel-work
 ```
 
 Apply after reviewing conflicts:
 
 ```bash
-agentctl preset apply --target codex --yes parallel-work
+maisternia preset apply --target codex --yes parallel-work
 ```
 
 Create a decomposable plan:

@@ -1,9 +1,9 @@
-# Installing agentctl
+# Installing AgentnykMaisternia
 
 ## Requirements
 
-`agentctl` is currently hosted in a private GitHub organization. Every
-installation method requires access to `kagi-labs/agentctl`.
+AgentnykMaisternia is currently hosted in a private GitHub organization. Every
+installation method requires access to `kagi-labs/agentnyk-maisternia`.
 
 Verify GitHub CLI authentication:
 
@@ -17,13 +17,13 @@ gh auth setup-git
 Building from source is available immediately. Homebrew, `go install
 ...@latest`, and GitHub release archives require at least one tagged release.
 Homebrew also requires the one-time private tap setup in
-[Releasing agentctl](RELEASING.md).
+[Releasing AgentnykMaisternia](RELEASING.md).
 
 ## Homebrew
 
 The Homebrew cask installs release binaries from the private
-`kagi-labs/agentctl` repository. These commands work after the first tagged
-release has published `Casks/agentctl.rb` to `kagi-labs/homebrew-tap`.
+`kagi-labs/agentnyk-maisternia` repository. These commands work after the first tagged
+release has published `Casks/maisternia.rb` to `kagi-labs/homebrew-tap`.
 
 Add the tap:
 
@@ -35,7 +35,7 @@ Install:
 
 ```bash
 HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" \
-  brew install --cask kagi-labs/tap/agentctl
+  brew install --cask kagi-labs/tap/maisternia
 ```
 
 Upgrade:
@@ -43,13 +43,13 @@ Upgrade:
 ```bash
 brew update
 HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" \
-  brew upgrade --cask agentctl
+  brew upgrade --cask maisternia
 ```
 
 Uninstall:
 
 ```bash
-brew uninstall --cask agentctl
+brew uninstall --cask maisternia
 brew untap kagi-labs/tap
 ```
 
@@ -68,7 +68,7 @@ organization, and install the latest tagged release:
 ```bash
 gh auth setup-git
 GOPRIVATE=github.com/kagi-labs/* \
-  go install github.com/kagi-labs/agentctl/cmd/agentctl@latest
+  go install github.com/kagi-labs/agentnyk-maisternia/cmd/maisternia@latest
 ```
 
 The binary is installed under `GOBIN`, or under `$(go env GOPATH)/bin` when
@@ -81,7 +81,7 @@ GOBIN="$(go env GOBIN)"
 if [ -z "$GOBIN" ]; then
   GOBIN="$(go env GOPATH)/bin"
 fi
-rm -f "$GOBIN/agentctl"
+rm -f "$GOBIN/maisternia"
 ```
 
 ## GitHub Release Binary
@@ -90,8 +90,8 @@ Download the archive matching the operating system and architecture:
 
 ```bash
 gh release download \
-  --repo kagi-labs/agentctl \
-  --pattern "agentctl_*_darwin_arm64.tar.gz" \
+  --repo kagi-labs/agentnyk-maisternia \
+  --pattern "maisternia_*_darwin_arm64.tar.gz" \
   --pattern checksums.txt
 ```
 
@@ -109,8 +109,8 @@ binary in a directory on `PATH`.
 ## Build From Source
 
 ```bash
-git clone git@github.com:kagi-labs/agentctl.git
-cd agentctl
+git clone git@github.com:kagi-labs/agentnyk-maisternia.git
+cd agentnyk-maisternia
 make install
 ```
 
@@ -129,19 +129,19 @@ make uninstall
 ## Verification
 
 ```bash
-agentctl --version
-agentctl doctor
-agentctl provider doctor all
+maisternia --version
+maisternia doctor
+maisternia provider doctor all
 ```
 
 For commands that use the version-controlled configuration after a system
 installation, save its checkout path once:
 
 ```bash
-agentctl config set-repository /path/to/agentctl
-agentctl admin
+maisternia config set-repository /path/to/agentnyk-maisternia
+maisternia admin
 ```
 
-Installation places only the `agentctl` executable. It does not apply managed
+Installation places only the `maisternia` executable. It does not apply managed
 agent configuration. Configuration changes still require a reviewed plan and
-an explicit `agentctl apply --yes`.
+an explicit `maisternia apply --yes`.

@@ -30,7 +30,7 @@ flowchart LR
 ### Doctor
 
 ```bash
-agentctl doctor
+maisternia doctor
 ```
 
 Validates:
@@ -47,8 +47,8 @@ Validates:
 ### Inventory and Plan
 
 ```bash
-agentctl inventory --target all
-agentctl plan --target codex
+maisternia inventory --target all
+maisternia plan --target codex
 ```
 
 Actions:
@@ -61,7 +61,7 @@ Actions:
 ### Render
 
 ```bash
-agentctl render --target all --output ./build/rendered
+maisternia render --target all --output ./build/rendered
 ```
 
 Renders provider files into an isolated staging directory.
@@ -69,7 +69,7 @@ Renders provider files into an isolated staging directory.
 ### Apply
 
 ```bash
-agentctl apply --target codex --yes
+maisternia apply --target codex --yes
 ```
 
 Apply:
@@ -84,27 +84,27 @@ Apply:
 Install state:
 
 ```text
-~/.config/agentctl/install-state.json
+~/.config/maisternia/install-state.json
 ```
 
 Backups:
 
 ```text
-~/.config/agentctl/backups/<timestamp>/
+~/.config/maisternia/backups/<timestamp>/
 ```
 
-For rename compatibility, `agentctl` reads the legacy
+For rename compatibility, `maisternia` reads the legacy
 `~/.config/cli-agent-configurator/install-state.json` when the new state file
 does not exist. The next successful apply writes the state under
-`~/.config/agentctl/`; the legacy file is left untouched.
+`~/.config/maisternia/`; the legacy file is left untouched.
 
 ### Provider Inspection
 
 ```bash
-agentctl provider list
-agentctl provider inspect antigravity
-agentctl provider doctor all
-agentctl provider capabilities hermes
+maisternia provider list
+maisternia provider inspect antigravity
+maisternia provider doctor all
+maisternia provider capabilities hermes
 ```
 
 Provider inspection:

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Agentctl should let a human author one understandable safety and automation
+AgentnykMaisternia should let a human author one understandable safety and automation
 configuration, preview how it maps to Codex, Claude Code, Antigravity, and
 Hermes, and install only provider-native behavior that preserves the declared
 guarantees.
@@ -16,7 +16,7 @@ The current implementation establishes the configuration layer:
 - managed definitions kept separate from native activation.
 
 The remaining work is enforcement, native compilation, simulation, and
-ergonomic editing. It should remain configuration work: agentctl does not need
+ergonomic editing. It should remain configuration work: maisternia does not need
 to become a long-running workflow controller.
 
 ## Research Conclusions
@@ -39,7 +39,7 @@ to become a long-running workflow controller.
    may tighten a user policy but may not weaken it. Unknown operations ask, and
    an unavailable human means deny.
 6. Enforcement claims must match provider behavior. If a provider can bypass a
-   hook, ignores its exit status, or lacks a matching lifecycle event, agentctl
+   hook, ignores its exit status, or lacks a matching lifecycle event, maisternia
    must report degraded or reject activation instead of calling it fail-closed.
 7. Audit data must be useful without becoming a transcript archive. Record
    decisions, operation classes, timing, result, rule IDs, hashes, and bounded
@@ -62,7 +62,7 @@ canonical hook packs + approval policy
  native settings   enforcement report
         |
         v
- provider invokes short-lived agentctl hook dispatcher
+ provider invokes short-lived maisternia hook dispatcher
         |
         +--> deterministic rule and requirement evaluation
         +--> bounded handler execution
@@ -127,7 +127,7 @@ put signing secrets in managed presets or provider configuration.
 
 ### P0: Hook Dispatcher And Initial Handlers
 
-Add `agentctl hook run` with strict stdin/stdout schemas, no ambient network,
+Add `maisternia hook run` with strict stdin/stdout schemas, no ambient network,
 bounded input and output, recursion protection, deterministic timeouts, and
 provider adapters. Initial handlers should cover:
 
@@ -156,8 +156,8 @@ provider file references the expected dispatcher and policy digest.
 Add a no-side-effect simulator:
 
 ```bash
-agentctl approval simulate --event fixture.json --target claude
-agentctl hook test safety --event fixture.json --target codex
+maisternia approval simulate --event fixture.json --target claude
+maisternia hook test safety --event fixture.json --target codex
 ```
 
 Test prompt-injected content, encoded sensitive paths, symlink traversal,
@@ -203,7 +203,7 @@ Native activation should not ship until all of these are true:
 6. Unknown operations and failed requirements cannot execute automatically.
 7. Doctor detects removed hooks, changed policy, stale provider capabilities,
    unsafe approval modes, and bypass settings.
-8. Rollback restores both native configuration and agentctl ownership state.
+8. Rollback restores both native configuration and maisternia ownership state.
 9. Audit fixtures prove that prompts, outputs, secrets, and raw environment
    values are not retained.
 10. CI covers all four providers, both scopes, conflict modes, hostile events,

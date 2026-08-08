@@ -13,17 +13,17 @@ func TestDetailsString(t *testing.T) {
 		{
 			name:    "release",
 			details: Details{Version: "0.1.0"},
-			want:    "agentctl 0.1.0",
+			want:    "maisternia 0.1.0",
 		},
 		{
 			name:    "development",
 			details: Details{},
-			want:    "agentctl dev",
+			want:    "maisternia dev",
 		},
 		{
 			name:    "dirty",
 			details: Details{Version: "dev", Dirty: true},
-			want:    "agentctl dev (dirty)",
+			want:    "maisternia dev (dirty)",
 		},
 	}
 	for _, tt := range tests {

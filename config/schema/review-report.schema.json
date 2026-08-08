@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/review-report.schema.json",
-  "title": "agentctl multi-lens review report",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/review-report.schema.json",
+  "title": "AgentnykMaisternia multi-lens review report",
   "type": "object",
   "additionalProperties": false,
   "required": [

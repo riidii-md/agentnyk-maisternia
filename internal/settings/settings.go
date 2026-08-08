@@ -25,7 +25,7 @@ func Default() Settings {
 }
 
 func Path(home string) string {
-	return filepath.Join(home, ".config", "agentctl", "settings.json")
+	return filepath.Join(home, ".config", "maisternia", "settings.json")
 }
 
 func Load(home string) (Settings, error) {

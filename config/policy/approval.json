@@ -79,7 +79,7 @@
     {
       "id": "local-agent-state",
       "description": "Allow bounded local status and metrics records that exclude prompts, outputs, credentials, and secrets.",
-      "operations": ["agentctl.state_write", "agentctl.metrics_write"],
+      "operations": ["maisternia.state_write", "maisternia.metrics_write"],
       "decision": "allow",
       "risk": "low",
       "requirements": ["redacted_record", "local_only"]

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kagi-labs/agentctl/internal/providers"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
 
 func Apply(plan Plan, options ApplyOptions) error {
@@ -196,9 +196,9 @@ func backupTarget(
 	action Action,
 	timestamp time.Time,
 ) error {
-	backupRoot := filepath.Join(root, ".config", "agentctl", "backups")
+	backupRoot := filepath.Join(root, ".config", "maisternia", "backups")
 	if scope == ScopeProject {
-		backupRoot = filepath.Join(root, ".agentctl", "backups")
+		backupRoot = filepath.Join(root, ".maisternia", "backups")
 	}
 	backupPath := filepath.Join(
 		backupRoot,
@@ -229,7 +229,7 @@ func atomicCopy(source, destination string) error {
 	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
 		return err
 	}
-	temp, err := os.CreateTemp(filepath.Dir(destination), ".agentctl-*")
+	temp, err := os.CreateTemp(filepath.Dir(destination), ".maisternia-*")
 	if err != nil {
 		return err
 	}

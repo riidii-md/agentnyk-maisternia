@@ -55,7 +55,7 @@ func (d Details) String() string {
 	if version == "" {
 		version = "dev"
 	}
-	result := "agentctl " + version
+	result := "maisternia " + version
 	if d.Dirty {
 		result += " (dirty)"
 	}

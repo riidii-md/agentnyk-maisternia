@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentctl/config/schema/task-event.schema.json",
-  "title": "agentctl task history event",
+  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/task-event.schema.json",
+  "title": "AgentnykMaisternia task history event",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "event_id", "task_id", "type", "occurred_at", "actor", "source_event_id", "details"],
@@ -11,7 +11,7 @@
     "task_id": {"type": "string"},
     "type": {"enum": ["trigger.ingested"]},
     "occurred_at": {"type": "string", "format": "date-time"},
-    "actor": {"const": "agentctl"},
+    "actor": {"const": "maisternia"},
     "source_event_id": {"type": "string"},
     "details": {
       "type": "object",
