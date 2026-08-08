@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/mattn/go-runewidth"
@@ -146,6 +147,9 @@ func (m Model) renderFooter(width int) string {
 			keys = "k keep existing  x replace from preset  b back  esc cancel"
 		case applyConfirm:
 			keys = "y apply  b back  esc cancel"
+			if m.applyDialog.Environment {
+				keys = "y install  esc cancel"
+			}
 		case applyRunning:
 			keys = "applying preset..."
 		case applyComplete:
@@ -168,6 +172,9 @@ func (m Model) renderFooter(width int) string {
 	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
 		keys = "i install  / search  f filter  enter inspect  ←/→ switch  j/k select  ? help  q quit"
+		if selected, found := m.selectedPreset(); found && selected.Preset.IsEnvironmentOnly() {
+			keys = "i install  / search  f filter  ←/→ switch  j/k select  ? help  q quit"
+		}
 	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 		m.snapshot.Config.Counts.Conflict > 0 &&
 		m.firstConflictingPreset() >= 0 {
@@ -177,6 +184,9 @@ func (m Model) renderFooter(width int) string {
 		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
 			keys = "i install  / search  f filter  enter inspect  j/k select  q quit"
+			if selected, found := m.selectedPreset(); found && selected.Preset.IsEnvironmentOnly() {
+				keys = "i install  / search  f filter  j/k select  q quit"
+			}
 		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 			m.snapshot.Config.Counts.Conflict > 0 &&
 			m.firstConflictingPreset() >= 0 {
@@ -314,9 +324,20 @@ func (m Model) renderPipelines(width int) string {
 
 	selected := m.snapshot.Presets[visible[index]]
 	preset := selected.Preset
+	targets := strings.Join(preset.Targets, ", ")
+	if preset.IsEnvironmentOnly() {
+		targets = "machine (provider-neutral)"
+	}
 	details := []string{
 		metric("Description", preset.Description, width),
-		metric("Targets", strings.Join(preset.Targets, ", "), width),
+		metric("Targets", targets, width),
+	}
+	if len(preset.EnvironmentPacks) > 0 {
+		details = append(details, metric(
+			"Environment",
+			strings.Join(preset.EnvironmentPacks, ", "),
+			width,
+		))
 	}
 	if width >= 90 {
 		details = append(
@@ -337,11 +358,12 @@ func (m Model) renderPipelines(width int) string {
 			), width),
 		)
 	}
-	details = append(
-		details,
-		metric("Resources", strings.Join(preset.Contents.ResourceIDs(), ", "), width),
-	)
-	if width >= 90 {
+	resources := strings.Join(preset.Contents.ResourceIDs(), ", ")
+	if preset.IsEnvironmentOnly() {
+		resources = "none (environment requirements only)"
+	}
+	details = append(details, metric("Resources", resources, width))
+	if width >= 90 && len(selected.Resources) > 0 {
 		details = append(details, metric(
 			"Prompt source",
 			fmt.Sprintf("%d resources; Enter to inspect", len(selected.Resources)),
@@ -353,16 +375,39 @@ func (m Model) renderPipelines(width int) string {
 		section(strings.ToUpper(preset.Name), details, width),
 	}
 	if width >= 90 {
-		sections = append(sections, section("ACTIONS", []string{
+		actions := []string{
 			"i  Install preset for one provider and scope",
 			"Enter  Inspect prompt/resource source",
-		}, width))
+		}
+		if preset.IsEnvironmentOnly() {
+			actions = []string{"i  Install environment preset on this machine"}
+		}
+		sections = append(sections, section("ACTIONS", actions, width))
+	}
+	if len(selected.Environments) > 0 {
+		lines := []string{
+			mutedStyle.Render("Environment detection is read-only; no installer command is executed."),
+		}
+		for _, plan := range selected.Environments {
+			lines = append(lines, activeStyle.Render(plan.PackName))
+			lines = append(lines, mutedStyle.Render(
+				"agentctl environment install --yes "+plan.PackID,
+			))
+			for _, requirement := range plan.Requirements {
+				lines = append(lines, renderEnvironmentRequirement(requirement, width))
+			}
+		}
+		sections = append(sections, section("ENVIRONMENT REQUIREMENTS", lines, width))
 	}
 
 	if len(preset.Pipelines) == 0 {
+		message := "This preset contains configuration only."
+		if preset.IsEnvironmentOnly() {
+			message = "This preset contains environment requirements only."
+		}
 		sections = append(sections, section(
 			"PIPELINE DAGS",
-			[]string{mutedStyle.Render("This preset contains configuration only.")},
+			[]string{mutedStyle.Render(message)},
 			width,
 		))
 		return strings.Join(sections, "\n\n")
@@ -386,6 +431,40 @@ func (m Model) renderPipelines(width int) string {
 		))
 	}
 	return strings.Join(sections, "\n\n")
+}
+
+func renderEnvironmentRequirement(
+	requirement environment.PlannedRequirement,
+	width int,
+) string {
+	marker := "○"
+	style := warningStyle
+	if requirement.State == environment.StateSatisfied {
+		marker = "✓"
+		style = goodStyle
+	} else if requirement.State == environment.StateBlocked ||
+		requirement.State == environment.StateUnsupported {
+		marker = "!"
+		style = errorStyle
+	}
+	detail := requirement.Reason
+	if requirement.Path != "" {
+		detail = requirement.Path
+	} else if installer, exists := requirement.SuggestedInstaller(); exists {
+		if len(installer.Commands) > 0 {
+			detail = strings.Join(installer.Commands[0], " ")
+		} else if installer.Instructions != "" {
+			detail = installer.Instructions
+		}
+	}
+	line := fmt.Sprintf(
+		"%s %-18s %-11s %s",
+		marker,
+		requirement.Name,
+		requirement.State,
+		detail,
+	)
+	return style.Render(truncate(line, width))
 }
 
 func (m Model) renderPresetResourcePreview(width int) string {
@@ -493,6 +572,9 @@ func presetKindSummary(preset presets.Preset) string {
 	if len(preset.Contents.MCPRefs) > 0 {
 		kinds = append(kinds, "MCP")
 	}
+	if len(preset.EnvironmentPacks) > 0 {
+		kinds = append(kinds, "environments")
+	}
 	if len(preset.Pipelines) > 0 {
 		kinds = append(kinds, "pipelines")
 	}
@@ -518,6 +600,16 @@ func (m Model) renderPresetApplyDialog(width int) string {
 	summary := []string{
 		metric("Preset", dialog.Name+" ("+dialog.PresetID+")", width),
 	}
+	if dialog.Environment {
+		packIDs := make([]string, 0, len(dialog.Plans))
+		for _, plan := range dialog.Plans {
+			packIDs = append(packIDs, plan.PackID)
+		}
+		summary = append(summary,
+			metric("Target", "local machine", width),
+			metric("Environment", strings.Join(packIDs, ", "), width),
+		)
+	}
 	if dialog.Request.Target != "" {
 		summary = append(summary, metric(
 			"Provider",
@@ -537,8 +629,8 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			metric("Destination root", root, width),
 		)
 	}
-	if dialog.Stage == applyChoose || dialog.Stage == applyConfirm ||
-		dialog.Stage == applyRunning || dialog.Stage == applyComplete {
+	if !dialog.Environment && (dialog.Stage == applyChoose || dialog.Stage == applyConfirm ||
+		dialog.Stage == applyRunning || dialog.Stage == applyComplete) {
 		summary = append(summary, metric("Plan", actionCountSummary(dialog.Counts), width))
 		if dialog.StatePath != "" {
 			summary = append(summary, metric("Install state", dialog.StatePath, width))
@@ -629,6 +721,23 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			}
 		}
 	case applyConfirm:
+		if dialog.Environment {
+			action = []string{
+				activeStyle.Render("INSTALL ENVIRONMENT PRESET"),
+				mutedStyle.Render("Satisfied requirements will be skipped."),
+			}
+			for _, plan := range dialog.Plans {
+				action = append(action, "", activeStyle.Render(plan.PackName))
+				for _, requirement := range plan.Requirements {
+					action = append(action, renderEnvironmentRequirement(requirement, width))
+				}
+			}
+			action = append(action, "", warningStyle.Render(truncate(
+				"Press y to install the displayed requirements. Press Esc to cancel.",
+				width,
+			)))
+			break
+		}
 		decision := "APPLY READY CHANGES"
 		description := "No unresolved conflicts; apply the planned preset changes."
 		switch dialog.Policy {
@@ -655,17 +764,31 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			)),
 		}
 	case applyRunning:
-		action = []string{
-			activeStyle.Render("Applying preset..."),
-			mutedStyle.Render(truncate(
-				"Plans are rechecked before each file is changed.",
-				width,
-			)),
+		if dialog.Environment {
+			action = []string{
+				activeStyle.Render("Installing environment preset..."),
+				mutedStyle.Render(truncate(
+					"Requirements are rechecked before each typed installer command runs.",
+					width,
+				)),
+			}
+		} else {
+			action = []string{
+				activeStyle.Render("Applying preset..."),
+				mutedStyle.Render(truncate(
+					"Plans are rechecked before each file is changed.",
+					width,
+				)),
+			}
 		}
 	case applyComplete:
 		if dialog.Err != nil {
+			heading := "Preset install failed"
+			if dialog.Environment {
+				heading = "Environment preset install failed"
+			}
 			action = []string{
-				errorStyle.Render("Preset install failed"),
+				errorStyle.Render(heading),
 				truncate(dialog.Err.Error(), width),
 				mutedStyle.Render(truncate(
 					"Review the error and refresh before retrying.",
@@ -673,9 +796,21 @@ func (m Model) renderPresetApplyDialog(width int) string {
 				)),
 			}
 		} else {
+			heading := "Preset applied"
+			description := "Configuration state has been refreshed."
+			if dialog.Environment {
+				heading = "Environment preset installed"
+				description = "Environment status has been refreshed."
+			}
 			action = []string{
-				goodStyle.Render("Preset applied"),
-				"Configuration state has been refreshed.",
+				goodStyle.Render(heading),
+				description,
+			}
+		}
+		if dialog.Environment && strings.TrimSpace(dialog.Output) != "" {
+			action = append(action, "", activeStyle.Render("INSTALLER OUTPUT"))
+			for _, line := range strings.Split(strings.TrimSpace(dialog.Output), "\n") {
+				action = append(action, truncate(sanitizeTerminalText(line), width))
 			}
 		}
 	}
@@ -689,6 +824,14 @@ func (m Model) renderPresetApplyDialog(width int) string {
 		title = "PROJECT FOLDER"
 	case applyPlanning:
 		title = "SCOPED PLAN"
+	case applyConfirm:
+		if dialog.Environment {
+			title = "REVIEW ENVIRONMENT INSTALL"
+		}
+	case applyRunning, applyComplete:
+		if dialog.Environment {
+			title = "ENVIRONMENT INSTALL"
+		}
 	}
 	return section("INSTALL PRESET", summary, width) + "\n\n" +
 		section(title, action, width)
@@ -981,10 +1124,11 @@ func (m Model) renderHelp(width int) string {
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
 		"enter            inspect preset prompt/resource source",
-		"i (or a)         install preset for one provider and scope",
+		"i (or a)         install selected preset using its target type",
 		"/                search presets",
 		"f                filter/group presets by resource type",
 		"u / p            choose user or project install scope",
+		"                  environment presets target the local machine",
 		"pgup / pgdown    scroll prompt/resource source",
 		"r                refresh configuration state",
 		"? / esc          toggle or close help",

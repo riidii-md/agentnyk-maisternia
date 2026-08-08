@@ -3,7 +3,9 @@ package admin
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -12,6 +14,7 @@ import (
 	"unicode"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/settings"
@@ -71,9 +74,10 @@ type ResourcePreview struct {
 }
 
 type PresetStatus struct {
-	Preset    presets.Preset
-	Config    ConfigStatus
-	Resources []ResourcePreview
+	Preset       presets.Preset
+	Config       ConfigStatus
+	Resources    []ResourcePreview
+	Environments []environment.Plan
 }
 
 type PresetInstallRequest struct {
@@ -81,6 +85,11 @@ type PresetInstallRequest struct {
 	Target   string
 	Scope    configurator.InstallScope
 	Project  string
+}
+
+type EnvironmentInstallRequest struct {
+	PresetID string
+	Plans    []environment.Plan
 }
 
 type Snapshot struct {
@@ -109,6 +118,10 @@ type Loader struct {
 		string,
 		providers.InspectOptions,
 	) (providers.Inspection, error)
+	LookPath                 func(string) (string, error)
+	EnvironmentGOOS          string
+	InspectEnvironmentPlugin func(host, pluginID string) (bool, error)
+	RunEnvironmentCommand    func(command []string, stdout, stderr io.Writer) error
 }
 
 func (l Loader) Load() Snapshot {
@@ -158,13 +171,30 @@ func (l Loader) Load() Snapshot {
 			snapshot.Config = summarizePlan(plan)
 		}
 
+		environments, environmentErr := environment.LoadLibrary(selection.Path)
+		if environmentErr != nil {
+			snapshot.addIssue(SeverityError, "environments", environmentErr)
+		}
+
 		library, err := presets.LoadLibrary(selection.Path)
 		if err != nil {
 			snapshot.addIssue(SeverityError, "presets", err)
 		} else {
-			presetsReady = true
+			presetsReady = environmentErr == nil
 			for _, preset := range library.Presets {
 				status := PresetStatus{Preset: preset}
+				if environmentErr == nil {
+					if err := presets.ValidateEnvironmentReferences(preset, environments); err != nil {
+						presetsReady = false
+						snapshot.addIssue(SeverityError, "preset "+preset.ID, err)
+					} else {
+						status.Environments, err = l.planEnvironments(preset, environments)
+						if err != nil {
+							presetsReady = false
+							snapshot.addIssue(SeverityError, "preset "+preset.ID, err)
+						}
+					}
+				}
 				if len(preset.Contents.ResourceIDs()) == 0 {
 					snapshot.Presets = append(snapshot.Presets, status)
 					continue
@@ -255,6 +285,31 @@ func (l Loader) Load() Snapshot {
 		len(snapshot.Policy.Capabilities.Phases) > 0 &&
 		len(snapshot.Providers) > 0
 	return snapshot
+}
+
+func (l Loader) planEnvironments(
+	preset presets.Preset,
+	library environment.Library,
+) ([]environment.Plan, error) {
+	lookPath := exec.LookPath
+	if l.LookPath != nil {
+		lookPath = l.LookPath
+	}
+	plans := make([]environment.Plan, 0, len(preset.EnvironmentPacks))
+	for _, packID := range preset.EnvironmentPacks {
+		pack, exists := library.Get(packID)
+		if !exists {
+			return nil, fmt.Errorf("environment pack %q does not exist", packID)
+		}
+		plan, err := environment.BuildPlan(pack, environment.PlanOptions{
+			LookPath: lookPath,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("plan environment pack %q: %w", packID, err)
+		}
+		plans = append(plans, plan)
+	}
+	return plans, nil
 }
 
 func (l Loader) PlanPreset(request PresetInstallRequest) (ConfigStatus, error) {

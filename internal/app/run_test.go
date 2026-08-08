@@ -694,6 +694,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 		"parallel-work",
 		"session-audit",
 		"standard-work",
+		"terminal-orchestration",
 	} {
 		if !strings.Contains(stdout.String(), presetID) {
 			t.Errorf("preset list output = %q, missing %q", stdout.String(), presetID)
@@ -725,8 +726,118 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "19 presets valid") {
+	if !strings.Contains(stdout.String(), "20 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"preset", "show", "--repo", repo, "parallel-work"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("parallel-work show code = %d, stderr = %s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), `"environment_packs"`) {
+		t.Fatalf("parallel-work show output includes environment packs = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"preset", "show", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("terminal-orchestration show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"environment_packs": [`) ||
+		!strings.Contains(stdout.String(), `"terminal-orchestration"`) {
+		t.Fatalf("terminal-orchestration show output = %q", stdout.String())
+	}
+}
+
+func TestRunEnvironmentCommands(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{"environment", "list", "--repo", repo}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("environment list code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "terminal-orchestration") ||
+		!strings.Contains(stdout.String(), "7") {
+		t.Fatalf("environment list output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "show", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("environment show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"id": "terminal-orchestration"`) ||
+		!strings.Contains(stdout.String(), `"command": "zellij"`) {
+		t.Fatalf("environment show output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "validate", "--repo", repo, "all"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("environment validate code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "1 environment packs valid") {
+		t.Fatalf("environment validate output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "plan", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("environment plan code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{
+		"read-only environment plan",
+		"zellij",
+		"tatami",
+		"herdr",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("environment plan output missing %q: %s", expected, stdout.String())
+		}
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"environment", "install", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 2 {
+		t.Fatalf("environment install without --yes code = %d, want 2", code)
+	}
+	if !strings.Contains(stdout.String(), "environment install plan") ||
+		!strings.Contains(stderr.String(), "--yes") {
+		t.Fatalf("environment install output = %q, stderr = %q", stdout.String(), stderr.String())
 	}
 }
 
@@ -1015,6 +1126,135 @@ func TestRunPresetPlanRenderAndApply(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "--yes") {
 		t.Fatalf("preset apply stderr = %q, want --yes instruction", stderr.String())
+	}
+}
+
+func TestPresetPlanIncludesReferencedEnvironmentPlan(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "plan",
+		"--repo", repo,
+		"--home", home,
+		"--target", "codex",
+		"terminal-orchestration",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset plan code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{
+		"environment requirements (read-only)",
+		"terminal-orchestration",
+		"zellij",
+		"tatami",
+		"herdr",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("preset plan missing %q: %s", expected, stdout.String())
+		}
+	}
+}
+
+func TestEnvironmentOnlyPresetApplyRequiresConfirmation(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "apply",
+		"--repo", repo,
+		"--home", t.TempDir(),
+		"terminal-orchestration",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("environment-only preset apply code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr.String(), "requires --yes") {
+		t.Fatalf("environment-only preset apply stderr = %q", stderr.String())
+	}
+}
+
+func TestEnvironmentOnlyPresetApplyInstallsSatisfiedRequirements(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	for _, directory := range []string{
+		filepath.Join(repo, "config", "presets"),
+		filepath.Join(repo, "config", "environments"),
+	} {
+		if err := os.MkdirAll(directory, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	preset := `{
+  "schema_version": 1,
+  "id": "test-environment",
+  "name": "Test Environment",
+  "description": "Safe satisfied-only environment fixture.",
+  "pipelines": [],
+  "contents": {"mcp_refs": [], "commands": [], "prompts": [], "skills": [], "hooks": [], "settings": []},
+  "targets": [],
+  "environment_packs": ["test-environment"]
+}`
+	pack := `{
+  "schema_version": 1,
+  "id": "test-environment",
+  "name": "Test Environment",
+  "description": "Safe satisfied-only environment fixture.",
+  "requirements": [{
+    "id": "shell",
+    "name": "Shell",
+    "description": "Existing test command.",
+    "kind": "binary",
+    "required": true,
+    "provides": ["shell"],
+    "depends_on": [],
+    "detect": {"command": "sh"},
+    "installers": [{
+      "id": "manual",
+      "kind": "manual",
+      "platforms": ["darwin", "linux", "windows"],
+      "url": "https://example.invalid/shell",
+      "instructions": "Install a shell."
+    }]
+  }]
+}`
+	if err := os.WriteFile(
+		filepath.Join(repo, "config", "presets", "test-environment.json"),
+		[]byte(preset),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(repo, "config", "environments", "test-environment.json"),
+		[]byte(pack),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "apply",
+		"--repo", repo,
+		"--yes",
+		"test-environment",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("environment-only preset apply code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{
+		"satisfied shell",
+		"installed environment pack test-environment",
+		"applied environment preset test-environment",
+	} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("environment-only preset apply missing %q: %s", expected, stdout.String())
+		}
 	}
 }
 

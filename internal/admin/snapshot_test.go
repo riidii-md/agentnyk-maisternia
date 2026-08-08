@@ -1,7 +1,9 @@
 package admin
 
 import (
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/settings"
 )
@@ -32,6 +35,12 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 			return loadedAt
 		},
 		InspectProvider: healthyInspection,
+		LookPath: func(command string) (string, error) {
+			if command == "zellij" {
+				return "/usr/local/bin/zellij", nil
+			}
+			return "", exec.ErrNotFound
+		},
 	}
 	snapshot := loader.Load()
 
@@ -53,10 +62,16 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	if snapshot.Config.ActionCount == 0 || snapshot.Config.Counts.Create == 0 {
 		t.Fatalf("config summary = %#v, want create actions", snapshot.Config)
 	}
-	if len(snapshot.Presets) != 19 {
-		t.Fatalf("presets = %d, want 19", len(snapshot.Presets))
+	if len(snapshot.Presets) != 20 {
+		t.Fatalf("presets = %d, want 20", len(snapshot.Presets))
 	}
 	for _, preset := range snapshot.Presets {
+		if preset.Preset.ID == "terminal-orchestration" {
+			if preset.Config.ActionCount != 0 || len(preset.Resources) != 0 {
+				t.Fatalf("environment-only preset has configuration = %#v", preset)
+			}
+			continue
+		}
 		if preset.Config.ActionCount == 0 {
 			t.Fatalf("preset %q has no scoped plan actions", preset.Preset.ID)
 		}
@@ -73,12 +88,133 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 			}
 		}
 	}
+	parallel := presetStatusByID(t, snapshot.Presets, "parallel-work")
+	if len(parallel.Environments) != 0 {
+		t.Fatalf("parallel-work environments = %#v, want none", parallel.Environments)
+	}
+	environmentPreset := presetStatusByID(t, snapshot.Presets, "terminal-orchestration")
+	if len(environmentPreset.Environments) != 1 {
+		t.Fatalf("terminal-orchestration environments = %#v", environmentPreset.Environments)
+	}
+	plan := environmentPreset.Environments[0]
+	if plan.PackID != "terminal-orchestration" || len(plan.Requirements) != 7 {
+		t.Fatalf("terminal-orchestration environment plan = %#v", plan)
+	}
+	if got := plannedRequirementByID(t, plan.Requirements, "zellij"); got.State != environment.StateSatisfied {
+		t.Fatalf("zellij state = %s", got.State)
+	}
+	if got := plannedRequirementByID(t, plan.Requirements, "tatami"); got.State != environment.StateMissing {
+		t.Fatalf("tatami state = %s", got.State)
+	}
 	if !snapshot.LoadedAt.Equal(loadedAt) {
 		t.Fatalf("loaded at = %s, want %s", snapshot.LoadedAt, loadedAt)
 	}
 	if len(snapshot.Issues) != 0 {
 		t.Fatalf("issues = %#v, want none", snapshot.Issues)
 	}
+}
+
+func TestLoaderInstallsEnvironmentOnlyPreset(t *testing.T) {
+	t.Parallel()
+
+	loader := Loader{
+		Repo: repositoryRoot(t),
+		Home: t.TempDir(),
+		Cwd:  t.TempDir(),
+		LookPath: func(command string) (string, error) {
+			return "/test/bin/" + command, nil
+		},
+		InspectEnvironmentPlugin: func(string, string) (bool, error) {
+			return true, nil
+		},
+		RunEnvironmentCommand: func([]string, io.Writer, io.Writer) error {
+			t.Fatal("satisfied environment requirements should not run installers")
+			return nil
+		},
+	}
+	library, err := environment.LoadLibrary(loader.Repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pack, found := library.Get("terminal-orchestration")
+	if !found {
+		t.Fatal("terminal-orchestration environment pack missing")
+	}
+	plan, err := environment.BuildPlan(pack, environment.PlanOptions{
+		LookPath: loader.LookPath,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := EnvironmentInstallRequest{
+		PresetID: "terminal-orchestration",
+		Plans:    []environment.Plan{plan},
+	}
+	output, err := loader.InstallEnvironmentPreset(request)
+	if err != nil {
+		t.Fatalf("InstallEnvironmentPreset() error = %v", err)
+	}
+	for _, requirementID := range []string{
+		"zellij", "tatami", "herdr", "mdmaid", "herdr-hail",
+		"herdr-automatic-rename", "herdr-bar",
+	} {
+		if !strings.Contains(output, "satisfied "+requirementID) {
+			t.Fatalf("install output missing %q: %s", requirementID, output)
+		}
+	}
+	if _, err := loader.InstallEnvironmentPreset(EnvironmentInstallRequest{
+		PresetID: "parallel-work",
+	}); err == nil ||
+		!strings.Contains(err.Error(), "not environment-only") {
+		t.Fatalf("parallel-work install error = %v", err)
+	}
+	if _, err := loader.InstallEnvironmentPreset(EnvironmentInstallRequest{
+		PresetID: "terminal-orchestration",
+	}); err == nil || !strings.Contains(err.Error(), "plan changed") {
+		t.Fatalf("stale environment plan error = %v", err)
+	}
+}
+
+func TestEnvironmentInstallOutputIsBounded(t *testing.T) {
+	t.Parallel()
+
+	output := newCappedInstallOutput(4)
+	written, err := output.Write([]byte("abcdef"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if written != 6 {
+		t.Fatalf("Write() = %d, want caller-visible length 6", written)
+	}
+	if got := output.String(); got != "abcd\n… installer output truncated\n" {
+		t.Fatalf("bounded output = %q", got)
+	}
+}
+
+func presetStatusByID(t *testing.T, values []PresetStatus, id string) PresetStatus {
+	t.Helper()
+	for _, value := range values {
+		if value.Preset.ID == id {
+			return value
+		}
+	}
+	t.Fatalf("preset %q not found", id)
+	return PresetStatus{}
+}
+
+func plannedRequirementByID(
+	t *testing.T,
+	values []environment.PlannedRequirement,
+	id string,
+) environment.PlannedRequirement {
+	t.Helper()
+	for _, value := range values {
+		if value.ID == id {
+			return value
+		}
+	}
+	t.Fatalf("requirement %q not found", id)
+	return environment.PlannedRequirement{}
 }
 
 func TestLoaderPlansAndAppliesPresetForOneProviderAndProject(t *testing.T) {

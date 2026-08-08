@@ -15,6 +15,7 @@ It provides one version-controlled source of truth for:
 - permanent provider aliases such as `/codex-plan`;
 - personal skills and policies;
 - reusable hook packs with explicit user or project installation scope;
+- declarative environment requirements referenced by presets;
 - a provider-neutral allow, ask, and deny approval policy;
 - model roles, provider capability metadata, and existing provider-config inspection;
 - safe configuration rendering and installation.
@@ -40,10 +41,11 @@ The repository contains the first safe configurator foundation:
 - a strict, versioned preset library under `config/presets`;
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
   multi-lens-review, harness-profile, session-audit, harness-improvement,
-  Codex-compatibility, and Codex resource-lab presets;
+  terminal-orchestration, Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
+- strict environment-pack validation, read-only planning, and guarded typed installation;
 - six validated hook packs and eight hook presets spanning safety, continuity,
   quality, delegation, maintenance, and redacted local observability;
 - a strict human-only approval policy definition with bounded grants, deny
@@ -77,6 +79,11 @@ depends on the planned structured settings merge; see
 The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
 `/work-speed-loop` for dependency-safe concurrent execution. See
 [Parallel work and the speed loop](docs/PARALLEL-WORK.md).
+
+The separate, provider-neutral `terminal-orchestration` preset installs or
+verifies Zellij, Tatami, Herdr, Mdmaid, and three pinned Herdr plugins without
+coupling machine setup to a workflow preset. See
+[Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md).
 
 The retrospective presets add read-only harness profiling, evidence-backed run
 audits, and proposal-only improvement with held-out replay and human approval.
@@ -252,10 +259,34 @@ go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
 go run ./cmd/agentctl preset show parallel-work
+go run ./cmd/agentctl preset show terminal-orchestration
 go run ./cmd/agentctl preset show harness-improvement
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
 ```
+
+Inspect the external tools referenced by presets without running installers:
+
+```bash
+go run ./cmd/agentctl environment list
+go run ./cmd/agentctl environment show terminal-orchestration
+go run ./cmd/agentctl environment plan terminal-orchestration
+go run ./cmd/agentctl preset plan terminal-orchestration
+```
+
+Environment detection only checks command presence on `PATH`; it does not run
+the tools or any suggested installer.
+
+After reviewing that plan, install missing requirements explicitly:
+
+```bash
+go run ./cmd/agentctl preset apply --yes terminal-orchestration
+# Equivalent direct pack command:
+go run ./cmd/agentctl environment install --yes terminal-orchestration
+```
+
+Environment install uses typed commands only, verifies each requirement, and
+runs only after explicit confirmation in the CLI or Admin install review.
 
 Inspect hook packs and preview a user-global or repository-local installation:
 
@@ -358,6 +389,7 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 
 - [Improved workflow](docs/WORKFLOW.md)
 - [Preset library](docs/PRESETS.md)
+- [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md)
 - [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
 - [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md)
 - [Hook packs and installation scopes](docs/HOOKS.md)

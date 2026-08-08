@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 )
 
 func TestRepositoryPresetLibraryIsValid(t *testing.T) {
@@ -20,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 19 {
-		t.Fatalf("preset count = %d, want 19", len(library.Presets))
+	if len(library.Presets) != 20 {
+		t.Fatalf("preset count = %d, want 20", len(library.Presets))
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -109,6 +110,25 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := parallel.Targets; len(got) != 4 {
 		t.Fatalf("parallel-work targets = %v, want all four providers", got)
+	}
+	if got := parallel.EnvironmentPacks; len(got) != 0 {
+		t.Fatalf("parallel-work environment packs = %v, want none", got)
+	}
+	environmentPreset, found := library.Get("terminal-orchestration")
+	if !found {
+		t.Fatal("terminal-orchestration preset missing")
+	}
+	if got := environmentPreset.EnvironmentPacks; !slices.Equal(got, []string{"terminal-orchestration"}) {
+		t.Fatalf("terminal-orchestration environment packs = %v", got)
+	}
+	if got := environmentPreset.Targets; len(got) != 0 {
+		t.Fatalf("terminal-orchestration targets = %v, want none", got)
+	}
+	if got := environmentPreset.Contents.ResourceIDs(); len(got) != 0 {
+		t.Fatalf("terminal-orchestration resources = %v, want none", got)
+	}
+	if got := environmentPreset.Pipelines; len(got) != 0 {
+		t.Fatalf("terminal-orchestration pipelines = %v, want none", got)
 	}
 	multiReview, found := library.Get("multi-lens-review")
 	if !found {
@@ -235,9 +255,16 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	environments, err := environment.LoadLibrary(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, preset := range library.Presets {
 		if err := ValidateAgainstManifest(preset, manifest); err != nil {
 			t.Errorf("preset %q manifest validation error = %v", preset.ID, err)
+		}
+		if err := ValidateEnvironmentReferences(preset, environments); err != nil {
+			t.Errorf("preset %q environment validation error = %v", preset.ID, err)
 		}
 	}
 	selected, err := SelectManifest(shape, manifest)
@@ -653,6 +680,21 @@ func TestLibraryRejectsUnsafeAndInvalidPresets(t *testing.T) {
 		if err := ValidateAgainstManifest(preset, manifest); err == nil ||
 			!strings.Contains(err.Error(), "missing") {
 			t.Fatalf("ValidateAgainstManifest() error = %v", err)
+		}
+	})
+
+	t.Run("unknown environment pack", func(t *testing.T) {
+		preset := Preset{
+			SchemaVersion:    SchemaVersion,
+			ID:               "unknown-environment",
+			Name:             "Unknown Environment",
+			EnvironmentPacks: []string{"missing"},
+		}
+		if err := ValidateEnvironmentReferences(
+			preset,
+			environment.Library{},
+		); err == nil || !strings.Contains(err.Error(), "missing") {
+			t.Fatalf("ValidateEnvironmentReferences() error = %v", err)
 		}
 	})
 }

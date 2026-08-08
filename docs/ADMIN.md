@@ -11,6 +11,7 @@ running or observing agent work. It brings together:
 - configuration repository health;
 - provider installation and configuration health;
 - the preset library and each preset's workflow/pipeline DAGs;
+- external environment requirements referenced by presets;
 - MCP references, commands, prompts, skills, hooks, settings, and provider targets inside presets;
 - existing Claude, Codex, Hermes, Antigravity, Kaji, and future-harness configuration;
 - managed configuration drift and conflicts;
@@ -71,25 +72,46 @@ provider health, configuration drift, and current render/apply attention items.
 
 ### Presets
 
-Shows the reusable preset library. A preset is a configuration bundle: workflow
-DAGs/pipelines plus MCP references, commands, prompts, skills, hooks, settings,
-and provider targets. The current view loads `config/presets/*.json`, computes a
-safe plan for each selected preset, and answers:
+Shows the reusable preset library. A preset can be a provider configuration
+bundle or a provider-neutral environment bundle. Configuration presets contain
+workflow DAGs/pipelines plus MCP references, commands, prompts, skills, hooks,
+settings, and provider targets. Environment-only presets reference machine
+tooling without provider targets. The current view loads
+`config/presets/*.json`, computes safe plans, and answers:
 
 ```text
 Which presets exist?
 Which workflow DAGs/pipelines are inside this preset?
 Which MCPs, commands, prompts, skills, hooks, and settings belong to it?
 Which provider targets are declared?
+Which external commands are satisfied, missing, blocked, or unsupported?
 What will change if this preset is applied?
 ```
+
+Environment detection is path-only and read-only. Opening or refreshing the
+Presets view never runs a tool, package manager, plugin host, or remote
+installer. The view displays typed installation commands or official manual
+links before any install is confirmed. The same pack can also be installed by
+the guarded CLI command:
+
+```bash
+agentctl environment install --yes <pack>
+```
+
+Environment presets are searchable and grouped under `environments`. They show
+the guarded install command. Press `i` (or `a`) to review the exact environment
+plan, then `y` to run it. This environment-specific flow does not ask for a
+provider or project scope because its target is the local machine. Satisfied
+requirements are skipped, command output is bounded and filtered, and status is
+refreshed after completion or partial failure.
 
 Press `Enter` to open the preset's managed prompt/resource source browser.
 Use `j`/`k` to move between resources and `Page Up`/`Page Down` to scroll
 source text. The browser shows the canonical repository source and its rendered
 provider targets; it does not read content back from provider session storage.
 
-Press `a` to open the preset apply panel. If the plan has conflicts, choose:
+For configuration presets, press `a` to open the preset apply panel. If the
+plan has conflicts, choose:
 
 - `k` keeps customized files, remembers the exact decision, and applies all
   remaining preset changes;
@@ -173,13 +195,13 @@ server or hook.
 | Up/Down or `j`/`k` | Move selection |
 | `g`, `G` | First or last item |
 | `Enter` | Inspect a preset's prompt/resource source, or accept an installer choice |
-| `i` (`a` remains an alias) | Install the selected preset for one provider and scope |
+| `i` (`a` remains an alias) | Install the selected configuration or environment preset |
 | `/` | Search presets by ID, name, description, target, or resource |
 | `f` | Cycle preset resource filters and groups |
 | `u`, `p` | Choose user-global or project-folder scope in the installer |
 | `k` | Keep existing files in the apply decision panel |
 | `x` | Replace conflicts from the preset in the apply decision panel |
-| `y` | Confirm the reviewed preset apply |
+| `y` | Confirm the reviewed configuration apply or environment install |
 | `Page Up`, `Page Down` | Scroll prompt/resource source |
 | `r` | Refresh all read-only state |
 | `?`, `Esc` | Open or close help |

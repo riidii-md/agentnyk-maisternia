@@ -11,6 +11,7 @@ import (
 	"github.com/kagi-labs/agentctl/internal/approvals"
 	"github.com/kagi-labs/agentctl/internal/buildinfo"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/hookpacks"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -23,6 +24,7 @@ Usage:
   agentctl admin [options]
   agentctl approval <command> [options]
   agentctl config <command> [options]
+  agentctl environment <command> [options]
   agentctl hook <command> [options]
   agentctl preset <command> [options]
   agentctl doctor [options]
@@ -87,6 +89,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runApprovalCommand(args[1:], stdout, stderr)
 	case "config":
 		return runConfigCommand(args[1:], stdout, stderr)
+	case "environment":
+		return runEnvironmentCommand(args[1:], stdout, stderr)
 	case "hook":
 		return runHookCommand(args[1:], stdout, stderr)
 	case "preset":
@@ -145,13 +149,23 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
+		environments, err := environment.LoadLibrary(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
 		for _, preset := range library.Presets {
 			if err := presets.ValidateAgainstManifest(preset, manifest); err != nil {
 				fmt.Fprintf(stderr, "error: %v\n", err)
 				return 1
 			}
+			if err := presets.ValidateEnvironmentReferences(preset, environments); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
 		}
 		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(library.Presets))
+		fmt.Fprintf(stdout, "environment pack library valid: %d packs\n", len(environments.Packs))
 
 		hooks, err := hookpacks.LoadLibrary(options.repo)
 		if err != nil {

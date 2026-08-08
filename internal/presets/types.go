@@ -6,13 +6,14 @@ const (
 )
 
 type Preset struct {
-	SchemaVersion int        `json:"schema_version"`
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	Description   string     `json:"description"`
-	Pipelines     []Pipeline `json:"pipelines"`
-	Contents      Contents   `json:"contents"`
-	Targets       []string   `json:"targets"`
+	SchemaVersion    int        `json:"schema_version"`
+	ID               string     `json:"id"`
+	Name             string     `json:"name"`
+	Description      string     `json:"description"`
+	Pipelines        []Pipeline `json:"pipelines"`
+	Contents         Contents   `json:"contents"`
+	Targets          []string   `json:"targets"`
+	EnvironmentPacks []string   `json:"environment_packs,omitempty"`
 }
 
 type Pipeline struct {
@@ -55,6 +56,12 @@ func (c Contents) ResourceIDs() []string {
 	result = append(result, c.Hooks...)
 	result = append(result, c.Settings...)
 	return result
+}
+
+func (p Preset) IsEnvironmentOnly() bool {
+	return len(p.EnvironmentPacks) > 0 &&
+		len(p.Contents.ResourceIDs()) == 0 &&
+		len(p.Pipelines) == 0
 }
 
 type Library struct {

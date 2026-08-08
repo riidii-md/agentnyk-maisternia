@@ -2,8 +2,8 @@
 
 ## Model
 
-A preset is a reusable configuration bundle. A pipeline is a declarative
-workflow DAG inside that bundle, not a running job.
+A preset is a reusable configuration or environment bundle. A pipeline is a
+declarative workflow DAG inside a configuration bundle, not a running job.
 
 Version 1 preset files live under:
 
@@ -17,11 +17,22 @@ Each file declares:
 - zero or more workflow DAGs;
 - managed resource references grouped as MCPs, commands, prompts, skills,
   hooks, and settings;
+- optional environment-pack references for tools the workflow needs outside
+  provider configuration directories;
 - canonical provider targets.
+
+An environment-only preset has no provider targets or managed manifest
+resources. It references an environment pack and uses the guarded environment
+installer when the preset is applied.
 
 Every content value is a resource ID from `config/manifest.json`. The manifest
 remains the source of truth for source files and provider-native target paths.
 This keeps presets compositional without duplicating file ownership rules.
+
+Environment-pack references resolve against `config/environments`. They model
+machine or shared tooling such as Zellij, Tatami, Herdr, and documented host
+plugins; they are not provider target paths and are not copied into every
+harness home.
 
 ## Included Presets
 
@@ -34,6 +45,8 @@ The repository starts with:
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution
   waves with isolated writes, integration barriers, and sequential fallback;
+- `terminal-orchestration`: provider-neutral machine setup for Zellij, Tatami,
+  Herdr, Mdmaid, and three pinned Herdr plugins;
 - `multi-lens-review`: plan and implementation review with independent lenses,
   per-finding refutation, applied fixes, and optional provider delegation;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
@@ -60,6 +73,7 @@ agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
 agentctl preset show parallel-work
+agentctl preset show terminal-orchestration
 agentctl preset show multi-lens-review
 agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
@@ -178,6 +192,15 @@ These commands select only the manifest resources declared by the preset. They
 delegate to the same configurator used by full-manifest operations, preserving
 target allowlists, symlink checks, managed install state, drift detection,
 conflict detection, backups, atomic writes, and explicit confirmation.
+
+When a preset references environment packs, `preset plan` and the admin Presets
+view also show a read-only environment plan. Detection checks whether each
+declared command exists on `PATH`; it does not run tools or installers. Missing
+requirements do not cause configuration-preset apply to install packages
+implicitly. Applying an environment-only preset skips provider/scope selection,
+shows the exact environment plan, and requires confirmation. The direct
+`agentctl environment install --yes <pack>` command remains available. See
+[Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
 
 `--scope user` is the default and resolves targets under `--home`. Its managed
 state and backups live under `~/.config/agentctl`. `--scope project` resolves

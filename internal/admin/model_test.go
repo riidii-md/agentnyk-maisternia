@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kagi-labs/agentctl/internal/configurator"
+	"github.com/kagi-labs/agentctl/internal/environment"
 	"github.com/kagi-labs/agentctl/internal/presets"
 	"github.com/kagi-labs/agentctl/internal/providers"
 	"github.com/kagi-labs/agentctl/internal/workflow"
@@ -515,7 +516,8 @@ func TestPresetResourceFiltersCoverEveryResourceKind(t *testing.T) {
 	t.Parallel()
 
 	preset := presets.Preset{
-		Pipelines: []presets.Pipeline{{ID: "delivery"}},
+		Pipelines:        []presets.Pipeline{{ID: "delivery"}},
+		EnvironmentPacks: []string{"terminal-orchestration"},
 		Contents: presets.Contents{
 			MCPRefs:  []string{"mcp"},
 			Commands: []string{"command"},
@@ -534,7 +536,7 @@ func TestPresetResourceFiltersCoverEveryResourceKind(t *testing.T) {
 		t.Fatal("preset matched unknown filter")
 	}
 	for _, expected := range []string{
-		"commands", "hooks", "skills", "prompts", "settings", "MCP", "pipelines",
+		"commands", "hooks", "skills", "prompts", "settings", "MCP", "environments", "pipelines",
 	} {
 		if summary := presetKindSummary(preset); !strings.Contains(summary, expected) {
 			t.Errorf("kind summary %q missing %q", summary, expected)
@@ -593,10 +595,11 @@ func TestHelpIncludesPresetDiscoveryAndScopedInstallKeys(t *testing.T) {
 	model = updated.(Model)
 	view := model.View()
 	for _, expected := range []string{
-		"install preset for one provider and scope",
+		"install selected preset using its target type",
 		"search presets",
 		"filter/group presets by resource type",
 		"choose user or project install scope",
+		"environment presets target the local machine",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("help missing %q:\n%s", expected, view)
@@ -665,6 +668,129 @@ func TestPresetContentsRemainVisibleAtCommonTerminalWidth(t *testing.T) {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("compact preset contents missing %q:\n%s", expected, view)
 		}
+	}
+}
+
+func TestPresetViewShowsReadOnlyEnvironmentRequirements(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets[0].Preset.ID = "terminal-orchestration"
+	fixture.Presets[0].Preset.Name = "Terminal Orchestration"
+	fixture.Presets[0].Preset.Description = "Install terminal workflow tools."
+	fixture.Presets[0].Preset.Pipelines = nil
+	fixture.Presets[0].Preset.Contents = presets.Contents{}
+	fixture.Presets[0].Preset.Targets = nil
+	fixture.Presets[0].Preset.EnvironmentPacks = []string{"terminal-orchestration"}
+	fixture.Presets[0].Resources = nil
+	fixture.Presets[0].Config = ConfigStatus{}
+	fixture.Presets = fixture.Presets[:1]
+	fixture.Presets[0].Environments = []environment.Plan{{
+		PackID:   "terminal-orchestration",
+		PackName: "Terminal Orchestration",
+		Requirements: []environment.PlannedRequirement{
+			{
+				ID:       "zellij",
+				Name:     "Zellij",
+				Required: true,
+				State:    environment.StateSatisfied,
+				Path:     "/opt/homebrew/bin/zellij",
+			},
+			{
+				ID:       "tatami",
+				Name:     "Tatami",
+				Required: true,
+				State:    environment.StateMissing,
+				Installers: []environment.PlannedInstaller{{
+					ID:       "brew",
+					Kind:     environment.InstallerHomebrew,
+					Commands: [][]string{{"brew", "install", "tatami"}},
+				}},
+			},
+		},
+	}}
+	loadCount := 0
+	model := NewModel(func() Snapshot {
+		loadCount++
+		return fixture
+	})
+	var installedPreset string
+	model.installEnvironment = func(request EnvironmentInstallRequest) (string, error) {
+		installedPreset = request.PresetID
+		if len(request.Plans) != 1 || request.Plans[0].PackID != "terminal-orchestration" {
+			t.Fatalf("environment install request = %#v", request)
+		}
+		return "satisfied zellij\ninstalled tatami\n", nil
+	}
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 110, Height: 38})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"ENVIRONMENT REQUIREMENTS",
+		"Terminal Orchestration",
+		"Zellij",
+		"satisfied",
+		"Tatami",
+		"missing",
+		"brew install tatami",
+		"read-only",
+		"agentctl environment install --yes terminal-orchestration",
+		"environment requirements only",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("preset environment view missing %q:\n%s", expected, view)
+		}
+	}
+	if strings.Contains(view, "Install preset for one provider and scope") {
+		t.Fatalf("environment-only preset exposed provider installer:\n%s", view)
+	}
+	if !strings.Contains(view, "i  Install environment preset") {
+		t.Fatalf("environment-only preset has no install action:\n%s", view)
+	}
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+	if model.applyDialog.Stage != applyConfirm || !model.applyDialog.Environment {
+		t.Fatalf("environment-only preset did not open install review: %#v", model.applyDialog)
+	}
+	view = model.View()
+	for _, expected := range []string{
+		"REVIEW ENVIRONMENT INSTALL",
+		"brew install tatami",
+		"Press y to install",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("environment install review missing %q:\n%s", expected, view)
+		}
+	}
+	updated, command := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	model = updated.(Model)
+	if command == nil || model.applyDialog.Stage != applyRunning {
+		t.Fatalf("environment confirmation did not start installer: %#v", model.applyDialog)
+	}
+	updated, _ = model.Update(command())
+	model = updated.(Model)
+	if installedPreset != "terminal-orchestration" {
+		t.Fatalf("installed preset = %q", installedPreset)
+	}
+	if loadCount != 2 {
+		t.Fatalf("snapshot load count = %d, want initial load plus refresh", loadCount)
+	}
+	view = model.View()
+	for _, expected := range []string{
+		"Environment preset installed",
+		"satisfied zellij",
+		"installed tatami",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("environment install result missing %q:\n%s", expected, view)
+		}
+	}
+	if !presetMatchesSearch(fixture.Presets[0].Preset, "terminal-orchestration") {
+		t.Fatal("environment-only preset is not searchable by pack id")
 	}
 }
 
