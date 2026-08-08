@@ -237,13 +237,13 @@ Inspect the complete preset:
 
 ```bash
 maisternia preset show harness-improvement
-maisternia preset plan --target codex harness-improvement
+maisternia preset plan --scope user --target codex harness-improvement
 ```
 
 Apply it after reviewing the plan:
 
 ```bash
-maisternia preset apply --target codex --yes harness-improvement
+maisternia preset apply --scope user --target codex --yes harness-improvement
 ```
 
 Then invoke this inside the configured harness after a completed task:

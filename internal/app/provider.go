@@ -19,7 +19,7 @@ const providerUsage = `Usage:
   maisternia provider capabilities [options] <provider>
 
 Options:
-  --repo <dir>  Configuration repository root (default: current directory)
+  --repo <dir>  Configuration catalog override
   --home <dir>  Home directory to inspect (default: current user home)
   --json        Emit machine-readable JSON
 
@@ -164,10 +164,10 @@ func parseProviderOptions(
 		fmt.Fprintf(stderr, "error: resolve user home: %v\n", err)
 		return providerOptions{}, 1
 	}
-	options := providerOptions{repo: ".", home: home}
+	options := providerOptions{repo: "", home: home}
 	flags := flag.NewFlagSet("provider "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.StringVar(&options.repo, "repo", options.repo, "configuration repository root")
+	flags.StringVar(&options.repo, "repo", options.repo, "configuration catalog override")
 	flags.StringVar(&options.home, "home", options.home, "home directory to inspect")
 	flags.BoolVar(&options.json, "json", false, "emit JSON")
 	if err := flags.Parse(args); err != nil {
@@ -175,14 +175,14 @@ func parseProviderOptions(
 	}
 	options.args = flags.Args()
 
-	options.repo, err = filepath.Abs(options.repo)
-	if err != nil {
-		fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
-		return providerOptions{}, 1
-	}
 	options.home, err = filepath.Abs(options.home)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
+		return providerOptions{}, 1
+	}
+	options.repo, err = resolveRepositoryOption(options.repo, options.home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
 		return providerOptions{}, 1
 	}
 	return options, 0

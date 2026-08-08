@@ -27,10 +27,10 @@ const presetUsage = `Usage:
   maisternia preset apply [options] --yes <preset>
 
 Options:
-  --repo <dir>         Configuration repository root (default: current directory)
+  --repo <dir>         Configuration catalog override
   --manifest <path>    Manifest path relative to repository
   --home <dir>         Target home directory (plan and apply)
-  --scope <scope>      user or project (plan and apply; default: user)
+  --scope <scope>      user or project (required for configuration plan/apply)
   --project <dir>      Project root for project scope (default: current directory)
   --target <agent>     all, codex, claude, antigravity (agy), or hermes
   --output <dir>       Staging directory (render)
@@ -60,6 +60,7 @@ func (o *optionalString) Set(value string) error {
 
 type presetOptions struct {
 	repo        string
+	repoSource  string
 	manifest    string
 	home        string
 	scope       string
@@ -95,6 +96,11 @@ func runPresetCommand(args []string, stdout, stderr io.Writer) int {
 	if code != 0 {
 		return code
 	}
+	if (command == "create" || command == "copy" || command == "edit" || command == "delete") &&
+		options.repoSource == "installed catalog" {
+		fmt.Fprintln(stderr, "error: preset authoring requires a source catalog; pass --repo /path/to/agentnyk-maisternia")
+		return 2
+	}
 	switch command {
 	case "create", "copy", "edit", "delete":
 		return runPresetAuthoring(command, options, stdout, stderr)
@@ -118,17 +124,17 @@ func parsePresetOptions(
 		return presetOptions{}, 1
 	}
 	options := presetOptions{
-		repo:      ".",
+		repo:      "",
 		manifest:  "config/manifest.json",
 		home:      home,
-		scope:     string(configurator.ScopeUser),
+		scope:     "",
 		project:   ".",
 		target:    "all",
 		conflicts: string(configurator.ConflictAbort),
 	}
 	flags := flag.NewFlagSet("preset "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.StringVar(&options.repo, "repo", options.repo, "configuration repository root")
+	flags.StringVar(&options.repo, "repo", options.repo, "configuration catalog override")
 	switch command {
 	case "validate", "plan", "render", "apply":
 		flags.StringVar(&options.manifest, "manifest", options.manifest, "manifest path")
@@ -165,7 +171,7 @@ func parsePresetOptions(
 	if err := flags.Parse(args); err != nil {
 		return presetOptions{}, 2
 	}
-	if (command == "plan" || command == "apply") &&
+	if (command == "plan" || command == "apply") && options.scope != "" &&
 		options.scope != string(configurator.ScopeUser) &&
 		options.scope != string(configurator.ScopeProject) {
 		fmt.Fprintf(stderr, "error: invalid --scope value %q; use user or project\n", options.scope)
@@ -183,17 +189,19 @@ func parsePresetOptions(
 		}
 	}
 
-	options.repo, err = filepath.Abs(options.repo)
+	options.home, err = filepath.Abs(options.home)
 	if err != nil {
-		fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
+		fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
 		return presetOptions{}, 1
 	}
+	selection, err := resolveRepositorySelection(options.repo, options.home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
+		return presetOptions{}, 1
+	}
+	options.repo = selection.Path
+	options.repoSource = selection.Source
 	if command == "plan" || command == "apply" {
-		options.home, err = filepath.Abs(options.home)
-		if err != nil {
-			fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
-			return presetOptions{}, 1
-		}
 		options.project, err = filepath.Abs(options.project)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: resolve project path: %v\n", err)
@@ -468,6 +476,10 @@ func runPresetInstallation(
 			"preset %q has no provider resources to render\n",
 			preset.ID,
 		)
+		return 2
+	}
+	if command != "render" && options.scope == "" {
+		fmt.Fprintln(stderr, "error: --scope is required for configuration presets; use user or project")
 		return 2
 	}
 

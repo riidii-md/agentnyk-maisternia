@@ -1,9 +1,9 @@
 ---
 description: Inspect a Maisternia preset plan without applying it
-argument-hint: PRESET=<preset-id> [TARGET=codex]
+argument-hint: PRESET=<preset-id> [TARGET=codex] [SCOPE=user]
 ---
 
-Run `maisternia preset plan --target $TARGET $PRESET`.
+Run `maisternia preset plan --scope $SCOPE --target $TARGET $PRESET`.
 
 Summarize:
 

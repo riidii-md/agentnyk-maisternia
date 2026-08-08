@@ -47,7 +47,7 @@ Usage:
   maisternia work next [options] <task-id>
 
 Common options:
-  --repo <dir>       Configuration repository root (default: current directory)
+  --repo <dir>       Configuration catalog override
   --manifest <path>  Manifest path relative to repository (default: config/manifest.json)
   --home <dir>       Target home directory (default: current user home)
   --target <agent>   all, codex, claude, antigravity (agy), or hermes (default: all)
@@ -70,8 +70,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 
 func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprint(stderr, usage)
-		return 2
+		return runAdminCommand(nil, stdin, stdout, stderr)
 	}
 	if len(args) == 1 &&
 		(args[0] == "version" || args[0] == "--version" || args[0] == "-v") {
@@ -272,7 +271,7 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 		return commandOptions{}, 1
 	}
 	options := commandOptions{
-		repo:      ".",
+		repo:      "",
 		manifest:  "config/manifest.json",
 		home:      home,
 		target:    "all",
@@ -280,7 +279,7 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 	}
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.StringVar(&options.repo, "repo", options.repo, "configuration repository root")
+	flags.StringVar(&options.repo, "repo", options.repo, "configuration catalog override")
 	flags.StringVar(&options.manifest, "manifest", options.manifest, "manifest path")
 	flags.StringVar(&options.home, "home", options.home, "target home directory")
 	flags.StringVar(&options.target, "target", options.target, "target agent")
@@ -314,14 +313,14 @@ func parseOptions(command string, args []string, stderr io.Writer) (commandOptio
 		}
 	}
 
-	options.repo, err = filepath.Abs(options.repo)
-	if err != nil {
-		fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
-		return commandOptions{}, 1
-	}
 	options.home, err = filepath.Abs(options.home)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
+		return commandOptions{}, 1
+	}
+	options.repo, err = resolveRepositoryOption(options.repo, options.home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
 		return commandOptions{}, 1
 	}
 	if options.output != "" {

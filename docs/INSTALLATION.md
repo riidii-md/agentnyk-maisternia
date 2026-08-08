@@ -19,6 +19,10 @@ Building from source is available immediately. Homebrew, `go install
 Homebrew also requires the one-time private tap setup in
 [Releasing AgentnykMaisternia](RELEASING.md).
 
+Every installation method produces the same self-contained executable. The
+versioned configuration catalog is embedded in the binary; a separate source
+checkout is not required at runtime.
+
 ## Homebrew
 
 The Homebrew cask installs release binaries from the private
@@ -134,14 +138,54 @@ maisternia doctor
 maisternia provider doctor all
 ```
 
-For commands that use the version-controlled configuration after a system
-installation, save its checkout path once:
+Open the Admin interface:
+
+```bash
+maisternia
+```
+
+`maisternia admin` is the explicit equivalent. The first command that needs the
+catalog materializes it under:
+
+```text
+~/.config/maisternia/catalogs/<content-sha256>/
+```
+
+The catalog directory is private, content-addressed, and installed atomically.
+Upgraded binaries can therefore install their matching catalog without
+overwriting an older version or depending on the location of a Git checkout.
+
+Installation and first launch do not apply managed agent configuration. In
+Admin, every configuration preset asks for user-global or project scope, shows
+the exact plan, and requires confirmation. When launched inside a Git repository,
+Maisternia recommends and prefills that repository for project scope.
+
+For non-interactive use, configuration preset planning and apply require an
+explicit scope:
+
+```bash
+maisternia preset plan --scope user --target codex standard-work
+maisternia preset apply --scope project --project /path/to/repo \
+  --target codex --yes standard-work
+```
+
+Environment-only presets remain local-machine scoped because they install host
+tools rather than provider configuration.
+
+## Optional Source Catalog Override
+
+Developers editing catalog definitions can point Maisternia at a checkout for
+one command:
+
+```bash
+maisternia admin --repo /path/to/agentnyk-maisternia
+```
+
+Or save that developer override:
 
 ```bash
 maisternia config set-repository /path/to/agentnyk-maisternia
-maisternia admin
 ```
 
-Installation places only the `maisternia` executable. It does not apply managed
-agent configuration. Configuration changes still require a reviewed plan and
-an explicit `maisternia apply --yes`.
+This setting is optional. `maisternia config clear-repository` restores
+automatic source-checkout and embedded-catalog discovery.

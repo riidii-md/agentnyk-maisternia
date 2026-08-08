@@ -489,14 +489,18 @@ func (m *Model) openPresetApply() {
 		return
 	}
 	m.applyDialog = presetApplyDialog{
-		Stage:    applyTarget,
-		PresetID: status.Preset.ID,
-		Name:     status.Preset.Name,
-		Targets:  append([]string(nil), status.Preset.Targets...),
+		Stage:        applyTarget,
+		PresetID:     status.Preset.ID,
+		Name:         status.Preset.Name,
+		Targets:      append([]string(nil), status.Preset.Targets...),
+		ProjectInput: strings.TrimSpace(m.snapshot.SuggestedProject),
 		Request: PresetInstallRequest{
 			PresetID: status.Preset.ID,
 		},
 		Policy: configurator.ConflictAbort,
+	}
+	if m.applyDialog.ProjectInput != "" {
+		m.applyDialog.ScopeCursor = 1
 	}
 }
 

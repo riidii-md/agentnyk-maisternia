@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"path/filepath"
+	"os"
 	"sort"
 	"strings"
 
@@ -20,7 +20,7 @@ const hookUsage = `Usage:
   maisternia hook apply [options] --yes <hook-preset>
 
 Install options:
-  --scope <scope>      user or project (default: user)
+  --scope <scope>      user or project (required)
   --project <dir>      Project root for project scope (default: current directory)
   --home <dir>         Target home directory for user scope
   --target <agent>     all, codex, claude, antigravity (agy), or hermes
@@ -59,14 +59,19 @@ func runHookCommand(args []string, stdout, stderr io.Writer) int {
 
 	flags := flag.NewFlagSet("hook "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	repo := "."
-	flags.StringVar(&repo, "repo", repo, "configuration repository root")
+	repo := ""
+	flags.StringVar(&repo, "repo", repo, "configuration catalog override")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
-	repo, err := filepath.Abs(repo)
+	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
+		fmt.Fprintf(stderr, "error: resolve user home: %v\n", err)
+		return 1
+	}
+	repo, err = resolveRepositoryOption(repo, home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
 		return 1
 	}
 	library, err := hookpacks.LoadLibrary(repo)

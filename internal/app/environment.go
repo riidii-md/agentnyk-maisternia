@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"path/filepath"
+	"os"
 	"strings"
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
@@ -19,7 +19,7 @@ const environmentUsage = `Usage:
   maisternia environment install [options] --yes <pack>
 
 Options:
-  --repo <dir>  Configuration repository root (default: current directory)
+  --repo <dir>  Configuration catalog override
   --yes         Confirm the exact displayed installer commands
 
 Planning is read-only. Install executes only typed, validated commands after
@@ -43,18 +43,23 @@ func runEnvironmentCommand(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	repo := "."
+	repo := ""
 	yes := false
 	flags := flag.NewFlagSet("environment "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.StringVar(&repo, "repo", repo, "configuration repository root")
+	flags.StringVar(&repo, "repo", repo, "configuration catalog override")
 	flags.BoolVar(&yes, "yes", false, "confirm installer execution")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
-	repo, err := filepath.Abs(repo)
+	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
+		fmt.Fprintf(stderr, "error: resolve user home: %v\n", err)
+		return 1
+	}
+	repo, err = resolveRepositoryOption(repo, home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
 		return 1
 	}
 	library, err := environment.LoadLibrary(repo)

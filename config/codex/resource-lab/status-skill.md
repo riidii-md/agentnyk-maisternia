@@ -10,7 +10,8 @@ Inspect maisternia configuration without changing provider files.
 1. Run `maisternia version`.
 2. Run `maisternia config show`.
 3. List presets with `maisternia preset list`.
-4. For a named preset, run `maisternia preset plan <preset>`.
+4. For a named preset, run `maisternia preset plan --scope user <preset>` unless
+   the user explicitly selected a project scope.
 5. Explain create, update, unchanged, ignored, and conflict states simply.
 6. For conflicts, distinguish:
    - keep existing: preserve the customized target and remember its checksums;
