@@ -36,6 +36,7 @@ var presetFilters = []string{
 	"prompts",
 	"settings",
 	"MCP",
+	"environments",
 	"pipelines",
 }
 
@@ -51,6 +52,7 @@ var presetGroupOrder = []string{
 	"prompts",
 	"settings",
 	"MCP",
+	"environments",
 	"pipelines",
 	"other",
 }
@@ -456,7 +458,7 @@ func (m Model) beginPresetPlan(
 
 func (m *Model) openPresetApply() {
 	status, found := m.selectedPreset()
-	if !found {
+	if !found || status.Preset.IsEnvironmentOnly() {
 		return
 	}
 	m.applyDialog = presetApplyDialog{
@@ -725,6 +727,8 @@ func presetMatchesFilter(preset presets.Preset, filter string) bool {
 		return len(preset.Contents.Settings) > 0
 	case "MCP":
 		return len(preset.Contents.MCPRefs) > 0
+	case "environments":
+		return len(preset.EnvironmentPacks) > 0
 	case "pipelines":
 		return len(preset.Pipelines) > 0
 	default:
@@ -742,6 +746,7 @@ func presetMatchesSearch(preset presets.Preset, query string) bool {
 		preset.Name,
 		preset.Description,
 		strings.Join(preset.Targets, " "),
+		strings.Join(preset.EnvironmentPacks, " "),
 		strings.Join(preset.Contents.ResourceIDs(), " "),
 		presetContentSummary(preset.Contents),
 	}, " "))

@@ -61,10 +61,16 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	if snapshot.Config.ActionCount == 0 || snapshot.Config.Counts.Create == 0 {
 		t.Fatalf("config summary = %#v, want create actions", snapshot.Config)
 	}
-	if len(snapshot.Presets) != 19 {
-		t.Fatalf("presets = %d, want 19", len(snapshot.Presets))
+	if len(snapshot.Presets) != 20 {
+		t.Fatalf("presets = %d, want 20", len(snapshot.Presets))
 	}
 	for _, preset := range snapshot.Presets {
+		if preset.Preset.ID == "terminal-orchestration" {
+			if preset.Config.ActionCount != 0 || len(preset.Resources) != 0 {
+				t.Fatalf("environment-only preset has configuration = %#v", preset)
+			}
+			continue
+		}
 		if preset.Config.ActionCount == 0 {
 			t.Fatalf("preset %q has no scoped plan actions", preset.Preset.ID)
 		}
@@ -82,12 +88,16 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 		}
 	}
 	parallel := presetStatusByID(t, snapshot.Presets, "parallel-work")
-	if len(parallel.Environments) != 1 {
-		t.Fatalf("parallel-work environments = %#v", parallel.Environments)
+	if len(parallel.Environments) != 0 {
+		t.Fatalf("parallel-work environments = %#v, want none", parallel.Environments)
 	}
-	plan := parallel.Environments[0]
+	environmentPreset := presetStatusByID(t, snapshot.Presets, "terminal-orchestration")
+	if len(environmentPreset.Environments) != 1 {
+		t.Fatalf("terminal-orchestration environments = %#v", environmentPreset.Environments)
+	}
+	plan := environmentPreset.Environments[0]
 	if plan.PackID != "terminal-orchestration" || len(plan.Requirements) != 7 {
-		t.Fatalf("parallel-work environment plan = %#v", plan)
+		t.Fatalf("terminal-orchestration environment plan = %#v", plan)
 	}
 	if got := plannedRequirementByID(t, plan.Requirements, "zellij"); got.State != environment.StateSatisfied {
 		t.Fatalf("zellij state = %s", got.State)

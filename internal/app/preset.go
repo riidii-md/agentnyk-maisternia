@@ -424,15 +424,14 @@ func runPresetInstallation(
 	if !exists {
 		return presetNotFound(options.args[0], stderr)
 	}
-	manifest, err := configurator.LoadManifest(options.repo, options.manifest)
-	if err != nil {
-		fmt.Fprintf(stderr, "error: %v\n", err)
-		return 1
-	}
-	selectedManifest, err := presets.SelectManifest(preset, manifest)
-	if err != nil {
-		fmt.Fprintf(stderr, "error: %v\n", err)
-		return 1
+	if command == "apply" && preset.IsEnvironmentOnly() {
+		fmt.Fprintf(
+			stderr,
+			"preset %q contains environment requirements only; run agentctl environment install --yes %s\n",
+			preset.ID,
+			preset.EnvironmentPacks[0],
+		)
+		return 2
 	}
 	environmentLibrary, err := environment.LoadLibrary(options.repo)
 	if err != nil {
@@ -448,6 +447,28 @@ func runPresetInstallation(
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
+	}
+	if preset.IsEnvironmentOnly() {
+		if command == "plan" {
+			return 0
+		}
+		fmt.Fprintf(
+			stderr,
+			"preset %q has no provider resources to render\n",
+			preset.ID,
+		)
+		return 2
+	}
+
+	manifest, err := configurator.LoadManifest(options.repo, options.manifest)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	selectedManifest, err := presets.SelectManifest(preset, manifest)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
 	}
 
 	switch command {

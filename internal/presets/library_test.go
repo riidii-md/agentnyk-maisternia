@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 19 {
-		t.Fatalf("preset count = %d, want 19", len(library.Presets))
+	if len(library.Presets) != 20 {
+		t.Fatalf("preset count = %d, want 20", len(library.Presets))
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -111,8 +111,24 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if got := parallel.Targets; len(got) != 4 {
 		t.Fatalf("parallel-work targets = %v, want all four providers", got)
 	}
-	if got := parallel.EnvironmentPacks; !slices.Equal(got, []string{"terminal-orchestration"}) {
-		t.Fatalf("parallel-work environment packs = %v", got)
+	if got := parallel.EnvironmentPacks; len(got) != 0 {
+		t.Fatalf("parallel-work environment packs = %v, want none", got)
+	}
+	environmentPreset, found := library.Get("terminal-orchestration")
+	if !found {
+		t.Fatal("terminal-orchestration preset missing")
+	}
+	if got := environmentPreset.EnvironmentPacks; !slices.Equal(got, []string{"terminal-orchestration"}) {
+		t.Fatalf("terminal-orchestration environment packs = %v", got)
+	}
+	if got := environmentPreset.Targets; len(got) != 0 {
+		t.Fatalf("terminal-orchestration targets = %v, want none", got)
+	}
+	if got := environmentPreset.Contents.ResourceIDs(); len(got) != 0 {
+		t.Fatalf("terminal-orchestration resources = %v, want none", got)
+	}
+	if got := environmentPreset.Pipelines; len(got) != 0 {
+		t.Fatalf("terminal-orchestration pipelines = %v, want none", got)
 	}
 	multiReview, found := library.Get("multi-lens-review")
 	if !found {

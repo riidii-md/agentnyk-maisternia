@@ -694,6 +694,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 		"parallel-work",
 		"session-audit",
 		"standard-work",
+		"terminal-orchestration",
 	} {
 		if !strings.Contains(stdout.String(), presetID) {
 			t.Errorf("preset list output = %q, missing %q", stdout.String(), presetID)
@@ -725,7 +726,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "19 presets valid") {
+	if !strings.Contains(stdout.String(), "20 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
 
@@ -739,9 +740,23 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("parallel-work show code = %d, stderr = %s", code, stderr.String())
 	}
+	if strings.Contains(stdout.String(), `"environment_packs"`) {
+		t.Fatalf("parallel-work show output includes environment packs = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run(
+		[]string{"preset", "show", "--repo", repo, "terminal-orchestration"},
+		&stdout,
+		&stderr,
+	)
+	if code != 0 {
+		t.Fatalf("terminal-orchestration show code = %d, stderr = %s", code, stderr.String())
+	}
 	if !strings.Contains(stdout.String(), `"environment_packs": [`) ||
 		!strings.Contains(stdout.String(), `"terminal-orchestration"`) {
-		t.Fatalf("parallel-work show output = %q", stdout.String())
+		t.Fatalf("terminal-orchestration show output = %q", stdout.String())
 	}
 }
 
@@ -1125,7 +1140,7 @@ func TestPresetPlanIncludesReferencedEnvironmentPlan(t *testing.T) {
 		"--repo", repo,
 		"--home", home,
 		"--target", "codex",
-		"parallel-work",
+		"terminal-orchestration",
 	}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("preset plan code = %d, stderr = %s", code, stderr.String())
@@ -1140,6 +1155,29 @@ func TestPresetPlanIncludesReferencedEnvironmentPlan(t *testing.T) {
 		if !strings.Contains(stdout.String(), expected) {
 			t.Fatalf("preset plan missing %q: %s", expected, stdout.String())
 		}
+	}
+}
+
+func TestEnvironmentOnlyPresetDirectsApplyToEnvironmentInstall(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "apply",
+		"--repo", repo,
+		"--home", t.TempDir(),
+		"--yes",
+		"terminal-orchestration",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("environment-only preset apply code = %d, want 2", code)
+	}
+	if !strings.Contains(
+		stderr.String(),
+		"agentctl environment install --yes terminal-orchestration",
+	) {
+		t.Fatalf("environment-only preset apply stderr = %q", stderr.String())
 	}
 }
 

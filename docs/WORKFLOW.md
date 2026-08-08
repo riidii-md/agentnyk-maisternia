@@ -65,11 +65,13 @@ and explicit apply.
 
 ### Presets Are The Library; Pipelines Are Workflow DAGs
 
-The top-level reusable thing is a preset. A preset is a configuration bundle the
-user can create, copy, edit, preview, and apply later. A pipeline is one part of
-that preset: the workflow DAG or phase graph. Presets may also include MCP
-server/tool configuration, command aliases, prompts, skills, hooks, provider
-settings, and target mappings.
+The top-level reusable thing is a preset. A preset is a configuration or
+environment bundle the user can create, copy, edit, and preview. A pipeline is
+one part of a configuration preset: the workflow DAG or phase graph.
+Configuration presets may also include MCP server/tool configuration, command
+aliases, prompts, skills, hooks, provider settings, and target mappings.
+Environment-only presets reference provider-neutral machine tooling and use the
+separate guarded environment installer.
 
 A pipeline in `agentctl` is not a running job. It is a declarative workflow graph
 that can be rendered into one or more provider harnesses as part of a preset.

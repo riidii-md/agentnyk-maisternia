@@ -72,10 +72,12 @@ provider health, configuration drift, and current render/apply attention items.
 
 ### Presets
 
-Shows the reusable preset library. A preset is a configuration bundle: workflow
-DAGs/pipelines plus MCP references, commands, prompts, skills, hooks, settings,
-and provider targets. The current view loads `config/presets/*.json`, computes a
-safe plan for each selected preset, and answers:
+Shows the reusable preset library. A preset can be a provider configuration
+bundle or a provider-neutral environment bundle. Configuration presets contain
+workflow DAGs/pipelines plus MCP references, commands, prompts, skills, hooks,
+settings, and provider targets. Environment-only presets reference machine
+tooling without provider targets. The current view loads
+`config/presets/*.json`, computes safe plans, and answers:
 
 ```text
 Which presets exist?
@@ -97,12 +99,17 @@ agentctl environment install --yes <pack>
 
 Package execution remains outside the TUI write boundary.
 
+Environment presets are searchable and grouped under `environments`. They show
+the guarded CLI install command and do not expose the provider/scope apply
+dialog.
+
 Press `Enter` to open the preset's managed prompt/resource source browser.
 Use `j`/`k` to move between resources and `Page Up`/`Page Down` to scroll
 source text. The browser shows the canonical repository source and its rendered
 provider targets; it does not read content back from provider session storage.
 
-Press `a` to open the preset apply panel. If the plan has conflicts, choose:
+For configuration presets, press `a` to open the preset apply panel. If the
+plan has conflicts, choose:
 
 - `k` keeps customized files, remembers the exact decision, and applies all
   remaining preset changes;

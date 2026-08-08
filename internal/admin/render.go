@@ -168,7 +168,10 @@ func (m Model) renderFooter(width int) string {
 	}
 	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
-		keys = "i install  / search  f filter  enter inspect  ←/→ switch  j/k select  ? help  q quit"
+		keys = "/ search  f filter  ←/→ switch  j/k select  ? help  q quit"
+		if selected, found := m.selectedPreset(); found && !selected.Preset.IsEnvironmentOnly() {
+			keys = "i install  / search  f filter  enter inspect  ←/→ switch  j/k select  ? help  q quit"
+		}
 	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 		m.snapshot.Config.Counts.Conflict > 0 &&
 		m.firstConflictingPreset() >= 0 {
@@ -177,7 +180,10 @@ func (m Model) renderFooter(width int) string {
 	if width < 72 {
 		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
-			keys = "i install  / search  f filter  enter inspect  j/k select  q quit"
+			keys = "/ search  f filter  j/k select  q quit"
+			if selected, found := m.selectedPreset(); found && !selected.Preset.IsEnvironmentOnly() {
+				keys = "i install  / search  f filter  enter inspect  j/k select  q quit"
+			}
 		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 			m.snapshot.Config.Counts.Conflict > 0 &&
 			m.firstConflictingPreset() >= 0 {
@@ -315,9 +321,13 @@ func (m Model) renderPipelines(width int) string {
 
 	selected := m.snapshot.Presets[visible[index]]
 	preset := selected.Preset
+	targets := strings.Join(preset.Targets, ", ")
+	if preset.IsEnvironmentOnly() {
+		targets = "machine (provider-neutral)"
+	}
 	details := []string{
 		metric("Description", preset.Description, width),
-		metric("Targets", strings.Join(preset.Targets, ", "), width),
+		metric("Targets", targets, width),
 	}
 	if len(preset.EnvironmentPacks) > 0 {
 		details = append(details, metric(
@@ -345,11 +355,12 @@ func (m Model) renderPipelines(width int) string {
 			), width),
 		)
 	}
-	details = append(
-		details,
-		metric("Resources", strings.Join(preset.Contents.ResourceIDs(), ", "), width),
-	)
-	if width >= 90 {
+	resources := strings.Join(preset.Contents.ResourceIDs(), ", ")
+	if preset.IsEnvironmentOnly() {
+		resources = "none (environment requirements only)"
+	}
+	details = append(details, metric("Resources", resources, width))
+	if width >= 90 && len(selected.Resources) > 0 {
 		details = append(details, metric(
 			"Prompt source",
 			fmt.Sprintf("%d resources; Enter to inspect", len(selected.Resources)),
@@ -361,10 +372,14 @@ func (m Model) renderPipelines(width int) string {
 		section(strings.ToUpper(preset.Name), details, width),
 	}
 	if width >= 90 {
-		sections = append(sections, section("ACTIONS", []string{
+		actions := []string{
 			"i  Install preset for one provider and scope",
 			"Enter  Inspect prompt/resource source",
-		}, width))
+		}
+		if preset.IsEnvironmentOnly() {
+			actions = []string{"Use the environment install command shown below."}
+		}
+		sections = append(sections, section("ACTIONS", actions, width))
 	}
 	if len(selected.Environments) > 0 {
 		lines := []string{
@@ -383,9 +398,13 @@ func (m Model) renderPipelines(width int) string {
 	}
 
 	if len(preset.Pipelines) == 0 {
+		message := "This preset contains configuration only."
+		if preset.IsEnvironmentOnly() {
+			message = "This preset contains environment requirements only."
+		}
 		sections = append(sections, section(
 			"PIPELINE DAGS",
-			[]string{mutedStyle.Render("This preset contains configuration only.")},
+			[]string{mutedStyle.Render(message)},
 			width,
 		))
 		return strings.Join(sections, "\n\n")
@@ -549,6 +568,9 @@ func presetKindSummary(preset presets.Preset) string {
 	}
 	if len(preset.Contents.MCPRefs) > 0 {
 		kinds = append(kinds, "MCP")
+	}
+	if len(preset.EnvironmentPacks) > 0 {
+		kinds = append(kinds, "environments")
 	}
 	if len(preset.Pipelines) > 0 {
 		kinds = append(kinds, "pipelines")

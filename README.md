@@ -41,7 +41,7 @@ The repository contains the first safe configurator foundation:
 - a strict, versioned preset library under `config/presets`;
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
   multi-lens-review, harness-profile, session-audit, harness-improvement,
-  Codex-compatibility, and Codex resource-lab presets;
+  terminal-orchestration, Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, and guarded apply;
@@ -77,10 +77,12 @@ depends on the planned structured settings merge; see
 [Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
 
 The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
-`/work-speed-loop` for dependency-safe concurrent execution. It also references
-the `terminal-orchestration` environment pack for Zellij, Tatami, Herdr,
-Mdmaid, and three pinned Herdr plugins. See
-[Parallel work and the speed loop](docs/PARALLEL-WORK.md) and
+`/work-speed-loop` for dependency-safe concurrent execution. See
+[Parallel work and the speed loop](docs/PARALLEL-WORK.md).
+
+The separate, provider-neutral `terminal-orchestration` preset installs or
+verifies Zellij, Tatami, Herdr, Mdmaid, and three pinned Herdr plugins without
+coupling machine setup to a workflow preset. See
 [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md).
 
 The retrospective presets add read-only harness profiling, evidence-backed run
@@ -257,6 +259,7 @@ go run ./cmd/agentctl preset list
 go run ./cmd/agentctl preset show idea-shaping
 go run ./cmd/agentctl preset show scored-experiment
 go run ./cmd/agentctl preset show parallel-work
+go run ./cmd/agentctl preset show terminal-orchestration
 go run ./cmd/agentctl preset show harness-improvement
 go run ./cmd/agentctl preset show codex-resource-lab
 go run ./cmd/agentctl preset validate all
@@ -268,7 +271,7 @@ Inspect the external tools referenced by presets without running installers:
 go run ./cmd/agentctl environment list
 go run ./cmd/agentctl environment show terminal-orchestration
 go run ./cmd/agentctl environment plan terminal-orchestration
-go run ./cmd/agentctl preset plan --target codex parallel-work
+go run ./cmd/agentctl preset plan terminal-orchestration
 ```
 
 Environment detection only checks command presence on `PATH`; it does not run

@@ -5,9 +5,9 @@ directory. A workflow can need a terminal multiplexer, workspace manager,
 agent multiplexer, or host plugin before its installed
 commands are useful.
 
-`agentctl` represents those dependencies as environment packs. The model keeps
-machine setup separate from provider files while making the relationship
-visible from the preset that needs it.
+`agentctl` represents those dependencies as environment packs. Dedicated
+environment-only presets keep machine setup separate from provider files and
+from workflow presets.
 
 ## Model
 
@@ -25,8 +25,8 @@ A preset references packs through `environment_packs`. Each pack declares:
 - supported platforms;
 - typed installation choices and pinned versions or refs where applicable.
 
-The `parallel-work` preset references the first pack, `terminal-orchestration`.
-It installs or verifies:
+The provider-neutral `terminal-orchestration` preset references the same-named
+environment pack. It installs or verifies:
 
 - Zellij;
 - Tatami;
@@ -55,7 +55,7 @@ Build a plan for the current machine:
 
 ```bash
 agentctl environment plan terminal-orchestration
-agentctl preset plan --target codex parallel-work
+agentctl preset plan terminal-orchestration
 ```
 
 Planning only calls the operating system's executable lookup. It does not run
@@ -69,8 +69,10 @@ Each requirement is reported as:
   installation is explicitly confirmed;
 - `unsupported`: no installer is declared for the host platform.
 
-Environment results do not silently expand a preset apply. Provider
-configuration and machine setup remain separately reviewed operations.
+Environment results do not silently expand a configuration-preset apply.
+Provider configuration and machine setup remain separately reviewed
+operations. Applying an environment-only preset points to the explicit
+environment install command instead of opening a provider/scope installer.
 
 ## Install
 

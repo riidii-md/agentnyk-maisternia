@@ -2,8 +2,8 @@
 
 ## Model
 
-A preset is a reusable configuration bundle. A pipeline is a declarative
-workflow DAG inside that bundle, not a running job.
+A preset is a reusable configuration or environment bundle. A pipeline is a
+declarative workflow DAG inside a configuration bundle, not a running job.
 
 Version 1 preset files live under:
 
@@ -20,6 +20,10 @@ Each file declares:
 - optional environment-pack references for tools the workflow needs outside
   provider configuration directories;
 - canonical provider targets.
+
+An environment-only preset has no provider targets or managed manifest
+resources. It references an environment pack and uses the separate guarded
+environment installer.
 
 Every content value is a resource ID from `config/manifest.json`. The manifest
 remains the source of truth for source files and provider-native target paths.
@@ -41,6 +45,8 @@ The repository starts with:
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution
   waves with isolated writes, integration barriers, and sequential fallback;
+- `terminal-orchestration`: provider-neutral machine setup for Zellij, Tatami,
+  Herdr, Mdmaid, and three pinned Herdr plugins;
 - `multi-lens-review`: plan and implementation review with independent lenses,
   per-finding refutation, applied fixes, and optional provider delegation;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
@@ -67,6 +73,7 @@ agentctl preset list
 agentctl preset show idea-shaping
 agentctl preset show scored-experiment
 agentctl preset show parallel-work
+agentctl preset show terminal-orchestration
 agentctl preset show multi-lens-review
 agentctl preset show harness-improvement
 agentctl preset show codex-resource-lab
@@ -189,8 +196,9 @@ conflict detection, backups, atomic writes, and explicit confirmation.
 When a preset references environment packs, `preset plan` and the admin Presets
 view also show a read-only environment plan. Detection checks whether each
 declared command exists on `PATH`; it does not run tools or installers. Missing
-requirements do not cause preset apply to install packages implicitly. Run the
-separate, guarded `agentctl environment install --yes <pack>` command after
+requirements do not cause configuration-preset apply to install packages
+implicitly. Environment-only presets have no provider/scope apply action; run
+the separate, guarded `agentctl environment install --yes <pack>` command after
 reviewing its exact plan. See [Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
 
 `--scope user` is the default and resolves targets under `--home`. Its managed

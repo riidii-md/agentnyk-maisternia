@@ -516,7 +516,8 @@ func TestPresetResourceFiltersCoverEveryResourceKind(t *testing.T) {
 	t.Parallel()
 
 	preset := presets.Preset{
-		Pipelines: []presets.Pipeline{{ID: "delivery"}},
+		Pipelines:        []presets.Pipeline{{ID: "delivery"}},
+		EnvironmentPacks: []string{"terminal-orchestration"},
 		Contents: presets.Contents{
 			MCPRefs:  []string{"mcp"},
 			Commands: []string{"command"},
@@ -535,7 +536,7 @@ func TestPresetResourceFiltersCoverEveryResourceKind(t *testing.T) {
 		t.Fatal("preset matched unknown filter")
 	}
 	for _, expected := range []string{
-		"commands", "hooks", "skills", "prompts", "settings", "MCP", "pipelines",
+		"commands", "hooks", "skills", "prompts", "settings", "MCP", "environments", "pipelines",
 	} {
 		if summary := presetKindSummary(preset); !strings.Contains(summary, expected) {
 			t.Errorf("kind summary %q missing %q", summary, expected)
@@ -673,7 +674,16 @@ func TestPresetViewShowsReadOnlyEnvironmentRequirements(t *testing.T) {
 	t.Parallel()
 
 	fixture := adminFixture()
+	fixture.Presets[0].Preset.ID = "terminal-orchestration"
+	fixture.Presets[0].Preset.Name = "Terminal Orchestration"
+	fixture.Presets[0].Preset.Description = "Install terminal workflow tools."
+	fixture.Presets[0].Preset.Pipelines = nil
+	fixture.Presets[0].Preset.Contents = presets.Contents{}
+	fixture.Presets[0].Preset.Targets = nil
 	fixture.Presets[0].Preset.EnvironmentPacks = []string{"terminal-orchestration"}
+	fixture.Presets[0].Resources = nil
+	fixture.Presets[0].Config = ConfigStatus{}
+	fixture.Presets = fixture.Presets[:1]
 	fixture.Presets[0].Environments = []environment.Plan{{
 		PackID:   "terminal-orchestration",
 		PackName: "Terminal Orchestration",
@@ -716,10 +726,22 @@ func TestPresetViewShowsReadOnlyEnvironmentRequirements(t *testing.T) {
 		"brew install tatami",
 		"read-only",
 		"agentctl environment install --yes terminal-orchestration",
+		"environment requirements only",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("preset environment view missing %q:\n%s", expected, view)
 		}
+	}
+	if strings.Contains(view, "Install preset for one provider and scope") {
+		t.Fatalf("environment-only preset exposed provider installer:\n%s", view)
+	}
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+	if model.applyDialog.Stage != "" {
+		t.Fatalf("environment-only preset opened provider installer: %#v", model.applyDialog)
+	}
+	if !presetMatchesSearch(fixture.Presets[0].Preset, "terminal-orchestration") {
+		t.Fatal("environment-only preset is not searchable by pack id")
 	}
 }
 

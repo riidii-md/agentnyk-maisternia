@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "terminal-orchestration",
   "name": "Terminal Orchestration",
-  "description": "Terminal workspace and agent-multiplexer tools used by the parallel-work workflow.",
+  "description": "Provider-neutral terminal workspace and agent-multiplexer tools for local orchestration workflows.",
   "requirements": [
     {
       "id": "zellij",

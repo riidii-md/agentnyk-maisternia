@@ -58,6 +58,12 @@ func (c Contents) ResourceIDs() []string {
 	return result
 }
 
+func (p Preset) IsEnvironmentOnly() bool {
+	return len(p.EnvironmentPacks) > 0 &&
+		len(p.Contents.ResourceIDs()) == 0 &&
+		len(p.Pipelines) == 0
+}
+
 type Library struct {
 	root    string
 	Presets []Preset
