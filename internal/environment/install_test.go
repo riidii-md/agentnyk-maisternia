@@ -173,16 +173,16 @@ func TestNPMInstallerIsPinnedAndNonInteractiveHostPluginIsExact(t *testing.T) {
 func TestDecodePluginInspection(t *testing.T) {
 	t.Parallel()
 
-	data := []byte(`{"result":{"plugins":[{"plugin_id":"hail"}]}}`)
-	present, err := decodePluginInspection(data, "hail")
+	data := []byte(`{"result":{"plugins":[{"plugin_id":"herdr-bar"}]}}`)
+	present, err := decodePluginInspection(data, "herdr-bar")
 	if err != nil || !present {
 		t.Fatalf("decodePluginInspection() = %t, %v", present, err)
 	}
-	present, err = decodePluginInspection(data, "herdr-bar")
+	present, err = decodePluginInspection(data, "herdr-automatic-rename")
 	if err != nil || present {
 		t.Fatalf("decodePluginInspection(absent) = %t, %v", present, err)
 	}
-	if _, err := decodePluginInspection([]byte(`{"result":`), "hail"); err == nil {
+	if _, err := decodePluginInspection([]byte(`{"result":`), "herdr-bar"); err == nil {
 		t.Fatal("decodePluginInspection() accepted malformed JSON")
 	}
 }
@@ -286,7 +286,7 @@ func TestDefaultCommandAndPluginInspectionFailuresAreBounded(t *testing.T) {
 	if err := runCommand([]string{"go", "version"}, &stdout, &stderr); err != nil {
 		t.Fatalf("runCommand(go version) error = %v, stderr = %s", err, stderr.String())
 	}
-	if _, err := inspectHerdrPlugin("maisternia-command-that-does-not-exist", "hail"); err == nil {
+	if _, err := inspectHerdrPlugin("maisternia-command-that-does-not-exist", "herdr-bar"); err == nil {
 		t.Fatal("inspectHerdrPlugin() accepted a missing host")
 	}
 }

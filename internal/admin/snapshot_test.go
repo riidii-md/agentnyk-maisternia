@@ -97,7 +97,7 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 		t.Fatalf("terminal-orchestration environments = %#v", environmentPreset.Environments)
 	}
 	plan := environmentPreset.Environments[0]
-	if plan.PackID != "terminal-orchestration" || len(plan.Requirements) != 7 {
+	if plan.PackID != "terminal-orchestration" || len(plan.Requirements) != 6 {
 		t.Fatalf("terminal-orchestration environment plan = %#v", plan)
 	}
 	if got := plannedRequirementByID(t, plan.Requirements, "zellij"); got.State != environment.StateSatisfied {
@@ -193,7 +193,7 @@ func TestLoaderInstallsEnvironmentOnlyPreset(t *testing.T) {
 		t.Fatalf("InstallEnvironmentPreset() error = %v", err)
 	}
 	for _, requirementID := range []string{
-		"zellij", "tatami", "herdr", "mdmaid", "herdr-hail",
+		"zellij", "tatami", "herdr", "mdmaid",
 		"herdr-automatic-rename", "herdr-bar",
 	} {
 		if !strings.Contains(output, "satisfied "+requirementID) {

@@ -29,15 +29,14 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if !found {
 		t.Fatal("terminal-orchestration environment pack missing")
 	}
-	if len(pack.Requirements) != 7 {
-		t.Fatalf("requirements = %d, want 7", len(pack.Requirements))
+	if len(pack.Requirements) != 6 {
+		t.Fatalf("requirements = %d, want 6", len(pack.Requirements))
 	}
 	for _, requirementID := range []string{
 		"zellij",
 		"tatami",
 		"herdr",
 		"mdmaid",
-		"herdr-hail",
 		"herdr-automatic-rename",
 		"herdr-bar",
 	} {
@@ -61,10 +60,6 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 		repository string
 		ref        string
 	}{
-		"herdr-hail": {
-			pluginID: "hail", repository: "natori-hrj/herdr-hail",
-			ref: "9f7120be96cfcc511548eb446ee4ca8b52519b31",
-		},
 		"herdr-automatic-rename": {
 			pluginID: "herdr-automatic-rename", repository: "qu8n/herdr-automatic-rename",
 			ref: "31406e377d3c0b5b29ad3e4ff031bdcffe08d12d",

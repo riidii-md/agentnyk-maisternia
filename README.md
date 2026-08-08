@@ -91,7 +91,7 @@ The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
 [Parallel work and the speed loop](docs/PARALLEL-WORK.md).
 
 The separate, provider-neutral `terminal-orchestration` preset installs or
-verifies Zellij, Tatami, Herdr, Mdmaid, and three pinned Herdr plugins without
+verifies Zellij, Tatami, Herdr, Mdmaid, and two pinned Herdr plugins without
 coupling machine setup to a workflow preset. See
 [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md).
 

@@ -100,26 +100,6 @@
       ]
     },
     {
-      "id": "herdr-hail",
-      "name": "Herdr Hail",
-      "description": "Slack and Discord bridge for blocked-agent notifications and replies.",
-      "kind": "host-plugin",
-      "required": true,
-      "provides": ["remote-agent-notifications"],
-      "depends_on": ["herdr"],
-      "detect": {"command": "herdr", "plugin_id": "hail"},
-      "installers": [
-        {
-          "id": "herdr",
-          "kind": "host-plugin",
-          "platforms": ["darwin", "linux"],
-          "host": "herdr",
-          "repository": "natori-hrj/herdr-hail",
-          "ref": "9f7120be96cfcc511548eb446ee4ca8b52519b31"
-        }
-      ]
-    },
-    {
       "id": "herdr-automatic-rename",
       "name": "Herdr Automatic Rename",
       "description": "Automatically names and numbers Herdr workspaces, tabs, and agents.",
