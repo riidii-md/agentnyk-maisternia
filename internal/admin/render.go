@@ -100,7 +100,10 @@ func (m Model) renderHeader(width int) string {
 
 	repository := m.snapshot.Repository.Path
 	if repository == "" {
-		repository = "repository not configured"
+		repository = "configuration catalog unavailable"
+		if m.loading {
+			repository = "loading configuration catalog"
+		}
 	}
 	repository = truncate(repository, width)
 	return first + "\n" + mutedStyle.Render(repository)
@@ -198,8 +201,12 @@ func (m Model) renderFooter(width int) string {
 
 func (m Model) renderOverview(width int) string {
 	var sections []string
-	repositoryState := "NOT CONFIGURED"
+	repositoryState := "UNAVAILABLE"
 	repositoryStyle := warningStyle
+	if m.loading {
+		repositoryState = "LOADING"
+		repositoryStyle = mutedStyle
+	}
 	if m.snapshot.Repository.Path != "" {
 		repositoryState = "INVALID"
 		repositoryStyle = errorStyle
@@ -656,6 +663,12 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			"User-global — install under the selected provider home",
 			"Specific project folder — install repository-local configuration",
 		}
+		if dialog.ProjectInput != "" {
+			choices[1] = fmt.Sprintf(
+				"Current Git project (recommended) — %s",
+				truncate(sanitizeTerminalText(dialog.ProjectInput), maximum(1, width-36)),
+			)
+		}
 		for index, choice := range choices {
 			action = append(action, selectable(choice, index == dialog.ScopeCursor, width))
 		}
@@ -1005,10 +1018,9 @@ func (m Model) renderConfig(width int) string {
 	repository := m.snapshot.Repository.Path
 	if repository == "" {
 		return section("CONFIGURATION", []string{
-			warningStyle.Render("Repository is not configured."),
-			"Run:",
-			activeStyle.Render("maisternia config set-repository /path/to/agentnyk-maisternia"),
-			"Then press r to refresh.",
+			warningStyle.Render("Configuration catalog is unavailable."),
+			"Review the reported issue, then press r to refresh.",
+			mutedStyle.Render("Developers can override catalog discovery with --repo."),
 		}, width)
 	}
 	counts := m.snapshot.Config.Counts

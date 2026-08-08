@@ -19,12 +19,14 @@ Options:
   --no-alt-screen    Render without the terminal alternate screen
 
 Repository resolution:
-  --repo, MAISTERNIA_REPO, saved settings, then current-directory ancestors.
+  --repo, MAISTERNIA_REPO, saved developer override, source checkout, then the
+  catalog installed automatically under ~/.config/maisternia/.
 
 The admin interface installs configuration presets for one provider at user or
-project scope, and installs environment presets for the local machine. Both
-paths show a plan and require explicit confirmation. It cannot dispatch agents,
-commit, push, or manage runtime sessions.
+project scope. When launched inside a Git repository, project scope is suggested
+and prefilled. Environment presets install for the local machine. Both paths show
+a plan and require explicit confirmation. It cannot dispatch agents, commit,
+push, or manage runtime sessions.
 `
 
 func runAdminCommand(

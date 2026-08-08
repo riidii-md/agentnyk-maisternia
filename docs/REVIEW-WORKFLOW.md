@@ -193,8 +193,8 @@ Inspect and apply only the review bundle:
 
 ```bash
 maisternia preset show multi-lens-review
-maisternia preset plan --target all multi-lens-review
-maisternia preset apply --target codex --yes multi-lens-review
+maisternia preset plan --scope user --target all multi-lens-review
+maisternia preset apply --scope user --target codex --yes multi-lens-review
 ```
 
 Applying may surface a conflict for an existing personal `lens-review` skill.

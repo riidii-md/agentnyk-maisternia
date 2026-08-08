@@ -18,8 +18,8 @@ const configUsage = `Usage:
   maisternia config set-repository [--home <dir>] <path>
   maisternia config clear-repository [--home <dir>]
 
-The saved repository is used by maisternia admin when --repo and MAISTERNIA_REPO
-are not provided.
+Maisternia installs its embedded catalog automatically. set-repository saves an
+optional developer override used before source-checkout and embedded discovery.
 `
 
 func runConfigCommand(args []string, stdout, stderr io.Writer) int {
@@ -67,12 +67,19 @@ func runConfigCommand(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
-		repository := value.Repository
-		if repository == "" {
-			repository = "<not configured>"
+		override := value.Repository
+		if override == "" {
+			override = "<automatic>"
+		}
+		selection, err := resolveRepositorySelection("", home)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
+			return 1
 		}
 		fmt.Fprintf(stdout, "settings: %s\n", settings.Path(home))
-		fmt.Fprintf(stdout, "repository: %s\n", repository)
+		fmt.Fprintf(stdout, "repository override: %s\n", override)
+		fmt.Fprintf(stdout, "catalog: %s\n", selection.Path)
+		fmt.Fprintf(stdout, "resolved from: %s\n", selection.Source)
 		return 0
 
 	case "set-repository":
@@ -101,7 +108,7 @@ func runConfigCommand(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "error: save settings: %v\n", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "repository configured: %s\n", repository)
+		fmt.Fprintf(stdout, "repository override configured: %s\n", repository)
 		return 0
 
 	case "clear-repository":
@@ -113,7 +120,7 @@ func runConfigCommand(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "error: save settings: %v\n", err)
 			return 1
 		}
-		fmt.Fprintln(stdout, "repository configuration cleared")
+		fmt.Fprintln(stdout, "repository override cleared; automatic catalog discovery is active")
 		return 0
 	}
 	return 2

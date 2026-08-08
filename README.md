@@ -71,7 +71,8 @@ The repository contains the first safe configurator foundation:
 - a configuration TUI backed by real preset-library entries, workflow DAGs,
   provider health, per-preset plans, managed files, and guarded preset apply;
 - cross-platform CI snapshot builds and tag-based releases;
-- persistent configuration-repository discovery for system installations.
+- a self-installing configuration catalog embedded in every binary;
+- automatic current-Git-project suggestions for scoped preset installation.
 
 Structured TOML, JSON, and YAML settings merging, native hook and approval
 activation, structured preset-content and DAG editing, broader provider-native
@@ -153,27 +154,26 @@ uninstallation.
 
 ## Admin
 
-Point the system installation at this configuration repository once:
+Open the Admin interface with no subcommand:
 
 ```bash
-maisternia config set-repository /path/to/agentnyk-maisternia
+maisternia
 ```
 
-Then open the admin interface from any directory:
-
-```bash
-maisternia admin
-```
+`maisternia admin` is the explicit equivalent. On first use, the binary installs
+its embedded, versioned catalog under `~/.config/maisternia/catalogs/`; no source
+checkout or `config set-repository` step is required.
 
 Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
 for all keys. The current TUI browses preset-library entries, their workflow
 DAGs and contents, provider health, drift, and conflicts. In Presets, use `/` to
 search and `f` to filter/group by resource type. On a selected preset, press `i`
 to install it, choose one provider, then choose user-global or a specific project
-folder scope. Only that scoped plan is inspected; any conflicts require an
-explicit keep-existing or replace-from-preset decision followed by confirmation.
-Overview and Config can open the same scoped installer for a conflicting preset.
-The TUI must not run, observe, dispatch, commit, or push.
+folder scope. When Maisternia is launched inside a Git repository, that project
+is prefilled and recommended. Only that scoped plan is inspected; any conflicts
+require an explicit keep-existing or replace-from-preset decision followed by
+confirmation. Overview and Config can open the same scoped installer for a
+conflicting preset. The TUI must not run, observe, dispatch, commit, or push.
 
 See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
 controls, and configuration boundaries.
@@ -332,7 +332,7 @@ the [hook and approval roadmap](docs/HOOK-APPROVAL-ROADMAP.md).
 Plan or stage only the files selected by one preset:
 
 ```bash
-go run ./cmd/maisternia preset plan --target hermes idea-shaping
+go run ./cmd/maisternia preset plan --scope user --target hermes idea-shaping
 go run ./cmd/maisternia preset render \
   --target codex \
   --output ./build/standard-work \
@@ -343,8 +343,9 @@ Preset apply uses the same conflict, drift, backup, and managed-state checks as
 the full manifest apply, and still requires explicit confirmation:
 
 ```bash
-go run ./cmd/maisternia preset apply --target codex --yes standard-work
+go run ./cmd/maisternia preset apply --scope user --target codex --yes standard-work
 go run ./cmd/maisternia preset apply \
+  --scope user \
   --conflicts keep \
   --yes \
   codex-compatibility

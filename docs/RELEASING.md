@@ -32,7 +32,10 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`. GoReleaser creates:
 - a private GitHub release;
 - a Homebrew cask when tap publishing is configured.
 
-Release binaries embed the version, commit, and commit date.
+Release binaries embed the version, commit, commit date, and complete
+configuration catalog. The same binary therefore supports Homebrew, release
+archives, and `go install` without a companion checkout or package-specific
+shared-data path.
 The release job reruns `make verify` before publishing, even when the same
 commit previously passed the branch CI workflow.
 
@@ -107,5 +110,9 @@ not create or push tags.
 2. Download an archive and run `maisternia --version`.
 3. Confirm `Casks/maisternia.rb` was updated in the tap.
 4. Test a Homebrew install using a GitHub token with read access.
-5. Run `maisternia doctor` from the installed binary.
-6. Confirm no configuration was applied during installation.
+5. From outside the source checkout, run `maisternia doctor` and confirm the
+   catalog was created under `~/.config/maisternia/catalogs/`.
+6. Run bare `maisternia`, confirm Admin opens, and verify the current Git project
+   is recommended when launched inside a test repository.
+7. Confirm no provider configuration was applied during installation or first
+   launch.

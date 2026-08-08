@@ -282,11 +282,11 @@ func parseWorkflowOptions(
 		fmt.Fprintf(stderr, "error: resolve user home: %v\n", err)
 		return workflowOptions{}, nil, 1
 	}
-	options := workflowOptions{repo: ".", home: home}
+	options := workflowOptions{repo: "", home: home}
 	flags := flag.NewFlagSet(name, flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	if includeRepo {
-		flags.StringVar(&options.repo, "repo", options.repo, "configuration repository root")
+		flags.StringVar(&options.repo, "repo", options.repo, "configuration catalog override")
 	}
 	if includeHome {
 		flags.StringVar(&options.home, "home", options.home, "task registry home directory")
@@ -294,17 +294,17 @@ func parseWorkflowOptions(
 	if err := flags.Parse(args); err != nil {
 		return workflowOptions{}, nil, 2
 	}
-	if includeRepo {
-		options.repo, err = filepath.Abs(options.repo)
-		if err != nil {
-			fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
-			return workflowOptions{}, nil, 1
-		}
-	}
 	if includeHome {
 		options.home, err = filepath.Abs(options.home)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
+			return workflowOptions{}, nil, 1
+		}
+	}
+	if includeRepo {
+		options.repo, err = resolveRepositoryOption(options.repo, options.home)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
 			return workflowOptions{}, nil, 1
 		}
 	}

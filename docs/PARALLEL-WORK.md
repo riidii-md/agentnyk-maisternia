@@ -198,13 +198,13 @@ Inspect and plan the preset:
 
 ```bash
 maisternia preset show parallel-work
-maisternia preset plan --target codex parallel-work
+maisternia preset plan --scope user --target codex parallel-work
 ```
 
 Apply after reviewing conflicts:
 
 ```bash
-maisternia preset apply --target codex --yes parallel-work
+maisternia preset apply --scope user --target codex --yes parallel-work
 ```
 
 Create a decomposable plan:

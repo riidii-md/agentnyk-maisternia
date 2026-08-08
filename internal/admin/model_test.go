@@ -30,6 +30,20 @@ func TestRunLoadsAndQuitsWithoutAlternateScreen(t *testing.T) {
 	}
 }
 
+func TestInitialViewReportsCatalogLoading(t *testing.T) {
+	t.Parallel()
+
+	model := NewModel(func() Snapshot { return adminFixture() })
+	view := model.View()
+	if !strings.Contains(view, "loading configuration catalog") ||
+		!strings.Contains(view, "LOADING") {
+		t.Fatalf("initial view does not report loading:\n%s", view)
+	}
+	if strings.Contains(view, "not configured") || strings.Contains(view, "NOT CONFIGURED") {
+		t.Fatalf("initial view reports false configuration error:\n%s", view)
+	}
+}
+
 func TestModelLoadsNavigatesAndRendersViews(t *testing.T) {
 	t.Parallel()
 
@@ -327,6 +341,38 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	}
 	if view = model.View(); !strings.Contains(view, "Preset applied") {
 		t.Fatalf("apply result missing:\n%s", view)
+	}
+}
+
+func TestPresetInstallerRecommendsDiscoveredGitProject(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.SuggestedProject = "/workspaces/current-project"
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+
+	if model.applyDialog.Stage != applyScope || model.applyDialog.ScopeCursor != 1 {
+		t.Fatalf("scope dialog = %#v, want recommended project scope", model.applyDialog)
+	}
+	view := model.View()
+	for _, expected := range []string{"Current Git project", fixture.SuggestedProject, "recommended"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("scope recommendation missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	if model.applyDialog.Stage != applyProject || model.applyDialog.ProjectInput != fixture.SuggestedProject {
+		t.Fatalf("project dialog = %#v, want prefilled suggestion", model.applyDialog)
 	}
 }
 

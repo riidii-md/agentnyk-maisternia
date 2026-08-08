@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"path/filepath"
+	"os"
 	"strings"
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/approvals"
@@ -20,7 +20,7 @@ const approvalUsage = `Usage:
   maisternia approval apply [options] --yes
 
 Install options:
-  --scope <scope>      user or project (default: user)
+  --scope <scope>      user or project (required)
   --project <dir>      Project root for project scope (default: current directory)
   --home <dir>         Target home directory for user scope
   --target <agent>     all, codex, claude, antigravity (agy), or hermes
@@ -57,14 +57,19 @@ func runApprovalCommand(args []string, stdout, stderr io.Writer) int {
 
 	flags := flag.NewFlagSet("approval "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	repo := "."
-	flags.StringVar(&repo, "repo", repo, "configuration repository root")
+	repo := ""
+	flags.StringVar(&repo, "repo", repo, "configuration catalog override")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
-	root, err := filepath.Abs(repo)
+	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(stderr, "error: resolve repository path: %v\n", err)
+		fmt.Fprintf(stderr, "error: resolve user home: %v\n", err)
+		return 1
+	}
+	root, err := resolveRepositoryOption(repo, home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve configuration catalog: %v\n", err)
 		return 1
 	}
 	policy, err := approvals.Load(root)

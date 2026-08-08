@@ -20,7 +20,7 @@ func (l Loader) InstallEnvironmentPreset(request EnvironmentInstallRequest) (str
 		return "", err
 	}
 	if selection.Path == "" {
-		return "", errors.New("repository is not configured")
+		return "", errors.New("configuration catalog is unavailable")
 	}
 	presetLibrary, err := presets.LoadLibrary(selection.Path)
 	if err != nil {

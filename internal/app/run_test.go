@@ -91,6 +91,49 @@ func TestRunVersion(t *testing.T) {
 	}
 }
 
+func TestRunWithoutArgumentsOpensAdmin(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	var stdout, stderr bytes.Buffer
+	code := RunWithIO(nil, strings.NewReader("q"), &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("RunWithIO(nil) code = %d, stderr = %s", code, stderr.String())
+	}
+	if strings.Contains(stderr.String(), "Usage:") {
+		t.Fatalf("bare command printed CLI usage instead of opening Admin: %s", stderr.String())
+	}
+}
+
+func TestDoctorUsesInstalledCatalogOutsideSourceCheckout(t *testing.T) {
+	home := t.TempDir()
+	t.Chdir(t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"doctor", "--home", home}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("doctor code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "manifest valid") {
+		t.Fatalf("doctor output = %q", stdout.String())
+	}
+	matches, err := filepath.Glob(filepath.Join(
+		home,
+		".config",
+		"maisternia",
+		"catalogs",
+		"*",
+		"config",
+		"manifest.json",
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("installed manifests = %v, want one", matches)
+	}
+}
+
 func TestRunApplyRequiresYes(t *testing.T) {
 	t.Parallel()
 
@@ -204,7 +247,6 @@ func TestRunRejectsInvalidCommandsAndOptions(t *testing.T) {
 		code int
 		want string
 	}{
-		{name: "no command", args: nil, code: 2, want: "Usage"},
 		{name: "help", args: []string{"help"}, code: 0, want: "Usage"},
 		{
 			name: "unknown command",
@@ -333,7 +375,8 @@ func TestRunConfiguresAdminRepository(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("config show code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "repository: "+repository) {
+	if !strings.Contains(stdout.String(), "repository override: "+repository) ||
+		!strings.Contains(stdout.String(), "catalog: "+repository) {
 		t.Fatalf("config show stdout = %q, want repository", stdout.String())
 	}
 
@@ -353,7 +396,8 @@ func TestRunConfiguresAdminRepository(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("config show after clear code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "repository: <not configured>") {
+	if !strings.Contains(stdout.String(), "repository override: <automatic>") ||
+		!strings.Contains(stdout.String(), "resolved from:") {
 		t.Fatalf("config show after clear = %q", stdout.String())
 	}
 }
@@ -927,6 +971,7 @@ func TestRunApprovalCommands(t *testing.T) {
 		"approval", "plan",
 		"--repo", repo,
 		"--home", home,
+		"--scope", "user",
 		"--target", "claude",
 	}, &stdout, &stderr)
 	if code != 0 {
@@ -1008,6 +1053,25 @@ func TestPresetPlanRejectsInvalidScope(t *testing.T) {
 	}
 }
 
+func TestConfigurationPresetPlanRequiresExplicitScope(t *testing.T) {
+	t.Parallel()
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "plan",
+		"--repo", appRepositoryRoot(t),
+		"--target", "codex",
+		"hook-safety",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("preset plan code = %d, want 2; stdout = %s; stderr = %s", code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "--scope") ||
+		!strings.Contains(stderr.String(), "user or project") {
+		t.Fatalf("preset plan stderr = %q", stderr.String())
+	}
+}
+
 func TestRunPresetAuthoringCommands(t *testing.T) {
 	t.Parallel()
 
@@ -1067,6 +1131,26 @@ func TestRunPresetAuthoringCommands(t *testing.T) {
 	}
 }
 
+func TestPresetAuthoringRequiresSourceCatalog(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Chdir(t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "create",
+		"--name", "Do Not Mutate Embedded Catalog",
+		"embedded-edit",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("preset create code = %d, want 2; stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "source catalog") ||
+		!strings.Contains(stderr.String(), "--repo") {
+		t.Fatalf("preset create stderr = %q", stderr.String())
+	}
+}
+
 func TestRunPresetPlanRenderAndApply(t *testing.T) {
 	t.Parallel()
 
@@ -1079,6 +1163,7 @@ func TestRunPresetPlanRenderAndApply(t *testing.T) {
 		"preset", "plan",
 		"--repo", repo,
 		"--home", home,
+		"--scope", "user",
 		"--target", "hermes",
 		"idea-shaping",
 	}, &stdout, &stderr)
@@ -1118,6 +1203,7 @@ func TestRunPresetPlanRenderAndApply(t *testing.T) {
 		"preset", "apply",
 		"--repo", repo,
 		"--home", home,
+		"--scope", "user",
 		"--target", "hermes",
 		"idea-shaping",
 	}, &stdout, &stderr)
@@ -1279,6 +1365,7 @@ func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
 			"preset", "apply",
 			"--repo", repo,
 			"--home", home,
+			"--scope", "user",
 			"--target", "codex",
 			"--conflicts", "keep",
 			"--yes",
@@ -1301,6 +1388,7 @@ func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
 			"preset", "plan",
 			"--repo", repo,
 			"--home", home,
+			"--scope", "user",
 			"--target", "codex",
 			"scored-experiment",
 		}, &stdout, &stderr)
@@ -1327,6 +1415,7 @@ func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
 			"preset", "apply",
 			"--repo", repo,
 			"--home", home,
+			"--scope", "user",
 			"--target", "codex",
 			"--conflicts", "replace",
 			"--yes",

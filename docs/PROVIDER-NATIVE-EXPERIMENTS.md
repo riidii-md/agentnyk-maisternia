@@ -8,7 +8,7 @@ The selected harness owns the live session, tool calls, approvals, native
 continuation loop, and completion decision:
 
 ```text
-maisternia preset apply --target codex --yes scored-experiment
+maisternia preset apply --scope user --target codex --yes scored-experiment
         |
         v
 start Codex normally

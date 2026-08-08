@@ -78,6 +78,9 @@ homebrew_casks:
     directory: Casks
     homepage: https://github.com/kagi-labs/agentnyk-maisternia
     description: Opinionated, provider-neutral workshop for coding-agent harnesses
+    caveats: |
+      Run `maisternia` to open the configuration workshop. The versioned catalog
+      installs automatically under ~/.config/maisternia; no source checkout is required.
     skip_upload: '{{ if eq (envOrDefault "HOMEBREW_TAP_TOKEN" "") "" }}true{{ else }}auto{{ end }}'
     custom_block: |
       require "download_strategy"

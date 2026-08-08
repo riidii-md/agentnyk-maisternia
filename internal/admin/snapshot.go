@@ -17,7 +17,7 @@ import (
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/repository"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
@@ -93,19 +93,17 @@ type EnvironmentInstallRequest struct {
 }
 
 type Snapshot struct {
-	LoadedAt   time.Time
-	Repository RepositoryStatus
-	Providers  []providers.Inspection
-	Presets    []PresetStatus
-	Policy     workflow.Policy
-	Config     ConfigStatus
-	Issues     []Issue
+	LoadedAt         time.Time
+	Repository       RepositoryStatus
+	SuggestedProject string
+	Providers        []providers.Inspection
+	Presets          []PresetStatus
+	Policy           workflow.Policy
+	Config           ConfigStatus
+	Issues           []Issue
 }
 
-type RepositorySelection struct {
-	Path   string
-	Source string
-}
+type RepositorySelection = repository.Selection
 
 type Loader struct {
 	Repo            string
@@ -122,6 +120,7 @@ type Loader struct {
 	EnvironmentGOOS          string
 	InspectEnvironmentPlugin func(host, pluginID string) (bool, error)
 	RunEnvironmentCommand    func(command []string, stdout, stderr io.Writer) error
+	InstallCatalog           func(home string) (string, error)
 }
 
 func (l Loader) Load() Snapshot {
@@ -135,6 +134,11 @@ func (l Loader) Load() Snapshot {
 			StatePath: configurator.StatePath(l.Home),
 		},
 	}
+	if cwd, err := l.currentDirectory(); err != nil {
+		snapshot.addIssue(SeverityWarning, "project", err)
+	} else {
+		snapshot.SuggestedProject = repository.DiscoverProject(cwd)
+	}
 
 	selection, err := l.resolveRepository()
 	if err != nil {
@@ -147,7 +151,7 @@ func (l Loader) Load() Snapshot {
 		snapshot.addIssue(
 			SeverityWarning,
 			"repository",
-			errors.New("repository is not configured"),
+			errors.New("configuration catalog is unavailable"),
 		)
 		return snapshot
 	}
@@ -340,7 +344,7 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 		return configurator.Plan{}, err
 	}
 	if selection.Path == "" {
-		return configurator.Plan{}, errors.New("repository is not configured")
+		return configurator.Plan{}, errors.New("configuration catalog is unavailable")
 	}
 	manifest, err := configurator.LoadManifest(
 		selection.Path,
@@ -440,82 +444,33 @@ func (l Loader) installRoot(request PresetInstallRequest) (string, error) {
 }
 
 func (l Loader) resolveRepository() (RepositorySelection, error) {
+	return repository.Resolve(repository.Options{
+		Explicit:       l.Repo,
+		Home:           l.Home,
+		Cwd:            l.Cwd,
+		Getenv:         l.Getenv,
+		InstallCatalog: l.InstallCatalog,
+	})
+}
+
+func (l Loader) currentDirectory() (string, error) {
 	cwd := l.Cwd
 	if strings.TrimSpace(cwd) == "" {
 		var err error
 		cwd, err = os.Getwd()
 		if err != nil {
-			return RepositorySelection{}, fmt.Errorf("resolve current directory: %w", err)
+			return "", fmt.Errorf("resolve current directory: %w", err)
 		}
 	}
 	cwd, err := filepath.Abs(cwd)
 	if err != nil {
-		return RepositorySelection{}, fmt.Errorf("resolve current directory: %w", err)
+		return "", fmt.Errorf("resolve current directory: %w", err)
 	}
-
-	if strings.TrimSpace(l.Repo) != "" {
-		path, err := absoluteFrom(cwd, l.Repo)
-		if err != nil {
-			return RepositorySelection{}, err
-		}
-		return RepositorySelection{Path: path, Source: "command line"}, nil
-	}
-	getenv := os.Getenv
-	if l.Getenv != nil {
-		getenv = l.Getenv
-	}
-	if value := strings.TrimSpace(getenv("MAISTERNIA_REPO")); value != "" {
-		path, err := absoluteFrom(cwd, value)
-		if err != nil {
-			return RepositorySelection{}, err
-		}
-		return RepositorySelection{Path: path, Source: "MAISTERNIA_REPO"}, nil
-	}
-	value, err := settings.Load(l.Home)
-	if err != nil {
-		return RepositorySelection{}, err
-	}
-	if value.Repository != "" {
-		return RepositorySelection{
-			Path:   value.Repository,
-			Source: settings.Path(l.Home),
-		}, nil
-	}
-	if discovered := discoverRepository(cwd); discovered != "" {
-		return RepositorySelection{
-			Path:   discovered,
-			Source: "current directory",
-		}, nil
-	}
-	return RepositorySelection{}, nil
+	return cwd, nil
 }
 
 func discoverRepository(start string) string {
-	current := start
-	for {
-		manifest := filepath.Join(current, "config", "manifest.json")
-		if info, err := os.Lstat(manifest); err == nil &&
-			info.Mode().IsRegular() &&
-			info.Mode()&os.ModeSymlink == 0 {
-			return current
-		}
-		parent := filepath.Dir(current)
-		if parent == current {
-			return ""
-		}
-		current = parent
-	}
-}
-
-func absoluteFrom(cwd, value string) (string, error) {
-	if !filepath.IsAbs(value) {
-		value = filepath.Join(cwd, value)
-	}
-	path, err := filepath.Abs(value)
-	if err != nil {
-		return "", fmt.Errorf("resolve repository: %w", err)
-	}
-	return path, nil
+	return repository.DiscoverCatalog(start)
 }
 
 func summarizePlan(plan configurator.Plan) ConfigStatus {

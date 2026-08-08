@@ -156,14 +156,14 @@ They do not make `maisternia` a runtime and do not cause it to execute phases.
 Use preset-scoped operations when only one bundle should be considered:
 
 ```bash
-maisternia preset plan --target hermes idea-shaping
+maisternia preset plan --scope user --target hermes idea-shaping
 
 maisternia preset render \
   --target codex \
   --output ./build/rendered-standard-work \
   standard-work
 
-maisternia preset apply --target codex --yes standard-work
+maisternia preset apply --scope user --target codex --yes standard-work
 
 # Install a preset into one repository instead of the provider user home.
 maisternia preset apply \
@@ -175,6 +175,7 @@ maisternia preset apply \
 
 # Preserve customized target files and apply everything else.
 maisternia preset apply \
+  --scope user \
   --target codex \
   --conflicts keep \
   --yes \
@@ -182,6 +183,7 @@ maisternia preset apply \
 
 # Back up customized files and replace them with preset versions.
 maisternia preset apply \
+  --scope user \
   --target codex \
   --conflicts replace \
   --yes \

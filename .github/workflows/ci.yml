@@ -40,7 +40,7 @@ jobs:
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 
       - name: Format
-        run: test -z "$(gofmt -l cmd internal)"
+        run: test -z "$(gofmt -l catalog.go cmd internal)"
 
       - name: Vet
         run: go vet ./...
@@ -94,6 +94,14 @@ jobs:
           args: release --snapshot --clean
         env:
           HOMEBREW_TAP_TOKEN: ""
+
+      - name: Verify snapshot binary is self-contained
+        run: |
+          binary="$(find dist -type f -path '*linux_amd64*' -name maisternia -print -quit)"
+          test -n "$binary"
+          test_home="$RUNNER_TEMP/maisternia-home"
+          mkdir -p "$test_home"
+          "$binary" doctor --home "$test_home"
 
       - name: Upload snapshot archives
         uses: actions/upload-artifact@v7

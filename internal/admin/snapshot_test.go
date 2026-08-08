@@ -114,6 +114,44 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	}
 }
 
+func TestLoaderUsesInstalledCatalogAndSuggestsCurrentGitProject(t *testing.T) {
+	t.Parallel()
+
+	project := t.TempDir()
+	if err := os.Mkdir(filepath.Join(project, ".git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(project, "config"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(project, "config", "manifest.json"), []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cwd := filepath.Join(project, "nested")
+	if err := os.Mkdir(cwd, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	catalog := repositoryRoot(t)
+	loader := Loader{
+		Home:   t.TempDir(),
+		Cwd:    cwd,
+		Getenv: func(string) string { return "" },
+		InstallCatalog: func(string) (string, error) {
+			return catalog, nil
+		},
+		InspectProvider: healthyInspection,
+		LookPath:        func(string) (string, error) { return "", exec.ErrNotFound },
+	}
+	snapshot := loader.Load()
+
+	if snapshot.Repository.Path != catalog || snapshot.Repository.Source != "installed catalog" {
+		t.Fatalf("repository = %#v", snapshot.Repository)
+	}
+	if snapshot.SuggestedProject != project {
+		t.Fatalf("suggested project = %q, want %q", snapshot.SuggestedProject, project)
+	}
+}
+
 func TestLoaderInstallsEnvironmentOnlyPreset(t *testing.T) {
 	t.Parallel()
 

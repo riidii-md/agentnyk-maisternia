@@ -92,10 +92,10 @@ The same conflict policy applies in both scopes:
 
 ```bash
 # Leave customized target files in place and remember that decision.
-maisternia hook apply --conflicts keep --yes hook-standard
+maisternia hook apply --scope user --conflicts keep --yes hook-standard
 
 # Back up customized target files and replace them.
-maisternia hook apply --conflicts replace --yes hook-standard
+maisternia hook apply --scope user --conflicts replace --yes hook-standard
 ```
 
 ## Inheritance

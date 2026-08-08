@@ -33,7 +33,7 @@ doctor:
 	$(GO) run ./cmd/maisternia doctor
 
 format:
-	gofmt -w cmd internal
+	gofmt -w catalog.go cmd internal
 
 test:
 	$(GO) test ./...
@@ -45,7 +45,7 @@ release-snapshot:
 	goreleaser release --snapshot --clean
 
 verify:
-	gofmt -w cmd internal
+	gofmt -w catalog.go cmd internal
 	$(GO) vet ./...
 	$(GO) test ./...
 	$(GO) test -race ./...

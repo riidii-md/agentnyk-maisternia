@@ -21,47 +21,55 @@ The interface does not dispatch an agent, watch live runs, infer next actions,
 commit, push, or open a pull request. Applying configuration remains an explicit
 preview, conflict-decision, and confirmation operation.
 
-## Configure The Repository
+## Automatic Catalog Setup
 
-Save the configuration repository once:
+Launch the interface from any directory:
 
 ```bash
-maisternia config set-repository /path/to/agentnyk-maisternia
+maisternia
 ```
 
-Inspect the saved value:
+`maisternia admin` is the explicit equivalent. The executable contains the
+versioned catalog and installs it automatically under
+`~/.config/maisternia/catalogs/<content-sha256>/`. No checkout path must be
+configured.
+
+Inspect the effective catalog and any developer override:
 
 ```bash
 maisternia config show
-```
-
-After that, launch the interface from any directory:
-
-```bash
-maisternia admin
 ```
 
 Repository resolution order is:
 
 1. `--repo`;
 2. `MAISTERNIA_REPO`;
-3. `~/.config/maisternia/settings.json`;
-4. the current directory and its ancestors.
+3. the optional developer override in `~/.config/maisternia/settings.json`;
+4. a source catalog in the current directory or its ancestors;
+5. the catalog embedded in the binary and installed automatically.
 
-An explicit one-time override does not change saved settings:
+An explicit override does not change saved settings:
 
 ```bash
 maisternia admin --repo /path/to/another/agentnyk-maisternia
 ```
 
-Clear the saved value:
+Developers can save or clear a checkout override:
 
 ```bash
+maisternia config set-repository /path/to/agentnyk-maisternia
 maisternia config clear-repository
 ```
 
 Settings are stored with mode `0600` under a mode `0700` maisternia directory.
-The settings file contains only the repository path and schema version.
+The settings file contains only the optional repository override and schema
+version.
+
+Catalog discovery is separate from installation scope. When launched inside a
+Git repository or linked worktree, Admin detects its nearest real `.git`
+directory or worktree file, recommends project scope, and prefills that path.
+Users can still choose user-global scope or edit the project path before the
+read-only plan is built.
 
 ## Views
 
@@ -153,9 +161,9 @@ maisternia apply --conflicts replace --yes
 For a single preset, use:
 
 ```bash
-maisternia preset plan standard-work
-maisternia preset apply --yes standard-work
-maisternia preset apply --conflicts keep --yes codex-compatibility
+maisternia preset plan --scope user standard-work
+maisternia preset apply --scope user --yes standard-work
+maisternia preset apply --scope user --conflicts keep --yes codex-compatibility
 ```
 
 An unmanaged conflict means a file already exists at a declared target but
