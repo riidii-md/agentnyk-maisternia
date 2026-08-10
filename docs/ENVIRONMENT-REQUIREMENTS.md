@@ -32,14 +32,13 @@ environment pack. It installs or verifies:
 - Tatami;
 - Herdr;
 - [Mdmaid](https://github.com/OleksandrBesan/mdmaid) `0.1.14` through npm;
-- [Herdr Hail](https://github.com/natori-hrj/herdr-hail);
 - [Herdr Automatic Rename](https://github.com/qu8n/herdr-automatic-rename);
 - [Herdr Bar](https://github.com/jeffarese/herdr-bar).
 
-The three plugin sources are pinned to immutable Git commit SHAs. Installation
-does not invent their configuration: Hail still needs its messaging settings,
-Herdr Bar still needs a chosen key binding, and Automatic Rename's optional
-shell hook remains an explicit shell configuration choice.
+The two plugin sources are pinned to immutable Git commit SHAs. Installation
+does not invent their configuration: Herdr Bar still needs a chosen key binding,
+and Automatic Rename's optional shell hook remains an explicit shell
+configuration choice.
 
 ## Inspect And Plan
 
