@@ -46,6 +46,8 @@ type RepositoryStatus struct {
 type ActionCounts struct {
 	Create    int
 	Update    int
+	Remove    int
+	Release   int
 	Unchanged int
 	Ignored   int
 	Conflict  int
@@ -378,20 +380,29 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 			target,
 		)
 	}
-	selected, err := presets.SelectManifest(preset, manifest)
-	if err != nil {
-		return configurator.Plan{}, err
-	}
 	root, err := l.installRoot(request)
 	if err != nil {
 		return configurator.Plan{}, err
 	}
-	plan, err := configurator.BuildPlanForScope(
+	if len(preset.Contents.ResourceIDs()) == 0 {
+		return configurator.BuildPresetRemovalPlanForScope(
+			root,
+			target,
+			request.Scope,
+			preset.ID,
+		)
+	}
+	selected, err := presets.SelectManifest(preset, manifest)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	plan, err := configurator.BuildPresetPlanForScope(
 		selection.Path,
 		root,
 		selected,
 		target,
 		request.Scope,
+		preset.ID,
 	)
 	if err != nil {
 		return configurator.Plan{}, err
@@ -548,6 +559,10 @@ func increment(counts ActionCounts, state configurator.ActionState) ActionCounts
 		counts.Create++
 	case configurator.ActionUpdate:
 		counts.Update++
+	case configurator.ActionRemove:
+		counts.Remove++
+	case configurator.ActionRelease:
+		counts.Release++
 	case configurator.ActionUnchanged:
 		counts.Unchanged++
 	case configurator.ActionIgnored:

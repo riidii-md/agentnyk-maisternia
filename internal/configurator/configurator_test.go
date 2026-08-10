@@ -283,6 +283,533 @@ func TestApplyRequiresConfirmationAndProtectsUserDrift(t *testing.T) {
 	assertFileContents(t, destination, "local edit")
 }
 
+func TestPresetPlanRemovesResourceDeletedFromPreset(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "keep.md"), "keep")
+	writeFile(t, filepath.Join(repo, "config", "remove.md"), "remove")
+	full := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Resources: []Resource{
+			{
+				ID: "keep", Source: "config/keep.md",
+				Targets: []Target{{Agent: "codex", Path: ".codex/commands/keep.md"}},
+			},
+			{
+				ID: "remove", Source: "config/remove.md",
+				Targets: []Target{{Agent: "codex", Path: ".codex/commands/remove.md"}},
+			},
+		},
+	}
+
+	plan, err := BuildPresetPlanForScope(
+		repo, home, full, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	remaining := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Resources:     full.Resources[:1],
+	}
+	plan, err = BuildPresetPlanForScope(
+		repo, home, remaining, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	action := actionForResource(t, plan, "remove")
+	if action.State != ActionRemove {
+		t.Fatalf("removed resource action = %#v, want remove", action)
+	}
+
+	now := time.Date(2026, 8, 10, 12, 0, 0, 0, time.UTC)
+	if err := Apply(plan, ApplyOptions{
+		Confirmed: true,
+		Now:       func() time.Time { return now },
+	}); err != nil {
+		t.Fatal(err)
+	}
+	removedTarget := filepath.Join(home, ".codex", "commands", "remove.md")
+	if _, err := os.Stat(removedTarget); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("removed target still exists, stat error = %v", err)
+	}
+	assertFileContents(t, filepath.Join(
+		home,
+		".config", "maisternia", "backups", "20260810T120000Z",
+		".codex", "commands", "remove.md",
+	), "remove")
+}
+
+func TestPresetRemovalReleasesSharedResourceBeforeDeletingIt(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "shared.md"), "shared")
+	manifest := validManifest(
+		"config/shared.md", "codex", ".codex/commands/shared.md",
+	)
+	for _, presetID := range []string{"preset-a", "preset-b"} {
+		plan, err := BuildPresetPlanForScope(
+			repo, home, manifest, "codex", ScopeUser, presetID,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	plan, err := BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "preset-a",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionRelease)
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	sharedTarget := filepath.Join(home, ".codex", "commands", "shared.md")
+	assertFileContents(t, sharedTarget, "shared")
+
+	plan, err = BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "preset-b",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionRemove)
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(sharedTarget); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("last owner removal left target, stat error = %v", err)
+	}
+}
+
+func TestPresetRemovalProtectsDriftAndKeepRelinquishesOwnership(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "command.md"), "managed")
+	manifest := validManifest(
+		"config/command.md", "codex", ".codex/commands/command.md",
+	)
+	plan, err := BuildPresetPlanForScope(
+		repo, home, manifest, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(home, ".codex", "commands", "command.md")
+	writeFile(t, target, "local edit")
+
+	plan, err = BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionConflict)
+	if !plan.Actions[0].Removal {
+		t.Fatalf("removal conflict = %#v, want removal marker", plan.Actions[0])
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrConflicts) {
+		t.Fatalf("Apply(abort) error = %v, want ErrConflicts", err)
+	}
+	if err := Apply(plan, ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: ConflictKeep,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	assertFileContents(t, target, "local edit")
+
+	next, err := BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(next.Actions) != 0 {
+		t.Fatalf("removal after relinquishing ownership = %#v, want no actions", next.Actions)
+	}
+}
+
+func TestPresetRemovalRejectsTargetChangedAfterPlanning(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "command.md"), "managed")
+	manifest := validManifest(
+		"config/command.md", "codex", ".codex/commands/command.md",
+	)
+	plan, err := BuildPresetPlanForScope(
+		repo, home, manifest, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	plan, err = BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(home, ".codex", "commands", "command.md"), "changed")
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrPlanStale) {
+		t.Fatalf("Apply(stale remove) error = %v, want ErrPlanStale", err)
+	}
+}
+
+func TestLegacyInstallStateIsNotPrunedWithoutPresetOwnership(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	target := filepath.Join(home, ".codex", "commands", "legacy.md")
+	writeFile(t, target, "legacy managed")
+	checksum, err := fileChecksum(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy := installState{
+		SchemaVersion: 2,
+		Resources: map[string]installedResource{
+			stateKey("codex", ".codex/commands/legacy.md"): {
+				Checksum:  checksum,
+				Source:    "/old/catalog/config/legacy.md",
+				Installed: time.Date(2026, 8, 1, 12, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+	data, err := json.Marshal(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, StatePath(home), string(data))
+
+	plan, err := BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "unknown-legacy-owner",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Actions) != 0 {
+		t.Fatalf("legacy removal plan = %#v, want no inferred removals", plan.Actions)
+	}
+	assertFileContents(t, target, "legacy managed")
+}
+
+func TestPresetRemovalCleansMissingTargetAndCanReplaceDrift(t *testing.T) {
+	t.Parallel()
+
+	t.Run("already absent", func(t *testing.T) {
+		repo := t.TempDir()
+		home := t.TempDir()
+		writeFile(t, filepath.Join(repo, "config", "command.md"), "managed")
+		manifest := validManifest(
+			"config/command.md", "codex", ".codex/commands/command.md",
+		)
+		plan, err := BuildPresetPlanForScope(
+			repo, home, manifest, "codex", ScopeUser, "team-work",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+			t.Fatal(err)
+		}
+		target := filepath.Join(home, ".codex", "commands", "command.md")
+		if err := os.Remove(target); err != nil {
+			t.Fatal(err)
+		}
+
+		plan, err = BuildPresetRemovalPlanForScope(
+			home, "codex", ScopeUser, "team-work",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertOnlyAction(t, plan, ActionRemove)
+		if plan.Actions[0].CurrentChecksum != "" {
+			t.Fatalf("absent removal checksum = %q, want empty", plan.Actions[0].CurrentChecksum)
+		}
+		if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+			t.Fatal(err)
+		}
+		next, err := BuildPresetRemovalPlanForScope(
+			home, "codex", ScopeUser, "team-work",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(next.Actions) != 0 {
+			t.Fatalf("absent target cleanup left actions: %#v", next.Actions)
+		}
+	})
+
+	t.Run("replace drift", func(t *testing.T) {
+		repo := t.TempDir()
+		home := t.TempDir()
+		writeFile(t, filepath.Join(repo, "config", "command.md"), "managed")
+		manifest := validManifest(
+			"config/command.md", "codex", ".codex/commands/command.md",
+		)
+		plan, err := BuildPresetPlanForScope(
+			repo, home, manifest, "codex", ScopeUser, "team-work",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+			t.Fatal(err)
+		}
+		target := filepath.Join(home, ".codex", "commands", "command.md")
+		writeFile(t, target, "local edit")
+
+		plan, err = BuildPresetRemovalPlanForScope(
+			home, "codex", ScopeUser, "team-work",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertOnlyAction(t, plan, ActionConflict)
+		now := time.Date(2026, 8, 10, 15, 0, 0, 0, time.UTC)
+		if err := Apply(plan, ApplyOptions{
+			Confirmed:      true,
+			ConflictPolicy: ConflictReplace,
+			Now:            func() time.Time { return now },
+		}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(target); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("replace removal left target, stat error = %v", err)
+		}
+		assertFileContents(t, filepath.Join(
+			home,
+			".config", "maisternia", "backups", "20260810T150000Z",
+			".codex", "commands", "command.md",
+		), "local edit")
+	})
+}
+
+func TestPresetRemovalHonorsProviderFilter(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "shared.md"), "shared")
+	manifest := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Resources: []Resource{{
+			ID: "shared", Source: "config/shared.md",
+			Targets: []Target{
+				{Agent: "codex", Path: ".codex/commands/shared.md"},
+				{Agent: "claude", Path: ".claude/commands/shared.md"},
+			},
+		}},
+	}
+	plan, err := BuildPresetPlanForScope(
+		repo, home, manifest, "all", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	plan, err = BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionRemove)
+	if plan.Actions[0].Agent != "codex" {
+		t.Fatalf("filtered removal agent = %q, want codex", plan.Actions[0].Agent)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	assertFileContents(t, filepath.Join(home, ".claude", "commands", "shared.md"), "shared")
+
+	plan, err = BuildPresetRemovalPlanForScope(
+		home, "all", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionRemove)
+	if plan.Actions[0].Agent != "claude" {
+		t.Fatalf("remaining removal agent = %q, want claude", plan.Actions[0].Agent)
+	}
+}
+
+func TestPresetRemovalRejectsOwnershipChangedAfterPlanning(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "command.md"), "managed")
+	manifest := validManifest(
+		"config/command.md", "codex", ".codex/commands/command.md",
+	)
+	plan, err := BuildPresetPlanForScope(
+		repo, home, manifest, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	plan, err = BuildPresetRemovalPlanForScope(
+		home, "codex", ScopeUser, "team-work",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	state, err := loadState(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := stateKey("codex", ".codex/commands/command.md")
+	state.PresetInstallations["another-preset"] = presetInstallation{
+		Resources: map[string]ownedResource{
+			key: {
+				ResourceID: "resource",
+				Agent:      "codex",
+				TargetPath: ".codex/commands/command.md",
+			},
+		},
+	}
+	if err := writeState(home, state); err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrPlanStale) {
+		t.Fatalf("Apply(changed ownership) error = %v, want ErrPlanStale", err)
+	}
+}
+
+func TestPresetPlanRejectsInvalidOwner(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "command.md"), "managed")
+	manifest := validManifest(
+		"config/command.md", "codex", ".codex/commands/command.md",
+	)
+	if _, err := BuildPresetPlanForScope(
+		repo, t.TempDir(), manifest, "codex", ScopeUser, "../unsafe",
+	); err == nil {
+		t.Fatal("BuildPresetPlanForScope() accepted invalid owner")
+	}
+	if _, err := BuildPresetRemovalPlanForScope(
+		t.TempDir(), "codex", ScopeUser, "../unsafe",
+	); err == nil {
+		t.Fatal("BuildPresetRemovalPlanForScope() accepted invalid owner")
+	}
+}
+
+func TestPresetRemovalRejectsUnsafeOwnershipState(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		key        string
+		owned      ownedResource
+		addManaged bool
+	}{
+		{
+			name: "unknown agent",
+			key:  "unknown:.codex/commands/command.md",
+			owned: ownedResource{
+				ResourceID: "resource",
+				Agent:      "unknown",
+				TargetPath: ".codex/commands/command.md",
+			},
+			addManaged: true,
+		},
+		{
+			name: "target escapes provider root",
+			key:  "codex:.claude/commands/command.md",
+			owned: ownedResource{
+				ResourceID: "resource",
+				Agent:      "codex",
+				TargetPath: ".claude/commands/command.md",
+			},
+			addManaged: true,
+		},
+		{
+			name: "inconsistent key",
+			key:  "codex:.codex/commands/other.md",
+			owned: ownedResource{
+				ResourceID: "resource",
+				Agent:      "codex",
+				TargetPath: ".codex/commands/command.md",
+			},
+			addManaged: true,
+		},
+		{
+			name: "missing managed record",
+			key:  "codex:.codex/commands/command.md",
+			owned: ownedResource{
+				ResourceID: "resource",
+				Agent:      "codex",
+				TargetPath: ".codex/commands/command.md",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			home := t.TempDir()
+			state := installState{
+				SchemaVersion: StateSchemaVersion,
+				Resources:     map[string]installedResource{},
+				PresetInstallations: map[string]presetInstallation{
+					"team-work": {
+						Resources: map[string]ownedResource{tt.key: tt.owned},
+					},
+				},
+			}
+			if tt.addManaged {
+				state.Resources[tt.key] = installedResource{Checksum: "checksum"}
+			}
+			if err := writeState(home, state); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := BuildPresetRemovalPlanForScope(
+				home, "all", ScopeUser, "team-work",
+			); err == nil {
+				t.Fatal("BuildPresetRemovalPlanForScope() accepted unsafe state")
+			}
+		})
+	}
+}
+
 func TestApplyKeepsConflictsAndPersistsExplicitDecision(t *testing.T) {
 	t.Parallel()
 

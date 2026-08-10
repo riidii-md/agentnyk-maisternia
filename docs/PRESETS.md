@@ -133,6 +133,18 @@ Deletion is intentionally explicit:
 maisternia preset delete --yes team-work
 ```
 
+Deleting the catalog definition does not choose an installation scope and does
+not mutate provider homes. Remove an installed preset before or after deleting
+its definition with the ID retained in install state:
+
+```bash
+maisternia preset uninstall \
+  --scope user \
+  --target codex \
+  --yes \
+  team-work
+```
+
 ## DAG Rules
 
 Each pipeline declares `entry_phases`, `phases`, and `edges`. A normal edge must
@@ -165,6 +177,10 @@ maisternia preset render \
 
 maisternia preset apply --scope user --target codex --yes standard-work
 
+# Remove all configuration targets owned only by this preset. This also works
+# when the preset definition is no longer present in the catalog.
+maisternia preset uninstall --scope user --target codex --yes standard-work
+
 # Install a preset into one repository instead of the provider user home.
 maisternia preset apply \
   --scope project \
@@ -195,6 +211,15 @@ delegate to the same configurator used by full-manifest operations, preserving
 target allowlists, symlink checks, managed install state, drift detection,
 conflict detection, backups, atomic writes, and explicit confirmation.
 
+Preset apply also reconciles previously recorded preset ownership. Any managed
+target removed from the preset becomes `REMOVE` when that preset was its last
+owner, or `RELEASE` when another installed preset still declares the same
+target. Removal backs up the file first. Locally modified files become
+conflicts; `--conflicts keep` leaves the file and relinquishes ownership, while
+`--conflicts replace` backs it up and removes it. This lifecycle is shared by
+all six managed content categories: MCP references, commands, prompts, skills,
+hooks, and settings.
+
 When a preset references environment packs, `preset plan` and the admin Presets
 view also show a read-only environment plan. Detection checks whether each
 declared command exists on `PATH`; it does not run tools or installers. Missing
@@ -204,11 +229,22 @@ shows the exact environment plan, and requires confirmation. The direct
 `maisternia environment install --yes <pack>` command remains available. See
 [Environment requirements](ENVIRONMENT-REQUIREMENTS.md).
 
+Environment packs are host requirements rather than provider-file resources.
+Their current installer remains presence-based and does not claim package
+manager ownership, upgrade an already-present tool, or uninstall it when a
+preset changes. Host-tool removal must therefore remain an explicit operation
+through its package manager or plugin host until environment install state is
+implemented.
+
 `--scope user` is the default and resolves targets under `--home`. Its managed
 state and backups live under `~/.config/maisternia`. `--scope project` resolves
 targets under `--project`; its local managed state and backups live under
 `<project>/.maisternia`. State from one scope is never used to claim ownership in
 the other scope.
+
+Install state schema version 3 records preset-to-target ownership. Older state
+is read safely, but its targets are not retroactively attributed to a preset.
+Apply a preset once after upgrading to establish ownership for future removal.
 
 Conflict handling defaults to `abort`. `keep` records the exact source and
 target checksums behind the decision, so the target is reported as `IGNORED`

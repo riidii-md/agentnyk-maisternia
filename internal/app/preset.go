@@ -25,19 +25,20 @@ const presetUsage = `Usage:
   maisternia preset plan [options] <preset>
   maisternia preset render [options] --output <dir> <preset>
   maisternia preset apply [options] --yes <preset>
+  maisternia preset uninstall [options] --yes <preset>
 
 Options:
   --repo <dir>         Configuration catalog override
   --manifest <path>    Manifest path relative to repository
-  --home <dir>         Target home directory (plan and apply)
-  --scope <scope>      user or project (required for configuration plan/apply)
+  --home <dir>         Target home directory (plan, apply, and uninstall)
+  --scope <scope>      user or project (required for configuration lifecycle operations)
   --project <dir>      Project root for project scope (default: current directory)
   --target <agent>     all, codex, claude, antigravity (agy), or hermes
   --output <dir>       Staging directory (render)
   --name <name>        Preset display name (create, copy, and edit)
   --description <text> Preset description (create and edit)
-  --conflicts <mode>   abort, keep, or replace when applying
-  --yes                Confirm delete or apply
+  --conflicts <mode>   abort, keep, or replace when applying or uninstalling
+  --yes                Confirm delete, apply, or uninstall
 
 Preset files live under config/presets. Pipelines inside them are declarative
 workflow DAGs; external agent harnesses own execution.
@@ -86,7 +87,7 @@ func runPresetCommand(args []string, stdout, stderr io.Writer) int {
 	command := args[0]
 	switch command {
 	case "list", "show", "validate", "create", "copy", "edit", "delete",
-		"plan", "render", "apply":
+		"plan", "render", "apply", "uninstall":
 	default:
 		fmt.Fprintf(stderr, "unknown preset command %q\n\n%s", command, presetUsage)
 		return 2
@@ -106,7 +107,7 @@ func runPresetCommand(args []string, stdout, stderr io.Writer) int {
 		return runPresetAuthoring(command, options, stdout, stderr)
 	case "list", "show", "validate":
 		return runPresetInspection(command, options, stdout, stderr)
-	case "plan", "render", "apply":
+	case "plan", "render", "apply", "uninstall":
 		return runPresetInstallation(command, options, stdout, stderr)
 	default:
 		return 2
@@ -140,7 +141,7 @@ func parsePresetOptions(
 		flags.StringVar(&options.manifest, "manifest", options.manifest, "manifest path")
 	}
 	switch command {
-	case "plan", "apply":
+	case "plan", "apply", "uninstall":
 		flags.StringVar(&options.home, "home", options.home, "target home directory")
 		flags.StringVar(&options.scope, "scope", options.scope, "installation scope: user or project")
 		flags.StringVar(&options.project, "project", options.project, "project root for project scope")
@@ -159,7 +160,7 @@ func parsePresetOptions(
 	case "delete":
 		flags.BoolVar(&options.yes, "yes", false, "confirm preset deletion")
 	}
-	if command == "apply" {
+	if command == "apply" || command == "uninstall" {
 		flags.BoolVar(&options.yes, "yes", false, "confirm configuration changes")
 		flags.StringVar(
 			&options.conflicts,
@@ -171,14 +172,14 @@ func parsePresetOptions(
 	if err := flags.Parse(args); err != nil {
 		return presetOptions{}, 2
 	}
-	if (command == "plan" || command == "apply") && options.scope != "" &&
+	if (command == "plan" || command == "apply" || command == "uninstall") && options.scope != "" &&
 		options.scope != string(configurator.ScopeUser) &&
 		options.scope != string(configurator.ScopeProject) {
 		fmt.Fprintf(stderr, "error: invalid --scope value %q; use user or project\n", options.scope)
 		return presetOptions{}, 2
 	}
 	options.args = flags.Args()
-	if command == "apply" {
+	if command == "apply" || command == "uninstall" {
 		if _, valid := conflictPolicy(options.conflicts); !valid {
 			fmt.Fprintf(
 				stderr,
@@ -201,7 +202,7 @@ func parsePresetOptions(
 	}
 	options.repo = selection.Path
 	options.repoSource = selection.Source
-	if command == "plan" || command == "apply" {
+	if command == "plan" || command == "apply" || command == "uninstall" {
 		options.project, err = filepath.Abs(options.project)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: resolve project path: %v\n", err)
@@ -422,6 +423,9 @@ func runPresetInstallation(
 		fmt.Fprintln(stderr, "error: preset render requires --output")
 		return 2
 	}
+	if command == "uninstall" {
+		return runPresetUninstall(options, stdout, stderr)
+	}
 
 	library, err := presets.LoadLibrary(options.repo)
 	if err != nil {
@@ -482,6 +486,9 @@ func runPresetInstallation(
 		fmt.Fprintln(stderr, "error: --scope is required for configuration presets; use user or project")
 		return 2
 	}
+	if command != "render" && len(preset.Contents.ResourceIDs()) == 0 {
+		return runEmptyPresetLifecycle(command, options, preset.ID, stdout, stderr)
+	}
 
 	manifest, err := configurator.LoadManifest(options.repo, options.manifest)
 	if err != nil {
@@ -496,12 +503,13 @@ func runPresetInstallation(
 
 	switch command {
 	case "plan":
-		plan, err := configurator.BuildPlanForScope(
+		plan, err := configurator.BuildPresetPlanForScope(
 			options.repo,
 			options.installRoot(),
 			selectedManifest,
 			options.target,
 			configurator.InstallScope(options.scope),
+			preset.ID,
 		)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
@@ -534,12 +542,13 @@ func runPresetInstallation(
 		return 0
 
 	case "apply":
-		plan, err := configurator.BuildPlanForScope(
+		plan, err := configurator.BuildPresetPlanForScope(
 			options.repo,
 			options.installRoot(),
 			selectedManifest,
 			options.target,
 			configurator.InstallScope(options.scope),
+			preset.ID,
 		)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
@@ -579,6 +588,125 @@ func runPresetInstallation(
 		return 0
 	}
 	return 2
+}
+
+func runEmptyPresetLifecycle(
+	command string,
+	options presetOptions,
+	presetID string,
+	stdout, stderr io.Writer,
+) int {
+	plan, err := configurator.BuildPresetRemovalPlanForScope(
+		options.installRoot(),
+		options.target,
+		configurator.InstallScope(options.scope),
+		presetID,
+	)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	printInstallScope(stdout, options)
+	printPlan(stdout, plan)
+	if command == "plan" {
+		if plan.HasConflicts() {
+			return 1
+		}
+		return 0
+	}
+	policy, _ := conflictPolicy(options.conflicts)
+	if plan.HasConflicts() && policy == configurator.ConflictAbort {
+		fmt.Fprintln(
+			stderr,
+			"error: resolve conflicts with --conflicts keep or --conflicts replace",
+		)
+		return 1
+	}
+	if !options.yes {
+		fmt.Fprintln(stderr, "preset apply requires --yes after reviewing the plan")
+		return 2
+	}
+	if err := configurator.Apply(plan, configurator.ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: policy,
+	}); err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(
+		stdout,
+		"applied preset %s at %s scope (%s)\n",
+		presetID,
+		options.scope,
+		options.installRoot(),
+	)
+	return 0
+}
+
+func runPresetUninstall(
+	options presetOptions,
+	stdout, stderr io.Writer,
+) int {
+	if options.scope == "" {
+		fmt.Fprintln(stderr, "error: --scope is required for preset uninstall; use user or project")
+		return 2
+	}
+	presetID := options.args[0]
+	if library, err := presets.LoadLibrary(options.repo); err == nil {
+		if preset, exists := library.Get(presetID); exists && len(preset.EnvironmentPacks) > 0 {
+			fmt.Fprintln(
+				stdout,
+				"note: environment requirements are shared host tools and are not removed",
+			)
+		}
+	}
+	plan, err := configurator.BuildPresetRemovalPlanForScope(
+		options.installRoot(),
+		options.target,
+		configurator.InstallScope(options.scope),
+		presetID,
+	)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	printInstallScope(stdout, options)
+	printPlan(stdout, plan)
+	if len(plan.Actions) == 0 {
+		fmt.Fprintf(
+			stdout,
+			"no managed configuration ownership recorded for preset %s\n",
+			presetID,
+		)
+		return 0
+	}
+	policy, _ := conflictPolicy(options.conflicts)
+	if plan.HasConflicts() && policy == configurator.ConflictAbort {
+		fmt.Fprintln(
+			stderr,
+			"error: resolve conflicts with --conflicts keep or --conflicts replace",
+		)
+		return 1
+	}
+	if !options.yes {
+		fmt.Fprintln(stderr, "preset uninstall requires --yes after reviewing the plan")
+		return 2
+	}
+	if err := configurator.Apply(plan, configurator.ApplyOptions{
+		Confirmed:      true,
+		ConflictPolicy: policy,
+	}); err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(
+		stdout,
+		"uninstalled preset %s at %s scope (%s)\n",
+		presetID,
+		options.scope,
+		options.installRoot(),
+	)
+	return 0
 }
 
 func printPresetEnvironmentPlans(

@@ -56,7 +56,13 @@ Actions:
 - `CREATE`: target does not exist;
 - `UNCHANGED`: target matches source;
 - `UPDATE`: target matches the last installed checksum and source changed;
+- `REMOVE`: a preset no longer declares a target that it exclusively owns;
+- `RELEASE`: a preset no longer declares a shared target, but another preset
+  still owns it;
 - `CONFLICT`: target is unmanaged, drifted, unsafe, or a symlink.
+
+`REMOVE` and `RELEASE` are preset-scoped actions. Full-manifest planning does
+not infer deletion ownership.
 
 ### Render
 
@@ -77,9 +83,28 @@ Apply:
 - refuses conflicts;
 - requires explicit `--yes`;
 - rechecks source and target checksums;
-- backs up managed updates;
+- backs up managed updates and removals;
 - writes atomically;
 - stores checksums in an install-state file.
+
+Preset apply records ownership per preset and target. On the next apply of the
+same preset, targets removed from that preset are reconciled across MCP
+references, commands, prompts, skills, hooks, and settings. An unchanged
+exclusive target is backed up and removed. A locally changed target becomes a
+conflict. A target shared by another applied preset remains installed and only
+the obsolete ownership edge is released.
+
+To remove every target owned by a preset, including after its catalog
+definition has been deleted, use:
+
+```bash
+maisternia preset uninstall --scope user --target codex --yes <preset-id>
+```
+
+Deletion remains explicit and scope-specific; editing or pulling the catalog
+does not mutate provider homes in the background. State written before schema
+version 3 has no preset identity, so it is never guessed as removable. Applying
+the current preset once records ownership for later reconciliation.
 
 Install state:
 

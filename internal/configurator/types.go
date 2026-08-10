@@ -7,7 +7,7 @@ import (
 
 const (
 	ManifestSchemaVersion = 1
-	StateSchemaVersion    = 2
+	StateSchemaVersion    = 3
 	maxManagedFileSize    = 2 << 20
 )
 
@@ -41,6 +41,8 @@ const (
 	ActionUpdate    ActionState = "update"
 	ActionIgnored   ActionState = "ignored"
 	ActionConflict  ActionState = "conflict"
+	ActionRelease   ActionState = "release"
+	ActionRemove    ActionState = "remove"
 )
 
 type ConflictPolicy string
@@ -68,12 +70,14 @@ type Action struct {
 	CurrentChecksum string
 	State           ActionState
 	Reason          string
+	Removal         bool
 }
 
 type Plan struct {
-	Home    string
-	Scope   InstallScope
-	Actions []Action
+	Home     string
+	Scope    InstallScope
+	PresetID string
+	Actions  []Action
 }
 
 func (p Plan) HasConflicts() bool {
@@ -92,15 +96,26 @@ type ApplyOptions struct {
 }
 
 type installState struct {
-	SchemaVersion int                           `json:"schema_version"`
-	Resources     map[string]installedResource  `json:"resources"`
-	Resolutions   map[string]conflictResolution `json:"conflict_resolutions,omitempty"`
+	SchemaVersion       int                           `json:"schema_version"`
+	Resources           map[string]installedResource  `json:"resources"`
+	Resolutions         map[string]conflictResolution `json:"conflict_resolutions,omitempty"`
+	PresetInstallations map[string]presetInstallation `json:"preset_installations,omitempty"`
 }
 
 type installedResource struct {
 	Checksum  string    `json:"checksum"`
 	Source    string    `json:"source"`
 	Installed time.Time `json:"installed_at"`
+}
+
+type presetInstallation struct {
+	Resources map[string]ownedResource `json:"resources"`
+}
+
+type ownedResource struct {
+	ResourceID string `json:"resource_id"`
+	Agent      string `json:"agent"`
+	TargetPath string `json:"target_path"`
 }
 
 type conflictResolution struct {

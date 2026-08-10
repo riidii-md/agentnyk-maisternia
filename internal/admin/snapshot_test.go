@@ -396,6 +396,8 @@ func TestDiscoverRepositoryAndActionCountStates(t *testing.T) {
 	for _, state := range []configurator.ActionState{
 		configurator.ActionCreate,
 		configurator.ActionUpdate,
+		configurator.ActionRemove,
+		configurator.ActionRelease,
 		configurator.ActionUnchanged,
 		configurator.ActionIgnored,
 		configurator.ActionConflict,
@@ -404,7 +406,8 @@ func TestDiscoverRepositoryAndActionCountStates(t *testing.T) {
 		counts = increment(counts, state)
 	}
 	if counts != (ActionCounts{
-		Create: 1, Update: 1, Unchanged: 1, Ignored: 1, Conflict: 1,
+		Create: 1, Update: 1, Remove: 1, Release: 1,
+		Unchanged: 1, Ignored: 1, Conflict: 1,
 	}) {
 		t.Fatalf("counts = %#v", counts)
 	}

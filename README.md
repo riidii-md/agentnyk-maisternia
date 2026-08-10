@@ -44,7 +44,7 @@ The repository contains the first safe configurator foundation:
 - staging-tree rendering;
 - conflict detection;
 - guarded apply with explicit `--yes`;
-- backups before managed updates;
+- backups before managed updates and removals;
 - drift detection using install checksums;
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
@@ -53,7 +53,8 @@ The repository contains the first safe configurator foundation:
   terminal-orchestration, Codex-compatibility, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
-- preset-scoped plan, staging render, and guarded apply;
+- preset-scoped plan, staging render, guarded apply, ownership reconciliation,
+  and uninstall;
 - strict environment-pack validation, read-only planning, and guarded typed installation;
 - six validated hook packs and eight hook presets spanning safety, continuity,
   quality, delegation, maintenance, and redacted local observability;
@@ -340,7 +341,9 @@ go run ./cmd/maisternia preset render \
 ```
 
 Preset apply uses the same conflict, drift, backup, and managed-state checks as
-the full manifest apply, and still requires explicit confirmation:
+the full manifest apply, records per-preset target ownership, and still requires
+explicit confirmation. Applying a changed preset removes targets it previously
+owned only after drift and shared-ownership checks:
 
 ```bash
 go run ./cmd/maisternia preset apply --scope user --target codex --yes standard-work
@@ -349,7 +352,18 @@ go run ./cmd/maisternia preset apply \
   --conflicts keep \
   --yes \
   codex-compatibility
+
+go run ./cmd/maisternia preset uninstall \
+  --scope user \
+  --target codex \
+  --yes \
+  standard-work
 ```
+
+Uninstall also works by remembered preset ID after its catalog definition has
+been deleted. It covers all managed preset resource categories. Environment
+packs remain presence-based host requirements and are not automatically removed
+through package managers or plugin hosts.
 
 Render a staging tree:
 
