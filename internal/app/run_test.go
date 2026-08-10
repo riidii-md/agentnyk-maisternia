@@ -1215,6 +1215,148 @@ func TestRunPresetPlanRenderAndApply(t *testing.T) {
 	}
 }
 
+func TestRunPresetUninstallWorksAfterPresetDefinitionIsGone(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	manifest := configurator.Manifest{
+		SchemaVersion: configurator.ManifestSchemaVersion,
+		Resources: []configurator.Resource{{
+			ID:     "deleted-command",
+			Source: "config/workflow/phases/plan.md",
+			Targets: []configurator.Target{{
+				Agent: "codex",
+				Path:  ".codex/commands/deleted-command.md",
+			}},
+		}},
+	}
+	plan, err := configurator.BuildPresetPlanForScope(
+		repo,
+		home,
+		manifest,
+		"codex",
+		configurator.ScopeUser,
+		"deleted-preset",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := configurator.Apply(plan, configurator.ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(home, ".codex", "commands", "deleted-command.md")
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"preset", "uninstall",
+		"--repo", repo,
+		"--home", home,
+		"--scope", "user",
+		"--target", "codex",
+		"deleted-preset",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("preset uninstall without --yes code = %d, want 2", code)
+	}
+	if !strings.Contains(stdout.String(), "REMOVE") ||
+		!strings.Contains(stderr.String(), "--yes") {
+		t.Fatalf("preset uninstall preview stdout=%q stderr=%q", stdout.String(), stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"preset", "uninstall",
+		"--repo", repo,
+		"--home", home,
+		"--scope", "user",
+		"--target", "codex",
+		"--yes",
+		"deleted-preset",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset uninstall code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("preset uninstall left target, stat error = %v", err)
+	}
+	if !strings.Contains(stdout.String(), "uninstalled preset deleted-preset") {
+		t.Fatalf("preset uninstall output = %q", stdout.String())
+	}
+}
+
+func TestRunPresetApplyRemovesLastManagedResource(t *testing.T) {
+	t.Parallel()
+
+	repo, home := createCLIRepository(
+		t,
+		"codex",
+		".codex/commands/brief.md",
+	)
+	presetDirectory := filepath.Join(repo, "config", "presets")
+	if err := os.MkdirAll(presetDirectory, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	presetPath := filepath.Join(presetDirectory, "single-resource.json")
+	writePreset := func(commands string) {
+		t.Helper()
+		content := `{
+  "schema_version": 1,
+  "id": "single-resource",
+  "name": "Single Resource",
+  "description": "Lifecycle fixture.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ` + commands + `,
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex"]
+}`
+		if err := os.WriteFile(presetPath, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writePreset(`["brief"]`)
+
+	var stdout, stderr bytes.Buffer
+	apply := func() int {
+		stdout.Reset()
+		stderr.Reset()
+		return Run([]string{
+			"preset", "apply",
+			"--repo", repo,
+			"--home", home,
+			"--scope", "user",
+			"--target", "codex",
+			"--yes",
+			"single-resource",
+		}, &stdout, &stderr)
+	}
+	if code := apply(); code != 0 {
+		t.Fatalf("initial preset apply code = %d, stderr = %s", code, stderr.String())
+	}
+	target := filepath.Join(home, ".codex", "commands", "brief.md")
+	if _, err := os.Stat(target); err != nil {
+		t.Fatalf("initial preset apply target: %v", err)
+	}
+
+	writePreset(`[]`)
+	if code := apply(); code != 0 {
+		t.Fatalf("empty preset apply code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "REMOVE") {
+		t.Fatalf("empty preset apply output = %q, want REMOVE", stdout.String())
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("empty preset apply left target, stat error = %v", err)
+	}
+}
+
 func TestPresetPlanIncludesReferencedEnvironmentPlan(t *testing.T) {
 	t.Parallel()
 

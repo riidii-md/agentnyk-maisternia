@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 )
@@ -24,6 +25,45 @@ func BuildPlanForScope(
 	manifest Manifest,
 	targetAgent string,
 	scope InstallScope,
+) (Plan, error) {
+	return buildPlanForScope(
+		repoRoot,
+		targetRoot,
+		manifest,
+		targetAgent,
+		scope,
+		"",
+	)
+}
+
+func BuildPresetPlanForScope(
+	repoRoot,
+	targetRoot string,
+	manifest Manifest,
+	targetAgent string,
+	scope InstallScope,
+	presetID string,
+) (Plan, error) {
+	if err := validatePresetOwner(presetID); err != nil {
+		return Plan{}, err
+	}
+	return buildPlanForScope(
+		repoRoot,
+		targetRoot,
+		manifest,
+		targetAgent,
+		scope,
+		presetID,
+	)
+}
+
+func buildPlanForScope(
+	repoRoot,
+	targetRoot string,
+	manifest Manifest,
+	targetAgent string,
+	scope InstallScope,
+	presetID string,
 ) (Plan, error) {
 	repoRoot, err := filepath.Abs(repoRoot)
 	if err != nil {
@@ -49,7 +89,8 @@ func BuildPlanForScope(
 		return Plan{}, err
 	}
 
-	plan := Plan{Home: targetRoot, Scope: scope}
+	plan := Plan{Home: targetRoot, Scope: scope, PresetID: presetID}
+	desired := make(map[string]ownedResource)
 	for _, resource := range manifest.Resources {
 		sourceRelative, _ := cleanRelativePath(resource.Source)
 		sourcePath := filepath.Join(repoRoot, sourceRelative)
@@ -64,6 +105,14 @@ func BuildPlanForScope(
 			}
 			canonicalAgent, _ := providers.CanonicalID(target.Agent)
 			targetRelative, _ := cleanRelativePath(target.Path)
+			key := stateKey(canonicalAgent, targetRelative)
+			if presetID != "" {
+				desired[key] = ownedResource{
+					ResourceID: resource.ID,
+					Agent:      canonicalAgent,
+					TargetPath: filepath.ToSlash(targetRelative),
+				}
+			}
 			destination := filepath.Join(targetRoot, targetRelative)
 			action := Action{
 				ResourceID:      resource.ID,
@@ -143,14 +192,197 @@ func BuildPlanForScope(
 			plan.Actions = append(plan.Actions, action)
 		}
 	}
+	if presetID != "" {
+		if err := appendRemovedPresetResources(
+			&plan,
+			state,
+			targetRoot,
+			targetAgent,
+			presetID,
+			desired,
+		); err != nil {
+			return Plan{}, err
+		}
+	}
 
+	sortPlanActions(&plan)
+	return plan, nil
+}
+
+func BuildPresetRemovalPlanForScope(
+	targetRoot,
+	targetAgent string,
+	scope InstallScope,
+	presetID string,
+) (Plan, error) {
+	if err := validatePresetOwner(presetID); err != nil {
+		return Plan{}, err
+	}
+	targetRoot, err := filepath.Abs(targetRoot)
+	if err != nil {
+		return Plan{}, fmt.Errorf("resolve target root: %w", err)
+	}
+	scope, err = normalizeInstallScope(scope)
+	if err != nil {
+		return Plan{}, err
+	}
+	if err := validateAgentFilter(targetAgent); err != nil {
+		return Plan{}, err
+	}
+	state, err := loadStateForScope(targetRoot, scope)
+	if err != nil {
+		return Plan{}, err
+	}
+	plan := Plan{Home: targetRoot, Scope: scope, PresetID: presetID}
+	if err := appendRemovedPresetResources(
+		&plan,
+		state,
+		targetRoot,
+		targetAgent,
+		presetID,
+		map[string]ownedResource{},
+	); err != nil {
+		return Plan{}, err
+	}
+	sortPlanActions(&plan)
+	return plan, nil
+}
+
+func appendRemovedPresetResources(
+	plan *Plan,
+	state installState,
+	targetRoot,
+	targetAgent,
+	presetID string,
+	desired map[string]ownedResource,
+) error {
+	installation, exists := state.PresetInstallations[presetID]
+	if !exists {
+		return nil
+	}
+	for key, owned := range installation.Resources {
+		if _, retained := desired[key]; retained {
+			continue
+		}
+		canonicalAgent, exists := providers.CanonicalID(owned.Agent)
+		if !exists {
+			return fmt.Errorf("preset %q install state has unknown agent %q", presetID, owned.Agent)
+		}
+		if !matchesAgent(targetAgent, canonicalAgent) {
+			continue
+		}
+		targetRelative, err := cleanRelativePath(owned.TargetPath)
+		if err != nil {
+			return fmt.Errorf("preset %q install state target: %w", presetID, err)
+		}
+		managedRoot, _ := providers.ManagedTargetRoot(canonicalAgent)
+		if targetRelative != managedRoot &&
+			!strings.HasPrefix(targetRelative, managedRoot+string(filepath.Separator)) {
+			return fmt.Errorf(
+				"preset %q install state target %q escapes provider root",
+				presetID,
+				owned.TargetPath,
+			)
+		}
+		canonicalKey := stateKey(canonicalAgent, targetRelative)
+		if canonicalKey != key {
+			return fmt.Errorf("preset %q install state resource key is inconsistent", presetID)
+		}
+		installed, managed := state.Resources[key]
+		if !managed {
+			return fmt.Errorf("preset %q install state has no managed record for %q", presetID, key)
+		}
+		action := Action{
+			ResourceID:      owned.ResourceID,
+			Agent:           canonicalAgent,
+			TargetPath:      filepath.ToSlash(targetRelative),
+			DestinationPath: filepath.Join(targetRoot, targetRelative),
+			SourceChecksum:  installed.Checksum,
+			Removal:         true,
+		}
+		if owners := otherPresetOwners(state, presetID, key); len(owners) > 0 {
+			action.State = ActionRelease
+			action.Reason = "target is still required by preset " + strings.Join(owners, ", ")
+			plan.Actions = append(plan.Actions, action)
+			continue
+		}
+		if symlinkPath, found, err := firstSymlink(targetRoot, action.DestinationPath); err != nil {
+			return err
+		} else if found {
+			action.State = ActionConflict
+			action.Reason = fmt.Sprintf("removal target traverses symlink %s", symlinkPath)
+			plan.Actions = append(plan.Actions, action)
+			continue
+		}
+		info, err := os.Lstat(action.DestinationPath)
+		if errors.Is(err, os.ErrNotExist) {
+			action.State = ActionRemove
+			action.Reason = "managed target is already absent"
+			plan.Actions = append(plan.Actions, action)
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("inspect removal target %s: %w", action.DestinationPath, err)
+		}
+		if !info.Mode().IsRegular() {
+			action.State = ActionConflict
+			action.Reason = "removal target is not a regular file"
+			plan.Actions = append(plan.Actions, action)
+			continue
+		}
+		currentChecksum, err := fileChecksum(action.DestinationPath)
+		if err != nil {
+			return fmt.Errorf("checksum removal target %s: %w", action.DestinationPath, err)
+		}
+		action.CurrentChecksum = currentChecksum
+		if currentChecksum == installed.Checksum {
+			action.State = ActionRemove
+			action.Reason = "resource is no longer declared by the preset"
+		} else {
+			action.State = ActionConflict
+			action.Reason = "managed target changed since the last apply; refusing removal"
+		}
+		plan.Actions = append(plan.Actions, action)
+	}
+	return nil
+}
+
+func otherPresetOwners(state installState, presetID, resourceKey string) []string {
+	var owners []string
+	for candidate, installation := range state.PresetInstallations {
+		if candidate == presetID {
+			continue
+		}
+		if _, exists := installation.Resources[resourceKey]; exists {
+			owners = append(owners, candidate)
+		}
+	}
+	sort.Strings(owners)
+	return owners
+}
+
+func sortPlanActions(plan *Plan) {
 	sort.Slice(plan.Actions, func(i, j int) bool {
 		if plan.Actions[i].Agent == plan.Actions[j].Agent {
 			return plan.Actions[i].TargetPath < plan.Actions[j].TargetPath
 		}
 		return plan.Actions[i].Agent < plan.Actions[j].Agent
 	})
-	return plan, nil
+}
+
+func validatePresetOwner(presetID string) error {
+	if presetID == "" || len(presetID) > 64 {
+		return fmt.Errorf("invalid preset install owner %q", presetID)
+	}
+	for index, character := range presetID {
+		if (character >= 'a' && character <= 'z') ||
+			(character >= '0' && character <= '9') ||
+			(character == '-' && index > 0) {
+			continue
+		}
+		return fmt.Errorf("invalid preset install owner %q", presetID)
+	}
+	return nil
 }
 
 func StatePath(home string) string {
@@ -174,9 +406,10 @@ func loadState(home string) (installState, error) {
 
 func loadStateForScope(root string, scope InstallScope) (installState, error) {
 	state := installState{
-		SchemaVersion: StateSchemaVersion,
-		Resources:     make(map[string]installedResource),
-		Resolutions:   make(map[string]conflictResolution),
+		SchemaVersion:       StateSchemaVersion,
+		Resources:           make(map[string]installedResource),
+		Resolutions:         make(map[string]conflictResolution),
+		PresetInstallations: make(map[string]presetInstallation),
 	}
 	path, err := stateReadPathForScope(root, scope)
 	if err != nil {
@@ -196,7 +429,7 @@ func loadStateForScope(root string, scope InstallScope) (installState, error) {
 	if err := decoder.Decode(&state); err != nil {
 		return installState{}, fmt.Errorf("decode install state: %w", err)
 	}
-	if state.SchemaVersion != 1 && state.SchemaVersion != StateSchemaVersion {
+	if state.SchemaVersion != 1 && state.SchemaVersion != 2 && state.SchemaVersion != StateSchemaVersion {
 		return installState{}, fmt.Errorf("unsupported install state schema %d", state.SchemaVersion)
 	}
 	state.SchemaVersion = StateSchemaVersion
@@ -205,6 +438,9 @@ func loadStateForScope(root string, scope InstallScope) (installState, error) {
 	}
 	if state.Resolutions == nil {
 		state.Resolutions = make(map[string]conflictResolution)
+	}
+	if state.PresetInstallations == nil {
+		state.PresetInstallations = make(map[string]presetInstallation)
 	}
 	return state, nil
 }

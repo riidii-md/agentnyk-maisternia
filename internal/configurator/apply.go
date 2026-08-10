@@ -53,17 +53,42 @@ func Apply(plan Plan, options ApplyOptions) error {
 
 	// Preflight the complete plan before the first write to reduce partial applies.
 	for _, action := range plan.Actions {
+		if err := verifyPresetOwnershipStillValid(state, plan, action); err != nil {
+			return err
+		}
 		if err := verifyActionStillValid(plan.Home, action); err != nil {
 			return err
 		}
 	}
 
 	for _, action := range plan.Actions {
+		if action.State == ActionRelease {
+			releasePresetOwnership(state, plan.PresetID, action)
+			continue
+		}
+		if action.Removal {
+			if action.State == ActionConflict && policy == ConflictKeep {
+				releasePresetOwnership(state, plan.PresetID, action)
+				forgetResourceIfUnowned(state, action)
+				continue
+			}
+			if action.CurrentChecksum != "" {
+				if err := backupTarget(plan.Home, scope, action, appliedAt); err != nil {
+					return err
+				}
+				if err := os.Remove(action.DestinationPath); err != nil {
+					return fmt.Errorf("remove %s: %w", action.TargetPath, err)
+				}
+			}
+			releasePresetOwnership(state, plan.PresetID, action)
+			forgetResourceIfUnowned(state, action)
+			continue
+		}
 		if action.State == ActionUnchanged {
 			if err := verifyActionStillValid(plan.Home, action); err != nil {
 				return err
 			}
-			recordInstalledResource(state, action, appliedAt)
+			recordInstalledResource(state, plan.PresetID, action, appliedAt)
 			continue
 		}
 		if action.State == ActionIgnored {
@@ -86,7 +111,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 			if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
 				return fmt.Errorf("replace %s: %w", action.TargetPath, err)
 			}
-			recordInstalledResource(state, action, appliedAt)
+			recordInstalledResource(state, plan.PresetID, action, appliedAt)
 			continue
 		}
 		if action.State != ActionCreate && action.State != ActionUpdate {
@@ -103,7 +128,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 		if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
 			return fmt.Errorf("install %s: %w", action.TargetPath, err)
 		}
-		recordInstalledResource(state, action, appliedAt)
+		recordInstalledResource(state, plan.PresetID, action, appliedAt)
 	}
 
 	if err := writeStateForScope(plan.Home, scope, state); err != nil {
@@ -112,7 +137,12 @@ func Apply(plan Plan, options ApplyOptions) error {
 	return nil
 }
 
-func recordInstalledResource(state installState, action Action, installedAt time.Time) {
+func recordInstalledResource(
+	state installState,
+	presetID string,
+	action Action,
+	installedAt time.Time,
+) {
 	targetRelative := filepath.FromSlash(action.TargetPath)
 	key := stateKey(action.Agent, targetRelative)
 	state.Resources[key] = installedResource{
@@ -124,6 +154,48 @@ func recordInstalledResource(state installState, action Action, installedAt time
 	for _, alias := range providers.LegacyAliases(action.Agent) {
 		delete(state.Resources, stateKey(alias, targetRelative))
 		delete(state.Resolutions, stateKey(alias, targetRelative))
+	}
+	if presetID != "" {
+		installation := state.PresetInstallations[presetID]
+		if installation.Resources == nil {
+			installation.Resources = make(map[string]ownedResource)
+		}
+		installation.Resources[key] = ownedResource{
+			ResourceID: action.ResourceID,
+			Agent:      action.Agent,
+			TargetPath: action.TargetPath,
+		}
+		state.PresetInstallations[presetID] = installation
+	}
+}
+
+func releasePresetOwnership(state installState, presetID string, action Action) {
+	if presetID == "" {
+		return
+	}
+	installation, exists := state.PresetInstallations[presetID]
+	if !exists {
+		return
+	}
+	key := stateKey(action.Agent, filepath.FromSlash(action.TargetPath))
+	delete(installation.Resources, key)
+	if len(installation.Resources) == 0 {
+		delete(state.PresetInstallations, presetID)
+		return
+	}
+	state.PresetInstallations[presetID] = installation
+}
+
+func forgetResourceIfUnowned(state installState, action Action) {
+	key := stateKey(action.Agent, filepath.FromSlash(action.TargetPath))
+	if len(otherPresetOwners(state, "", key)) > 0 {
+		return
+	}
+	delete(state.Resources, key)
+	delete(state.Resolutions, key)
+	for _, alias := range providers.LegacyAliases(action.Agent) {
+		delete(state.Resources, stateKey(alias, filepath.FromSlash(action.TargetPath)))
+		delete(state.Resolutions, stateKey(alias, filepath.FromSlash(action.TargetPath)))
 	}
 }
 
@@ -147,6 +219,12 @@ func recordConflictResolution(
 }
 
 func verifyActionStillValid(home string, action Action) error {
+	if action.State == ActionRelease {
+		return nil
+	}
+	if action.Removal {
+		return verifyRemovalStillValid(home, action)
+	}
 	sourceChecksum, err := fileChecksum(action.SourcePath)
 	if err != nil {
 		return fmt.Errorf("%w: source unavailable: %v", ErrPlanStale, err)
@@ -188,6 +266,64 @@ func verifyActionStillValid(home string, action Action) error {
 	default:
 		return nil
 	}
+}
+
+func verifyRemovalStillValid(home string, action Action) error {
+	if symlinkPath, found, err := firstSymlink(home, action.DestinationPath); err != nil {
+		return fmt.Errorf("%w: inspect removal target path: %v", ErrPlanStale, err)
+	} else if found {
+		return fmt.Errorf("%w: removal target path traverses symlink %s", ErrPlanStale, symlinkPath)
+	}
+	info, err := os.Lstat(action.DestinationPath)
+	if action.CurrentChecksum == "" {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("%w: inspect absent removal target: %v", ErrPlanStale, err)
+		}
+		return fmt.Errorf("%w: removal target appeared after planning", ErrPlanStale)
+	}
+	if err != nil {
+		return fmt.Errorf("%w: removal target unavailable: %v", ErrPlanStale, err)
+	}
+	if !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("%w: removal target is no longer a regular file", ErrPlanStale)
+	}
+	currentChecksum, err := fileChecksum(action.DestinationPath)
+	if err != nil {
+		return fmt.Errorf("%w: checksum removal target: %v", ErrPlanStale, err)
+	}
+	if currentChecksum != action.CurrentChecksum {
+		return fmt.Errorf("%w: removal target changed after planning", ErrPlanStale)
+	}
+	return nil
+}
+
+func verifyPresetOwnershipStillValid(
+	state installState,
+	plan Plan,
+	action Action,
+) error {
+	if !action.Removal {
+		return nil
+	}
+	installation, exists := state.PresetInstallations[plan.PresetID]
+	key := stateKey(action.Agent, filepath.FromSlash(action.TargetPath))
+	if !exists {
+		return fmt.Errorf("%w: preset ownership no longer exists", ErrPlanStale)
+	}
+	if _, exists := installation.Resources[key]; !exists {
+		return fmt.Errorf("%w: preset no longer owns %s", ErrPlanStale, action.TargetPath)
+	}
+	otherOwners := otherPresetOwners(state, plan.PresetID, key)
+	if action.State == ActionRelease && len(otherOwners) == 0 {
+		return fmt.Errorf("%w: shared target no longer has another owner", ErrPlanStale)
+	}
+	if action.State != ActionRelease && len(otherOwners) > 0 {
+		return fmt.Errorf("%w: removal target now has another owner", ErrPlanStale)
+	}
+	return nil
 }
 
 func backupTarget(
@@ -268,6 +404,9 @@ func writeStateForScope(root string, scope InstallScope, state installState) err
 	}
 	if state.Resolutions == nil {
 		state.Resolutions = make(map[string]conflictResolution)
+	}
+	if state.PresetInstallations == nil {
+		state.PresetInstallations = make(map[string]presetInstallation)
 	}
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {

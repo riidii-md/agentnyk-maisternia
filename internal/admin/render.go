@@ -147,7 +147,7 @@ func (m Model) renderFooter(width int) string {
 		case applyPlanning:
 			keys = "building scoped plan..."
 		case applyChoose:
-			keys = "k keep existing  x replace from preset  b back  esc cancel"
+			keys = "k keep existing  x accept preset state  b back  esc cancel"
 		case applyConfirm:
 			keys = "y apply  b back  esc cancel"
 			if m.applyDialog.Environment {
@@ -238,10 +238,12 @@ func (m Model) renderOverview(width int) string {
 		metric(
 			"Configuration",
 			fmt.Sprintf(
-				"%d unchanged, %d create, %d update, %d kept, %d conflict",
+				"%d unchanged, %d create, %d update, %d remove, %d release, %d kept, %d conflict",
 				counts.Unchanged,
 				counts.Create,
 				counts.Update,
+				counts.Remove,
+				counts.Release,
 				counts.Ignored,
 				counts.Conflict,
 			),
@@ -593,10 +595,12 @@ func presetKindSummary(preset presets.Preset) string {
 
 func actionCountSummary(counts ActionCounts) string {
 	return fmt.Sprintf(
-		"%d unchanged, %d create, %d update, %d kept, %d conflict",
+		"%d unchanged, %d create, %d update, %d remove, %d release, %d kept, %d conflict",
 		counts.Unchanged,
 		counts.Create,
 		counts.Update,
+		counts.Remove,
+		counts.Release,
 		counts.Ignored,
 		counts.Conflict,
 	)
@@ -706,9 +710,9 @@ func (m Model) renderPresetApplyDialog(width int) string {
 				"   Preserve customized files, remember the decision, and apply the rest.",
 				width,
 			)),
-			"x  Replace from preset",
+			"x  Accept preset state",
 			mutedStyle.Render(truncate(
-				"   Back up customized files, then install and manage the preset versions.",
+				"   Back up customized files, then install, replace, or remove as planned.",
 				width,
 			)),
 			"",
@@ -757,13 +761,13 @@ func (m Model) renderPresetApplyDialog(width int) string {
 		case configurator.ConflictKeep:
 			decision = "KEEP EXISTING"
 			description = fmt.Sprintf(
-				"Preserve and remember %d customized files; apply all other changes.",
+				"Preserve %d customized files; relinquish obsolete ownership and apply the rest.",
 				dialog.Counts.Conflict,
 			)
 		case configurator.ConflictReplace:
-			decision = "REPLACE FROM PRESET"
+			decision = "ACCEPT PRESET STATE"
 			description = fmt.Sprintf(
-				"Back up and replace %d customized files; apply all other changes.",
+				"Back up and reconcile %d customized targets; apply all other changes.",
 				dialog.Counts.Conflict,
 			)
 		}
@@ -1040,17 +1044,21 @@ func (m Model) renderConfig(width int) string {
 		metric("Unchanged", fmt.Sprint(counts.Unchanged), width),
 		metric("Create", fmt.Sprint(counts.Create), width),
 		metric("Update", fmt.Sprint(counts.Update), width),
+		metric("Remove", fmt.Sprint(counts.Remove), width),
+		metric("Release shared", fmt.Sprint(counts.Release), width),
 		metric("Kept existing", fmt.Sprint(counts.Ignored), width),
 		metric("Conflict", fmt.Sprint(counts.Conflict), width),
 	}
 	var providersRows []string
 	for _, provider := range m.snapshot.Config.ByProvider {
 		line := fmt.Sprintf(
-			"%-16s unchanged %-4d create %-4d update %-4d kept %-4d conflict %-4d",
+			"%-16s unchanged %-4d create %-4d update %-4d remove %-4d release %-4d kept %-4d conflict %-4d",
 			provider.Provider,
 			provider.Counts.Unchanged,
 			provider.Counts.Create,
 			provider.Counts.Update,
+			provider.Counts.Remove,
+			provider.Counts.Release,
 			provider.Counts.Ignored,
 			provider.Counts.Conflict,
 		)
@@ -1293,6 +1301,10 @@ func (m Model) renderProviderTargets(providerID string, width int) []string {
 		case configurator.ActionIgnored:
 			style = activeStyle
 		case configurator.ActionUpdate:
+			style = warningStyle
+		case configurator.ActionRemove:
+			style = errorStyle
+		case configurator.ActionRelease:
 			style = warningStyle
 		case configurator.ActionConflict:
 			style = errorStyle

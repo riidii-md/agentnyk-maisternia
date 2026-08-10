@@ -123,7 +123,8 @@ plan has conflicts, choose:
 
 - `k` keeps customized files, remembers the exact decision, and applies all
   remaining preset changes;
-- `x` backs up conflicting files and replaces them with preset versions;
+- `x` backs up conflicting targets and accepts the preset state, replacing or
+  removing them as planned;
 - `Esc` cancels without writing.
 
 After choosing, press `y` for final confirmation. Abort remains the default;
@@ -164,6 +165,7 @@ For a single preset, use:
 maisternia preset plan --scope user standard-work
 maisternia preset apply --scope user --yes standard-work
 maisternia preset apply --scope user --conflicts keep --yes codex-compatibility
+maisternia preset uninstall --scope user --target codex --yes standard-work
 ```
 
 An unmanaged conflict means a file already exists at a declared target but
@@ -177,6 +179,13 @@ A keep-existing decision records both source and target checksums. It appears as
 customized target changes, maisternia marks that decision stale and asks again.
 Replace decisions create timestamped backups under
 `~/.config/maisternia/backups/`.
+
+Preset plans also show `REMOVE` for an exclusively owned target removed from a
+preset and `RELEASE` when another preset still owns the target. Removal is
+backed up and requires the same explicit apply confirmation. Locally changed
+removal targets remain conflicts. The CLI `preset uninstall` removes all safely
+owned configuration targets and can use the recorded ID after the catalog
+definition is gone.
 
 The `codex-resource-lab` preset provides one visible example of every Codex
 resource category:

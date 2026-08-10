@@ -100,6 +100,15 @@ before a failure are not transactionally rolled back. In Admin, `i` opens the
 same environment review and `y` explicitly confirms installation. A
 configuration-preset apply never installs packages implicitly.
 
+Environment requirements do not currently participate in preset ownership or
+automatic reconciliation. Maisternia cannot safely infer that a Homebrew, npm,
+Cargo, Go, or host-plugin installation is unused merely because one preset no
+longer references it. Removing or changing an environment requirement therefore
+does not upgrade or uninstall an already-present host tool. Use the owning
+package manager or plugin host explicitly. Managed provider files are different:
+`preset apply` and `preset uninstall` reconcile their recorded ownership as
+documented in [Preset library](PRESETS.md).
+
 ## Typed Installer Choices
 
 Environment definitions cannot contain arbitrary shell. The schema currently
@@ -138,6 +147,6 @@ detect -> plan -> choose exact installer -> confirm -> execute -> verify
 
 Execution remains opt-in, uses typed argument arrays, displays exact commands,
 and verifies each requirement afterward. Remote pipe-to-shell scripts are not
-an environment-pack extension mechanism. A future install-state layer may add
-drift and uninstall support, but current truth comes from command presence and
-the Herdr plugin registry.
+an environment-pack extension mechanism. A future environment install-state
+layer may add drift and uninstall support, but current truth comes from command
+presence and the Herdr plugin registry.

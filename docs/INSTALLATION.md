@@ -167,7 +167,14 @@ explicit scope:
 maisternia preset plan --scope user --target codex standard-work
 maisternia preset apply --scope project --project /path/to/repo \
   --target codex --yes standard-work
+maisternia preset uninstall --scope user --target codex --yes standard-work
 ```
+
+Applying the same configuration preset again updates changed resources and
+reconciles resources removed from the preset. Exclusive, unchanged targets are
+backed up and removed; shared targets are retained; local drift becomes a
+conflict. `preset uninstall` uses recorded ownership and therefore still works
+when the preset definition has already been removed from the catalog.
 
 Environment-only presets remain local-machine scoped because they install host
 tools rather than provider configuration.

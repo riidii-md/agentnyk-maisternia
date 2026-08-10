@@ -312,7 +312,7 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 		project,
 		"work-brief",
 		"k  Keep existing",
-		"x  Replace from preset",
+		"x  Accept preset state",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("scoped conflict choice missing %q:\n%s", expected, view)
@@ -321,7 +321,7 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 
 	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
 	model = updated.(Model)
-	if view = model.View(); !strings.Contains(view, "REPLACE FROM PRESET") ||
+	if view = model.View(); !strings.Contains(view, "ACCEPT PRESET STATE") ||
 		!strings.Contains(view, "Press y to apply") {
 		t.Fatalf("replace confirmation missing:\n%s", view)
 	}
