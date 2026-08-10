@@ -1638,6 +1638,150 @@ func TestRunEventRejectsUnsupportedTriggerWithoutWriting(t *testing.T) {
 	}
 }
 
+func TestRunExternalPresetSourceLifecycle(t *testing.T) {
+	home := t.TempDir()
+	source := createExternalPresetCatalog(t, "external v1")
+	primary := appRepositoryRoot(t)
+	var stdout, stderr bytes.Buffer
+	run := func(arguments ...string) int {
+		stdout.Reset()
+		stderr.Reset()
+		return Run(append([]string{"preset"}, arguments...), &stdout, &stderr)
+	}
+
+	if code := run("source", "add", "--home", home, "--id", "team", source); code != 0 {
+		t.Fatalf("preset source add code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, expected := range []string{"added preset source team", "1 preset", "directory"} {
+		if !strings.Contains(stdout.String(), expected) {
+			t.Fatalf("source add output missing %q: %s", expected, stdout.String())
+		}
+	}
+	if code := run("source", "list", "--home", home); code != 0 {
+		t.Fatalf("preset source list code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "team") || !strings.Contains(stdout.String(), source) {
+		t.Fatalf("source list output = %q", stdout.String())
+	}
+
+	if code := run("list", "--repo", primary, "--home", home); code != 0 {
+		t.Fatalf("preset list code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "team/external") || !strings.Contains(stdout.String(), "team") {
+		t.Fatalf("preset list does not include qualified source: %s", stdout.String())
+	}
+	if code := run("show", "--repo", primary, "--home", home, "team/external"); code != 0 {
+		t.Fatalf("preset show code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"id": "external"`) {
+		t.Fatalf("preset show output = %q", stdout.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"doctor", "--repo", primary, "--home", home}, &stdout, &stderr); code != 0 {
+		t.Fatalf("doctor code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "preset library valid: 21 presets") {
+		t.Fatalf("doctor did not validate external preset: %s", stdout.String())
+	}
+
+	if code := run(
+		"apply", "--repo", primary, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "team/external",
+	); code != 0 {
+		t.Fatalf("external preset apply code = %d, stderr = %s", code, stderr.String())
+	}
+	target := filepath.Join(home, ".codex", "commands", "external.md")
+	if data, err := os.ReadFile(target); err != nil || string(data) != "external v1" {
+		t.Fatalf("external preset target = %q, %v", data, err)
+	}
+
+	if code := run("source", "remove", "--home", home, "team"); code != 2 {
+		t.Fatalf("source remove without --yes code = %d, stderr = %s", code, stderr.String())
+	}
+	if code := run("source", "remove", "--home", home, "--yes", "team"); code != 0 {
+		t.Fatalf("source remove code = %d, stderr = %s", code, stderr.String())
+	}
+	if code := run(
+		"uninstall", "--repo", primary, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "team/external",
+	); code != 0 {
+		t.Fatalf("removed external preset uninstall code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("external preset uninstall left target: %v", err)
+	}
+}
+
+func TestRunPresetSourceRefreshActivatesChangedFolderSnapshot(t *testing.T) {
+	home := t.TempDir()
+	source := createExternalPresetCatalog(t, "external v1")
+	var stdout, stderr bytes.Buffer
+	run := func(arguments ...string) int {
+		stdout.Reset()
+		stderr.Reset()
+		return Run(append([]string{"preset", "source"}, arguments...), &stdout, &stderr)
+	}
+	if code := run("add", "--home", home, "--id", "team", source); code != 0 {
+		t.Fatalf("add code = %d, stderr = %s", code, stderr.String())
+	}
+	if err := os.WriteFile(
+		filepath.Join(source, "config", "commands", "external.md"),
+		[]byte("external v2"),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if code := run("refresh", "--home", home, "team"); code != 0 {
+		t.Fatalf("refresh code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "refreshed preset source team") {
+		t.Fatalf("refresh output = %q", stdout.String())
+	}
+}
+
+func createExternalPresetCatalog(t *testing.T, content string) string {
+	t.Helper()
+	root := t.TempDir()
+	files := map[string]string{
+		"config/commands/external.md": content,
+		"config/manifest.json": `{
+  "schema_version": 1,
+  "resources": [{
+    "id": "external-command",
+    "source": "config/commands/external.md",
+    "targets": [{"agent": "codex", "path": ".codex/commands/external.md"}]
+  }]
+}`,
+		"config/presets/external.json": `{
+  "schema_version": 1,
+  "id": "external",
+  "name": "External",
+  "description": "External test preset.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["external-command"],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex"]
+}`,
+	}
+	for relative, content := range files {
+		path := filepath.Join(root, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
+}
+
 func createCLIRepository(t *testing.T, agent, targetPath string) (string, string) {
 	t.Helper()
 	repo := t.TempDir()

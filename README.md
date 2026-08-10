@@ -9,6 +9,7 @@ one version-controlled source of truth for:
 - shared work phases;
 - Codex, Claude, Antigravity, and Hermes provider adapters;
 - reusable preset-library entries;
+- immutable external preset sources from local folders or GitHub repositories;
 - workflow/pipeline DAGs inside presets;
 - MCP references and neutral `/work-*` commands;
 - permanent provider aliases such as `/codex-plan`;
@@ -55,6 +56,8 @@ The repository contains the first safe configurator foundation:
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, guarded apply, ownership reconciliation,
   and uninstall;
+- local-folder and GitHub preset-source registration, immutable snapshots,
+  explicit refresh/removal, qualified IDs, and Admin source addition;
 - strict environment-pack validation, read-only planning, and guarded typed installation;
 - six validated hook packs and eight hook presets spanning safety, continuity,
   quality, delegation, maintenance, and redacted local observability;
@@ -168,7 +171,8 @@ checkout or `config set-repository` step is required.
 Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
 for all keys. The current TUI browses preset-library entries, their workflow
 DAGs and contents, provider health, drift, and conflicts. In Presets, use `/` to
-search and `f` to filter/group by resource type. On a selected preset, press `i`
+search, `f` to filter/group by resource type, and `s` to add a validated local
+folder or GitHub preset source. On a selected preset, press `i`
 to install it, choose one provider, then choose user-global or a specific project
 folder scope. When Maisternia is launched inside a Git repository, that project
 is prefilled and recommended. Only that scoped plan is inspected; any conflicts

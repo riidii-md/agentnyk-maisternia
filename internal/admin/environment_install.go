@@ -10,6 +10,7 @@ import (
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 )
 
 const maxEnvironmentInstallOutput = 1 << 20
@@ -22,18 +23,19 @@ func (l Loader) InstallEnvironmentPreset(request EnvironmentInstallRequest) (str
 	if selection.Path == "" {
 		return "", errors.New("configuration catalog is unavailable")
 	}
-	presetLibrary, err := presets.LoadLibrary(selection.Path)
+	collection, err := presetsources.LoadCollection(l.Home, selection.Path)
 	if err != nil {
 		return "", err
 	}
-	preset, exists := presetLibrary.Get(request.PresetID)
+	resolved, exists := collection.Get(request.PresetID)
 	if !exists {
 		return "", fmt.Errorf("preset %q does not exist", request.PresetID)
 	}
+	preset := resolved.Preset
 	if !preset.IsEnvironmentOnly() {
 		return "", fmt.Errorf("preset %q is not environment-only", request.PresetID)
 	}
-	environmentLibrary, err := environment.LoadLibrary(selection.Path)
+	environmentLibrary, err := environment.LoadLibrary(resolved.Root)
 	if err != nil {
 		return "", err
 	}

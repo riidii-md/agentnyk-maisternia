@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 )
 
 const presetUsage = `Usage:
@@ -26,6 +28,10 @@ const presetUsage = `Usage:
   maisternia preset render [options] --output <dir> <preset>
   maisternia preset apply [options] --yes <preset>
   maisternia preset uninstall [options] --yes <preset>
+  maisternia preset source add [options] <folder|github-repository>
+  maisternia preset source list [options]
+  maisternia preset source refresh [options] <source|all>
+  maisternia preset source remove [options] --yes <source>
 
 Options:
   --repo <dir>         Configuration catalog override
@@ -37,6 +43,8 @@ Options:
   --output <dir>       Staging directory (render)
   --name <name>        Preset display name (create, copy, and edit)
   --description <text> Preset description (create and edit)
+  --id <id>            External source id (source add; inferred when omitted)
+  --ref <ref>          GitHub branch, tag, or commit (source add)
   --conflicts <mode>   abort, keep, or replace when applying or uninstalling
   --yes                Confirm delete, apply, or uninstall
 
@@ -85,6 +93,9 @@ func runPresetCommand(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	command := args[0]
+	if command == "source" {
+		return runPresetSourceCommand(args[1:], stdout, stderr)
+	}
 	switch command {
 	case "list", "show", "validate", "create", "copy", "edit", "delete",
 		"plan", "render", "apply", "uninstall":
@@ -136,13 +147,13 @@ func parsePresetOptions(
 	flags := flag.NewFlagSet("preset "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	flags.StringVar(&options.repo, "repo", options.repo, "configuration catalog override")
+	flags.StringVar(&options.home, "home", options.home, "home directory")
 	switch command {
 	case "validate", "plan", "render", "apply":
 		flags.StringVar(&options.manifest, "manifest", options.manifest, "manifest path")
 	}
 	switch command {
 	case "plan", "apply", "uninstall":
-		flags.StringVar(&options.home, "home", options.home, "target home directory")
 		flags.StringVar(&options.scope, "scope", options.scope, "installation scope: user or project")
 		flags.StringVar(&options.project, "project", options.project, "project root for project scope")
 		flags.StringVar(&options.target, "target", options.target, "target agent")
@@ -235,7 +246,7 @@ func runPresetInspection(
 	options presetOptions,
 	stdout, stderr io.Writer,
 ) int {
-	library, err := presets.LoadLibrary(options.repo)
+	collection, err := presetsources.LoadCollection(options.home, options.repo)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)
 		return 1
@@ -245,16 +256,22 @@ func runPresetInspection(
 		if len(options.args) != 0 {
 			return unexpectedPresetArguments(options.args, stderr)
 		}
-		if len(library.Presets) == 0 {
+		if len(collection.Presets) == 0 {
 			fmt.Fprintln(stdout, "no presets")
 			return 0
 		}
-		fmt.Fprintf(stdout, "%-24s %-28s %9s %9s %s\n", "ID", "NAME", "PIPELINES", "RESOURCES", "TARGETS")
-		for _, preset := range library.Presets {
+		fmt.Fprintf(stdout, "%-32s %-18s %-28s %9s %9s %s\n", "ID", "SOURCE", "NAME", "PIPELINES", "RESOURCES", "TARGETS")
+		for _, resolved := range collection.Presets {
+			preset := resolved.Preset
+			source := "built-in"
+			if resolved.Source.ID != "" {
+				source = resolved.Source.ID
+			}
 			fmt.Fprintf(
 				stdout,
-				"%-24s %-28s %9d %9d %s\n",
-				preset.ID,
+				"%-32s %-18s %-28s %9d %9d %s\n",
+				resolved.Selector,
+				source,
 				preset.Name,
 				len(preset.Pipelines),
 				len(preset.Contents.ResourceIDs()),
@@ -268,14 +285,14 @@ func runPresetInspection(
 			fmt.Fprintln(stderr, "error: preset show requires one preset id")
 			return 2
 		}
-		preset, exists := library.Get(options.args[0])
+		resolved, exists := collection.Get(options.args[0])
 		if !exists {
 			return presetNotFound(options.args[0], stderr)
 		}
 		encoder := json.NewEncoder(stdout)
 		encoder.SetIndent("", "  ")
 		encoder.SetEscapeHTML(false)
-		if err := encoder.Encode(preset); err != nil {
+		if err := encoder.Encode(resolved.Preset); err != nil {
 			fmt.Fprintf(stderr, "error: encode preset: %v\n", err)
 			return 1
 		}
@@ -285,25 +302,30 @@ func runPresetInspection(
 		if len(options.args) > 1 {
 			return unexpectedPresetArguments(options.args[1:], stderr)
 		}
-		manifest, err := configurator.LoadManifest(options.repo, options.manifest)
-		if err != nil {
-			fmt.Fprintf(stderr, "error: %v\n", err)
-			return 1
-		}
-		environments, err := environment.LoadLibrary(options.repo)
-		if err != nil {
-			fmt.Fprintf(stderr, "error: %v\n", err)
-			return 1
-		}
-		selected := library.Presets
+		selected := collection.Presets
 		if len(options.args) == 1 && options.args[0] != "all" {
-			preset, exists := library.Get(options.args[0])
+			resolved, exists := collection.Get(options.args[0])
 			if !exists {
 				return presetNotFound(options.args[0], stderr)
 			}
-			selected = []presets.Preset{preset}
+			selected = []presetsources.ResolvedPreset{resolved}
 		}
-		for _, preset := range selected {
+		for _, resolved := range selected {
+			preset := resolved.Preset
+			manifestPath := "config/manifest.json"
+			if resolved.Source.ID == "" {
+				manifestPath = options.manifest
+			}
+			manifest, err := configurator.LoadManifest(resolved.Root, manifestPath)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			environments, err := environment.LoadLibrary(resolved.Root)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
 			if err := presets.ValidateAgainstManifest(preset, manifest); err != nil {
 				fmt.Fprintf(stderr, "error: %v\n", err)
 				return 1
@@ -312,7 +334,7 @@ func runPresetInspection(
 				fmt.Fprintf(stderr, "error: %v\n", err)
 				return 1
 			}
-			fmt.Fprintf(stdout, "valid %s\n", preset.ID)
+			fmt.Fprintf(stdout, "valid %s\n", resolved.Selector)
 		}
 		fmt.Fprintf(stdout, "%d presets valid\n", len(selected))
 		return 0
@@ -427,16 +449,18 @@ func runPresetInstallation(
 		return runPresetUninstall(options, stdout, stderr)
 	}
 
-	library, err := presets.LoadLibrary(options.repo)
+	collection, err := presetsources.LoadCollection(options.home, options.repo)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)
 		return 1
 	}
-	preset, exists := library.Get(options.args[0])
+	resolved, exists := collection.Get(options.args[0])
 	if !exists {
 		return presetNotFound(options.args[0], stderr)
 	}
-	environmentLibrary, err := environment.LoadLibrary(options.repo)
+	preset := resolved.Preset
+	selector := resolved.Selector
+	environmentLibrary, err := environment.LoadLibrary(resolved.Root)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)
 		return 1
@@ -472,7 +496,7 @@ func runPresetInstallation(
 				}
 				fmt.Fprintf(stdout, "installed environment pack %s\n", packID)
 			}
-			fmt.Fprintf(stdout, "applied environment preset %s\n", preset.ID)
+			fmt.Fprintf(stdout, "applied environment preset %s\n", selector)
 			return 0
 		}
 		fmt.Fprintf(
@@ -487,10 +511,14 @@ func runPresetInstallation(
 		return 2
 	}
 	if command != "render" && len(preset.Contents.ResourceIDs()) == 0 {
-		return runEmptyPresetLifecycle(command, options, preset.ID, stdout, stderr)
+		return runEmptyPresetLifecycle(command, options, resolved.OwnerID, selector, stdout, stderr)
 	}
 
-	manifest, err := configurator.LoadManifest(options.repo, options.manifest)
+	manifestPath := "config/manifest.json"
+	if resolved.Source.ID == "" {
+		manifestPath = options.manifest
+	}
+	manifest, err := configurator.LoadManifest(resolved.Root, manifestPath)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)
 		return 1
@@ -504,12 +532,12 @@ func runPresetInstallation(
 	switch command {
 	case "plan":
 		plan, err := configurator.BuildPresetPlanForScope(
-			options.repo,
+			resolved.Root,
 			options.installRoot(),
 			selectedManifest,
 			options.target,
 			configurator.InstallScope(options.scope),
-			preset.ID,
+			resolved.OwnerID,
 		)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
@@ -524,7 +552,7 @@ func runPresetInstallation(
 
 	case "render":
 		if err := configurator.Render(
-			options.repo,
+			resolved.Root,
 			options.output,
 			selectedManifest,
 			options.target,
@@ -535,7 +563,7 @@ func runPresetInstallation(
 		fmt.Fprintf(
 			stdout,
 			"rendered preset %s for %s to %s\n",
-			preset.ID,
+			selector,
 			options.target,
 			options.output,
 		)
@@ -543,12 +571,12 @@ func runPresetInstallation(
 
 	case "apply":
 		plan, err := configurator.BuildPresetPlanForScope(
-			options.repo,
+			resolved.Root,
 			options.installRoot(),
 			selectedManifest,
 			options.target,
 			configurator.InstallScope(options.scope),
-			preset.ID,
+			resolved.OwnerID,
 		)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
@@ -581,7 +609,7 @@ func runPresetInstallation(
 		fmt.Fprintf(
 			stdout,
 			"applied preset %s at %s scope (%s)\n",
-			preset.ID,
+			selector,
 			options.scope,
 			options.installRoot(),
 		)
@@ -590,17 +618,186 @@ func runPresetInstallation(
 	return 2
 }
 
+func runPresetSourceCommand(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprint(stderr, presetUsage)
+		return 2
+	}
+	if isHelp(args[0]) {
+		fmt.Fprint(stdout, presetUsage)
+		return 0
+	}
+	command := args[0]
+	if command != "add" && command != "list" && command != "refresh" && command != "remove" {
+		fmt.Fprintf(stderr, "unknown preset source command %q\n", command)
+		return 2
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve user home: %v\n", err)
+		return 1
+	}
+	var id, ref string
+	var yes bool
+	flags := flag.NewFlagSet("preset source "+command, flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.StringVar(&home, "home", home, "home directory")
+	if command == "add" {
+		flags.StringVar(&id, "id", "", "preset source id")
+		flags.StringVar(&ref, "ref", "", "GitHub branch, tag, or commit")
+	}
+	if command == "remove" {
+		flags.BoolVar(&yes, "yes", false, "confirm source removal")
+	}
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	home, err = filepath.Abs(home)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: resolve home path: %v\n", err)
+		return 1
+	}
+	manager := presetsources.Manager{Home: home}
+	switch command {
+	case "add":
+		if flags.NArg() != 1 {
+			fmt.Fprintln(stderr, "error: preset source add requires one folder or GitHub repository")
+			return 2
+		}
+		location := flags.Arg(0)
+		if id == "" {
+			id = presetsources.SuggestedID(location)
+		}
+		source, err := manager.Add(context.Background(), presetsources.AddRequest{
+			ID: id, Location: location, Ref: ref,
+		})
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		library, err := presets.LoadLibrary(source.Snapshot)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: inspect added source: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(
+			stdout,
+			"added preset source %s (%s, %d %s, digest %s)\n",
+			source.ID,
+			source.Kind,
+			len(library.Presets),
+			plural(len(library.Presets), "preset", "presets"),
+			source.Digest[:12],
+		)
+		if source.Kind == presetsources.KindGitHub {
+			fmt.Fprintf(stdout, "locked %s@%s to %s\n", source.Location, source.Ref, source.Revision)
+		}
+		fmt.Fprintln(stdout, "source definitions were validated and cached; no preset was applied")
+		return 0
+
+	case "list":
+		if flags.NArg() != 0 {
+			return unexpectedPresetArguments(flags.Args(), stderr)
+		}
+		registry, err := presetsources.Load(home)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		active := 0
+		for _, source := range registry.Sources {
+			if source.Enabled {
+				active++
+			}
+		}
+		if active == 0 {
+			fmt.Fprintln(stdout, "no external preset sources")
+			return 0
+		}
+		fmt.Fprintf(stdout, "%-20s %-10s %-32s %-18s %s\n", "ID", "KIND", "LOCATION", "REF", "DIGEST")
+		for _, source := range registry.Sources {
+			if !source.Enabled {
+				continue
+			}
+			fmt.Fprintf(
+				stdout,
+				"%-20s %-10s %-32s %-18s %s\n",
+				source.ID,
+				source.Kind,
+				source.Location,
+				source.Ref,
+				source.Digest[:12],
+			)
+		}
+		return 0
+
+	case "refresh":
+		if flags.NArg() != 1 {
+			fmt.Fprintln(stderr, "error: preset source refresh requires one source id or all")
+			return 2
+		}
+		ids := []string{flags.Arg(0)}
+		if ids[0] == "all" {
+			registry, err := presetsources.Load(home)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			ids = ids[:0]
+			for _, source := range registry.Sources {
+				if source.Enabled {
+					ids = append(ids, source.ID)
+				}
+			}
+		}
+		for _, sourceID := range ids {
+			source, err := manager.Refresh(context.Background(), sourceID)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: refresh preset source %s: %v\n", sourceID, err)
+				return 1
+			}
+			fmt.Fprintf(stdout, "refreshed preset source %s (digest %s)\n", source.ID, source.Digest[:12])
+		}
+		return 0
+
+	case "remove":
+		if flags.NArg() != 1 {
+			fmt.Fprintln(stderr, "error: preset source remove requires one source id")
+			return 2
+		}
+		if !yes {
+			fmt.Fprintln(stderr, "preset source remove requires --yes")
+			return 2
+		}
+		if err := manager.Remove(flags.Arg(0)); err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "removed preset source %s; installed files were not changed\n", flags.Arg(0))
+		return 0
+	}
+	return 2
+}
+
+func plural(count int, singular, pluralValue string) string {
+	if count == 1 {
+		return singular
+	}
+	return pluralValue
+}
+
 func runEmptyPresetLifecycle(
 	command string,
 	options presetOptions,
-	presetID string,
+	ownerID string,
+	selector string,
 	stdout, stderr io.Writer,
 ) int {
 	plan, err := configurator.BuildPresetRemovalPlanForScope(
 		options.installRoot(),
 		options.target,
 		configurator.InstallScope(options.scope),
-		presetID,
+		ownerID,
 	)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)
@@ -636,7 +833,7 @@ func runEmptyPresetLifecycle(
 	fmt.Fprintf(
 		stdout,
 		"applied preset %s at %s scope (%s)\n",
-		presetID,
+		selector,
 		options.scope,
 		options.installRoot(),
 	)
@@ -652,19 +849,34 @@ func runPresetUninstall(
 		return 2
 	}
 	presetID := options.args[0]
-	if library, err := presets.LoadLibrary(options.repo); err == nil {
-		if preset, exists := library.Get(presetID); exists && len(preset.EnvironmentPacks) > 0 {
-			fmt.Fprintln(
-				stdout,
-				"note: environment requirements are shared host tools and are not removed",
-			)
+	ownerID := presetID
+	if collection, err := presetsources.LoadCollection(options.home, options.repo); err == nil {
+		if resolved, exists := collection.Get(presetID); exists {
+			ownerID = resolved.OwnerID
+			if len(resolved.Preset.EnvironmentPacks) > 0 {
+				fmt.Fprintln(
+					stdout,
+					"note: environment requirements are shared host tools and are not removed",
+				)
+			}
 		}
+	}
+	if ownerID == presetID && strings.Contains(presetID, "/") {
+		resolvedOwner, found, err := presetsources.OwnerForSelector(options.home, presetID)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		if !found {
+			return presetNotFound(presetID, stderr)
+		}
+		ownerID = resolvedOwner
 	}
 	plan, err := configurator.BuildPresetRemovalPlanForScope(
 		options.installRoot(),
 		options.target,
 		configurator.InstallScope(options.scope),
-		presetID,
+		ownerID,
 	)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: %v\n", err)

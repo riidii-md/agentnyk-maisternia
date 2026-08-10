@@ -10,6 +10,7 @@ import (
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 )
 
 type Tab int
@@ -44,6 +45,7 @@ var presetFilters = []string{
 const (
 	maxPresetSearchRunes = 256
 	maxProjectPathRunes  = 4096
+	maxSourceInputRunes  = 4096
 )
 
 var presetGroupOrder = []string{
@@ -74,6 +76,30 @@ type planPresetMsg struct {
 	request PresetInstallRequest
 	config  ConfigStatus
 	err     error
+}
+
+type addPresetSourceMsg struct {
+	location string
+	source   presetsources.Source
+	snapshot Snapshot
+	err      error
+}
+
+type sourceStage string
+
+const (
+	sourceInput    sourceStage = "input"
+	sourceConfirm  sourceStage = "confirm"
+	sourceRunning  sourceStage = "running"
+	sourceComplete sourceStage = "complete"
+)
+
+type presetSourceDialog struct {
+	Stage    sourceStage
+	Input    string
+	Location string
+	Source   presetsources.Source
+	Err      error
 }
 
 type applyStage string
@@ -121,6 +147,8 @@ type Model struct {
 	loading            bool
 	help               bool
 	applyDialog        presetApplyDialog
+	sourceDialog       presetSourceDialog
+	addPresetSource    func(string) (presetsources.Source, error)
 
 	presetPreview        bool
 	presetResourceCursor int
@@ -137,6 +165,7 @@ type RunOptions struct {
 	PlanPreset         func(PresetInstallRequest) (ConfigStatus, error)
 	ApplyPreset        func(PresetInstallRequest, configurator.ConflictPolicy) error
 	InstallEnvironment func(EnvironmentInstallRequest) (string, error)
+	AddPresetSource    func(string) (presetsources.Source, error)
 	AltScreen          bool
 }
 
@@ -145,6 +174,7 @@ func Run(options RunOptions) error {
 	model.planPreset = options.PlanPreset
 	model.applyPreset = options.ApplyPreset
 	model.installEnvironment = options.InstallEnvironment
+	model.addPresetSource = options.AddPresetSource
 	programOptions := []tea.ProgramOption{
 		tea.WithInput(options.Input),
 		tea.WithOutput(options.Output),
@@ -212,7 +242,22 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.clampCursor()
 		}
 		return m, nil
+	case addPresetSourceMsg:
+		if m.sourceDialog.Stage != sourceRunning || m.sourceDialog.Location != message.location {
+			return m, nil
+		}
+		m.sourceDialog.Stage = sourceComplete
+		m.sourceDialog.Source = message.source
+		m.sourceDialog.Err = message.err
+		if message.err == nil {
+			m.snapshot = message.snapshot
+			m.clampCursor()
+		}
+		return m, nil
 	case tea.KeyMsg:
+		if m.sourceDialog.Stage != "" {
+			return m.updateSourceDialog(message)
+		}
 		if m.applyDialog.Stage != "" {
 			return m.updateApplyDialog(message)
 		}
@@ -246,6 +291,10 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 				m.snapshot.Config.Counts.Conflict > 0 {
 				m.openFirstConflictingPreset()
+			}
+		case "s", "+":
+			if m.tab == TabPipelines && !m.presetPreview {
+				m.sourceDialog = presetSourceDialog{Stage: sourceInput}
 			}
 		case "/":
 			if m.tab == TabPipelines && !m.presetPreview {
@@ -323,6 +372,64 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			} else if count := m.itemCount(); count > 0 {
 				m.cursor[m.tab] = count - 1
 			}
+		}
+	}
+	return m, nil
+}
+
+func (m Model) updateSourceDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
+	key := message.String()
+	if key == "ctrl+c" {
+		return m, tea.Quit
+	}
+	if m.sourceDialog.Stage == sourceRunning {
+		return m, nil
+	}
+	if m.sourceDialog.Stage == sourceComplete {
+		if key == "q" {
+			return m, tea.Quit
+		}
+		if key == "enter" || key == "esc" {
+			m.sourceDialog = presetSourceDialog{}
+		}
+		return m, nil
+	}
+	if key == "esc" {
+		m.sourceDialog = presetSourceDialog{}
+		return m, nil
+	}
+	switch m.sourceDialog.Stage {
+	case sourceInput:
+		switch key {
+		case "enter":
+			location := strings.TrimSpace(m.sourceDialog.Input)
+			if location != "" {
+				m.sourceDialog.Location = location
+				m.sourceDialog.Stage = sourceConfirm
+			}
+		case "backspace", "delete":
+			runes := []rune(m.sourceDialog.Input)
+			if len(runes) > 0 {
+				m.sourceDialog.Input = string(runes[:len(runes)-1])
+			}
+		case "ctrl+u":
+			m.sourceDialog.Input = ""
+		default:
+			if message.Type == tea.KeyRunes {
+				m.sourceDialog.Input = appendPrintableLimited(
+					m.sourceDialog.Input,
+					message.Runes,
+					maxSourceInputRunes,
+				)
+			}
+		}
+	case sourceConfirm:
+		switch key {
+		case "y":
+			m.sourceDialog.Stage = sourceRunning
+			return m, m.addPresetSourceCommand()
+		case "b":
+			m.sourceDialog.Stage = sourceInput
 		}
 	}
 	return m, nil
@@ -475,33 +582,41 @@ func (m *Model) openPresetApply() {
 	if !found {
 		return
 	}
+	selector := presetSelector(status)
 	if status.Preset.IsEnvironmentOnly() {
 		m.applyDialog = presetApplyDialog{
 			Stage:       applyConfirm,
-			PresetID:    status.Preset.ID,
+			PresetID:    selector,
 			Name:        status.Preset.Name,
 			Environment: true,
 			Plans:       append([]environment.Plan(nil), status.Environments...),
 			Request: PresetInstallRequest{
-				PresetID: status.Preset.ID,
+				PresetID: selector,
 			},
 		}
 		return
 	}
 	m.applyDialog = presetApplyDialog{
 		Stage:        applyTarget,
-		PresetID:     status.Preset.ID,
+		PresetID:     selector,
 		Name:         status.Preset.Name,
 		Targets:      append([]string(nil), status.Preset.Targets...),
 		ProjectInput: strings.TrimSpace(m.snapshot.SuggestedProject),
 		Request: PresetInstallRequest{
-			PresetID: status.Preset.ID,
+			PresetID: selector,
 		},
 		Policy: configurator.ConflictAbort,
 	}
 	if m.applyDialog.ProjectInput != "" {
 		m.applyDialog.ScopeCursor = 1
 	}
+}
+
+func presetSelector(status PresetStatus) string {
+	if status.Selector != "" {
+		return status.Selector
+	}
+	return status.Preset.ID
 }
 
 func (m *Model) openFirstConflictingPreset() {
@@ -574,6 +689,26 @@ func (m Model) applyPresetCommand() tea.Cmd {
 			request:  request,
 			snapshot: snapshot,
 		}
+	}
+}
+
+func (m Model) addPresetSourceCommand() tea.Cmd {
+	location := m.sourceDialog.Location
+	add := m.addPresetSource
+	loader := m.loader
+	return func() tea.Msg {
+		if add == nil {
+			return addPresetSourceMsg{
+				location: location,
+				err:      fmt.Errorf("preset source management is not configured"),
+			}
+		}
+		source, err := add(location)
+		message := addPresetSourceMsg{location: location, source: source, err: err}
+		if err == nil && loader != nil {
+			message.snapshot = loader()
+		}
+		return message
 	}
 }
 
@@ -740,7 +875,7 @@ func (m Model) visiblePresetIndexes() []int {
 	for _, group := range presetGroupOrder {
 		for index, status := range m.snapshot.Presets {
 			if !presetMatchesFilter(status.Preset, filter) ||
-				!presetMatchesSearch(status.Preset, m.presetSearch) ||
+				!presetStatusMatchesSearch(status, m.presetSearch) ||
 				m.presetDisplayGroup(status.Preset) != group {
 				continue
 			}
@@ -748,6 +883,22 @@ func (m Model) visiblePresetIndexes() []int {
 		}
 	}
 	return indexes
+}
+
+func presetStatusMatchesSearch(status PresetStatus, query string) bool {
+	if presetMatchesSearch(status.Preset, query) {
+		return true
+	}
+	query = strings.ToLower(strings.TrimSpace(query))
+	if query == "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(strings.Join([]string{
+		presetSelector(status),
+		status.Source.ID,
+		status.Source.Location,
+		status.Source.Revision,
+	}, " ")), query)
 }
 
 func (m Model) presetDisplayGroup(preset presets.Preset) string {
