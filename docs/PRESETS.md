@@ -93,6 +93,84 @@ duplicate resources, unknown manifest resources, unknown providers, dangling
 edges, duplicate graph elements, and cycles that are not marked as explicit
 loop edges.
 
+## External Preset Sources
+
+External presets can be added from a local folder or a GitHub repository. A
+source is a complete compatible preset catalog, not a single preset JSON file,
+because presets reference manifest resources and may reference environment
+packs stored beside them. Its root must contain:
+
+```text
+config/manifest.json
+config/presets/*.json
+config/environments/*.json   # optional
+config/...                   # files referenced by the manifest
+```
+
+Add and inspect sources:
+
+```bash
+# Local folder; --id is optional and otherwise inferred from the folder name.
+maisternia preset source add --id team /path/to/team-preset-catalog
+
+# GitHub accepts owner/repository or a credential-free HTTPS GitHub URL.
+maisternia preset source add --id community --ref main owner/preset-catalog
+
+maisternia preset source list
+maisternia preset list
+maisternia preset show team/standard-work
+```
+
+External IDs are always source-qualified (`source-id/preset-id`) so that they
+cannot shadow included presets or presets from another source. The primary
+catalog remains authoritative for provider definitions, workflow policy, and
+full-manifest operations. External sources contribute only their presets,
+manifest resources, optional environment packs, and referenced files.
+
+Adding a source validates its complete bundle and copies it into Maisternia's
+private, content-addressed catalog cache. Local folders are not read live after
+that point. GitHub branches and tags are resolved to a commit before download;
+the normalized catalog files, rather than the downloaded archive bytes, define
+the snapshot digest. `GITHUB_TOKEN` can provide access to a private repository
+without storing a token in source metadata.
+
+The registry is stored at `~/.config/maisternia/preset-sources.json` with mode
+`0600` under mode-`0700` directories. It records origin and snapshot provenance,
+never credentials. Cached snapshots share the existing
+`~/.config/maisternia/catalogs/<content-sha256>/` store.
+
+Source changes are explicit and never apply provider configuration:
+
+```bash
+maisternia preset source refresh team
+maisternia preset source refresh all
+maisternia preset source remove --yes team
+```
+
+A failed refresh leaves the previous validated snapshot active. Removing a
+source hides its presets but does not change its original folder, delete cached
+snapshots, uninstall host tools, or mutate provider files. Recorded source
+identity is retained so an installed preset can still be removed safely:
+
+```bash
+maisternia preset uninstall \
+  --scope user \
+  --target codex \
+  --yes \
+  team/standard-work
+```
+
+Adding the same origin again reactivates its stable ownership identity. A
+removed source ID cannot be reused for a different folder, GitHub repository,
+or ref; choose a new source ID instead.
+
+Importing or refreshing a source never executes downloaded content. Applying a
+configuration preset still shows the exact scoped plan and uses the existing
+confirmation, conflict, drift, symlink, backup, and ownership checks.
+Environment installation remains a separate confirmed action. When separately
+owned presets target the same file, identical content may be shared; a source
+change that would make shared content diverge is a conflict.
+
 ## Authoring
 
 Create an empty preset:

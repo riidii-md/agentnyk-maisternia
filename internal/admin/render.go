@@ -57,7 +57,9 @@ func (m Model) render(width, height int) string {
 	}
 
 	var body string
-	if m.applyDialog.Stage != "" {
+	if m.sourceDialog.Stage != "" {
+		body = m.renderPresetSourceDialog(width)
+	} else if m.applyDialog.Stage != "" {
 		body = m.renderPresetApplyDialog(width)
 	} else if m.help {
 		body = m.renderHelp(width)
@@ -135,6 +137,18 @@ func (m Model) renderTabs(width int) string {
 }
 
 func (m Model) renderFooter(width int) string {
+	if m.sourceDialog.Stage != "" {
+		keys := "type folder or GitHub repository  enter next  esc cancel"
+		switch m.sourceDialog.Stage {
+		case sourceConfirm:
+			keys = "y add source  b back  esc cancel"
+		case sourceRunning:
+			keys = "validating and caching source..."
+		case sourceComplete:
+			keys = "enter close  q quit"
+		}
+		return mutedStyle.Render(truncate(keys, width))
+	}
 	if m.applyDialog.Stage != "" {
 		var keys string
 		switch m.applyDialog.Stage {
@@ -174,9 +188,9 @@ func (m Model) renderFooter(width int) string {
 	}
 	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
-		keys = "i install  / search  f filter  enter inspect  ←/→ switch  j/k select  ? help  q quit"
+		keys = "i install  s add source  / search  f filter  enter inspect  j/k select  ? help  q quit"
 		if selected, found := m.selectedPreset(); found && selected.Preset.IsEnvironmentOnly() {
-			keys = "i install  / search  f filter  ←/→ switch  j/k select  ? help  q quit"
+			keys = "i install  s add source  / search  f filter  j/k select  ? help  q quit"
 		}
 	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 		m.snapshot.Config.Counts.Conflict > 0 &&
@@ -186,9 +200,9 @@ func (m Model) renderFooter(width int) string {
 	if width < 72 {
 		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
-			keys = "i install  / search  f filter  enter inspect  j/k select  q quit"
+			keys = "i install  s source  / search  f filter  enter inspect  j/k select  q quit"
 			if selected, found := m.selectedPreset(); found && selected.Preset.IsEnvironmentOnly() {
-				keys = "i install  / search  f filter  j/k select  q quit"
+				keys = "i install  s source  / search  f filter  j/k select  q quit"
 			}
 		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 			m.snapshot.Config.Counts.Conflict > 0 &&
@@ -284,6 +298,7 @@ func (m Model) renderPipelines(width int) string {
 		return section("PRESET LIBRARY", []string{
 			mutedStyle.Render("No presets found under config/presets."),
 			mutedStyle.Render("Create one with maisternia preset create."),
+			"s  Add an external preset source",
 		}, width)
 	}
 
@@ -322,8 +337,8 @@ func (m Model) renderPipelines(width int) string {
 			lastGroup = group
 		}
 		line := fmt.Sprintf(
-			"%-22s %-25s %-18s %d resources",
-			truncate(status.Preset.ID, 21),
+			"%-30s %-20s %-18s %d resources",
+			truncate(presetSelector(status), 29),
 			truncate(status.Preset.Name, 24),
 			truncate(presetKindSummary(status.Preset), 17),
 			len(status.Preset.Contents.ResourceIDs()),
@@ -340,6 +355,16 @@ func (m Model) renderPipelines(width int) string {
 	details := []string{
 		metric("Description", preset.Description, width),
 		metric("Targets", targets, width),
+	}
+	if selected.Source.ID != "" {
+		details = append(details,
+			metric("Preset ID", presetSelector(selected), width),
+			metric("Source", fmt.Sprintf("%s (%s)", selected.Source.ID, selected.Source.Kind), width),
+			metric("Origin", selected.Source.Location, width),
+		)
+		if selected.Source.Revision != "" {
+			details = append(details, metric("Revision", selected.Source.Revision, width))
+		}
 	}
 	if len(preset.EnvironmentPacks) > 0 {
 		details = append(details, metric(
@@ -387,9 +412,13 @@ func (m Model) renderPipelines(width int) string {
 		actions := []string{
 			"i  Install preset for one provider and scope",
 			"Enter  Inspect prompt/resource source",
+			"s  Add an external preset source",
 		}
 		if preset.IsEnvironmentOnly() {
-			actions = []string{"i  Install environment preset on this machine"}
+			actions = []string{
+				"i  Install environment preset on this machine",
+				"s  Add an external preset source",
+			}
 		}
 		sections = append(sections, section("ACTIONS", actions, width))
 	}
@@ -604,6 +633,67 @@ func actionCountSummary(counts ActionCounts) string {
 		counts.Ignored,
 		counts.Conflict,
 	)
+}
+
+func (m Model) renderPresetSourceDialog(width int) string {
+	dialog := m.sourceDialog
+	lines := []string{}
+	switch dialog.Stage {
+	case sourceInput:
+		value := dialog.Input
+		if value == "" {
+			value = mutedStyle.Render("<local catalog folder, owner/repository, or GitHub URL>")
+		} else {
+			value = truncate(sanitizeTerminalText(value), maximum(1, width-2))
+		}
+		lines = []string{
+			"Enter a local folder or GitHub repository containing a Maisternia catalog:",
+			activeStyle.Render("> ") + value,
+			"",
+			mutedStyle.Render("Expected layout: config/manifest.json and config/presets/*.json"),
+			mutedStyle.Render("The source is validated and copied into an immutable local snapshot."),
+		}
+	case sourceConfirm:
+		lines = []string{
+			metric("Source", sanitizeTerminalText(dialog.Location), width),
+			"",
+			warningStyle.Render(truncate(
+				"This source may contain untrusted commands, prompts, hooks, settings, or installers.",
+				width,
+			)),
+			mutedStyle.Render(truncate(
+				"Review preset plans before applying them. Environment installation has a separate confirmation.",
+				width,
+			)),
+			"",
+			goodStyle.Render("No preset is applied by this action."),
+			"Press y to validate and cache this source, or Esc to cancel.",
+		}
+	case sourceRunning:
+		lines = []string{
+			activeStyle.Render("Validating and caching external preset source..."),
+			metric("Source", sanitizeTerminalText(dialog.Location), width),
+			mutedStyle.Render("GitHub access is explicit; normal Admin refresh remains offline."),
+		}
+	case sourceComplete:
+		if dialog.Err != nil {
+			lines = []string{
+				errorStyle.Render("Source was not added"),
+				truncate(sanitizeTerminalText(dialog.Err.Error()), width),
+				mutedStyle.Render("The previous source registry and active snapshots were left unchanged."),
+			}
+		} else {
+			lines = []string{
+				goodStyle.Render("External preset source added"),
+				metric("ID", dialog.Source.ID, width),
+				metric("Kind", string(dialog.Source.Kind), width),
+				metric("Origin", dialog.Source.Location, width),
+				metric("Digest", dialog.Source.Digest, width),
+				mutedStyle.Render("Its presets are now listed with source-qualified IDs."),
+			}
+		}
+	}
+	return section("ADD EXTERNAL PRESET SOURCE", lines, width)
 }
 
 func (m Model) renderPresetApplyDialog(width int) string {

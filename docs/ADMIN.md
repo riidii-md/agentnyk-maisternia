@@ -3,10 +3,10 @@
 ## Purpose
 
 `maisternia admin` is AgentnykMaisternia's terminal configuration surface. It
-is primarily a read-only browser for configuration and plans, with one guarded
-write path: applying the selected preset after an explicit conflict decision
-and final confirmation. It is not a surface for running or observing agent
-work. It brings together:
+is primarily a read-only browser for configuration and plans, with guarded
+write paths for registering an external preset source and applying the selected
+preset after explicit review and confirmation. It is not a surface for running
+or observing agent work. It brings together:
 
 - configuration repository health;
 - provider installation and configuration health;
@@ -95,6 +95,15 @@ Which provider targets are declared?
 Which external commands are satisfied, missing, blocked, or unsupported?
 What will change if this preset is applied?
 ```
+
+Included presets keep their normal IDs. External presets show a qualified ID
+such as `team/standard-work`, plus their source kind, origin, and locked GitHub
+revision when applicable. Press `s` to add either a local catalog folder or a
+GitHub repository. Admin shows a trust warning and requires confirmation before
+it validates and caches the source. This action updates only the private source
+registry and immutable cache; it does not apply a preset. Use
+`maisternia preset source refresh` and `maisternia preset source remove --yes`
+for the explicit update and removal lifecycle.
 
 Environment detection is path-only and read-only. Opening or refreshing the
 Presets view never runs a tool, package manager, plugin host, or remote
@@ -213,6 +222,7 @@ server or hook.
 | `g`, `G` | First or last item |
 | `Enter` | Inspect a preset's prompt/resource source, or accept an installer choice |
 | `i` (`a` remains an alias) | Install the selected configuration or environment preset |
+| `s` | Add a local-folder or GitHub preset source from the Presets view |
 | `/` | Search presets by ID, name, description, target, or resource |
 | `f` | Cycle preset resource filters and groups |
 | `u`, `p` | Choose user-global or project-folder scope in the installer |
@@ -232,8 +242,8 @@ session.
 
 The TUI is a configuration studio. Runtime automation is deliberately outside
 its scope. The preset library, resource search/filter/grouping, DAG browser,
-source preview, provider inspection, conflict explanation, and guarded scoped
-preset install are implemented. Installation always chooses one provider and
+source preview, external-source addition, provider inspection, conflict
+explanation, and guarded scoped preset install are implemented. Installation always chooses one provider and
 either user-global or an explicit existing project folder before building the
 plan. Conflict decisions affect only that scoped plan.
 

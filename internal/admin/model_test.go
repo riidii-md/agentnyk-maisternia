@@ -11,6 +11,7 @@ import (
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
@@ -385,6 +386,74 @@ func TestPresetViewExposesApplyAction(t *testing.T) {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("preset actions missing %q:\n%s", expected, view)
 		}
+	}
+}
+
+func TestPresetViewAddsExternalSourceAfterTrustConfirmation(t *testing.T) {
+	fixture := adminFixture()
+	refreshed := fixture
+	refreshed.Presets = append(refreshed.Presets, PresetStatus{
+		Selector: "team/external",
+		Source: presetsources.Source{
+			ID: "team", Kind: presetsources.KindDirectory, Location: "/catalogs/team",
+		},
+		Preset: presets.Preset{
+			SchemaVersion: presets.SchemaVersion,
+			ID:            "external",
+			Name:          "External",
+			Description:   "External preset.",
+			Contents:      presets.Contents{Commands: []string{"external-command"}},
+			Targets:       []string{"codex"},
+		},
+	})
+	model := loadedAdminModel(t, TabPipelines, 110, 34)
+	model.loader = func() Snapshot { return refreshed }
+	var added string
+	model.addPresetSource = func(location string) (presetsources.Source, error) {
+		added = location
+		return refreshed.Presets[len(refreshed.Presets)-1].Source, nil
+	}
+
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	model = updated.(Model)
+	if model.sourceDialog.Stage != sourceInput {
+		t.Fatalf("source dialog stage = %q, want input", model.sourceDialog.Stage)
+	}
+	updated, _ = model.Update(tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune("/catalogs/team"),
+	})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	if model.sourceDialog.Stage != sourceConfirm {
+		t.Fatalf("source dialog stage = %q, want confirm", model.sourceDialog.Stage)
+	}
+	view := model.View()
+	for _, expected := range []string{
+		"ADD EXTERNAL PRESET SOURCE",
+		"/catalogs/team",
+		"untrusted commands, prompts, hooks, settings, or installers",
+		"No preset is applied by this action",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("source confirmation missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, command := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	model = updated.(Model)
+	if model.sourceDialog.Stage != sourceRunning || command == nil {
+		t.Fatalf("source add did not start: %#v", model.sourceDialog)
+	}
+	updated, _ = model.Update(command())
+	model = updated.(Model)
+	if added != "/catalogs/team" || model.sourceDialog.Stage != sourceComplete ||
+		model.sourceDialog.Source.ID != "team" {
+		t.Fatalf("source add result = added %q dialog %#v", added, model.sourceDialog)
+	}
+	if _, found := model.snapshot.Presets[len(model.snapshot.Presets)-1], len(model.snapshot.Presets) > len(fixture.Presets); !found {
+		t.Fatal("source add did not refresh preset snapshot")
 	}
 }
 

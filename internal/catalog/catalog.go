@@ -30,6 +30,41 @@ func InstallEmbedded(home string) (string, error) {
 	return Install(home, maisternia.CatalogFS())
 }
 
+// InstallDirectory snapshots a real local directory through a traversal-
+// resistant rooted filesystem. The root identity checks prevent a symlink or
+// rename swap from changing which directory is imported after inspection.
+func InstallDirectory(home, source string) (string, error) {
+	source, err := filepath.Abs(source)
+	if err != nil {
+		return "", fmt.Errorf("resolve catalog source: %w", err)
+	}
+	before, err := os.Lstat(source)
+	if err != nil {
+		return "", fmt.Errorf("inspect catalog source: %w", err)
+	}
+	if !before.IsDir() || before.Mode()&os.ModeSymlink != 0 {
+		return "", errors.New("catalog source must be a real directory")
+	}
+	root, err := os.OpenRoot(source)
+	if err != nil {
+		return "", fmt.Errorf("open catalog source: %w", err)
+	}
+	defer root.Close()
+	opened, err := root.Stat(".")
+	if err != nil {
+		return "", fmt.Errorf("inspect opened catalog source: %w", err)
+	}
+	after, err := os.Lstat(source)
+	if err != nil {
+		return "", fmt.Errorf("reinspect catalog source: %w", err)
+	}
+	if !after.IsDir() || after.Mode()&os.ModeSymlink != 0 ||
+		!os.SameFile(before, after) || !os.SameFile(opened, after) {
+		return "", errors.New("catalog source changed during inspection")
+	}
+	return Install(home, root.FS())
+}
+
 // Install materializes assets into an immutable content-addressed directory
 // under the user's Maisternia configuration root.
 func Install(home string, assets fs.FS) (string, error) {
@@ -120,7 +155,7 @@ func readCatalog(assets fs.FS) ([]catalogFile, string, error) {
 		}
 		data, err := fs.ReadFile(assets, name)
 		if err != nil {
-			return fmt.Errorf("read embedded catalog file %q: %w", name, err)
+			return fmt.Errorf("read catalog file %q: %w", name, err)
 		}
 		total += int64(len(data))
 		if total > maxCatalogBytes {
@@ -134,10 +169,10 @@ func readCatalog(assets fs.FS) ([]catalogFile, string, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, "", fmt.Errorf("inspect embedded catalog: %w", err)
+		return nil, "", fmt.Errorf("inspect catalog: %w", err)
 	}
 	if len(files) == 0 {
-		return nil, "", errors.New("embedded catalog is empty")
+		return nil, "", errors.New("catalog is empty")
 	}
 	manifestFound := false
 	for _, file := range files {
@@ -147,7 +182,7 @@ func readCatalog(assets fs.FS) ([]catalogFile, string, error) {
 		}
 	}
 	if !manifestFound {
-		return nil, "", errors.New("embedded catalog has no config/manifest.json")
+		return nil, "", errors.New("catalog has no config/manifest.json")
 	}
 	return files, hex.EncodeToString(hash.Sum(nil)), nil
 }

@@ -246,3 +246,30 @@ func TestInstallRejectsSymlinkedCatalogDirectory(t *testing.T) {
 		t.Fatal("Install() accepted a symlinked catalogs directory")
 	}
 }
+
+func TestInstallDirectoryUsesARealRootedSource(t *testing.T) {
+	t.Parallel()
+
+	source := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(source, "config"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(source, "config", "manifest.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	installed, err := InstallDirectory(t.TempDir(), source)
+	if err != nil {
+		t.Fatalf("InstallDirectory() error = %v", err)
+	}
+	if data, err := os.ReadFile(filepath.Join(installed, "config", "manifest.json")); err != nil || string(data) != "{}" {
+		t.Fatalf("installed manifest = %q, %v", data, err)
+	}
+
+	link := filepath.Join(t.TempDir(), "source-link")
+	if err := os.Symlink(source, link); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := InstallDirectory(t.TempDir(), link); err == nil {
+		t.Fatal("InstallDirectory() accepted a symlinked source root")
+	}
+}

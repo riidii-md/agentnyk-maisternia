@@ -5,6 +5,7 @@
 ## Owns
 
 - A local library of reusable presets.
+- A private registry of validated local-folder and GitHub preset snapshots.
 - Provider-neutral workflow/pipeline DAG definitions inside those presets.
 - Phase prompt/command templates, MCP references, hooks, skills, and settings bundles.
 - Strict environment requirement definitions and read-only presence plans for
@@ -29,6 +30,8 @@
 - Commit, push, PR, or release actions.
 - Arbitrary repository shell scripts, remote pipe-to-shell installers, or
   implicit package execution during preset apply.
+- Provider registries, workflow policy, or full-manifest configuration from an
+  external preset source; those remain owned by the primary catalog.
 
 If the TUI observes live work, it becomes a controller. Keep it focused on
 authoring and applying configuration.
@@ -48,6 +51,7 @@ workflow in its own environment.
 
 ```text
 maisternia preset
+  -> included or source-qualified external preset snapshot
   -> workflow DAG + MCP/config bundles + environment references
   -> read-only external-tool presence plan
   -> optional, separately confirmed typed environment install
@@ -98,6 +102,8 @@ maisternia-owned configuration.
 The first preset-library implementation provides:
 
 - strict JSON preset files under `config/presets`;
+- immutable external preset catalogs from local folders or GitHub, with
+  qualified IDs and explicit add, refresh, and remove lifecycle;
 - manifest-backed content references;
 - provider target selection;
 - declarative DAG phases, edges, conditions, entry phases, and explicit loops;

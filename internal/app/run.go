@@ -14,6 +14,7 @@ import (
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
 
@@ -143,28 +144,45 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "approval policy valid: %d rules\n", len(approvalPolicy.Rules))
 		}
 
-		library, err := presets.LoadLibrary(options.repo)
+		collection, err := presetsources.LoadCollection(options.home, options.repo)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 			return 1
 		}
-		environments, err := environment.LoadLibrary(options.repo)
-		if err != nil {
-			fmt.Fprintf(stderr, "error: %v\n", err)
-			return 1
-		}
-		for _, preset := range library.Presets {
-			if err := presets.ValidateAgainstManifest(preset, manifest); err != nil {
+		environmentCounts := make(map[string]int)
+		for _, resolved := range collection.Presets {
+			presetManifest := manifest
+			if resolved.Source.ID != "" {
+				presetManifest, err = configurator.LoadManifest(
+					resolved.Root,
+					"config/manifest.json",
+				)
+				if err != nil {
+					fmt.Fprintf(stderr, "error: %v\n", err)
+					return 1
+				}
+			}
+			environments, err := environment.LoadLibrary(resolved.Root)
+			if err != nil {
 				fmt.Fprintf(stderr, "error: %v\n", err)
 				return 1
 			}
-			if err := presets.ValidateEnvironmentReferences(preset, environments); err != nil {
+			environmentCounts[resolved.Root] = len(environments.Packs)
+			if err := presets.ValidateAgainstManifest(resolved.Preset, presetManifest); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			if err := presets.ValidateEnvironmentReferences(resolved.Preset, environments); err != nil {
 				fmt.Fprintf(stderr, "error: %v\n", err)
 				return 1
 			}
 		}
-		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(library.Presets))
-		fmt.Fprintf(stdout, "environment pack library valid: %d packs\n", len(environments.Packs))
+		totalEnvironmentPacks := 0
+		for _, count := range environmentCounts {
+			totalEnvironmentPacks += count
+		}
+		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(collection.Presets))
+		fmt.Fprintf(stdout, "environment pack library valid: %d packs\n", totalEnvironmentPacks)
 
 		hooks, err := hookpacks.LoadLibrary(options.repo)
 		if err != nil {

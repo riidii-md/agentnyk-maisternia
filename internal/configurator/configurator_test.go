@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -393,6 +394,87 @@ func TestPresetRemovalReleasesSharedResourceBeforeDeletingIt(t *testing.T) {
 	}
 	if _, err := os.Stat(sharedTarget); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("last owner removal left target, stat error = %v", err)
+	}
+}
+
+func TestSharedPresetTargetRejectsDivergentSourceContent(t *testing.T) {
+	t.Parallel()
+
+	repoA := t.TempDir()
+	repoB := t.TempDir()
+	home := t.TempDir()
+	for _, repo := range []string{repoA, repoB} {
+		writeFile(t, filepath.Join(repo, "config", "shared.md"), "shared v1")
+	}
+	manifest := validManifest(
+		"config/shared.md", "codex", ".codex/commands/shared.md",
+	)
+	for index, repo := range []string{repoA, repoB} {
+		owner := []string{"preset-a", "preset-b"}[index]
+		plan, err := BuildPresetPlanForScope(repo, home, manifest, "codex", ScopeUser, owner)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	writeFile(t, filepath.Join(repoB, "config", "shared.md"), "shared v2")
+	plan, err := BuildPresetPlanForScope(
+		repoB, home, manifest, "codex", ScopeUser, "preset-b",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionConflict)
+	if !strings.Contains(plan.Actions[0].Reason, "shared") ||
+		!strings.Contains(plan.Actions[0].Reason, "preset-a") {
+		t.Fatalf("divergent shared action = %#v", plan.Actions[0])
+	}
+}
+
+func TestPresetUpdatePlanBecomesStaleWhenTargetGainsAnotherOwner(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	source := filepath.Join(repo, "config", "shared.md")
+	writeFile(t, source, "v1")
+	manifest := validManifest(
+		"config/shared.md", "codex", ".codex/commands/shared.md",
+	)
+	initial, err := BuildPresetPlanForScope(
+		repo, home, manifest, "codex", ScopeUser, "preset-b",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(initial, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	writeFile(t, source, "v2")
+	stale, err := BuildPresetPlanForScope(
+		repo, home, manifest, "codex", ScopeUser, "preset-b",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, stale, ActionUpdate)
+	writeFile(t, source, "v1")
+	shared, err := BuildPresetPlanForScope(
+		repo, home, manifest, "codex", ScopeUser, "preset-a",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(shared, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, source, "v2")
+	if err := Apply(stale, ApplyOptions{Confirmed: true}); !errors.Is(err, ErrPlanStale) {
+		t.Fatalf("Apply(stale shared update) error = %v, want ErrPlanStale", err)
 	}
 }
 

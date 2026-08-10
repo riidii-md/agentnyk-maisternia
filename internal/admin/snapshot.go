@@ -16,6 +16,7 @@ import (
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/repository"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
@@ -77,6 +78,8 @@ type ResourcePreview struct {
 
 type PresetStatus struct {
 	Preset       presets.Preset
+	Selector     string
+	Source       presetsources.Source
 	Config       ConfigStatus
 	Resources    []ResourcePreview
 	Environments []environment.Plan
@@ -177,47 +180,60 @@ func (l Loader) Load() Snapshot {
 			snapshot.Config = summarizePlan(plan)
 		}
 
-		environments, environmentErr := environment.LoadLibrary(selection.Path)
-		if environmentErr != nil {
-			snapshot.addIssue(SeverityError, "environments", environmentErr)
-		}
-
-		library, err := presets.LoadLibrary(selection.Path)
+		collection, err := presetsources.LoadCollection(l.Home, selection.Path)
 		if err != nil {
 			snapshot.addIssue(SeverityError, "presets", err)
 		} else {
-			presetsReady = environmentErr == nil
-			for _, preset := range library.Presets {
-				status := PresetStatus{Preset: preset}
-				if environmentErr == nil {
-					if err := presets.ValidateEnvironmentReferences(preset, environments); err != nil {
+			presetsReady = true
+			for _, resolved := range collection.Presets {
+				preset := resolved.Preset
+				status := PresetStatus{
+					Preset: preset, Selector: resolved.Selector, Source: resolved.Source,
+				}
+				presetManifest := manifest
+				if resolved.Source.ID != "" {
+					presetManifest, err = configurator.LoadManifest(
+						resolved.Root,
+						"config/manifest.json",
+					)
+					if err != nil {
 						presetsReady = false
-						snapshot.addIssue(SeverityError, "preset "+preset.ID, err)
-					} else {
-						status.Environments, err = l.planEnvironments(preset, environments)
-						if err != nil {
-							presetsReady = false
-							snapshot.addIssue(SeverityError, "preset "+preset.ID, err)
-						}
+						snapshot.addIssue(SeverityError, "preset "+resolved.Selector, err)
+						snapshot.Presets = append(snapshot.Presets, status)
+						continue
+					}
+				}
+				environments, environmentErr := environment.LoadLibrary(resolved.Root)
+				if environmentErr != nil {
+					presetsReady = false
+					snapshot.addIssue(SeverityError, "preset "+resolved.Selector, environmentErr)
+				} else if err := presets.ValidateEnvironmentReferences(preset, environments); err != nil {
+					presetsReady = false
+					snapshot.addIssue(SeverityError, "preset "+resolved.Selector, err)
+				} else {
+					status.Environments, err = l.planEnvironments(preset, environments)
+					if err != nil {
+						presetsReady = false
+						snapshot.addIssue(SeverityError, "preset "+resolved.Selector, err)
 					}
 				}
 				if len(preset.Contents.ResourceIDs()) == 0 {
 					snapshot.Presets = append(snapshot.Presets, status)
 					continue
 				}
-				selected, err := presets.SelectManifest(preset, manifest)
+				selected, err := presets.SelectManifest(preset, presetManifest)
 				if err != nil {
 					presetsReady = false
 					snapshot.addIssue(
 						SeverityError,
-						"preset "+preset.ID,
+						"preset "+resolved.Selector,
 						err,
 					)
 					snapshot.Presets = append(snapshot.Presets, status)
 					continue
 				}
 				status.Resources, err = loadResourcePreviews(
-					selection.Path,
+					resolved.Root,
 					preset.Contents,
 					selected.Resources,
 				)
@@ -225,14 +241,14 @@ func (l Loader) Load() Snapshot {
 					presetsReady = false
 					snapshot.addIssue(
 						SeverityError,
-						"preset "+preset.ID,
+						"preset "+resolved.Selector,
 						err,
 					)
 					snapshot.Presets = append(snapshot.Presets, status)
 					continue
 				}
 				plan, err := configurator.BuildPlan(
-					selection.Path,
+					resolved.Root,
 					l.Home,
 					selected,
 					"all",
@@ -241,7 +257,7 @@ func (l Loader) Load() Snapshot {
 					presetsReady = false
 					snapshot.addIssue(
 						SeverityError,
-						"preset "+preset.ID,
+						"preset "+resolved.Selector,
 						err,
 					)
 					snapshot.Presets = append(snapshot.Presets, status)
@@ -348,23 +364,24 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 	if selection.Path == "" {
 		return configurator.Plan{}, errors.New("configuration catalog is unavailable")
 	}
-	manifest, err := configurator.LoadManifest(
-		selection.Path,
-		"config/manifest.json",
-	)
+	collection, err := presetsources.LoadCollection(l.Home, selection.Path)
 	if err != nil {
 		return configurator.Plan{}, err
 	}
-	library, err := presets.LoadLibrary(selection.Path)
-	if err != nil {
-		return configurator.Plan{}, err
-	}
-	preset, exists := library.Get(request.PresetID)
+	resolved, exists := collection.Get(request.PresetID)
 	if !exists {
 		return configurator.Plan{}, fmt.Errorf(
 			"preset %q does not exist",
 			request.PresetID,
 		)
+	}
+	preset := resolved.Preset
+	manifest, err := configurator.LoadManifest(
+		resolved.Root,
+		"config/manifest.json",
+	)
+	if err != nil {
+		return configurator.Plan{}, err
 	}
 	target, valid := providers.CanonicalID(request.Target)
 	if !valid {
@@ -389,7 +406,7 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 			root,
 			target,
 			request.Scope,
-			preset.ID,
+			resolved.OwnerID,
 		)
 	}
 	selected, err := presets.SelectManifest(preset, manifest)
@@ -397,12 +414,12 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 		return configurator.Plan{}, err
 	}
 	plan, err := configurator.BuildPresetPlanForScope(
-		selection.Path,
+		resolved.Root,
 		root,
 		selected,
 		target,
 		request.Scope,
-		preset.ID,
+		resolved.OwnerID,
 	)
 	if err != nil {
 		return configurator.Plan{}, err

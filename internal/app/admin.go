@@ -22,11 +22,11 @@ Repository resolution:
   --repo, MAISTERNIA_REPO, saved developer override, source checkout, then the
   catalog installed automatically under ~/.config/maisternia/.
 
-The admin interface installs configuration presets for one provider at user or
-project scope. When launched inside a Git repository, project scope is suggested
-and prefilled. Environment presets install for the local machine. Both paths show
-a plan and require explicit confirmation. It cannot dispatch agents, commit,
-push, or manage runtime sessions.
+The admin interface can register validated external preset sources and installs
+configuration presets for one provider at user or project scope. When launched
+inside a Git repository, project scope is suggested and prefilled. Environment
+presets install for the local machine. Every write path requires explicit
+confirmation. It cannot dispatch agents, commit, push, or manage runtime sessions.
 `
 
 func runAdminCommand(
@@ -82,6 +82,7 @@ func runAdminCommand(
 		PlanPreset:         loader.PlanPreset,
 		ApplyPreset:        loader.ApplyPreset,
 		InstallEnvironment: loader.InstallEnvironmentPreset,
+		AddPresetSource:    loader.AddPresetSource,
 		AltScreen:          !noAltScreen,
 	}); err != nil {
 		fmt.Fprintf(stderr, "error: run admin interface: %v\n", err)

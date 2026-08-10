@@ -154,6 +154,16 @@ func buildPlanForScope(
 				return Plan{}, fmt.Errorf("checksum target %s: %w", destination, err)
 			}
 			action.CurrentChecksum = currentChecksum
+			installed, managed := installedStateResource(state, canonicalAgent, targetRelative)
+			if presetID != "" && managed && installed.Checksum != sourceChecksum {
+				if owners := otherPresetOwners(state, presetID, key); len(owners) > 0 {
+					action.State = ActionConflict
+					action.Reason = "shared target has different content required by preset " +
+						strings.Join(owners, ", ")
+					plan.Actions = append(plan.Actions, action)
+					continue
+				}
+			}
 			if currentChecksum == sourceChecksum {
 				action.State = ActionUnchanged
 				action.Reason = "target matches source"
@@ -161,7 +171,6 @@ func buildPlanForScope(
 				continue
 			}
 
-			installed, managed := installedStateResource(state, canonicalAgent, targetRelative)
 			resolution, resolved := conflictResolutionState(
 				state,
 				canonicalAgent,

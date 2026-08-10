@@ -306,6 +306,15 @@ func verifyPresetOwnershipStillValid(
 	action Action,
 ) error {
 	if !action.Removal {
+		if plan.PresetID == "" || action.State == ActionConflict {
+			return nil
+		}
+		key := stateKey(action.Agent, filepath.FromSlash(action.TargetPath))
+		installed, managed := state.Resources[key]
+		if managed && installed.Checksum != action.SourceChecksum &&
+			len(otherPresetOwners(state, plan.PresetID, key)) > 0 {
+			return fmt.Errorf("%w: shared target ownership changed after planning", ErrPlanStale)
+		}
 		return nil
 	}
 	installation, exists := state.PresetInstallations[plan.PresetID]

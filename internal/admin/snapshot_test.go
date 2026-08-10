@@ -12,6 +12,7 @@ import (
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
 )
@@ -152,6 +153,44 @@ func TestLoaderUsesInstalledCatalogAndSuggestsCurrentGitProject(t *testing.T) {
 	}
 }
 
+func TestLoaderIncludesAndPlansQualifiedExternalPreset(t *testing.T) {
+	home := t.TempDir()
+	sourceRoot := writeAdminExternalCatalog(t, "external admin")
+	if _, err := (presetsources.Manager{Home: home}).Add(t.Context(), presetsources.AddRequest{
+		ID:       "team",
+		Location: sourceRoot,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	loader := Loader{
+		Repo:            repositoryRoot(t),
+		Home:            home,
+		Cwd:             t.TempDir(),
+		InspectProvider: healthyInspection,
+		LookPath:        func(string) (string, error) { return "", exec.ErrNotFound },
+	}
+	snapshot := loader.Load()
+	status := presetStatusBySelector(t, snapshot.Presets, "team/external")
+	if status.Source.ID != "team" || status.Source.Kind != presetsources.KindDirectory {
+		t.Fatalf("external preset source = %#v", status.Source)
+	}
+	if len(status.Resources) != 1 || !strings.Contains(status.Resources[0].Content, "external admin") {
+		t.Fatalf("external preset resources = %#v", status.Resources)
+	}
+
+	plan, err := loader.PlanPreset(PresetInstallRequest{
+		PresetID: "team/external",
+		Target:   "codex",
+		Scope:    configurator.ScopeUser,
+	})
+	if err != nil {
+		t.Fatalf("PlanPreset() error = %v", err)
+	}
+	if plan.Counts.Create != 1 || len(plan.Actions) != 1 {
+		t.Fatalf("external preset plan = %#v", plan)
+	}
+}
+
 func TestLoaderInstallsEnvironmentOnlyPreset(t *testing.T) {
 	t.Parallel()
 
@@ -238,6 +277,59 @@ func presetStatusByID(t *testing.T, values []PresetStatus, id string) PresetStat
 	}
 	t.Fatalf("preset %q not found", id)
 	return PresetStatus{}
+}
+
+func presetStatusBySelector(t *testing.T, values []PresetStatus, selector string) PresetStatus {
+	t.Helper()
+	for _, value := range values {
+		if value.Selector == selector {
+			return value
+		}
+	}
+	t.Fatalf("preset selector %q not found", selector)
+	return PresetStatus{}
+}
+
+func writeAdminExternalCatalog(t *testing.T, content string) string {
+	t.Helper()
+	root := t.TempDir()
+	files := map[string]string{
+		"config/commands/external.md": content,
+		"config/manifest.json": `{
+  "schema_version": 1,
+  "resources": [{
+    "id": "external-command",
+    "source": "config/commands/external.md",
+    "targets": [{"agent": "codex", "path": ".codex/commands/external.md"}]
+  }]
+}`,
+		"config/presets/external.json": `{
+  "schema_version": 1,
+  "id": "external",
+  "name": "External",
+  "description": "External admin preset.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["external-command"],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex"]
+}`,
+	}
+	for relative, data := range files {
+		path := filepath.Join(root, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
 }
 
 func plannedRequirementByID(
