@@ -81,15 +81,35 @@ requests such as “help me understand,” prefer:
 Apply the active delegation policy before transforming:
 
 - `local`: continue in the current harness;
-- `ask`: ask whether to keep the work local or delegate it;
+- `ask`: ask which available harness should run the transformation;
 - `delegate`: use the preferred available target without asking.
 
-Supported preferences are `codex-subagent`, `agy`, and `auto`. A Codex subagent
-or AGY may draft, analyze, or independently structure the source. Give it only
-the task-local context it needs. The coordinating harness remains responsible
-for fidelity verification, the final Markdown artifact, and mdmaid.desk
-registration. If the preferred target is unavailable, do not pretend delegation
-occurred; follow an explicit requirement or fall back locally and disclose it.
+When `delegation` is absent, default an explicit
+`/work-adapt-for-reader` command to policy `ask`, scope `explicit-command`, and
+target `auto`. Default automatic or nested skill use to `local`, so another
+workflow is not interrupted unexpectedly. Treat a missing scope on an existing
+delegation object as `explicit-command`. Scope `all-invocations` applies the
+policy to both explicit and automatic use; outside the configured scope, run
+locally.
+
+When asking, use this concrete gate:
+
+> Where should I run the adaptation?
+
+Offer **Here (current harness)**, **Codex**, **Claude**, and **AGY**. Mark the
+best available choice as recommended and label unavailable choices instead of
+silently substituting them. `Here` maps to target `current` and means no
+delegation. A named harness requests a fresh delegated run using its native
+subagent support or a safe available runner. `auto` chooses a native delegate
+when possible and does not silently cross a provider boundary. Accept legacy
+target `codex-subagent` as an alias for `codex` when reading an existing profile.
+
+A Codex, Claude, or AGY delegate may draft, analyze, or independently structure
+the source. Give it only the task-local context it needs. The coordinating
+harness remains responsible for fidelity verification, the final Markdown
+artifact, and mdmaid.desk registration. If the selected target is unavailable,
+do not pretend delegation occurred; follow an explicit requirement or fall back
+locally and disclose it.
 
 ## Choose a view and depth
 

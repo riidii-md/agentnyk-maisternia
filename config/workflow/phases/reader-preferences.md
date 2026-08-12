@@ -14,8 +14,10 @@ time, density, terminology, answer position, evidence placement, visuals, and
 whether to ask or infer when intent is ambiguous. Separately configure the
 view-selection policy (`infer`, `ask-when-ambiguous`, or `always-ask`) and its
 scope (`explicit-command` or `all-invocations`). Also configure delegation policy
-(`local`, `ask`, or `delegate`) and the preferred harness (`auto`, Codex
-subagent, or AGY). Ask in short rounds and reuse supplied answers.
+(`local`, `ask`, or `delegate`), its scope (`explicit-command` or
+`all-invocations`), and the preferred harness (`auto`, `current`, Codex, Claude,
+or AGY). Explain that `current` means this session and a named harness means a
+fresh delegated run. Ask in short rounds and reuse supplied answers.
 
 Produce:
 

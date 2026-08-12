@@ -433,7 +433,9 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			"references/modes.md", "references/preferences.md",
 			".agent-runs/readability", "mdmaid-desk register",
 			"big picture", "conceptual depth", "delegation policy",
-			"Codex subagent", "AGY", "view_selection", "always-ask",
+			"current harness", "Codex", "Claude", "AGY",
+			"When `delegation` is absent", "explicit-command",
+			"view_selection", "always-ask",
 		},
 		"config/workflow/skills/adapt-for-reader/references/modes.md": {
 			"scan", "decide", "learn", "operate", "reference", "narrative",
@@ -444,6 +446,7 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			"Explicit current request", "situation override", "project", "user",
 			"delegation", "preferred target", "conceptual depth",
 			"View selection", "explicit-command", "all-invocations",
+			"current", "codex", "claude", "agy",
 		},
 		"config/workflow/skills/adapt-for-reader/references/principles.md": {
 			"reader effort", "signaling", "decorative",
@@ -452,11 +455,14 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			"$ARGUMENTS", "one focused question", "current request wins",
 			".agent-runs/readability", "mdmaid-desk register",
 			"big picture", "delegation", "always-ask", "recommended",
+			"Where should I run the adaptation?", "Codex", "Claude", "AGY",
+			"When `delegation` is absent", "explicit command",
 		},
 		"config/workflow/phases/reader-preferences.md": {
 			"explicit approval", "reader-profile.schema.json", "Do not write",
 			"conceptual depth", "delegation policy", "preferred harness",
 			"view-selection policy", "explicit-command", "all-invocations",
+			"current", "Codex", "Claude", "AGY",
 		},
 	}
 	for relative, required := range contracts {
@@ -488,6 +494,20 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			Preferences struct {
 				Properties map[string]json.RawMessage `json:"properties"`
 			} `json:"preferences"`
+			Delegation struct {
+				Required   []string `json:"required"`
+				Properties struct {
+					Policy struct {
+						Enum []string `json:"enum"`
+					} `json:"policy"`
+					Scope struct {
+						Enum []string `json:"enum"`
+					} `json:"scope"`
+					Target struct {
+						Enum []string `json:"enum"`
+					} `json:"target"`
+				} `json:"properties"`
+			} `json:"delegation"`
 		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(schemaContent, &schema); err != nil {
@@ -503,6 +523,18 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		if len(schema.Defs.Preferences.Properties[property]) == 0 {
 			t.Errorf("reader profile preferences are missing %q", property)
 		}
+	}
+	if !slices.Equal(schema.Defs.Delegation.Required, []string{"policy", "target"}) {
+		t.Errorf("delegation required fields = %v, want policy and target", schema.Defs.Delegation.Required)
+	}
+	if !slices.Equal(schema.Defs.Delegation.Properties.Policy.Enum, []string{"local", "ask", "delegate"}) {
+		t.Errorf("delegation policies = %v", schema.Defs.Delegation.Properties.Policy.Enum)
+	}
+	if !slices.Equal(schema.Defs.Delegation.Properties.Scope.Enum, []string{"explicit-command", "all-invocations"}) {
+		t.Errorf("delegation scopes = %v", schema.Defs.Delegation.Properties.Scope.Enum)
+	}
+	if !slices.Equal(schema.Defs.Delegation.Properties.Target.Enum, []string{"auto", "current", "codex", "claude", "agy", "codex-subagent"}) {
+		t.Errorf("delegation targets = %v", schema.Defs.Delegation.Properties.Target.Enum)
 	}
 }
 

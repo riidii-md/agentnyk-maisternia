@@ -96,8 +96,11 @@
         "policy": {
           "enum": ["local", "ask", "delegate"]
         },
+        "scope": {
+          "enum": ["explicit-command", "all-invocations"]
+        },
         "target": {
-          "enum": ["auto", "codex-subagent", "agy"]
+          "enum": ["auto", "current", "codex", "claude", "agy", "codex-subagent"]
         }
       }
     },

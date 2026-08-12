@@ -63,12 +63,27 @@ with one-line outcomes and mark the inferred choice as recommended.
 
 ## Delegation
 
-The delegation preference has a policy and preferred target:
+The delegation preference has a policy, scope, and preferred target:
 
 - policy `local`: shape the document in the current harness;
-- policy `ask`: ask once whether to keep it local or delegate;
+- policy `ask`: ask which harness should run it;
 - policy `delegate`: delegate without asking when the preferred target exists;
-- preferred target `auto`, `codex-subagent`, or `agy`.
+- scope `explicit-command`: apply the gate to `/work-adapt-for-reader` only;
+- scope `all-invocations`: also apply it when another workflow invokes the skill;
+- preferred target `auto`, `current`, `codex`, `claude`, or `agy`.
+
+When the whole delegation object is absent, explicit command use defaults to
+`ask`, `explicit-command`, and `auto`; automatic or nested use defaults to
+local. A missing scope also means `explicit-command`. This keeps old profiles
+interactive at the deliberate command gate without interrupting workflows that
+apply reader adaptation internally. Accept `codex-subagent` as a compatibility
+alias for `codex` when reading an older profile.
+
+Ask “Where should I run the adaptation?” and offer Here (current harness),
+Codex, Claude, and AGY. `current` means no delegation. A named provider means a
+fresh delegated run. Mark an available recommendation and make unavailable
+choices visible. `auto` may select a native delegate, but it must not silently
+cross a provider boundary.
 
 Delegation changes who drafts or analyzes the content, not who owns delivery.
 The coordinating harness verifies the result, writes the Markdown artifact, and
@@ -141,6 +156,7 @@ current task or session.
     },
     "delegation": {
       "policy": "ask",
+      "scope": "explicit-command",
       "target": "auto"
     }
   },
