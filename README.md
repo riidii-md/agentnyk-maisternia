@@ -50,8 +50,9 @@ The repository contains the first safe configurator foundation:
 - atomic file writes;
 - a strict, versioned preset library under `config/presets`;
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
-  multi-lens-review, harness-profile, session-audit, harness-improvement,
-  terminal-orchestration, Codex-compatibility, and Codex resource-lab presets;
+  multi-lens-review, adaptive-readability, harness-profile, session-audit,
+  harness-improvement, terminal-orchestration, Codex-compatibility, and Codex
+  resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, guarded apply, ownership reconciliation,
@@ -110,6 +111,11 @@ The `multi-lens-review` preset adds separate plan and implementation gates,
 independent review lenses, per-finding refutation, coordinator-applied fixes,
 and explicit cross-provider delegation. See
 [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md).
+
+The `adaptive-readability` preset adds the `adapt-for-reader` skill,
+`/work-adapt-for-reader`, and `/work-reader-preferences`. It adapts text by
+reader task and time budget, supports scoped situation overrides, and asks for
+clarification only when ambiguity would materially change the output.
 
 ## Installation
 

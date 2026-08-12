@@ -41,8 +41,8 @@ func TestRepositorySchemasAreValidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(paths) != 17 {
-		t.Fatalf("schema count = %d, want 17", len(paths))
+	if len(paths) != 18 {
+		t.Fatalf("schema count = %d, want 18", len(paths))
 	}
 	for _, path := range paths {
 		data, err := os.ReadFile(path)
