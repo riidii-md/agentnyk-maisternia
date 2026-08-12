@@ -23,7 +23,7 @@ Repository resolution:
   catalog installed automatically under ~/.config/maisternia/.
 
 The admin interface can register validated external preset sources and installs
-configuration presets for one provider at user or project scope. When launched
+configuration presets for one or more providers at user or project scope. When launched
 inside a Git repository, project scope is suggested and prefilled. Environment
 presets install for the local machine. Every write path requires explicit
 confirmation. It cannot dispatch agents, commit, push, or manage runtime sessions.
