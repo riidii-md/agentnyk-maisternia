@@ -29,14 +29,15 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if !found {
 		t.Fatal("terminal-orchestration environment pack missing")
 	}
-	if len(pack.Requirements) != 6 {
-		t.Fatalf("requirements = %d, want 6", len(pack.Requirements))
+	if len(pack.Requirements) != 7 {
+		t.Fatalf("requirements = %d, want 7", len(pack.Requirements))
 	}
 	for _, requirementID := range []string{
 		"zellij",
 		"tatami",
 		"herdr",
 		"mdmaid",
+		"mdmaid-desk",
 		"herdr-automatic-rename",
 		"herdr-bar",
 	} {
@@ -54,6 +55,14 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 		mdmaid.Installers[0].Package != "mdmaid" ||
 		mdmaid.Installers[0].Version != "0.1.14" {
 		t.Fatalf("mdmaid installer = %#v", mdmaid.Installers)
+	}
+	mdmaidDesk, _ := pack.Requirement("mdmaid-desk")
+	if !slices.Contains(mdmaidDesk.DependsOn, "mdmaid") ||
+		len(mdmaidDesk.Installers) != 1 ||
+		mdmaidDesk.Installers[0].Kind != InstallerNPMGlobal ||
+		mdmaidDesk.Installers[0].Package != "mdmaid-desk" ||
+		mdmaidDesk.Installers[0].Version != "0.1.0" {
+		t.Fatalf("mdmaid-desk requirement = %#v", mdmaidDesk)
 	}
 	plugins := map[string]struct {
 		pluginID   string

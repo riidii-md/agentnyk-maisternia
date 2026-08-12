@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 20 {
-		t.Fatalf("preset count = %d, want 20", len(library.Presets))
+	if len(library.Presets) != 21 {
+		t.Fatalf("preset count = %d, want 21", len(library.Presets))
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -155,6 +155,35 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := multiReview.Targets; len(got) != 4 {
 		t.Fatalf("multi-lens-review targets = %v, want all four providers", got)
+	}
+	adaptiveReadability, found := library.Get("adaptive-readability")
+	if !found {
+		t.Fatal("adaptive-readability preset missing")
+	}
+	if len(adaptiveReadability.Pipelines) != 1 ||
+		adaptiveReadability.Pipelines[0].ID != "reader-adaptation" {
+		t.Fatalf("adaptive-readability pipelines = %#v", adaptiveReadability.Pipelines)
+	}
+	if got := adaptiveReadability.Contents.Commands; !slices.Equal(got, []string{
+		"work-adapt-for-reader", "work-reader-preferences",
+	}) {
+		t.Fatalf("adaptive-readability commands = %v", got)
+	}
+	if got := adaptiveReadability.Contents.Skills; !slices.Equal(got, []string{
+		"adapt-for-reader-skill",
+		"adapt-for-reader-modes",
+		"adapt-for-reader-preferences",
+		"adapt-for-reader-principles",
+	}) {
+		t.Fatalf("adaptive-readability skills = %v", got)
+	}
+	if got := adaptiveReadability.Contents.Settings; !slices.Equal(got, []string{
+		"reader-profile-schema",
+	}) {
+		t.Fatalf("adaptive-readability settings = %v", got)
+	}
+	if got := adaptiveReadability.Targets; len(got) != 4 {
+		t.Fatalf("adaptive-readability targets = %v, want all four providers", got)
 	}
 	profile, found := library.Get("harness-profile")
 	if !found {
@@ -348,6 +377,22 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		}
 	}
 
+	adaptiveReadabilityManifest, err := SelectManifest(adaptiveReadability, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(adaptive-readability) error = %v", err)
+	}
+	if len(adaptiveReadabilityManifest.Resources) != 7 {
+		t.Fatalf(
+			"adaptive-readability resource count = %d, want 7",
+			len(adaptiveReadabilityManifest.Resources),
+		)
+	}
+	for _, resource := range adaptiveReadabilityManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("adaptive-readability resource %q targets = %v, want 4", resource.ID, got)
+		}
+	}
+
 	improvementManifest, err := SelectManifest(improvement, manifest)
 	if err != nil {
 		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
@@ -375,6 +420,121 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		if got := resource.Targets; len(got) != 4 {
 			t.Fatalf("hook resource %q targets = %v, want 4", resource.ID, got)
 		}
+	}
+}
+
+func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/skills/adapt-for-reader/SKILL.md": {
+			"materially change", "Do not persist inferred preferences",
+			"references/modes.md", "references/preferences.md",
+			".agent-runs/readability", "mdmaid-desk register",
+			"big picture", "conceptual depth", "delegation policy",
+			"current harness", "Codex", "Claude", "AGY",
+			"When `delegation` is absent", "explicit-command",
+			"view_selection", "always-ask",
+		},
+		"config/workflow/skills/adapt-for-reader/references/modes.md": {
+			"scan", "decide", "learn", "operate", "reference", "narrative",
+			"Military-style templates", "shared schema", "confirmation",
+			"Big picture", "Deep explanation", "Conceptual depth",
+		},
+		"config/workflow/skills/adapt-for-reader/references/preferences.md": {
+			"Explicit current request", "situation override", "project", "user",
+			"delegation", "preferred target", "conceptual depth",
+			"View selection", "explicit-command", "all-invocations",
+			"current", "codex", "claude", "agy",
+		},
+		"config/workflow/skills/adapt-for-reader/references/principles.md": {
+			"reader effort", "signaling", "decorative",
+		},
+		"config/workflow/phases/adapt-for-reader.md": {
+			"$ARGUMENTS", "one focused question", "current request wins",
+			".agent-runs/readability", "mdmaid-desk register",
+			"big picture", "delegation", "always-ask", "recommended",
+			"Where should I run the adaptation?", "Codex", "Claude", "AGY",
+			"When `delegation` is absent", "explicit command",
+		},
+		"config/workflow/phases/reader-preferences.md": {
+			"explicit approval", "reader-profile.schema.json", "Do not write",
+			"conceptual depth", "delegation policy", "preferred harness",
+			"view-selection policy", "explicit-command", "all-invocations",
+			"current", "Codex", "Claude", "AGY",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+
+	schemaPath := filepath.Join(root, "config", "schema", "reader-profile.schema.json")
+	schemaContent, err := os.ReadFile(schemaPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Schema     string `json:"$schema"`
+		Type       string `json:"type"`
+		Properties struct {
+			SchemaVersion json.RawMessage `json:"schema_version"`
+			Defaults      json.RawMessage `json:"defaults"`
+			Situations    json.RawMessage `json:"situations"`
+		} `json:"properties"`
+		Defs struct {
+			Preferences struct {
+				Properties map[string]json.RawMessage `json:"properties"`
+			} `json:"preferences"`
+			Delegation struct {
+				Required   []string `json:"required"`
+				Properties struct {
+					Policy struct {
+						Enum []string `json:"enum"`
+					} `json:"policy"`
+					Scope struct {
+						Enum []string `json:"enum"`
+					} `json:"scope"`
+					Target struct {
+						Enum []string `json:"enum"`
+					} `json:"target"`
+				} `json:"properties"`
+			} `json:"delegation"`
+		} `json:"$defs"`
+	}
+	if err := json.Unmarshal(schemaContent, &schema); err != nil {
+		t.Fatalf("parse reader profile schema: %v", err)
+	}
+	if schema.Schema == "" || schema.Type != "object" ||
+		len(schema.Properties.SchemaVersion) == 0 ||
+		len(schema.Properties.Defaults) == 0 ||
+		len(schema.Properties.Situations) == 0 {
+		t.Fatalf("reader profile schema is incomplete: %#v", schema)
+	}
+	for _, property := range []string{"view", "depth", "view_selection", "delegation"} {
+		if len(schema.Defs.Preferences.Properties[property]) == 0 {
+			t.Errorf("reader profile preferences are missing %q", property)
+		}
+	}
+	if !slices.Equal(schema.Defs.Delegation.Required, []string{"policy", "target"}) {
+		t.Errorf("delegation required fields = %v, want policy and target", schema.Defs.Delegation.Required)
+	}
+	if !slices.Equal(schema.Defs.Delegation.Properties.Policy.Enum, []string{"local", "ask", "delegate"}) {
+		t.Errorf("delegation policies = %v", schema.Defs.Delegation.Properties.Policy.Enum)
+	}
+	if !slices.Equal(schema.Defs.Delegation.Properties.Scope.Enum, []string{"explicit-command", "all-invocations"}) {
+		t.Errorf("delegation scopes = %v", schema.Defs.Delegation.Properties.Scope.Enum)
+	}
+	if !slices.Equal(schema.Defs.Delegation.Properties.Target.Enum, []string{"auto", "current", "codex", "claude", "agy", "codex-subagent"}) {
+		t.Errorf("delegation targets = %v", schema.Defs.Delegation.Properties.Target.Enum)
 	}
 }
 

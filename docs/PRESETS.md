@@ -46,9 +46,12 @@ The repository starts with:
 - `parallel-work`: dependency-aware parallel planning and bounded execution
   waves with isolated writes, integration barriers, and sequential fallback;
 - `terminal-orchestration`: provider-neutral machine setup for Zellij, Tatami,
-  Herdr, Mdmaid, and three pinned Herdr plugins;
+  Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr plugins;
 - `multi-lens-review`: plan and implementation review with independent lenses,
   per-finding refutation, applied fixes, and optional provider delegation;
+- `adaptive-readability`: reader- and task-aware text transformation with
+  reusable defaults, situation overrides, explicit calibration, and a
+  clarification gate for materially ambiguous intent;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
 - `session-audit`: evidence-backed correctness, trajectory, process/safety, and
   cost review plus delegated bottleneck analysis for one completed run;
@@ -75,6 +78,7 @@ maisternia preset show scored-experiment
 maisternia preset show parallel-work
 maisternia preset show terminal-orchestration
 maisternia preset show multi-lens-review
+maisternia preset show adaptive-readability
 maisternia preset show harness-improvement
 maisternia preset show codex-resource-lab
 maisternia preset show approval-standard

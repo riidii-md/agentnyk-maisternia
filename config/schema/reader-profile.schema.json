@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentnyk-maisternia.local/schema/reader-profile.schema.json",
+  "title": "Reader adaptation profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "defaults", "situations"],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "defaults": {
+      "$ref": "#/$defs/preferences"
+    },
+    "situations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/situation"
+      },
+      "maxItems": 64
+    }
+  },
+  "$defs": {
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "not": {
+            "required": ["view", "mode"]
+          }
+        }
+      ],
+      "properties": {
+        "view": {
+          "enum": ["auto", "big-picture", "decision", "explanation", "action-brief", "lookup", "story"]
+        },
+        "mode": {
+          "enum": ["auto", "scan", "decide", "learn", "operate", "reference", "narrative"]
+        },
+        "depth": {
+          "enum": ["high-level", "working", "deep"]
+        },
+        "density": {
+          "enum": ["compact", "balanced", "detailed"]
+        },
+        "answer_position": {
+          "enum": ["auto", "first", "contextual"]
+        },
+        "terminology": {
+          "enum": ["plain", "dual-label", "domain-native"]
+        },
+        "visuals": {
+          "enum": ["auto", "prefer", "avoid"]
+        },
+        "evidence": {
+          "enum": ["inline", "near-claim", "appendix"]
+        },
+        "interaction": {
+          "enum": ["ask-when-material", "infer-and-state", "never-ask"]
+        },
+        "layering": {
+          "type": "boolean"
+        },
+        "first_pass_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "view_selection": {
+          "$ref": "#/$defs/view-selection"
+        },
+        "delegation": {
+          "$ref": "#/$defs/delegation"
+        }
+      }
+    },
+    "view-selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "scope"],
+      "properties": {
+        "policy": {
+          "enum": ["infer", "ask-when-ambiguous", "always-ask"]
+        },
+        "scope": {
+          "enum": ["explicit-command", "all-invocations"]
+        }
+      }
+    },
+    "delegation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "target"],
+      "properties": {
+        "policy": {
+          "enum": ["local", "ask", "delegate"]
+        },
+        "scope": {
+          "enum": ["explicit-command", "all-invocations"]
+        },
+        "target": {
+          "enum": ["auto", "current", "codex", "claude", "agy", "codex-subagent"]
+        }
+      }
+    },
+    "situation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "when", "overrides"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "when": {
+          "$ref": "#/$defs/match"
+        },
+        "overrides": {
+          "$ref": "#/$defs/preferences"
+        }
+      }
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "task": {
+          "enum": ["scan", "decide", "learn", "operate", "reference", "narrative"]
+        },
+        "medium": {
+          "enum": ["chat", "terminal", "markdown", "html", "document", "slides", "email"]
+        },
+        "audience": {
+          "enum": ["novice", "mixed", "expert"]
+        }
+      }
+    }
+  }
+}

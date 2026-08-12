@@ -32,6 +32,7 @@ environment pack. It installs or verifies:
 - Tatami;
 - Herdr;
 - [Mdmaid](https://github.com/OleksandrBesan/mdmaid) `0.1.14` through npm;
+- [mdmaid.desk](https://github.com/riidii-md/mdmaid.desk) `0.1.0` through npm;
 - [Herdr Automatic Rename](https://github.com/qu8n/herdr-automatic-rename);
 - [Herdr Bar](https://github.com/jeffarese/herdr-bar).
 

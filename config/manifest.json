@@ -354,6 +354,76 @@
       ]
     },
     {
+      "id": "work-adapt-for-reader",
+      "source": "config/workflow/phases/adapt-for-reader.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-adapt-for-reader.md"},
+        {"agent": "claude", "path": ".claude/commands/work-adapt-for-reader.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-adapt-for-reader.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-adapt-for-reader/SKILL.md"}
+      ]
+    },
+    {
+      "id": "work-reader-preferences",
+      "source": "config/workflow/phases/reader-preferences.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/commands/work-reader-preferences.md"},
+        {"agent": "claude", "path": ".claude/commands/work-reader-preferences.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-reader-preferences.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-reader-preferences/SKILL.md"}
+      ]
+    },
+    {
+      "id": "adapt-for-reader-skill",
+      "source": "config/workflow/skills/adapt-for-reader/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/adapt-for-reader/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/adapt-for-reader/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/adapt-for-reader/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/adapt-for-reader/SKILL.md"}
+      ]
+    },
+    {
+      "id": "adapt-for-reader-modes",
+      "source": "config/workflow/skills/adapt-for-reader/references/modes.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/adapt-for-reader/references/modes.md"},
+        {"agent": "claude", "path": ".claude/skills/adapt-for-reader/references/modes.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/adapt-for-reader/references/modes.md"},
+        {"agent": "hermes", "path": ".hermes/skills/adapt-for-reader/references/modes.md"}
+      ]
+    },
+    {
+      "id": "adapt-for-reader-preferences",
+      "source": "config/workflow/skills/adapt-for-reader/references/preferences.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/adapt-for-reader/references/preferences.md"},
+        {"agent": "claude", "path": ".claude/skills/adapt-for-reader/references/preferences.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/adapt-for-reader/references/preferences.md"},
+        {"agent": "hermes", "path": ".hermes/skills/adapt-for-reader/references/preferences.md"}
+      ]
+    },
+    {
+      "id": "adapt-for-reader-principles",
+      "source": "config/workflow/skills/adapt-for-reader/references/principles.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/adapt-for-reader/references/principles.md"},
+        {"agent": "claude", "path": ".claude/skills/adapt-for-reader/references/principles.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/adapt-for-reader/references/principles.md"},
+        {"agent": "hermes", "path": ".hermes/skills/adapt-for-reader/references/principles.md"}
+      ]
+    },
+    {
+      "id": "reader-profile-schema",
+      "source": "config/schema/reader-profile.schema.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/reader-profile.schema.json"},
+        {"agent": "claude", "path": ".claude/maisternia/reader-profile.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/reader-profile.schema.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/reader-profile.schema.json"}
+      ]
+    },
+    {
       "id": "review-policy",
       "source": "config/workflow/review-policy.json",
       "targets": [

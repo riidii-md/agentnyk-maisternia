@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "adaptive-readability",
+  "name": "Adaptive Readability",
+  "description": "Reader- and task-aware text adaptation with reusable preferences, situation overrides, clarification gates, evidence-preserving modes, and explicit calibration commands.",
+  "pipelines": [
+    {
+      "id": "reader-adaptation",
+      "name": "Reader Adaptation",
+      "entry_phases": ["resolve"],
+      "phases": ["resolve", "clarify", "transform", "verify", "deliver"],
+      "edges": [
+        {"from": "resolve", "to": "clarify", "condition": "material reader or purpose ambiguity"},
+        {"from": "resolve", "to": "transform", "condition": "reader contract sufficient"},
+        {"from": "clarify", "to": "transform"},
+        {"from": "transform", "to": "verify"},
+        {"from": "verify", "to": "transform", "condition": "meaning, evidence, or mode gate fails", "loop": true},
+        {"from": "verify", "to": "deliver", "condition": "quality gate passes"}
+      ]
+    }
+  ],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-adapt-for-reader", "work-reader-preferences"],
+    "prompts": [],
+    "skills": [
+      "adapt-for-reader-skill",
+      "adapt-for-reader-modes",
+      "adapt-for-reader-preferences",
+      "adapt-for-reader-principles"
+    ],
+    "hooks": [],
+    "settings": ["reader-profile-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

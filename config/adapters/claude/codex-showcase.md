@@ -75,7 +75,11 @@ Return complete Markdown with these sections when relevant:
 - Next Steps
 - Sources and Relevant Files
 PROMPT
-OUTPUT="$(mktemp /tmp/codex-output.XXXX.md)"
+WORKSPACE_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+WORKSPACE_ROOT="$(cd "$WORKSPACE_ROOT" && pwd -P)"
+ARTIFACT_DIR="$WORKSPACE_ROOT/.agent-runs/showcase"
+mkdir -p "$ARTIFACT_DIR"
+OUTPUT="$ARTIFACT_DIR/$(date -u +%Y%m%d-%H%M%S)-codex-showcase.md"
 codex exec "${CODEX_PROFILE_ARGS[@]}" \
   --model "$CODEX_REVIEW_MODEL" \
   -c 'model_reasoning_effort="medium"' \
@@ -85,13 +89,35 @@ codex exec "${CODEX_PROFILE_ARGS[@]}" \
   - < "$TASK"
 printf 'Full Codex final message: %s\n' "$OUTPUT"
 
-CODEX_READABLE_DOC="${CODEX_READABLE_DOC:-${CODEX_HOME:-$HOME/.codex}/bin/codex-readable-doc}"
-if [ -x "$CODEX_READABLE_DOC" ]; then
-  "$CODEX_READABLE_DOC" --open codex-showcase < "$OUTPUT"
+if command -v mdmaid-desk >/dev/null 2>&1; then
+  DESK_WORKSPACE="${MDMAID_DESK_WORKSPACE:-}"
+  if [ -z "$DESK_WORKSPACE" ]; then
+    while IFS=$'\t' read -r candidate_id candidate_name candidate_root; do
+      if [ "$candidate_root" = "$WORKSPACE_ROOT" ]; then
+        DESK_WORKSPACE="$candidate_id"
+        break
+      fi
+    done < <(mdmaid-desk workspace list)
+  fi
+  if [ -z "$DESK_WORKSPACE" ]; then
+    workspace_slug="$(basename "$WORKSPACE_ROOT" | tr '[:upper:]_' '[:lower:]-' | tr -cd 'a-z0-9-' | cut -c1-48)"
+    case "$workspace_slug" in
+      ""|[0-9]*) workspace_slug="workspace-$workspace_slug" ;;
+    esac
+    workspace_hash="$(printf '%s' "$WORKSPACE_ROOT" | cksum | awk '{print $1}')"
+    DESK_WORKSPACE="$workspace_slug-$workspace_hash"
+    mdmaid-desk workspace add "$WORKSPACE_ROOT" \
+      --id "$DESK_WORKSPACE" \
+      --name "$(basename "$WORKSPACE_ROOT")"
+  fi
+  mdmaid-desk register "$OUTPUT" \
+    --workspace "$DESK_WORKSPACE" \
+    --kind showcase \
+    --attention review
 else
-  printf 'Readable-output helper unavailable; Markdown remains at %s\n' "$OUTPUT"
+  printf 'mdmaid-desk unavailable; Markdown remains at %s\n' "$OUTPUT"
 fi
 ```
 
-Reply with the phase and status, Markdown and rendered paths when available,
-and the next user decision or command.
+Reply with the phase and status, Markdown path, mdmaid.desk registration status,
+and the next user decision or command. Do not duplicate the complete Markdown.
