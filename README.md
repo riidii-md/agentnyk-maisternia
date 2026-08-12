@@ -182,9 +182,10 @@ Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
 for all keys. The current TUI browses preset-library entries, their workflow
 DAGs and contents, provider health, drift, and conflicts. In Presets, use `/` to
 search, `f` to filter/group by resource type, and `s` to add a validated local
-folder or GitHub preset source. On a selected preset, press `i`
-to install it, choose one provider, then choose user-global or a specific project
-folder scope. When Maisternia is launched inside a Git repository, that project
+folder or GitHub preset source. On a selected preset or inside its resource
+inspection view, press `i` to install it. Select one, several, or all supported
+providers, then choose user-global or a specific project folder scope once. When
+Maisternia is launched inside a Git repository, that project
 is prefilled and recommended. Only that scoped plan is inspected; any conflicts
 require an explicit keep-existing or replace-from-preset decision followed by
 confirmation. Overview and Config can open the same scoped installer for a

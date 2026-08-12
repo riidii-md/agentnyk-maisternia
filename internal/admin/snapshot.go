@@ -87,9 +87,21 @@ type PresetStatus struct {
 
 type PresetInstallRequest struct {
 	PresetID string
-	Target   string
+	Targets  []string
 	Scope    configurator.InstallScope
 	Project  string
+}
+
+func clonePresetInstallRequest(request PresetInstallRequest) PresetInstallRequest {
+	request.Targets = append([]string(nil), request.Targets...)
+	return request
+}
+
+func presetInstallRequestsEqual(left, right PresetInstallRequest) bool {
+	return left.PresetID == right.PresetID &&
+		left.Scope == right.Scope &&
+		left.Project == right.Project &&
+		slices.Equal(left.Targets, right.Targets)
 }
 
 type EnvironmentInstallRequest struct {
@@ -383,48 +395,87 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 	if err != nil {
 		return configurator.Plan{}, err
 	}
-	target, valid := providers.CanonicalID(request.Target)
-	if !valid {
-		return configurator.Plan{}, fmt.Errorf(
-			"unknown provider %q",
-			request.Target,
-		)
-	}
-	if !slices.Contains(preset.Targets, target) {
-		return configurator.Plan{}, fmt.Errorf(
-			"preset %q does not support provider %q",
-			preset.ID,
-			target,
-		)
+	targets, err := normalizePresetTargets(request.Targets, preset.Targets)
+	if err != nil {
+		return configurator.Plan{}, err
 	}
 	root, err := l.installRoot(request)
 	if err != nil {
 		return configurator.Plan{}, err
 	}
+	plans := make([]configurator.Plan, 0, len(targets))
 	if len(preset.Contents.ResourceIDs()) == 0 {
-		return configurator.BuildPresetRemovalPlanForScope(
-			root,
-			target,
-			request.Scope,
-			resolved.OwnerID,
-		)
+		for _, target := range targets {
+			plan, err := configurator.BuildPresetRemovalPlanForScope(
+				root,
+				target,
+				request.Scope,
+				resolved.OwnerID,
+			)
+			if err != nil {
+				return configurator.Plan{}, err
+			}
+			plans = append(plans, plan)
+		}
+		return combinePresetPlans(plans), nil
 	}
 	selected, err := presets.SelectManifest(preset, manifest)
 	if err != nil {
 		return configurator.Plan{}, err
 	}
-	plan, err := configurator.BuildPresetPlanForScope(
-		resolved.Root,
-		root,
-		selected,
-		target,
-		request.Scope,
-		resolved.OwnerID,
-	)
-	if err != nil {
-		return configurator.Plan{}, err
+	for _, target := range targets {
+		plan, err := configurator.BuildPresetPlanForScope(
+			resolved.Root,
+			root,
+			selected,
+			target,
+			request.Scope,
+			resolved.OwnerID,
+		)
+		if err != nil {
+			return configurator.Plan{}, err
+		}
+		plans = append(plans, plan)
 	}
-	return plan, nil
+	return combinePresetPlans(plans), nil
+}
+
+func normalizePresetTargets(requested, supported []string) ([]string, error) {
+	if len(requested) == 0 {
+		return nil, errors.New("select at least one provider")
+	}
+	result := make([]string, 0, len(requested))
+	seen := make(map[string]struct{}, len(requested))
+	for _, value := range requested {
+		target, valid := providers.CanonicalID(value)
+		if !valid {
+			return nil, fmt.Errorf("unknown provider %q", value)
+		}
+		if _, exists := seen[target]; exists {
+			return nil, fmt.Errorf("duplicate provider %q", target)
+		}
+		if !slices.Contains(supported, target) {
+			return nil, fmt.Errorf(
+				"preset does not support provider %q",
+				target,
+			)
+		}
+		seen[target] = struct{}{}
+		result = append(result, target)
+	}
+	return result, nil
+}
+
+func combinePresetPlans(plans []configurator.Plan) configurator.Plan {
+	combined := configurator.Plan{
+		Home:     plans[0].Home,
+		Scope:    plans[0].Scope,
+		PresetID: plans[0].PresetID,
+	}
+	for _, plan := range plans {
+		combined.Actions = append(combined.Actions, plan.Actions...)
+	}
+	return combined
 }
 
 func (l Loader) installRoot(request PresetInstallRequest) (string, error) {

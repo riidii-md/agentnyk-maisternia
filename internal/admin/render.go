@@ -153,7 +153,7 @@ func (m Model) renderFooter(width int) string {
 		var keys string
 		switch m.applyDialog.Stage {
 		case applyTarget:
-			keys = "j/k provider  enter next  esc cancel"
+			keys = "j/k move  space toggle  a all  n none  enter scope  esc cancel"
 		case applyScope:
 			keys = "j/k scope  u user  p project  enter next  b back  esc cancel"
 		case applyProject:
@@ -182,7 +182,7 @@ func (m Model) renderFooter(width int) string {
 	}
 	if m.presetPreview {
 		return mutedStyle.Render(truncate(
-			"j/k resource  pgup/pgdn scroll prompt  esc back  ? help  q quit",
+			"i install preset  j/k resource  pgup/pgdn scroll prompt  esc back  ? help  q quit",
 			width,
 		))
 	}
@@ -410,7 +410,7 @@ func (m Model) renderPipelines(width int) string {
 	}
 	if width >= 90 {
 		actions := []string{
-			"i  Install preset for one provider and scope",
+			"i  Install preset for selected or all providers",
 			"Enter  Inspect prompt/resource source",
 			"s  Add an external preset source",
 		}
@@ -547,6 +547,10 @@ func (m Model) renderPresetResourcePreview(width int) string {
 	return strings.Join([]string{
 		section("PRESET PROMPTS / RESOURCES", rows, width),
 		section("SELECTED RESOURCE", details, width),
+		section("ACTIONS", []string{
+			"i  Install the whole preset for selected or all providers",
+			"Esc  Return to the preset library",
+		}, width),
 		section("SOURCE TEXT", content, width),
 	}, "\n\n")
 }
@@ -711,10 +715,16 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			metric("Environment", strings.Join(packIDs, ", "), width),
 		)
 	}
-	if dialog.Request.Target != "" {
+	if len(dialog.Request.Targets) > 0 {
+		selectedProviders := make([]string, 0, len(dialog.Request.Targets))
+		for _, target := range dialog.Request.Targets {
+			selectedProviders = append(selectedProviders,
+				m.providerDisplayName(target)+" ("+target+")",
+			)
+		}
 		summary = append(summary, metric(
-			"Provider",
-			m.providerDisplayName(dialog.Request.Target)+" ("+dialog.Request.Target+")",
+			"Providers",
+			strings.Join(selectedProviders, ", "),
 			width,
 		))
 	}
@@ -741,17 +751,37 @@ func (m Model) renderPresetApplyDialog(width int) string {
 	switch dialog.Stage {
 	case applyTarget:
 		action = []string{
-			"Install this preset into exactly one provider/harness:",
+			"Select one, several, or all supported providers:",
 		}
+		allMarker := "[ ]"
+		if m.allPresetTargetsSelected() {
+			allMarker = "[x]"
+		}
+		action = append(action, selectable(fmt.Sprintf(
+			"%s All supported providers (%d)",
+			allMarker,
+			len(dialog.Targets),
+		), dialog.TargetCursor == 0, width))
 		for index, target := range dialog.Targets {
+			marker := "[ ]"
+			if index < len(dialog.TargetSelected) && dialog.TargetSelected[index] {
+				marker = "[x]"
+			}
 			line := fmt.Sprintf(
-				"%s (%s)",
+				"%s %s (%s)",
+				marker,
 				m.providerDisplayName(target),
 				target,
 			)
-			action = append(action, selectable(line, index == dialog.TargetCursor, width))
+			action = append(action, selectable(line, index+1 == dialog.TargetCursor, width))
 		}
-		action = append(action, "", mutedStyle.Render("Enter continues; no files change yet."))
+		if dialog.TargetError != "" {
+			action = append(action, "", warningStyle.Render(dialog.TargetError))
+		}
+		action = append(action, "", mutedStyle.Render(truncate(
+			"Space toggles. Use a for all or n for none. Enter continues; no files change yet.",
+			width,
+		)))
 	case applyScope:
 		choices := []string{
 			"User-global — install under the selected provider home",
@@ -786,7 +816,7 @@ func (m Model) renderPresetApplyDialog(width int) string {
 	case applyPlanning:
 		action = []string{
 			activeStyle.Render("Building scoped install plan..."),
-			mutedStyle.Render("Only the selected preset, provider, and scope are inspected."),
+			mutedStyle.Render("Only the selected preset, providers, and scope are inspected."),
 		}
 	case applyChoose:
 		action = []string{
@@ -924,7 +954,7 @@ func (m Model) renderPresetApplyDialog(width int) string {
 	title := "DECISION"
 	switch dialog.Stage {
 	case applyTarget:
-		title = "CHOOSE PROVIDER"
+		title = "SELECT PROVIDERS"
 	case applyScope:
 		title = "CHOOSE INSTALLATION SCOPE"
 	case applyProject:
@@ -1172,7 +1202,7 @@ func (m Model) renderConfig(width int) string {
 					maximum(1, width-20),
 				),
 			mutedStyle.Render(truncate(
-				"Choose one provider and user-global or project scope before resolving conflicts.",
+				"Choose one or more providers and user-global or project scope before resolving conflicts.",
 				width,
 			)),
 		}
@@ -1234,7 +1264,8 @@ func (m Model) renderHelp(width int) string {
 		"↑/↓ or j/k       move selection",
 		"g / G            first or last item",
 		"enter            inspect preset prompt/resource source",
-		"i (or a)         install selected preset using its target type",
+		"i (or a)         install selected preset for one, several, or all providers",
+		"space / a / n    toggle, select all, or clear providers in installer",
 		"/                search presets",
 		"f                filter/group presets by resource type",
 		"u / p            choose user or project install scope",

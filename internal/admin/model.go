@@ -116,22 +116,24 @@ const (
 )
 
 type presetApplyDialog struct {
-	Stage        applyStage
-	PresetID     string
-	Name         string
-	Targets      []string
-	TargetCursor int
-	ScopeCursor  int
-	Request      PresetInstallRequest
-	ProjectInput string
-	Counts       ActionCounts
-	Conflicts    []configurator.Action
-	StatePath    string
-	Policy       configurator.ConflictPolicy
-	Environment  bool
-	Plans        []environment.Plan
-	Output       string
-	Err          error
+	Stage          applyStage
+	PresetID       string
+	Name           string
+	Targets        []string
+	TargetSelected []bool
+	TargetCursor   int
+	TargetError    string
+	ScopeCursor    int
+	Request        PresetInstallRequest
+	ProjectInput   string
+	Counts         ActionCounts
+	Conflicts      []configurator.Action
+	StatePath      string
+	Policy         configurator.ConflictPolicy
+	Environment    bool
+	Plans          []environment.Plan
+	Output         string
+	Err            error
 }
 
 type Model struct {
@@ -210,7 +212,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.clampCursor()
 		return m, nil
 	case planPresetMsg:
-		if m.applyDialog.Request != message.request ||
+		if !presetInstallRequestsEqual(m.applyDialog.Request, message.request) ||
 			m.applyDialog.Stage != applyPlanning {
 			return m, nil
 		}
@@ -231,7 +233,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case applyPresetMsg:
-		if m.applyDialog.Request != message.request {
+		if !presetInstallRequestsEqual(m.applyDialog.Request, message.request) {
 			return m, nil
 		}
 		m.applyDialog.Stage = applyComplete
@@ -286,7 +288,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.presetContentOffset = 0
 			}
 		case "i", "a":
-			if m.tab == TabPipelines && !m.presetPreview {
+			if m.tab == TabPipelines {
 				m.openPresetApply()
 			} else if (m.tab == TabOverview || m.tab == TabConfig) &&
 				m.snapshot.Config.Counts.Conflict > 0 {
@@ -467,15 +469,23 @@ func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.applyDialog.TargetCursor--
 			}
 		case "down", "j":
-			if m.applyDialog.TargetCursor < len(m.applyDialog.Targets)-1 {
+			if m.applyDialog.TargetCursor < len(m.applyDialog.Targets) {
 				m.applyDialog.TargetCursor++
 			}
+		case " ":
+			m.togglePresetTarget()
+		case "a":
+			m.selectAllPresetTargets(true)
+		case "n":
+			m.selectAllPresetTargets(false)
 		case "enter":
-			if len(m.applyDialog.Targets) == 0 {
+			selected := m.selectedPresetTargets()
+			if len(selected) == 0 {
+				m.applyDialog.TargetError = "Select at least one provider before continuing."
 				return m, nil
 			}
-			m.applyDialog.Request.Target =
-				m.applyDialog.Targets[m.applyDialog.TargetCursor]
+			m.applyDialog.Request.Targets = selected
+			m.applyDialog.TargetError = ""
 			m.applyDialog.Stage = applyScope
 		}
 	case applyScope:
@@ -490,7 +500,7 @@ func (m Model) updateApplyDialog(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.applyDialog.Stage = applyProject
 		case "b":
 			m.resetPresetPlan()
-			m.applyDialog.Request.Target = ""
+			m.applyDialog.Request.Targets = nil
 			m.applyDialog.Stage = applyTarget
 		case "enter":
 			if m.applyDialog.ScopeCursor == 0 {
@@ -566,6 +576,49 @@ func (m *Model) resetPresetPlan() {
 	m.applyDialog.Err = nil
 }
 
+func (m *Model) togglePresetTarget() {
+	if len(m.applyDialog.TargetSelected) != len(m.applyDialog.Targets) {
+		return
+	}
+	if m.applyDialog.TargetCursor == 0 {
+		m.selectAllPresetTargets(!m.allPresetTargetsSelected())
+		return
+	}
+	index := m.applyDialog.TargetCursor - 1
+	m.applyDialog.TargetSelected[index] = !m.applyDialog.TargetSelected[index]
+	m.applyDialog.TargetError = ""
+}
+
+func (m *Model) selectAllPresetTargets(selected bool) {
+	for index := range m.applyDialog.TargetSelected {
+		m.applyDialog.TargetSelected[index] = selected
+	}
+	m.applyDialog.TargetError = ""
+}
+
+func (m Model) allPresetTargetsSelected() bool {
+	if len(m.applyDialog.TargetSelected) == 0 {
+		return false
+	}
+	for _, selected := range m.applyDialog.TargetSelected {
+		if !selected {
+			return false
+		}
+	}
+	return true
+}
+
+func (m Model) selectedPresetTargets() []string {
+	selected := make([]string, 0, len(m.applyDialog.Targets))
+	for index, target := range m.applyDialog.Targets {
+		if index < len(m.applyDialog.TargetSelected) &&
+			m.applyDialog.TargetSelected[index] {
+			selected = append(selected, target)
+		}
+	}
+	return selected
+}
+
 func (m Model) beginPresetPlan(
 	scope configurator.InstallScope,
 	project string,
@@ -597,11 +650,12 @@ func (m *Model) openPresetApply() {
 		return
 	}
 	m.applyDialog = presetApplyDialog{
-		Stage:        applyTarget,
-		PresetID:     selector,
-		Name:         status.Preset.Name,
-		Targets:      append([]string(nil), status.Preset.Targets...),
-		ProjectInput: strings.TrimSpace(m.snapshot.SuggestedProject),
+		Stage:          applyTarget,
+		PresetID:       selector,
+		Name:           status.Preset.Name,
+		Targets:        append([]string(nil), status.Preset.Targets...),
+		TargetSelected: make([]bool, len(status.Preset.Targets)),
+		ProjectInput:   strings.TrimSpace(m.snapshot.SuggestedProject),
 		Request: PresetInstallRequest{
 			PresetID: selector,
 		},
@@ -642,7 +696,7 @@ func (m Model) firstConflictingPreset() int {
 }
 
 func (m Model) applyPresetCommand() tea.Cmd {
-	request := m.applyDialog.Request
+	request := clonePresetInstallRequest(m.applyDialog.Request)
 	policy := m.applyDialog.Policy
 	applyPreset := m.applyPreset
 	installEnvironment := m.installEnvironment
@@ -713,7 +767,7 @@ func (m Model) addPresetSourceCommand() tea.Cmd {
 }
 
 func (m Model) planPresetCommand() tea.Cmd {
-	request := m.applyDialog.Request
+	request := clonePresetInstallRequest(m.applyDialog.Request)
 	planPreset := m.planPreset
 	return func() tea.Msg {
 		if planPreset == nil {

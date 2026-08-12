@@ -225,7 +225,8 @@ server or hook.
 | `s` | Add a local-folder or GitHub preset source from the Presets view |
 | `/` | Search presets by ID, name, description, target, or resource |
 | `f` | Cycle preset resource filters and groups |
-| `u`, `p` | Choose user-global or project-folder scope in the installer |
+| `Space`, `a`, `n` | Toggle a provider, select all, or clear provider selections in the installer |
+| `u`, `p` | Choose user-global or project-folder scope once for selected providers |
 | `k` | Keep existing files in the apply decision panel |
 | `x` | Replace conflicts from the preset in the apply decision panel |
 | `y` | Confirm the reviewed configuration apply or environment install |
@@ -243,9 +244,10 @@ session.
 The TUI is a configuration studio. Runtime automation is deliberately outside
 its scope. The preset library, resource search/filter/grouping, DAG browser,
 source preview, external-source addition, provider inspection, conflict
-explanation, and guarded scoped preset install are implemented. Installation always chooses one provider and
-either user-global or an explicit existing project folder before building the
-plan. Conflict decisions affect only that scoped plan.
+explanation, and guarded scoped preset install are implemented. Installation
+chooses one, several, or all providers and then either user-global or an explicit
+existing project folder before building one aggregated plan. Conflict decisions
+affect only that scoped plan.
 
 Pipeline and step editing should be delivered in a separate change because it
 introduces writes. That editor should:

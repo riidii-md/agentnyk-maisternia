@@ -3,6 +3,7 @@ package admin
 import (
 	"bytes"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -198,6 +199,7 @@ func TestPresetResourcePreviewCanBeOpenedAndNavigated(t *testing.T) {
 		"work-brief",
 		"# /work-brief",
 		"Summarize the current ticket.",
+		"i install preset",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("resource preview missing %q:\n%s", expected, view)
@@ -214,6 +216,82 @@ func TestPresetResourcePreviewCanBeOpenedAndNavigated(t *testing.T) {
 	model = updated.(Model)
 	if view = model.View(); !strings.Contains(view, "PRESET LIBRARY") {
 		t.Fatalf("resource preview did not close:\n%s", view)
+	}
+}
+
+func TestPresetResourcePreviewCanStartPresetInstall(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 110, 36)
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+
+	if model.applyDialog.Stage != applyTarget {
+		t.Fatalf("install from preview stage = %q, want provider selection", model.applyDialog.Stage)
+	}
+	if view := model.View(); !strings.Contains(view, "SELECT PROVIDERS") {
+		t.Fatalf("install from preview did not open provider selection:\n%s", view)
+	}
+}
+
+func TestPresetInstallerSelectsMultipleOrAllProvidersBeforeScope(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 110, 36)
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+	view := model.View()
+	for _, expected := range []string{
+		"SELECT PROVIDERS",
+		"[ ] All supported providers",
+		"[ ] Codex (codex)",
+		"[ ] Claude (claude)",
+		"space toggle",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("provider checklist missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	if model.applyDialog.Stage != applyTarget ||
+		!strings.Contains(model.View(), "Select at least one provider") {
+		t.Fatalf("empty provider selection advanced unexpectedly:\n%s", model.View())
+	}
+
+	for _, key := range []tea.KeyMsg{
+		{Type: tea.KeyDown},
+		{Type: tea.KeySpace},
+		{Type: tea.KeyDown},
+		{Type: tea.KeySpace},
+		{Type: tea.KeyEnter},
+	} {
+		updated, _ = model.Update(key)
+		model = updated.(Model)
+	}
+	if model.applyDialog.Stage != applyScope ||
+		!slices.Equal(model.applyDialog.Request.Targets, []string{"codex", "claude"}) {
+		t.Fatalf("multi-provider selection = %#v", model.applyDialog)
+	}
+
+	model = loadedAdminModel(t, TabPipelines, 110, 36)
+	for _, key := range []tea.KeyMsg{
+		{Type: tea.KeyRunes, Runes: []rune{'i'}},
+		{Type: tea.KeyRunes, Runes: []rune{'a'}},
+	} {
+		updated, _ = model.Update(key)
+		model = updated.(Model)
+	}
+	if view = model.View(); !strings.Contains(view, "[x] All supported providers") {
+		t.Fatalf("select-all state is not visible:\n%s", view)
+	}
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	model = updated.(Model)
+	if !slices.Equal(model.applyDialog.Request.Targets, model.applyDialog.Targets) {
+		t.Fatalf("select all targets = %v, want %v", model.applyDialog.Request.Targets, model.applyDialog.Targets)
 	}
 }
 
@@ -263,16 +341,20 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	view := model.View()
 	for _, expected := range []string{
 		"INSTALL PRESET",
-		"CHOOSE PROVIDER",
-		"Codex (codex)",
-		"Claude (claude)",
+		"SELECT PROVIDERS",
+		"[ ] Codex (codex)",
+		"[ ] Claude (claude)",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("provider choice missing %q:\n%s", expected, view)
 		}
 	}
 
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyDown})
+	for range 2 {
+		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyDown})
+		model = updated.(Model)
+	}
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeySpace})
 	model = updated.(Model)
 	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	model = updated.(Model)
@@ -298,9 +380,9 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	}
 	updated, _ = model.Update(command())
 	model = updated.(Model)
-	if plannedRequest != (PresetInstallRequest{
+	if !presetInstallRequestsEqual(plannedRequest, PresetInstallRequest{
 		PresetID: "standard-work",
-		Target:   "claude",
+		Targets:  []string{"claude"},
 		Scope:    configurator.ScopeProject,
 		Project:  project,
 	}) {
@@ -337,7 +419,8 @@ func TestPresetApplyDialogRequiresConflictDecisionAndConfirmation(t *testing.T) 
 	}
 	updated, _ = model.Update(command())
 	model = updated.(Model)
-	if appliedRequest != plannedRequest || appliedPolicy != configurator.ConflictReplace {
+	if !presetInstallRequestsEqual(appliedRequest, plannedRequest) ||
+		appliedPolicy != configurator.ConflictReplace {
 		t.Fatalf("apply = %#v %q", appliedRequest, appliedPolicy)
 	}
 	if view = model.View(); !strings.Contains(view, "Preset applied") {
@@ -356,6 +439,8 @@ func TestPresetInstallerRecommendsDiscoveredGitProject(t *testing.T) {
 	model.tab = TabPipelines
 
 	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
 	model = updated.(Model)
 	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	model = updated.(Model)
@@ -382,7 +467,7 @@ func TestPresetViewExposesApplyAction(t *testing.T) {
 
 	model := loadedAdminModel(t, TabPipelines, 100, 32)
 	view := model.View()
-	for _, expected := range []string{"ACTIONS", "i  Install preset"} {
+	for _, expected := range []string{"ACTIONS", "i  Install preset for selected or all providers"} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("preset actions missing %q:\n%s", expected, view)
 		}
@@ -535,6 +620,8 @@ func TestPresetInstallerUserScopeCanReturnToScopeWithoutStalePlan(t *testing.T) 
 
 	for _, key := range []tea.KeyMsg{
 		{Type: tea.KeyRunes, Runes: []rune{'i'}},
+		{Type: tea.KeyDown},
+		{Type: tea.KeySpace},
 		{Type: tea.KeyEnter},
 		{Type: tea.KeyRunes, Runes: []rune{'u'}},
 	} {
@@ -546,9 +633,9 @@ func TestPresetInstallerUserScopeCanReturnToScopeWithoutStalePlan(t *testing.T) 
 			model = updated.(Model)
 		}
 	}
-	if len(requests) != 1 || requests[0] != (PresetInstallRequest{
+	if len(requests) != 1 || !presetInstallRequestsEqual(requests[0], PresetInstallRequest{
 		PresetID: "standard-work",
-		Target:   "codex",
+		Targets:  []string{"codex"},
 		Scope:    configurator.ScopeUser,
 	}) {
 		t.Fatalf("user plan requests = %#v", requests)
@@ -611,6 +698,7 @@ func TestPresetAndProjectInputsRejectControlsAndEnforceLimits(t *testing.T) {
 	model = loadedAdminModel(t, TabPipelines, 100, 32)
 	for _, key := range []tea.KeyMsg{
 		{Type: tea.KeyRunes, Runes: []rune{'i'}},
+		{Type: tea.KeyRunes, Runes: []rune{'a'}},
 		{Type: tea.KeyEnter},
 		{Type: tea.KeyRunes, Runes: []rune{'p'}},
 		{Type: tea.KeyRunes, Runes: append([]rune(strings.Repeat("p", maxProjectPathRunes+20)), '\n')},
@@ -666,6 +754,8 @@ func TestPresetInstallerReportsUnavailablePlanningAndApply(t *testing.T) {
 		model.tab = TabPipelines
 		updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
 		model = updated.(Model)
+		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+		model = updated.(Model)
 		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
 		model = updated.(Model)
 		updated, command := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'u'}})
@@ -710,7 +800,8 @@ func TestHelpIncludesPresetDiscoveryAndScopedInstallKeys(t *testing.T) {
 	model = updated.(Model)
 	view := model.View()
 	for _, expected := range []string{
-		"install selected preset using its target type",
+		"install selected preset for one, several, or all providers",
+		"toggle, select all, or clear providers",
 		"search presets",
 		"filter/group presets by resource type",
 		"choose user or project install scope",
@@ -1011,7 +1102,7 @@ func TestConflictActionOpensFirstConflictingPresetInstaller(t *testing.T) {
 	})
 	model = updated.(Model)
 	if view := model.View(); !strings.Contains(view, "INSTALL PRESET") ||
-		!strings.Contains(view, "CHOOSE PROVIDER") ||
+		!strings.Contains(view, "SELECT PROVIDERS") ||
 		!strings.Contains(view, "Idea Shaping") {
 		t.Fatalf("conflict shortcut did not open scoped preset installer:\n%s", view)
 	}
