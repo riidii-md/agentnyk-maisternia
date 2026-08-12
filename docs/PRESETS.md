@@ -46,7 +46,7 @@ The repository starts with:
 - `parallel-work`: dependency-aware parallel planning and bounded execution
   waves with isolated writes, integration barriers, and sequential fallback;
 - `terminal-orchestration`: provider-neutral machine setup for Zellij, Tatami,
-  Herdr, Mdmaid, and three pinned Herdr plugins;
+  Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr plugins;
 - `multi-lens-review`: plan and implementation review with independent lenses,
   per-finding refutation, applied fixes, and optional provider delegation;
 - `adaptive-readability`: reader- and task-aware text transformation with

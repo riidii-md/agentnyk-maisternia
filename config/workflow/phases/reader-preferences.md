@@ -9,10 +9,13 @@ installed `reader-profile.schema.json`.
 
 First resolve whether the preferences are for the current session, the current
 project, or the user. Then identify recurring situations and ask only the
-highest-impact missing questions: reader task, first-pass time, density,
-terminology, answer position, evidence placement, visuals, and whether to ask
-or infer when intent is ambiguous. Ask in short rounds and reuse supplied
-answers.
+highest-impact missing questions: desired view, conceptual depth, first-pass
+time, density, terminology, answer position, evidence placement, visuals, and
+whether to ask or infer when intent is ambiguous. Separately configure the
+view-selection policy (`infer`, `ask-when-ambiguous`, or `always-ask`) and its
+scope (`explicit-command` or `all-invocations`). Also configure delegation policy
+(`local`, `ask`, or `delegate`) and the preferred harness (`auto`, Codex
+subagent, or AGY). Ask in short rounds and reuse supplied answers.
 
 Produce:
 

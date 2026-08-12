@@ -815,7 +815,7 @@ func TestRunEnvironmentCommands(t *testing.T) {
 		t.Fatalf("environment list code = %d, stderr = %s", code, stderr.String())
 	}
 	if !strings.Contains(stdout.String(), "terminal-orchestration") ||
-		!strings.Contains(stdout.String(), "6") {
+		!strings.Contains(stdout.String(), "7") {
 		t.Fatalf("environment list output = %q", stdout.String())
 	}
 

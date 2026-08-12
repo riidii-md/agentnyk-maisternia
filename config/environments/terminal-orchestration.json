@@ -100,6 +100,25 @@
       ]
     },
     {
+      "id": "mdmaid-desk",
+      "name": "mdmaid.desk",
+      "description": "Persistent local inbox and reading workspace for generated Markdown artifacts.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["artifact-inbox"],
+      "depends_on": ["mdmaid"],
+      "detect": {"command": "mdmaid-desk"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "mdmaid-desk",
+          "version": "0.1.0"
+        }
+      ]
+    },
+    {
       "id": "herdr-automatic-rename",
       "name": "Herdr Automatic Rename",
       "description": "Automatically names and numbers Herdr workspaces, tabs, and agents.",

@@ -6,10 +6,28 @@ modes.
 
 ## Contents
 
-- Mode selection
+- Plain-language views and mode selection
 - `scan`, `decide`, `learn`, `operate`, `reference`, and `narrative`
+- Conceptual depth
 - Cross-mode modifiers
 - Choosing a structured notation
+
+## Plain-language views
+
+Ask what result the reader wants. Do not require them to understand internal
+mode names.
+
+| Reader can say | View | Internal mode | What it provides |
+|---|---|---|---|
+| “Give me the big picture” | `big-picture` | `scan` | governing idea, major changes, and why they matter |
+| “Help me choose” | `decision` | `decide` | recommendation, options, tradeoffs, and risks |
+| “Explain how it works” | `explanation` | `learn` | a mental model, relationships, examples, and boundaries |
+| “Tell me the state and next action” | `action-brief` | `operate` | current state, change, risk, owner, and next step |
+| “Make this easy to look up” | `lookup` | `reference` | predictable navigation and exact reusable detail |
+| “Walk me through the story or rationale” | `story` | `narrative` | chronology, causality, context, and implications |
+
+New profiles should store the plain-language `view`. Continue accepting the
+internal `mode` values for compatibility. Do not store both at the same scope.
 
 ## Mode selection
 
@@ -25,6 +43,12 @@ modes.
 When tasks overlap, choose the mode for the reader's immediate action and use a
 deeper layer for the secondary task. For example, a decision document can put
 the recommendation first and place a learning-oriented explanation below it.
+
+“Help me understand” is ambiguous. It can mean a big-picture orientation or a
+deep explanation. Use the requested conceptual depth and intended outcome to
+distinguish them; ask when that choice would materially change the result.
+
+Big picture gives orientation. Deep explanation teaches mechanisms and proof.
 
 ## `scan`
 
@@ -123,9 +147,24 @@ Shape:
 Use fewer headings than `scan` mode when fragmentation would break flow.
 Answer-first is optional.
 
+## Conceptual depth
+
+Depth is independent of view and density:
+
+- `high-level`: governing idea, major parts or changes, why they matter, and
+  important limits; omit line-level mechanics.
+- `working`: enough mechanics, examples, and boundaries to reason about or work
+  with the subject.
+- `deep`: implementation detail, evidence, edge cases, and source-level proof.
+
+Density controls how compressed the chosen depth is. A compact deep explanation
+is still technical; a detailed big picture is still conceptually high-level.
+Do not select `learn` merely because the user said “understand.”
+
 ## Cross-cutting modifiers
 
 - `density`: `compact`, `balanced`, or `detailed`.
+- `depth`: `high-level`, `working`, or `deep`.
 - `terminology`: `plain`, `dual-label`, or `domain-native`.
 - `visuals`: `auto`, `prefer`, or `avoid`.
 - `evidence`: `inline`, `near-claim`, or `appendix`.

@@ -219,13 +219,14 @@ is to orchestrate independent runners. Invoking Codex from the same Codex
 session would not provide an independent lane.
 
 Repository tests verify the expected Claude-to-Codex command inventory,
-required Codex execution primitives, sandbox choice, showcase rendering
+required Codex execution primitives, sandbox choice, showcase presentation
 integration, cleanup approval gate, and absence of personal absolute paths.
 
-The readable-output and cleanup helper binaries are not managed yet because the
-current manifest does not preserve executable file modes. Showcase keeps the
-Markdown output when the readable helper is unavailable; cleanup refuses to
-improvise deletion when its helper is missing.
+Showcase writes durable Markdown under `.agent-runs/showcase/` and registers it
+with `mdmaid-desk`; the terminal environment pack manages that CLI. The cleanup
+helper binary is not managed yet because the current manifest does not preserve
+executable file modes, so cleanup refuses to improvise deletion when its helper
+is missing.
 
 ## Managed Data
 

@@ -127,8 +127,10 @@ func TestRepositoryClaudeCodexAdaptersAreExecutable(t *testing.T) {
 		repoRoot,
 		targets,
 		"codex-showcase.md",
-		"codex-readable-doc",
 		"complete Markdown",
+		".agent-runs/showcase",
+		"mdmaid-desk register",
+		"--kind showcase",
 	)
 	assertAdapterContains(
 		t,
@@ -140,6 +142,34 @@ func TestRepositoryClaudeCodexAdaptersAreExecutable(t *testing.T) {
 		"--delete",
 		"explicit approval",
 	)
+}
+
+func TestRepositoryCanonicalShowcaseDeliversMarkdownToMdmaidDesk(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, _ := loadRepositoryManifest(t)
+	data, err := os.ReadFile(filepath.Join(
+		repoRoot,
+		"config",
+		"workflow",
+		"phases",
+		"showcase.md",
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	for _, snippet := range []string{
+		".agent-runs/showcase",
+		"mdmaid-desk workspace list",
+		"mdmaid-desk register",
+		"--kind showcase",
+		"preserve the Markdown artifact",
+	} {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("canonical showcase missing required content %q", snippet)
+		}
+	}
 }
 
 func TestRepositoryManagedPromptsContainNoPersonalAbsolutePaths(t *testing.T) {

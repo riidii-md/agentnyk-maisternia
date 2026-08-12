@@ -431,22 +431,32 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		"config/workflow/skills/adapt-for-reader/SKILL.md": {
 			"materially change", "Do not persist inferred preferences",
 			"references/modes.md", "references/preferences.md",
+			".agent-runs/readability", "mdmaid-desk register",
+			"big picture", "conceptual depth", "delegation policy",
+			"Codex subagent", "AGY", "view_selection", "always-ask",
 		},
 		"config/workflow/skills/adapt-for-reader/references/modes.md": {
 			"scan", "decide", "learn", "operate", "reference", "narrative",
 			"Military-style templates", "shared schema", "confirmation",
+			"Big picture", "Deep explanation", "Conceptual depth",
 		},
 		"config/workflow/skills/adapt-for-reader/references/preferences.md": {
 			"Explicit current request", "situation override", "project", "user",
+			"delegation", "preferred target", "conceptual depth",
+			"View selection", "explicit-command", "all-invocations",
 		},
 		"config/workflow/skills/adapt-for-reader/references/principles.md": {
 			"reader effort", "signaling", "decorative",
 		},
 		"config/workflow/phases/adapt-for-reader.md": {
 			"$ARGUMENTS", "one focused question", "current request wins",
+			".agent-runs/readability", "mdmaid-desk register",
+			"big picture", "delegation", "always-ask", "recommended",
 		},
 		"config/workflow/phases/reader-preferences.md": {
 			"explicit approval", "reader-profile.schema.json", "Do not write",
+			"conceptual depth", "delegation policy", "preferred harness",
+			"view-selection policy", "explicit-command", "all-invocations",
 		},
 	}
 	for relative, required := range contracts {
@@ -474,6 +484,11 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			Defaults      json.RawMessage `json:"defaults"`
 			Situations    json.RawMessage `json:"situations"`
 		} `json:"properties"`
+		Defs struct {
+			Preferences struct {
+				Properties map[string]json.RawMessage `json:"properties"`
+			} `json:"preferences"`
+		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(schemaContent, &schema); err != nil {
 		t.Fatalf("parse reader profile schema: %v", err)
@@ -483,6 +498,11 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		len(schema.Properties.Defaults) == 0 ||
 		len(schema.Properties.Situations) == 0 {
 		t.Fatalf("reader profile schema is incomplete: %#v", schema)
+	}
+	for _, property := range []string{"view", "depth", "view_selection", "delegation"} {
+		if len(schema.Defs.Preferences.Properties[property]) == 0 {
+			t.Errorf("reader profile preferences are missing %q", property)
+		}
 	}
 }
 

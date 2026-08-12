@@ -24,9 +24,22 @@
     "preferences": {
       "type": "object",
       "additionalProperties": false,
+      "allOf": [
+        {
+          "not": {
+            "required": ["view", "mode"]
+          }
+        }
+      ],
       "properties": {
+        "view": {
+          "enum": ["auto", "big-picture", "decision", "explanation", "action-brief", "lookup", "story"]
+        },
         "mode": {
           "enum": ["auto", "scan", "decide", "learn", "operate", "reference", "narrative"]
+        },
+        "depth": {
+          "enum": ["high-level", "working", "deep"]
         },
         "density": {
           "enum": ["compact", "balanced", "detailed"]
@@ -53,6 +66,38 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 30
+        },
+        "view_selection": {
+          "$ref": "#/$defs/view-selection"
+        },
+        "delegation": {
+          "$ref": "#/$defs/delegation"
+        }
+      }
+    },
+    "view-selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "scope"],
+      "properties": {
+        "policy": {
+          "enum": ["infer", "ask-when-ambiguous", "always-ask"]
+        },
+        "scope": {
+          "enum": ["explicit-command", "all-invocations"]
+        }
+      }
+    },
+    "delegation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "target"],
+      "properties": {
+        "policy": {
+          "enum": ["local", "ask", "delegate"]
+        },
+        "target": {
+          "enum": ["auto", "codex-subagent", "agy"]
         }
       }
     },

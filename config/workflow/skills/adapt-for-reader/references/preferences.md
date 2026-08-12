@@ -7,6 +7,7 @@ them scoped, overridable, and explicit.
 
 - Precedence
 - Preference dimensions and situation overrides
+- View selection and delegation
 - Persistence gate and profile locations
 - Update procedure
 
@@ -14,7 +15,7 @@ them scoped, overridable, and explicit.
 
 Resolve conflicts from highest to lowest priority:
 
-1. **Explicit current request** and explicit mode arguments.
+1. **Explicit current request** and explicit view or mode arguments.
 2. Current task constraints, including required format and fidelity.
 3. Matching project situation override.
 4. Matching user situation override.
@@ -30,7 +31,9 @@ let a profile weaken a safety, accuracy, accessibility, or repository rule.
 
 Store only communication preferences that change output:
 
-- primary `mode` or `auto`;
+- primary plain-language `view` or `auto`;
+- legacy/internal `mode` only when maintaining an existing profile;
+- conceptual depth: `high-level`, `working`, or `deep`;
 - `density`;
 - `answer_position`;
 - `terminology`;
@@ -39,6 +42,38 @@ Store only communication preferences that change output:
 - `interaction`: ask when material, infer and state, or never ask;
 - `layering`;
 - optional first-pass time budget.
+
+Do not store both `view` and `mode` at the same scope. Translate a legacy mode
+to its plain-language view when revising a profile.
+
+## View selection
+
+The `view_selection` preference controls the selection gate separately from the
+reader-contract `interaction` preference:
+
+- `infer`: select from the reader contract without asking;
+- `ask-when-ambiguous`: ask only when plausible views materially differ;
+- `always-ask`: ask on every applicable invocation unless it already names a
+  view or mode.
+
+Its scope is `explicit-command` or `all-invocations`. With `explicit-command`,
+always-ask applies to `/work-adapt-for-reader` while automatic skill use can
+continue without interruption. When asking, show the six plain-language views
+with one-line outcomes and mark the inferred choice as recommended.
+
+## Delegation
+
+The delegation preference has a policy and preferred target:
+
+- policy `local`: shape the document in the current harness;
+- policy `ask`: ask once whether to keep it local or delegate;
+- policy `delegate`: delegate without asking when the preferred target exists;
+- preferred target `auto`, `codex-subagent`, or `agy`.
+
+Delegation changes who drafts or analyzes the content, not who owns delivery.
+The coordinating harness verifies the result, writes the Markdown artifact, and
+registers it with mdmaid.desk. If the target is unavailable, follow the explicit
+request; otherwise fall back locally and disclose that fallback.
 
 Do not store inferred identity, disability, protected traits, medical details,
 or other sensitive personal attributes. Record a functional requirement such
@@ -49,11 +84,12 @@ user explicitly requests it.
 
 Use situation overrides for preferences such as:
 
-- decision material: `decide`, recommendation first, evidence near claims;
-- learning material: `learn`, detailed, contextual orientation;
-- progress update: `operate`, compact, current state first;
-- policy or API material: `reference`, domain-native terms, stable sections;
-- rationale or retrospective: `narrative`, contextual answer position.
+- decision material: `decision`, recommendation first, evidence near claims;
+- big-picture orientation: `big-picture`, high-level depth;
+- technical teaching: `explanation`, deep depth, contextual orientation;
+- progress update: `action-brief`, compact, current state first;
+- policy or API material: `lookup`, domain-native terms, stable sections;
+- rationale or retrospective: `story`, contextual answer position.
 
 Match only explicit task or medium fields. Do not infer a situation from a
 stereotype about the reader.
@@ -90,14 +126,23 @@ current task or session.
 {
   "schema_version": 1,
   "defaults": {
-    "mode": "auto",
+    "view": "auto",
+    "depth": "working",
     "density": "balanced",
     "answer_position": "auto",
     "terminology": "dual-label",
     "visuals": "auto",
     "evidence": "near-claim",
     "interaction": "ask-when-material",
-    "layering": true
+    "layering": true,
+    "view_selection": {
+      "policy": "ask-when-ambiguous",
+      "scope": "explicit-command"
+    },
+    "delegation": {
+      "policy": "ask",
+      "target": "auto"
+    }
   },
   "situations": [
     {
