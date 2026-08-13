@@ -1,6 +1,17 @@
 # Review fragment: install under .codex/rules only after reviewing how these
 # command prefixes interact with the other active policy layers.
 prefix_rule(
+    pattern = ["sed", "-n"],
+    decision = "allow",
+    justification = "Printing selected file lines is approved for Codex inspection.",
+    match = ["sed -n '35,75p' src/domain.ts"],
+    not_match = [
+        "sed '35,75p' src/domain.ts",
+        "sed -i '' 's/old/new/' src/domain.ts",
+    ],
+)
+
+prefix_rule(
     pattern = ["git", "add"],
     decision = "allow",
     justification = "Staging repository changes is approved by the git-workflow-approvals preset.",
@@ -10,6 +21,13 @@ prefix_rule(
     pattern = ["git", "commit"],
     decision = "allow",
     justification = "Routine local commits are approved by the git-workflow-approvals preset.",
+)
+
+prefix_rule(
+    pattern = ["git", "diff"],
+    decision = "allow",
+    justification = "Inspecting repository changes is approved by the git-workflow-approvals preset.",
+    match = ["git diff src/domain.ts"],
 )
 
 prefix_rule(

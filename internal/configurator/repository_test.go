@@ -172,8 +172,10 @@ func TestRepositoryRendersGitWorkflowApprovalFragments(t *testing.T) {
 	}
 	codexRules := readRenderedFile(t, output, ".codex/maisternia/fragments/git-workflow-approvals.rules")
 	for _, allowed := range []string{
+		"pattern = [\"sed\", \"-n\"],\n    decision = \"allow\"",
 		"pattern = [\"git\", \"add\"],\n    decision = \"allow\"",
 		"pattern = [\"git\", \"commit\"],\n    decision = \"allow\"",
+		"pattern = [\"git\", \"diff\"],\n    decision = \"allow\"",
 		"pattern = [\"git\", \"fetch\"],\n    decision = \"allow\"",
 	} {
 		if !strings.Contains(codexRules, allowed) {
