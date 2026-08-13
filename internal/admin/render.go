@@ -392,11 +392,16 @@ func (m Model) renderPipelines(width int) string {
 			), width),
 		)
 	}
-	resources := strings.Join(preset.Contents.ResourceIDs(), ", ")
-	if preset.IsEnvironmentOnly() {
-		resources = "none (environment requirements only)"
+	resourceInventory := presetResourceInventory(preset.Contents, width)
+	if len(resourceInventory) > 0 {
+		details = append(details, resourceInventory...)
+	} else {
+		resources := "none"
+		if preset.IsEnvironmentOnly() {
+			resources = "none (environment requirements only)"
+		}
+		details = append(details, metric("Resources", resources, width))
 	}
-	details = append(details, metric("Resources", resources, width))
 	if width >= 90 && len(selected.Resources) > 0 {
 		details = append(details, metric(
 			"Prompt source",
@@ -592,6 +597,105 @@ func presetContentSummary(contents presets.Contents) string {
 		len(contents.Hooks),
 		len(contents.Settings),
 	)
+}
+
+func presetResourceInventory(contents presets.Contents, width int) []string {
+	groups := []struct {
+		label  string
+		values []string
+	}{
+		{label: "Commands", values: slashCommands(contents.Commands)},
+		{label: "Skills", values: contents.Skills},
+		{label: "Settings", values: contents.Settings},
+		{label: "Prompts", values: contents.Prompts},
+		{label: "Hooks", values: contents.Hooks},
+		{label: "MCP", values: contents.MCPRefs},
+	}
+	var lines []string
+	for _, group := range groups {
+		if len(group.values) == 0 {
+			continue
+		}
+		lines = append(lines, wrappedResourceMetric(group.label, group.values, width)...)
+	}
+	return lines
+}
+
+func slashCommands(commands []string) []string {
+	values := make([]string, 0, len(commands))
+	for _, command := range commands {
+		command = sanitizeTerminalText(command)
+		if !strings.HasPrefix(command, "/") {
+			command = "/" + command
+		}
+		values = append(values, command)
+	}
+	return values
+}
+
+func wrappedResourceMetric(label string, values []string, width int) []string {
+	labelWidth := 16
+	if width < 72 {
+		labelWidth = 13
+	}
+	valueWidth := maximum(1, width-labelWidth)
+	wrapped := wrapResourceValues(values, valueWidth)
+	lines := make([]string, 0, len(wrapped))
+	for index, line := range wrapped {
+		prefix := strings.Repeat(" ", labelWidth)
+		if index == 0 {
+			prefix = fmt.Sprintf("%-*s", labelWidth, label)
+		}
+		lines = append(lines, labelStyle.Render(prefix)+line)
+	}
+	return lines
+}
+
+func wrapResourceValues(values []string, width int) []string {
+	var lines []string
+	current := ""
+	for _, value := range values {
+		value = sanitizeTerminalText(value)
+		candidate := value
+		if current != "" {
+			candidate = current + ", " + value
+		}
+		if runewidth.StringWidth(candidate) <= width {
+			current = candidate
+			continue
+		}
+		if current != "" {
+			lines = append(lines, current)
+			current = ""
+		}
+		for runewidth.StringWidth(value) > width {
+			chunk, rest := splitDisplayWidth(value, width)
+			lines = append(lines, chunk)
+			value = rest
+		}
+		current = value
+	}
+	if current != "" {
+		lines = append(lines, current)
+	}
+	return lines
+}
+
+func splitDisplayWidth(value string, width int) (string, string) {
+	var builder strings.Builder
+	used := 0
+	byteOffset := 0
+	for offset, character := range value {
+		characterWidth := runewidth.RuneWidth(character)
+		if used+characterWidth > width && builder.Len() > 0 {
+			byteOffset = offset
+			break
+		}
+		builder.WriteRune(character)
+		used += characterWidth
+		byteOffset = offset + len(string(character))
+	}
+	return builder.String(), value[byteOffset:]
 }
 
 func presetKindSummary(preset presets.Preset) string {

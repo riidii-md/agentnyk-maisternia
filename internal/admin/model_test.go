@@ -877,6 +877,69 @@ func TestPresetContentsRemainVisibleAtCommonTerminalWidth(t *testing.T) {
 	}
 }
 
+func TestPresetViewListsResourceNamesByType(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets[0].Preset.Contents = presets.Contents{
+		MCPRefs:  []string{"documentation-context"},
+		Commands: []string{"work-plan", "work-adapt-for-reader"},
+		Prompts:  []string{"migration-plan-prompt"},
+		Skills:   []string{"adapt-for-reader-skill"},
+		Hooks:    []string{"hook-pack-quality"},
+		Settings: []string{"work-routing-profile-schema"},
+	}
+	fixture.Presets = fixture.Presets[:1]
+
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 72, Height: 50})
+	model = updated.(Model)
+
+	view := model.View()
+	for _, expected := range []string{
+		"Commands", "/work-plan", "/work-adapt-for-reader",
+		"Skills", "adapt-for-reader-skill",
+		"Settings", "work-routing-profile-schema",
+		"Prompts", "migration-plan-prompt",
+		"Hooks", "hook-pack-quality",
+		"MCP", "documentation-context",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("preset resource inventory missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestPresetResourceInventoryWrapsWithoutLosingNames(t *testing.T) {
+	t.Parallel()
+
+	lines := presetResourceInventory(presets.Contents{
+		Commands: []string{
+			"work-adapt-for-reader",
+			"work-routing-preferences",
+			"work-reader-preferences",
+		},
+	}, 48)
+	view := strings.Join(lines, "\n")
+	for _, expected := range []string{
+		"/work-adapt-for-reader",
+		"/work-routing-preferences",
+		"/work-reader-preferences",
+	} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("wrapped resource inventory lost %q:\n%s", expected, view)
+		}
+	}
+	for _, line := range strings.Split(view, "\n") {
+		if lipgloss.Width(line) > 48 {
+			t.Fatalf("resource inventory line width = %d, want <= 48:\n%s", lipgloss.Width(line), view)
+		}
+	}
+}
+
 func TestPresetViewShowsReadOnlyEnvironmentRequirements(t *testing.T) {
 	t.Parallel()
 
