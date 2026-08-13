@@ -1,9 +1,11 @@
 package configurator
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -142,6 +144,95 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 	claudeGoReleaser := readRenderedFile(t, output, ".claude/maisternia/fragments/goreleaser-validation.permissions.json")
 	if !strings.Contains(claudeGoReleaser, `Bash(goreleaser check --config .goreleaser.yml)`) {
 		t.Fatalf("Claude GoReleaser validation permission is not exact: %s", claudeGoReleaser)
+	}
+}
+
+func TestRepositoryRendersGitWorkflowApprovalFragments(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	requiredIDs := map[string]bool{
+		"git-workflow-approvals-codex-rules":        false,
+		"git-workflow-approvals-claude-permissions": false,
+	}
+	for _, resource := range manifest.Resources {
+		if _, required := requiredIDs[resource.ID]; required {
+			requiredIDs[resource.ID] = true
+		}
+	}
+	for id, found := range requiredIDs {
+		if !found {
+			t.Errorf("repository manifest missing required resource %q", id)
+		}
+	}
+
+	output := t.TempDir()
+	if err := Render(repoRoot, output, manifest, "all"); err != nil {
+		t.Fatalf("Render(repository) error = %v", err)
+	}
+	codexRules := readRenderedFile(t, output, ".codex/maisternia/fragments/git-workflow-approvals.rules")
+	for _, allowed := range []string{
+		"pattern = [\"git\", \"commit\"],\n    decision = \"allow\"",
+		"pattern = [\"git\", \"fetch\"],\n    decision = \"allow\"",
+	} {
+		if !strings.Contains(codexRules, allowed) {
+			t.Errorf("Codex git workflow rules missing %q", allowed)
+		}
+	}
+	for _, prompted := range []string{
+		"pattern = [\"git\", \"commit\", \"--amend\"],\n    decision = \"prompt\"",
+		"pattern = [\"git\", \"push\"],\n    decision = \"prompt\"",
+		"pattern = [\"git\", \"merge\"],\n    decision = \"prompt\"",
+		"pattern = [\"git\", \"stash\"],\n    decision = \"prompt\"",
+		"pattern = [\"gh\", \"pr\", \"create\"],\n    decision = \"prompt\"",
+	} {
+		if !strings.Contains(codexRules, prompted) {
+			t.Errorf("Codex git workflow rules missing %q", prompted)
+		}
+	}
+	for _, forbidden := range []string{
+		`pattern = ["git"]`,
+		`pattern = ["gh"]`,
+		`decision = "forbidden"`,
+	} {
+		if strings.Contains(codexRules, forbidden) {
+			t.Errorf("Codex git workflow rules contain out-of-scope policy %q", forbidden)
+		}
+	}
+
+	claudePermissions := readRenderedFile(t, output, ".claude/maisternia/fragments/git-workflow-approvals.permissions.json")
+	var claudeFragment struct {
+		Permissions struct {
+			Allow []string `json:"allow"`
+			Ask   []string `json:"ask"`
+		} `json:"permissions"`
+	}
+	if err := json.Unmarshal([]byte(claudePermissions), &claudeFragment); err != nil {
+		t.Fatalf("decode Claude git workflow permissions: %v", err)
+	}
+	if got := claudeFragment.Permissions.Allow; !slices.Equal(got, []string{
+		"Bash(git commit *)",
+		"Bash(git fetch *)",
+	}) {
+		t.Errorf("Claude git workflow allow permissions = %v", got)
+	}
+	if got := claudeFragment.Permissions.Ask; !slices.Equal(got, []string{
+		"Bash(git commit *--amend*)",
+		"Bash(git push *)",
+		"Bash(git merge *)",
+		"Bash(git stash *)",
+		"Bash(gh pr create *)",
+	}) {
+		t.Errorf("Claude git workflow ask permissions = %v", got)
+	}
+	for _, forbidden := range []string{
+		`"Bash(git *)"`,
+		`"Bash(gh *)"`,
+		`"Bash(*)"`,
+	} {
+		if strings.Contains(claudePermissions, forbidden) {
+			t.Errorf("Claude git workflow permissions contain broad grant %q", forbidden)
+		}
 	}
 }
 
