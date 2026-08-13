@@ -84,6 +84,12 @@ availability check, disclosure rule, or fallback. Direct or nested skill use
 stays in the current harness unless its caller explicitly resolved a general
 all-invocations route.
 
+If an explicit `/work-adapt-for-reader` run stayed local at its lazy gate and
+preference resolution then finds a legacy reader-profile `delegation` object,
+load `work-routing` and pass that object as compatibility input. This conditional
+migration path is not a second picker. Without a general route or that legacy
+object, keep adaptation local and do not ask where to run.
+
 A delegated harness may draft, analyze, or independently structure the source.
 The coordinating harness remains responsible for fidelity verification, the
 final Markdown artifact, and mdmaid.desk registration.

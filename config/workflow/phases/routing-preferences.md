@@ -15,6 +15,7 @@ plain language such as:
 ```text
 always run plans in Codex
 ask me where to run reviews
+ask me where to run adapt-for-reader every time
 keep implementation in the current harness
 use Codex and Claude for independent review
 ```

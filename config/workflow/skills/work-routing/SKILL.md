@@ -8,8 +8,7 @@ description: Route provider-neutral /work-* commands to the current harness, Cod
 Route the workflow without changing its meaning. Keep the `/work-*` command as
 the workflow identity and treat harness selection as execution metadata. A
 canonical command's lazy gate should load this skill only when a route signal or
-saved profile exists; `/work-routing-preferences` and deliberate
-`/work-adapt-for-reader` are the intentional exceptions.
+saved profile exists; `/work-routing-preferences` is the intentional exception.
 
 ## Resolve an explicit route
 
@@ -72,11 +71,12 @@ session trust; durable trust belongs in the user profile.
 Never persist an inferred route. Use `/work-routing-preferences` to propose or
 migrate durable preferences.
 
-For deliberate `/work-adapt-for-reader`, when no general route or legacy
-preference exists, use `ask`; nested readability use stays local. Its deprecated
-reader-profile `delegation` object is lowest-priority migration input only.
-Normalize `codex-subagent` to `codex`, preserve its scope, disclose the
-compatibility read, and never update either profile automatically.
+For `/work-adapt-for-reader`, its deprecated reader-profile `delegation` object
+is lowest-priority migration input only. The reader skill may load this router
+after discovering that object; otherwise adaptation follows the same local
+default as every canonical command. Normalize `codex-subagent` to `codex`,
+preserve its scope, disclose the compatibility read, and never update either
+profile automatically.
 
 ## Finish locally or enter delegation
 

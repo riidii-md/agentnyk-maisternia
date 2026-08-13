@@ -104,8 +104,7 @@ func TestRepositoryWorkRoutingContract(t *testing.T) {
 		if !strings.Contains(string(content), "work-routing") {
 			t.Errorf("canonical command %q does not invoke work-routing", resource.ID)
 		}
-		if resource.ID != "work-adapt-for-reader" &&
-			!strings.Contains(string(content), "Routing gate (lazy)") {
+		if !strings.Contains(string(content), "Routing gate (lazy)") {
 			t.Errorf("canonical command %q does not guard routing context lazily", resource.ID)
 		}
 		if strings.Contains(string(content), "Before phase work, use the installed `work-routing` skill") {
@@ -325,8 +324,15 @@ func TestRepositoryDelegatingWorkflowsUseSharedRouter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(adaptCommand), "Routing gate (explicit adaptation)") {
-		t.Error("deliberate adapt-for-reader command lost its explicit harness gate")
+	if !strings.Contains(string(adaptCommand), "Routing gate (lazy)") {
+		t.Error("adapt-for-reader does not use the standard lazy harness gate")
+	}
+	if strings.Contains(string(adaptCommand), "asks where to run when no preference exists") {
+		t.Error("adapt-for-reader still asks where to run without a route or preference")
+	}
+	if !strings.Contains(string(adaptSkill), "`delegation` object") ||
+		!strings.Contains(string(adaptSkill), "load `work-routing`") {
+		t.Error("adapt-for-reader does not preserve lazy legacy routing migration")
 	}
 	if _, err := os.Stat(filepath.Join(
 		root,

@@ -174,8 +174,13 @@ then checks only the invocation, active session route, and existence of the two
 exact profile paths. With no signal or profile, work stays local and the router
 skill is not loaded. When routing is needed, the compact core skill resolves the
 route; its larger runner/authority reference is read only for an actual external
-target. `/work-routing-preferences` and deliberate `/work-adapt-for-reader` are
-intentional eager-routing commands.
+target. `/work-routing-preferences` is the intentional eager-routing command.
+`/work-adapt-for-reader` follows the same lazy rule; configure an `ask` override
+for that workflow when you want it to ask where every time.
+
+```text
+/work-routing-preferences ask me where to run adapt-for-reader every time
+```
 
 Provider hosts decide their exact prompt accounting. This layout follows skill
 progressive disclosure without assuming that installed reference files enter

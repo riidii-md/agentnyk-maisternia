@@ -1,6 +1,6 @@
 # /work-adapt-for-reader - Adapt Text to Its Reader
 
-Routing gate (explicit adaptation): load `work-routing` because this deliberate command asks where to run when no preference exists. Automatic or nested reader adaptation remains local unless its caller already resolved a route. Continue only with the cleaned task.
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Transform supplied text, referenced files, or current conversation context for
 the reader and use described in:
@@ -30,9 +30,12 @@ or deep.
 
 The shared `work-routing` skill owns harness selection. An explicit `@harness`
 route wins; otherwise it resolves the general workflow-routing profile and the
-legacy reader delegation migration rule. Do not run a separate adaptation-only
-delegation prompt. Configure durable execution choices with
-`/work-routing-preferences`.
+legacy reader delegation migration rule. With no route or routing preference,
+run locally without asking where. If preference resolution later discovers a
+legacy reader-profile `delegation` object, load `work-routing` then as a
+compatibility migration path. Do not run a separate adaptation-only delegation
+prompt. Configure durable choices, including **ask every time for this
+workflow**, with `/work-routing-preferences`.
 
 The coordinating harness must verify returned content and remains responsible
 for the final Markdown artifact and mdmaid.desk registration.
