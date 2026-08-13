@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "git-workflow-approvals",
   "name": "Git Workflow Approvals",
-  "description": "Provider-native Claude Code and Codex rules that auto-approve commit and fetch while asking before push, merge, stash, amend, or pull-request creation.",
+  "description": "Provider-native Claude Code and Codex rules that auto-approve add, commit, and fetch while asking before push, merge, stash, amend, or pull-request creation.",
   "pipelines": [],
   "contents": {
     "mcp_refs": [],

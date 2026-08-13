@@ -64,8 +64,9 @@ The repository starts with:
   review fragments with explicit default approvals for Claude Code and Codex;
 - `goreleaser-validation`: a pinned prebuilt GoReleaser requirement and the
   narrow release-configuration validation approval for Claude Code and Codex;
-- `git-workflow-approvals`: automatic commit and fetch approval with explicit
-  prompts for push, merge, stash, amend, and GitHub pull-request creation;
+- `git-workflow-approvals`: automatic add, commit, and fetch approval with
+  explicit prompts for push, merge, stash, amend, and GitHub pull-request
+  creation;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
   deny policy with human-only grants;
 - `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
@@ -128,12 +129,13 @@ prebuilt release and requires verification against the release checksums. This
 avoids coupling GoReleaser's own source toolchain to the repository's pinned Go
 toolchain.
 
-The Git workflow preset approves the `git commit` and `git fetch` command
-prefixes. It asks before `git push`, `git merge`, `git stash`, the conventional
-`git commit --amend` form, and `gh pr create`. It does not add general `git`,
-`gh`, shell, force-push, reset, or rebase rules. Codex prefix policy cannot
-express a negative match for an option placed later in a command, so unusual
-reordered amend forms still depend on the remaining active policy layers.
+The Git workflow preset approves the `git add`, `git commit`, and `git fetch`
+command prefixes. It asks before `git push`, `git merge`, `git stash`, the
+conventional `git commit --amend` form, and `gh pr create`. It does not add
+general `git`, `gh`, shell, force-push, reset, or rebase rules. Codex prefix
+policy cannot express a negative match for an option placed later in a command,
+so unusual reordered amend forms still depend on the remaining active policy
+layers.
 
 Inspect and stage the bundles before merging their native fragments:
 

@@ -1,6 +1,12 @@
 # Review fragment: install under .codex/rules only after reviewing how these
 # command prefixes interact with the other active policy layers.
 prefix_rule(
+    pattern = ["git", "add"],
+    decision = "allow",
+    justification = "Staging repository changes is approved by the git-workflow-approvals preset.",
+)
+
+prefix_rule(
     pattern = ["git", "commit"],
     decision = "allow",
     justification = "Routine local commits are approved by the git-workflow-approvals preset.",

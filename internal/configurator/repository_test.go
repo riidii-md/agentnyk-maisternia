@@ -172,6 +172,7 @@ func TestRepositoryRendersGitWorkflowApprovalFragments(t *testing.T) {
 	}
 	codexRules := readRenderedFile(t, output, ".codex/maisternia/fragments/git-workflow-approvals.rules")
 	for _, allowed := range []string{
+		"pattern = [\"git\", \"add\"],\n    decision = \"allow\"",
 		"pattern = [\"git\", \"commit\"],\n    decision = \"allow\"",
 		"pattern = [\"git\", \"fetch\"],\n    decision = \"allow\"",
 	} {
@@ -211,6 +212,7 @@ func TestRepositoryRendersGitWorkflowApprovalFragments(t *testing.T) {
 		t.Fatalf("decode Claude git workflow permissions: %v", err)
 	}
 	if got := claudeFragment.Permissions.Allow; !slices.Equal(got, []string{
+		"Bash(git add *)",
 		"Bash(git commit *)",
 		"Bash(git fetch *)",
 	}) {
