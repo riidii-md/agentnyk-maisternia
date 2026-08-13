@@ -65,8 +65,8 @@ The repository starts with:
 - `goreleaser-validation`: a pinned prebuilt GoReleaser requirement and the
   narrow release-configuration validation approval for Claude Code and Codex;
 - `git-workflow-approvals`: automatic add, commit, and fetch approval with
-  explicit prompts for push, merge, stash, amend, and GitHub pull-request
-  creation;
+  Codex-only read inspection and explicit prompts for push, merge, stash,
+  amend, and GitHub pull-request creation;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
   deny policy with human-only grants;
 - `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
@@ -136,6 +136,13 @@ general `git`, `gh`, shell, force-push, reset, or rebase rules. Codex prefix
 policy cannot express a negative match for an option placed later in a command,
 so unusual reordered amend forms still depend on the remaining active policy
 layers.
+
+For Codex only, the same preset also approves `git diff` and `sed -n` prefixes
+to remove prompts from routine source inspection such as
+`sed -n '35,75p' src/domain.ts && git diff src/domain.ts`. Plain `sed` and the
+normal `sed -i` form remain unmatched. Because prefix policy cannot reject an
+option that appears later in a matched command, operators accept that an
+unusual `sed -n ... -i ...` ordering may still match the allow prefix.
 
 Inspect and stage the bundles before merging their native fragments:
 
