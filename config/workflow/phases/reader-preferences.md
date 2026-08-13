@@ -1,5 +1,7 @@
 # /work-reader-preferences - Calibrate Readability Preferences
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Create or revise reusable reader-output preferences from:
 
 `$ARGUMENTS`
@@ -13,11 +15,13 @@ highest-impact missing questions: desired view, conceptual depth, first-pass
 time, density, terminology, answer position, evidence placement, visuals, and
 whether to ask or infer when intent is ambiguous. Separately configure the
 view-selection policy (`infer`, `ask-when-ambiguous`, or `always-ask`) and its
-scope (`explicit-command` or `all-invocations`). Also configure delegation policy
-(`local`, `ask`, or `delegate`), its scope (`explicit-command` or
-`all-invocations`), and the preferred harness (`auto`, `current`, Codex, Claude,
-or AGY). Explain that `current` means this session and a named harness means a
-fresh delegated run. Ask in short rounds and reuse supplied answers.
+scope (`explicit-command` or `all-invocations`). Ask in short rounds and reuse
+supplied answers.
+
+Do not configure harness delegation in the reader profile. Direct the user to
+`/work-routing-preferences`, which is the single routing system. If the existing
+reader profile contains a legacy `delegation` object, offer a migration to the
+`work-adapt-for-reader` route and show both diffs before any write.
 
 Produce:
 

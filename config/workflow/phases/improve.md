@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-improve - Propose A Harness Improvement
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Use completed profiles and audits to improve the harness over time. Optimize
 task quality and cost together. Never rewrite durable configuration merely
 because one run produced a finding.

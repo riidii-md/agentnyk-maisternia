@@ -21,8 +21,9 @@ Codex owns the scored improvement loop
 ```
 
 The same preset targets Claude Code, Hermes, and Antigravity. Existing
-provider-branded command names may remain as aliases, but the workflow
-definition must remain provider-neutral.
+provider-branded workflow aliases are replaced by canonical routing such as
+`/work-experiment @codex -- <objective>`; the workflow definition remains
+provider-neutral.
 
 Kaji is not required for a basic loop inside one live harness. It becomes
 useful when the work needs process recovery, cross-provider coordination,

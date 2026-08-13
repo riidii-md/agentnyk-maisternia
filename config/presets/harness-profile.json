@@ -17,11 +17,17 @@
   ],
   "contents": {
     "mcp_refs": [],
-    "commands": ["work-profile"],
+    "commands": ["work-profile", "work-routing-preferences"],
     "prompts": [],
-    "skills": ["session-retrospective-skill"],
+    "skills": [
+      "session-retrospective-skill", "work-routing-skill",
+      "work-routing-runners"
+    ],
     "hooks": [],
-    "settings": ["retrospective-policy", "retrospective-record-schema"]
+    "settings": [
+      "retrospective-policy", "retrospective-record-schema",
+      "work-routing-profile-schema"
+    ]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }

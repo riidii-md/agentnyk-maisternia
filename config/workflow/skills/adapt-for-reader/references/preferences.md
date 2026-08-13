@@ -7,7 +7,7 @@ them scoped, overridable, and explicit.
 
 - Precedence
 - Preference dimensions and situation overrides
-- View selection and delegation
+- View selection and shared work routing
 - Persistence gate and profile locations
 - Update procedure
 
@@ -61,34 +61,18 @@ always-ask applies to `/work-adapt-for-reader` while automatic skill use can
 continue without interruption. When asking, show the six plain-language views
 with one-line outcomes and mark the inferred choice as recommended.
 
-## Delegation
+## Shared work routing
 
-The delegation preference has a policy, scope, and preferred target:
+Harness choice is not a readability preference. Resolve it through the
+installed `work-routing` skill and the provider-neutral work-routing profile.
+Use `/work-routing-preferences` for `local`, `ask`, or `delegate` policy,
+ordered harnesses, and per-workflow overrides.
 
-- policy `local`: shape the document in the current harness;
-- policy `ask`: ask which harness should run it;
-- policy `delegate`: delegate without asking when the preferred target exists;
-- scope `explicit-command`: apply the gate to `/work-adapt-for-reader` only;
-- scope `all-invocations`: also apply it when another workflow invokes the skill;
-- preferred target `auto`, `current`, `codex`, `claude`, or `agy`.
-
-When the whole delegation object is absent, explicit command use defaults to
-`ask`, `explicit-command`, and `auto`; automatic or nested use defaults to
-local. A missing scope also means `explicit-command`. This keeps old profiles
-interactive at the deliberate command gate without interrupting workflows that
-apply reader adaptation internally. Accept `codex-subagent` as a compatibility
-alias for `codex` when reading an older profile.
-
-Ask “Where should I run the adaptation?” and offer Here (current harness),
-Codex, Claude, and AGY. `current` means no delegation. A named provider means a
-fresh delegated run. Mark an available recommendation and make unavailable
-choices visible. `auto` may select a native delegate, but it must not silently
-cross a provider boundary.
-
-Delegation changes who drafts or analyzes the content, not who owns delivery.
-The coordinating harness verifies the result, writes the Markdown artifact, and
-registers it with mdmaid.desk. If the target is unavailable, follow the explicit
-request; otherwise fall back locally and disclose that fallback.
+Treat a reader profile's legacy `delegation` object as migration input only.
+For `work-adapt-for-reader`, the shared router may honor it when no new route
+exists, normalize `codex-subagent` to `codex`, and suggest moving it to the
+general routing profile. Never maintain both copies or remove the legacy value
+without an approved migration diff.
 
 Do not store inferred identity, disability, protected traits, medical details,
 or other sensitive personal attributes. Record a functional requirement such
@@ -153,11 +137,6 @@ current task or session.
     "view_selection": {
       "policy": "ask-when-ambiguous",
       "scope": "explicit-command"
-    },
-    "delegation": {
-      "policy": "ask",
-      "scope": "explicit-command",
-      "target": "auto"
     }
   },
   "situations": [

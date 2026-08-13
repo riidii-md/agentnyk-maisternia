@@ -85,12 +85,6 @@
       "optional": ["documentation.search", "subagent.spawn"],
       "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
     },
-    "delegated-review": {
-      "authority": "workspace_write",
-      "required": ["filesystem.read", "filesystem.workspace_write", "repository.read", "repository.test"],
-      "optional": ["documentation.search", "output.structured", "runner.safe_headless", "subagent.spawn"],
-      "forbidden": ["git.commit", "git.push", "external.write", "production.access"]
-    },
     "pr": {
       "authority": "explicit_approval",
       "required": ["filesystem.read", "repository.read"],

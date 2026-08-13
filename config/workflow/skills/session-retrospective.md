@@ -19,9 +19,15 @@ Follow the installed retrospective policy and compose these procedures:
    supports a change.
 5. `/work-retrospective` coordinates the complete post-run package.
 
+Use the installed `work-routing` skill whenever a retrospective lane crosses a
+provider boundary. Keep same-harness subagent scheduling local, but reuse the
+shared router for harness selection, disclosure, authority, unavailable-target
+handling, and the routing receipt.
+
 Keep measured values separate from estimates and unknowns. Prefer deterministic
 repository evidence over model judgment. Treat transcripts as observable traces,
-not hidden reasoning. Redact sensitive input before delegating review.
+not hidden reasoning. Redact sensitive input before delegating review. Routed
+reviewers remain read-only and receive only the selected run evidence.
 
 Repeated findings may justify a proposal. They do not authorize installation.
 Never edit durable configuration, activate hooks, publish transcripts, or apply

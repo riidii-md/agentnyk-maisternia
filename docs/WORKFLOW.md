@@ -134,32 +134,96 @@ Canonical commands use the `/work-*` namespace:
 /work-run
 /work-verify
 /work-review
-/work-delegated-review
 /work-pr
 /work-showcase
 /work-cleanup
+/work-routing-preferences
 ```
 
 The command identifies the phase. Provider rendering decides how that command is
 installed in each harness. The harness decides how to execute it at runtime.
 
-### Provider Aliases Remain First-Class
+### Route Canonical Commands With `@harness`
 
-Provider-prefixed aliases are useful when the user wants an explicit harness:
+Harness selection is invocation metadata, not a second command namespace:
 
 ```text
-/codex-shape
-/codex-analyze
-/codex-plan
-/codex-work-loop
-/codex-review
-/codex-pr-check
+/work-plan @codex -- plan the migration
+/work-research @codex @claude -- compare the options
+/work-review @agy @codex @claude -- review this branch
+/work-run @here -- execute locally
 ```
 
-These aliases preserve canonical phase semantics while rendering provider-aware
-instructions for a specific harness. Optional aliases such as `/claude-plan` or
-`/antigravity-research` can be added when there is recurring need. The repository
-should not generate every possible provider/phase combination by default.
+The installed `work-routing` skill accepts `@here`, `@auto`, `@codex`,
+`@claude`, `@agy`/`@antigravity`, and `@hermes`. Put a route block immediately
+after the command and end it with `--` when the task could mention a provider.
+This prevents `using the Codex API` from being mistaken for execution routing.
+
+An explicit invocation route wins over session, project, and user defaults. Use
+`/work-routing-preferences` to configure `local`, `ask`, or `delegate` globally
+or per workflow. Persistent profiles live at:
+
+```text
+project: <repository>/.maisternia/work-routing.json
+user:    ${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json
+```
+
+Routing is progressively disclosed to protect the context budget. Invoking a
+`/work-*` command loads that command's phase instructions. Its small inline gate
+then checks only the invocation, active session route, and existence of the two
+exact profile paths. With no signal or profile, work stays local and the router
+skill is not loaded. When routing is needed, the compact core skill resolves the
+route; its larger runner/authority reference is read only for an actual external
+target. `/work-routing-preferences` and deliberate `/work-adapt-for-reader` are
+intentional eager-routing commands.
+
+Provider hosts decide their exact prompt accounting. This layout follows skill
+progressive disclosure without assuming that installed reference files enter
+context merely because they exist.
+
+Several named harnesses select a multi-harness strategy. Research and planning
+default to independent lanes plus coordinator synthesis. Review defaults to
+`parallel-verify`: selected harnesses produce independent read-only lenses, and
+the current harness verifies findings, preserves disagreement, and owns fixes.
+
+Before dispatch, the current harness shows a compact routing receipt. A named
+harness approves the target and minimal task packet for that invocation; it
+does not approve sensitive disclosure, workspace writes, commits, pushes,
+external writes, or dangerous bypass flags. An unavailable target is never
+silently replaced.
+
+### Migrate Provider-Prefixed Commands
+
+The old `codex-compatibility` preset is no longer in the catalog. Removing its
+definition does not delete installed files. Install the canonical replacements
+before retiring its managed aliases:
+
+```bash
+maisternia preset apply --scope user --target codex --yes standard-work
+maisternia preset apply --scope user --target claude --yes standard-work
+maisternia preset apply --scope user --target codex --yes idea-shaping
+maisternia preset apply --scope user --target claude --yes idea-shaping
+maisternia preset apply --scope user --target codex --yes parallel-work
+maisternia preset apply --scope user --target claude --yes parallel-work
+maisternia preset uninstall --scope user --target codex --yes codex-compatibility
+maisternia preset uninstall --scope user --target claude --yes codex-compatibility
+```
+
+These three presets replace the old alias surface: standard work, idea shaping,
+and parallel/fleet work. Reapply every other installed preset that owns
+`/work-*` commands so its canonical command copies gain routing and its retired
+resources are reconciled by the owning preset. Use `workflow-routing` alone only
+when routing custom canonical commands that are managed elsewhere.
+
+The commands preserve the old preset's Codex-and-Claude provider scope. Choose
+`--target all` explicitly instead if you want to add the workflows to every
+provider supported by each preset.
+
+Inspect conflicts before choosing keep or replace, and preserve the same scope
+used by the old installation. Install state created before preset ownership
+tracking cannot be guessed safely; review those unmanaged aliases manually.
+Rendering into an existing staging directory does not prune unrelated or
+obsolete files, so use a fresh staging directory when auditing the new catalog.
 
 ### Rendered Files Are Configuration, Not Runtime State
 

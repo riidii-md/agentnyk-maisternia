@@ -54,7 +54,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resourceID := range []string{
 		"work-plan-review",
 		"work-review",
-		"work-delegated-review",
+		"work-routing-preferences",
 	} {
 		if !slices.Contains(standard.Contents.Commands, resourceID) {
 			t.Errorf("standard-work commands are missing %q", resourceID)
@@ -78,8 +78,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		experiment.Pipelines[0].ID != "improve" {
 		t.Fatalf("scored-experiment pipelines = %#v", experiment.Pipelines)
 	}
-	if got := experiment.Contents.Commands; len(got) != 1 ||
-		got[0] != "work-experiment" {
+	if got := experiment.Contents.Commands; !slices.Equal(got, []string{
+		"work-experiment", "work-routing-preferences",
+	}) {
 		t.Fatalf("scored-experiment commands = %v", got)
 	}
 	if got := experiment.Targets; len(got) != 4 {
@@ -93,19 +94,21 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		parallel.Pipelines[0].ID != "speed-loop" {
 		t.Fatalf("parallel-work pipelines = %#v", parallel.Pipelines)
 	}
-	if got := parallel.Contents.Commands; len(got) != 3 ||
+	if got := parallel.Contents.Commands; len(got) != 4 ||
 		got[0] != "work-parallel-plan" ||
 		got[1] != "work-parallel-run" ||
-		got[2] != "work-speed-loop" {
+		got[2] != "work-speed-loop" ||
+		got[3] != "work-routing-preferences" {
 		t.Fatalf("parallel-work commands = %v", got)
 	}
-	if got := parallel.Contents.Skills; len(got) != 1 ||
-		got[0] != "parallel-work-skill" {
+	if got := parallel.Contents.Skills; !slices.Equal(got, []string{
+		"parallel-work-skill", "work-routing-skill", "work-routing-runners",
+	}) {
 		t.Fatalf("parallel-work skills = %v", got)
 	}
-	if got := parallel.Contents.Settings; len(got) != 2 ||
-		got[0] != "parallel-work-policy" ||
-		got[1] != "parallel-plan-schema" {
+	if got := parallel.Contents.Settings; !slices.Equal(got, []string{
+		"parallel-work-policy", "parallel-plan-schema", "work-routing-profile-schema",
+	}) {
 		t.Fatalf("parallel-work settings = %v", got)
 	}
 	if got := parallel.Targets; len(got) != 4 {
@@ -141,16 +144,17 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if got := multiReview.Contents.Commands; len(got) != 3 ||
 		got[0] != "work-plan-review" ||
 		got[1] != "work-review" ||
-		got[2] != "work-delegated-review" {
+		got[2] != "work-routing-preferences" {
 		t.Fatalf("multi-lens-review commands = %v", got)
 	}
-	if got := multiReview.Contents.Skills; len(got) != 1 ||
-		got[0] != "multi-lens-review-skill" {
+	if got := multiReview.Contents.Skills; !slices.Equal(got, []string{
+		"multi-lens-review-skill", "work-routing-skill", "work-routing-runners",
+	}) {
 		t.Fatalf("multi-lens-review skills = %v", got)
 	}
-	if got := multiReview.Contents.Settings; len(got) != 2 ||
-		got[0] != "review-policy" ||
-		got[1] != "review-report-schema" {
+	if got := multiReview.Contents.Settings; !slices.Equal(got, []string{
+		"review-policy", "review-report-schema", "work-routing-profile-schema",
+	}) {
 		t.Fatalf("multi-lens-review settings = %v", got)
 	}
 	if got := multiReview.Targets; len(got) != 4 {
@@ -165,7 +169,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("adaptive-readability pipelines = %#v", adaptiveReadability.Pipelines)
 	}
 	if got := adaptiveReadability.Contents.Commands; !slices.Equal(got, []string{
-		"work-adapt-for-reader", "work-reader-preferences",
+		"work-adapt-for-reader", "work-reader-preferences", "work-routing-preferences",
 	}) {
 		t.Fatalf("adaptive-readability commands = %v", got)
 	}
@@ -174,11 +178,13 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"adapt-for-reader-modes",
 		"adapt-for-reader-preferences",
 		"adapt-for-reader-principles",
+		"work-routing-skill",
+		"work-routing-runners",
 	}) {
 		t.Fatalf("adaptive-readability skills = %v", got)
 	}
 	if got := adaptiveReadability.Contents.Settings; !slices.Equal(got, []string{
-		"reader-profile-schema",
+		"reader-profile-schema", "work-routing-profile-schema",
 	}) {
 		t.Fatalf("adaptive-readability settings = %v", got)
 	}
@@ -189,16 +195,20 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !found {
 		t.Fatal("harness-profile preset missing")
 	}
-	if got := profile.Contents.Commands; len(got) != 1 || got[0] != "work-profile" {
+	if got := profile.Contents.Commands; !slices.Equal(got, []string{
+		"work-profile", "work-routing-preferences",
+	}) {
 		t.Fatalf("harness-profile commands = %v", got)
 	}
-	if got := profile.Contents.Settings; len(got) != 2 ||
+	if got := profile.Contents.Settings; len(got) != 3 ||
 		got[0] != "retrospective-policy" ||
-		got[1] != "retrospective-record-schema" {
+		got[1] != "retrospective-record-schema" ||
+		got[2] != "work-routing-profile-schema" {
 		t.Fatalf("harness-profile settings = %v", got)
 	}
-	if got := profile.Contents.Skills; len(got) != 1 ||
-		got[0] != "session-retrospective-skill" {
+	if got := profile.Contents.Skills; !slices.Equal(got, []string{
+		"session-retrospective-skill", "work-routing-skill", "work-routing-runners",
+	}) {
 		t.Fatalf("harness-profile skills = %v", got)
 	}
 	audit, found := library.Get("session-audit")
@@ -208,7 +218,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if len(audit.Pipelines) != 1 || audit.Pipelines[0].ID != "audit" {
 		t.Fatalf("session-audit pipelines = %#v", audit.Pipelines)
 	}
-	if got := audit.Contents.Commands; len(got) != 2 ||
+	if got := audit.Contents.Commands; len(got) != 3 ||
 		got[1] != "work-session-analysis" {
 		t.Fatalf("session-audit commands = %v", got)
 	}
@@ -232,8 +242,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		improvement.Pipelines[0].ID != "improve-harness" {
 		t.Fatalf("harness-improvement pipelines = %#v", improvement.Pipelines)
 	}
-	if got := improvement.Contents.Commands; len(got) != 5 {
-		t.Fatalf("harness-improvement commands = %v, want 5", got)
+	if got := improvement.Contents.Commands; len(got) != 6 {
+		t.Fatalf("harness-improvement commands = %v, want 6", got)
 	}
 	if got := improvement.Targets; len(got) != 4 {
 		t.Fatalf("harness-improvement targets = %v, want all four providers", got)
@@ -335,23 +345,25 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(scored-experiment) error = %v", err)
 	}
-	if len(experimentManifest.Resources) != 1 {
+	if len(experimentManifest.Resources) != 5 {
 		t.Fatalf(
-			"scored-experiment resource count = %d, want 1",
+			"scored-experiment resource count = %d, want 5",
 			len(experimentManifest.Resources),
 		)
 	}
-	if got := experimentManifest.Resources[0].Targets; len(got) != 4 {
-		t.Fatalf("scored-experiment rendered targets = %v, want 4", got)
+	for _, resource := range experimentManifest.Resources {
+		if got := resource.Targets; len(got) != 4 {
+			t.Fatalf("scored-experiment resource %q targets = %v, want 4", resource.ID, got)
+		}
 	}
 
 	parallelManifest, err := SelectManifest(parallel, manifest)
 	if err != nil {
 		t.Fatalf("SelectManifest(parallel-work) error = %v", err)
 	}
-	if len(parallelManifest.Resources) != 6 {
+	if len(parallelManifest.Resources) != 10 {
 		t.Fatalf(
-			"parallel-work resource count = %d, want 6",
+			"parallel-work resource count = %d, want 10",
 			len(parallelManifest.Resources),
 		)
 	}
@@ -365,9 +377,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(multi-lens-review) error = %v", err)
 	}
-	if len(multiReviewManifest.Resources) != 6 {
+	if len(multiReviewManifest.Resources) != 9 {
 		t.Fatalf(
-			"multi-lens-review resource count = %d, want 6",
+			"multi-lens-review resource count = %d, want 9",
 			len(multiReviewManifest.Resources),
 		)
 	}
@@ -381,9 +393,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(adaptive-readability) error = %v", err)
 	}
-	if len(adaptiveReadabilityManifest.Resources) != 7 {
+	if len(adaptiveReadabilityManifest.Resources) != 11 {
 		t.Fatalf(
-			"adaptive-readability resource count = %d, want 7",
+			"adaptive-readability resource count = %d, want 11",
 			len(adaptiveReadabilityManifest.Resources),
 		)
 	}
@@ -397,9 +409,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
 	}
-	if len(improvementManifest.Resources) != 8 {
+	if len(improvementManifest.Resources) != 12 {
 		t.Fatalf(
-			"harness-improvement resource count = %d, want 8",
+			"harness-improvement resource count = %d, want 12",
 			len(improvementManifest.Resources),
 		)
 	}
@@ -432,9 +444,8 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			"materially change", "Do not persist inferred preferences",
 			"references/modes.md", "references/preferences.md",
 			".agent-runs/readability", "mdmaid-desk register",
-			"big picture", "conceptual depth", "delegation policy",
-			"current harness", "Codex", "Claude", "AGY",
-			"When `delegation` is absent", "explicit-command",
+			"big picture", "conceptual depth", "work-routing",
+			"current harness", "coordinating harness",
 			"view_selection", "always-ask",
 		},
 		"config/workflow/skills/adapt-for-reader/references/modes.md": {
@@ -444,9 +455,9 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		},
 		"config/workflow/skills/adapt-for-reader/references/preferences.md": {
 			"Explicit current request", "situation override", "project", "user",
-			"delegation", "preferred target", "conceptual depth",
+			"work-routing", "/work-routing-preferences", "legacy", "conceptual depth",
 			"View selection", "explicit-command", "all-invocations",
-			"current", "codex", "claude", "agy",
+			"migration",
 		},
 		"config/workflow/skills/adapt-for-reader/references/principles.md": {
 			"reader effort", "signaling", "decorative",
@@ -454,15 +465,14 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		"config/workflow/phases/adapt-for-reader.md": {
 			"$ARGUMENTS", "one focused question", "current request wins",
 			".agent-runs/readability", "mdmaid-desk register",
-			"big picture", "delegation", "always-ask", "recommended",
-			"Where should I run the adaptation?", "Codex", "Claude", "AGY",
-			"When `delegation` is absent", "explicit command",
+			"big picture", "work-routing", "always-ask", "recommended",
+			"/work-routing-preferences", "coordinating harness",
 		},
 		"config/workflow/phases/reader-preferences.md": {
 			"explicit approval", "reader-profile.schema.json", "Do not write",
-			"conceptual depth", "delegation policy", "preferred harness",
+			"conceptual depth", "/work-routing-preferences", "migration",
 			"view-selection policy", "explicit-command", "all-invocations",
-			"current", "Codex", "Claude", "AGY",
+			"work-adapt-for-reader",
 		},
 	}
 	for relative, required := range contracts {
@@ -570,10 +580,12 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			CriticalHighBlocking bool `json:"critical_high_blocking"`
 		} `json:"application"`
 		Delegation struct {
-			CrossProviderRequiresExplicitSelection bool `json:"cross_provider_requires_explicit_selection"`
-			Providers                              map[string]struct {
-				AutomaticReadOnly bool `json:"automatic_read_only"`
-			} `json:"providers"`
+			RoutingContract                        string `json:"routing_contract"`
+			CrossProviderStrategy                  string `json:"cross_provider_strategy"`
+			NativeSubagentsAllowed                 bool   `json:"native_subagents_allowed"`
+			PreferDifferentProviderForVerification bool   `json:"prefer_different_provider_for_verification"`
+			DelegatesReadOnly                      bool   `json:"delegates_read_only"`
+			CoordinatorOwnsFixes                   bool   `json:"coordinator_owns_fixes"`
 		} `json:"delegation"`
 	}
 	if err := json.Unmarshal(policyContent, &policy); err != nil {
@@ -586,8 +598,12 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	if !policy.Application.ApplyAllConfirmed || !policy.Application.CriticalHighBlocking {
 		t.Fatalf("review application policy = %#v", policy.Application)
 	}
-	if !policy.Delegation.CrossProviderRequiresExplicitSelection ||
-		policy.Delegation.Providers["hermes"].AutomaticReadOnly {
+	if policy.Delegation.RoutingContract != "work-routing" ||
+		policy.Delegation.CrossProviderStrategy != "parallel-verify" ||
+		!policy.Delegation.NativeSubagentsAllowed ||
+		!policy.Delegation.PreferDifferentProviderForVerification ||
+		!policy.Delegation.DelegatesReadOnly ||
+		!policy.Delegation.CoordinatorOwnsFixes {
 		t.Fatalf("review delegation policy = %#v", policy.Delegation)
 	}
 
@@ -597,15 +613,11 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		},
 		"config/workflow/phases/review.md": {
 			"dependency-currency", "diff-analysis", "is_real", "grounded",
-		},
-		"config/workflow/phases/delegated-review.md": {
-			"codex", "claude", "antigravity", "hermes", "cross-provider",
+			"@agy @codex @claude", "parallel-verify", "@hermes",
 		},
 		"config/workflow/skills/multi-lens-review.md": {
 			"Critical", "High", "refuted", "Apply every confirmed fix",
-		},
-		"config/adapters/claude/codex-review.md": {
-			"plan-delta", "--ephemeral", "is_real && grounded", "applies every confirmed fix",
+			"work-routing", "@agy @codex @claude",
 		},
 	}
 	for relative, required := range contracts {

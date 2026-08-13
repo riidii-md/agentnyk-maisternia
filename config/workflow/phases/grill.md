@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-grill - Ask the Next Useful Question
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Run the interactive clarification phase for a shape task.
 
 Before asking anything:
@@ -37,4 +39,3 @@ maisternia grill answer --action <action> [--text "<answer>"] \
 
 Do not repeat an answered question unless new evidence directly conflicts with
 the answer. Critical open questions block transition to brainstorming.
-

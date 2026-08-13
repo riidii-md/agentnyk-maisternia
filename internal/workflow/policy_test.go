@@ -41,8 +41,8 @@ func TestRepositorySchemasAreValidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(paths) != 18 {
-		t.Fatalf("schema count = %d, want 18", len(paths))
+	if len(paths) != 19 {
+		t.Fatalf("schema count = %d, want 19", len(paths))
 	}
 	for _, path := range paths {
 		data, err := os.ReadFile(path)
@@ -68,9 +68,8 @@ func TestRepositoryReviewPhaseAuthorities(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]string{
-		"plan-review":      "artifact_write",
-		"review":           "workspace_write",
-		"delegated-review": "workspace_write",
+		"plan-review": "artifact_write",
+		"review":      "workspace_write",
 	}
 	for phase, authority := range want {
 		profile, routing, err := policy.Phase(phase)

@@ -39,13 +39,18 @@
       "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-verify",
-      "work-review", "work-delegated-review", "work-pr", "work-showcase",
-      "work-cleanup"
+      "work-review", "work-pr", "work-showcase", "work-cleanup",
+      "work-routing-preferences"
     ],
     "prompts": [],
-    "skills": ["multi-lens-review-skill"],
+    "skills": [
+      "multi-lens-review-skill", "work-routing-skill",
+      "work-routing-runners"
+    ],
     "hooks": [],
-    "settings": ["review-policy", "review-report-schema"]
+    "settings": [
+      "review-policy", "review-report-schema", "work-routing-profile-schema"
+    ]
   },
   "targets": ["codex", "claude", "antigravity"]
 }

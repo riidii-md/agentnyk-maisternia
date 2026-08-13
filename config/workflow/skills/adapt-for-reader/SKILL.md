@@ -13,7 +13,7 @@ changing its meaning, evidence, uncertainty, or required detail.
 
 - Resolve the reader contract and preferences
 - Apply the clarification and view-selection gates
-- Resolve delegation
+- Use the shared work-routing result
 - Choose and apply a reader view and depth
 - Verify fidelity and reader success
 - Deliver through mdmaid.desk and optionally calibrate preferences
@@ -76,40 +76,17 @@ requests such as “help me understand,” prefer:
 
 > Do you want the big picture, enough mechanics to work with it, or a deep explanation?
 
-## Resolve delegation
+## Use shared workflow routing
 
-Apply the active delegation policy before transforming:
+When `/work-adapt-for-reader` invoked this skill, use the route already resolved
+by the installed `work-routing` skill. Do not implement another harness picker,
+availability check, disclosure rule, or fallback. Direct or nested skill use
+stays in the current harness unless its caller explicitly resolved a general
+all-invocations route.
 
-- `local`: continue in the current harness;
-- `ask`: ask which available harness should run the transformation;
-- `delegate`: use the preferred available target without asking.
-
-When `delegation` is absent, default an explicit
-`/work-adapt-for-reader` command to policy `ask`, scope `explicit-command`, and
-target `auto`. Default automatic or nested skill use to `local`, so another
-workflow is not interrupted unexpectedly. Treat a missing scope on an existing
-delegation object as `explicit-command`. Scope `all-invocations` applies the
-policy to both explicit and automatic use; outside the configured scope, run
-locally.
-
-When asking, use this concrete gate:
-
-> Where should I run the adaptation?
-
-Offer **Here (current harness)**, **Codex**, **Claude**, and **AGY**. Mark the
-best available choice as recommended and label unavailable choices instead of
-silently substituting them. `Here` maps to target `current` and means no
-delegation. A named harness requests a fresh delegated run using its native
-subagent support or a safe available runner. `auto` chooses a native delegate
-when possible and does not silently cross a provider boundary. Accept legacy
-target `codex-subagent` as an alias for `codex` when reading an existing profile.
-
-A Codex, Claude, or AGY delegate may draft, analyze, or independently structure
-the source. Give it only the task-local context it needs. The coordinating
-harness remains responsible for fidelity verification, the final Markdown
-artifact, and mdmaid.desk registration. If the selected target is unavailable,
-do not pretend delegation occurred; follow an explicit requirement or fall back
-locally and disclose it.
+A delegated harness may draft, analyze, or independently structure the source.
+The coordinating harness remains responsible for fidelity verification, the
+final Markdown artifact, and mdmaid.desk registration.
 
 ## Choose a view and depth
 

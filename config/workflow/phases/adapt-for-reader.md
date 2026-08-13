@@ -1,5 +1,7 @@
 # /work-adapt-for-reader - Adapt Text to Its Reader
 
+Routing gate (explicit adaptation): load `work-routing` because this deliberate command asks where to run when no preference exists. Automatic or nested reader adaptation remains local unless its caller already resolved a route. Continue only with the cleaned task.
+
 Transform supplied text, referenced files, or current conversation context for
 the reader and use described in:
 
@@ -26,23 +28,14 @@ story/rationale; describe each in one line and mark the inferred choice as
 recommended. Also resolve conceptual depth independently as high-level, working,
 or deep.
 
-Resolve the delegation policy next. When `delegation` is absent, use `ask` with
-`explicit-command` scope and target `auto` for this explicit command; automatic
-skill use outside this command remains local. A missing delegation scope also
-means `explicit-command`.
+The shared `work-routing` skill owns harness selection. An explicit `@harness`
+route wins; otherwise it resolves the general workflow-routing profile and the
+legacy reader delegation migration rule. Do not run a separate adaptation-only
+delegation prompt. Configure durable execution choices with
+`/work-routing-preferences`.
 
-When the effective policy is `ask`, ask:
-
-> Where should I run the adaptation?
-
-Offer **Here (current harness)**, **Codex**, **Claude**, and **AGY**, mark the
-best available choice as recommended, and identify unavailable choices. `Here`
-does not delegate; a named harness requests a fresh delegated run. Respect
-`local` without asking and `delegate` by using the explicitly preferred
-available harness. Outside the configured `explicit-command` or
-`all-invocations` scope, keep the work local. The coordinating harness must
-verify returned content and remains responsible for final delivery. Never
-claim delegation when the target was unavailable.
+The coordinating harness must verify returned content and remains responsible
+for the final Markdown artifact and mdmaid.desk registration.
 
 Apply plain-language, accessibility, density, evidence, and visual preferences
 as modifiers. Use tables or diagrams only when they materially reduce

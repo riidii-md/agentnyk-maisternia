@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-shape - Shape an Idea
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Turn an incomplete idea into an evidence-backed decision and implementation
 plan. This workflow is read-only for the target project.
 
@@ -74,4 +76,3 @@ Never force a transition that maisternia rejects.
 
 Generate readable Markdown artifacts as phases complete. Register or open them
 through `mdmaid.show` when available. Document presentation is not approval.
-

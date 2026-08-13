@@ -57,7 +57,7 @@ The repository starts with:
   cost review plus delegated bottleneck analysis for one completed run;
 - `harness-improvement`: post-run profiling, audit, repeated-pattern proposals,
   held-out replay, and human-approved installation;
-- `codex-compatibility`: permanent Codex-prefixed compatibility aliases;
+- `workflow-routing`: shared `@harness` routing and reusable workflow defaults;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
@@ -274,18 +274,18 @@ maisternia preset apply \
 # Preserve customized target files and apply everything else.
 maisternia preset apply \
   --scope user \
-  --target codex \
+  --target all \
   --conflicts keep \
   --yes \
-  codex-compatibility
+  workflow-routing
 
 # Back up customized files and replace them with preset versions.
 maisternia preset apply \
   --scope user \
-  --target codex \
+  --target all \
   --conflicts replace \
   --yes \
-  codex-compatibility
+  workflow-routing
 ```
 
 These commands select only the manifest resources declared by the preset. They

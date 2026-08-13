@@ -1,6 +1,12 @@
 # /work-plan - Create the Implementation Plan
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Produce an actionable implementation specification for the accepted direction.
+
+When `work-routing` resolves several harnesses, request independent plans and
+let the current coordinating harness synthesize one plan while preserving
+material disagreements and unsupported assumptions.
 
 Input:
 

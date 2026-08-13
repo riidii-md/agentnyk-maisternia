@@ -90,6 +90,8 @@
     },
     "delegation": {
       "type": "object",
+      "deprecated": true,
+      "description": "Compatibility input only. Migrate to the provider-neutral work-routing profile.",
       "additionalProperties": false,
       "required": ["policy", "target"],
       "properties": {

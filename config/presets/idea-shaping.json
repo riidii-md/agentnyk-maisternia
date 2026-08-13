@@ -30,12 +30,13 @@
     "mcp_refs": [],
     "commands": [
       "work-shape", "work-source", "work-grill", "work-brainstorm",
-      "work-research", "work-decide", "work-plan"
+      "work-research", "work-decide", "work-plan",
+      "work-routing-preferences"
     ],
     "prompts": [],
-    "skills": [],
+    "skills": ["work-routing-skill", "work-routing-runners"],
     "hooks": [],
-    "settings": []
+    "settings": ["work-routing-profile-schema"]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }
