@@ -52,7 +52,8 @@ The repository contains the first safe configurator foundation:
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
   multi-lens-review, adaptive-readability, harness-profile, session-audit,
   harness-improvement, terminal-orchestration, workflow-routing,
-  `developer-context`, `goreleaser-validation`, and Codex resource-lab presets;
+  `developer-context`, `goreleaser-validation`, `git-workflow-approvals`, and
+  Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, guarded apply, ownership reconciliation,
@@ -100,11 +101,13 @@ verifies Zellij, Tatami, Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr
 plugins without coupling machine setup to a workflow preset. See
 [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md).
 
-The `developer-context` and `goreleaser-validation` presets stage reviewable
-Claude Code and Codex fragments for exact MCP tool approvals and the narrow
-`goreleaser check --config .goreleaser.yml` command. GitNexus is read-only and
-repository-bounded; GoReleaser uses pinned prebuilt-release instructions rather
-than the repository Go toolchain. See [Preset library](docs/PRESETS.md).
+The `developer-context`, `goreleaser-validation`, and
+`git-workflow-approvals` presets stage reviewable Claude Code and Codex
+fragments for exact MCP tool approvals, the narrow
+`goreleaser check --config .goreleaser.yml` command, and routine Git approval
+boundaries. GitNexus is read-only and repository-bounded; GoReleaser uses
+pinned prebuilt-release instructions rather than the repository Go toolchain.
+See [Preset library](docs/PRESETS.md).
 
 The retrospective presets add read-only harness profiling, evidence-backed run
 audits, and proposal-only improvement with held-out replay and human approval.
@@ -296,6 +299,7 @@ go run ./cmd/maisternia preset show harness-improvement
 go run ./cmd/maisternia preset show codex-resource-lab
 go run ./cmd/maisternia preset show developer-context
 go run ./cmd/maisternia preset show goreleaser-validation
+go run ./cmd/maisternia preset show git-workflow-approvals
 go run ./cmd/maisternia preset validate all
 ```
 

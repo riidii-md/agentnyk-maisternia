@@ -1,0 +1,49 @@
+# Review fragment: install under .codex/rules only after reviewing how these
+# command prefixes interact with the other active policy layers.
+prefix_rule(
+    pattern = ["git", "add"],
+    decision = "allow",
+    justification = "Staging repository changes is approved by the git-workflow-approvals preset.",
+)
+
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "allow",
+    justification = "Routine local commits are approved by the git-workflow-approvals preset.",
+)
+
+prefix_rule(
+    pattern = ["git", "fetch"],
+    decision = "allow",
+    justification = "Fetching remote metadata is approved by the git-workflow-approvals preset.",
+)
+
+prefix_rule(
+    pattern = ["git", "commit", "--amend"],
+    decision = "prompt",
+    justification = "Amending a commit rewrites local history and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Pushing publishes repository state and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["git", "merge"],
+    decision = "prompt",
+    justification = "Merging changes branch history and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["git", "stash"],
+    decision = "prompt",
+    justification = "Stashing changes worktree state and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "create"],
+    decision = "prompt",
+    justification = "Creating a pull request publishes external state and requires confirmation.",
+)

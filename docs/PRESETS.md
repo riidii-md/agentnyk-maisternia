@@ -64,6 +64,9 @@ The repository starts with:
   review fragments with explicit default approvals for Claude Code and Codex;
 - `goreleaser-validation`: a pinned prebuilt GoReleaser requirement and the
   narrow release-configuration validation approval for Claude Code and Codex;
+- `git-workflow-approvals`: automatic add, commit, and fetch approval with
+  explicit prompts for push, merge, stash, amend, and GitHub pull-request
+  creation;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
   deny policy with human-only grants;
 - `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
@@ -87,6 +90,7 @@ maisternia preset show harness-improvement
 maisternia preset show codex-resource-lab
 maisternia preset show developer-context
 maisternia preset show goreleaser-validation
+maisternia preset show git-workflow-approvals
 maisternia preset show approval-standard
 maisternia preset show hook-standard
 maisternia preset validate all
@@ -98,10 +102,11 @@ are review fragments, not active configuration, because maisternia does not yet
 merge structured TOML or JSON. Its settings resource is an opt-in named Codex
 profile and does not replace the user's main `config.toml`.
 
-`developer-context` and `goreleaser-validation` also render review fragments.
+`developer-context`, `goreleaser-validation`, and `git-workflow-approvals` also
+render review fragments.
 They do not replace or silently merge Codex `config.toml`, Codex rule files,
-Claude `.mcp.json`, or Claude `settings.json`. After applying either preset,
-review and merge only the selected fragments from the provider's
+Claude `.mcp.json`, or Claude `settings.json`. After applying any of these
+presets, review and merge only the selected fragments from the provider's
 `maisternia/fragments` directory into active native configuration.
 
 The developer-context fragments use Context7's hosted MCP endpoint and approve
@@ -124,6 +129,14 @@ prebuilt release and requires verification against the release checksums. This
 avoids coupling GoReleaser's own source toolchain to the repository's pinned Go
 toolchain.
 
+The Git workflow preset approves the `git add`, `git commit`, and `git fetch`
+command prefixes. It asks before `git push`, `git merge`, `git stash`, the
+conventional `git commit --amend` form, and `gh pr create`. It does not add
+general `git`, `gh`, shell, force-push, reset, or rebase rules. Codex prefix
+policy cannot express a negative match for an option placed later in a command,
+so unusual reordered amend forms still depend on the remaining active policy
+layers.
+
 Inspect and stage the bundles before merging their native fragments:
 
 ```bash
@@ -135,6 +148,9 @@ maisternia preset render --target all --output ./build/developer-context develop
 
 maisternia preset plan --scope project --project "$PWD" --target all goreleaser-validation
 maisternia preset render --target all --output ./build/goreleaser-validation goreleaser-validation
+
+maisternia preset plan --scope project --project "$PWD" --target all git-workflow-approvals
+maisternia preset render --target all --output ./build/git-workflow-approvals git-workflow-approvals
 ```
 
 Environment installation remains separate and confirmation-required. The

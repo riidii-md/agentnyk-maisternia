@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 23 {
-		t.Fatalf("preset count = %d, want 23", len(library.Presets))
+	if len(library.Presets) != 24 {
+		t.Fatalf("preset count = %d, want 24", len(library.Presets))
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -503,6 +503,45 @@ func TestRepositoryDeveloperContextAndGoReleaserValidationPresets(t *testing.T) 
 	}
 	if len(goReleaserManifest.Resources) != 2 {
 		t.Fatalf("goreleaser-validation resource count = %d, want 2", len(goReleaserManifest.Resources))
+	}
+}
+
+func TestRepositoryGitWorkflowApprovalsPreset(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	library, err := LoadLibrary(root)
+	if err != nil {
+		t.Fatalf("LoadLibrary() error = %v", err)
+	}
+
+	preset, found := library.Get("git-workflow-approvals")
+	if !found {
+		t.Fatal("git-workflow-approvals preset missing")
+	}
+	if got := preset.Targets; !slices.Equal(got, []string{"codex", "claude"}) {
+		t.Fatalf("git-workflow-approvals targets = %v", got)
+	}
+	if got := preset.Contents.Settings; !slices.Equal(got, []string{
+		"git-workflow-approvals-codex-rules",
+		"git-workflow-approvals-claude-permissions",
+	}) {
+		t.Fatalf("git-workflow-approvals settings = %v", got)
+	}
+	if got := preset.EnvironmentPacks; len(got) != 0 {
+		t.Fatalf("git-workflow-approvals environment packs = %v, want none", got)
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest() error = %v", err)
+	}
+	selected, err := SelectManifest(preset, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(git-workflow-approvals) error = %v", err)
+	}
+	if len(selected.Resources) != 2 {
+		t.Fatalf("git-workflow-approvals resource count = %d, want 2", len(selected.Resources))
 	}
 }
 

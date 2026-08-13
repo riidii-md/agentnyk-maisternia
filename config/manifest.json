@@ -522,6 +522,20 @@
       ]
     },
     {
+      "id": "git-workflow-approvals-codex-rules",
+      "source": "config/codex/git-workflow-approvals/approval.rules",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/fragments/git-workflow-approvals.rules"}
+      ]
+    },
+    {
+      "id": "git-workflow-approvals-claude-permissions",
+      "source": "config/claude/git-workflow-approvals/permissions.json",
+      "targets": [
+        {"agent": "claude", "path": ".claude/maisternia/fragments/git-workflow-approvals.permissions.json"}
+      ]
+    },
+    {
       "id": "codex-lab-mcp-context7",
       "source": "config/codex/resource-lab/mcp-context7.toml",
       "targets": [
