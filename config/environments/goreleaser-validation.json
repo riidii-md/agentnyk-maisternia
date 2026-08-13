@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "goreleaser-validation",
+  "name": "GoReleaser Validation",
+  "description": "Pinned prebuilt GoReleaser binary for validating release configuration without compiling GoReleaser using the repository toolchain.",
+  "requirements": [
+    {
+      "id": "goreleaser",
+      "name": "GoReleaser",
+      "description": "Runs the release configuration validation command approved by the provider fragments.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["goreleaser-validation"],
+      "depends_on": [],
+      "detect": {"command": "goreleaser"},
+      "installers": [
+        {
+          "id": "official-release",
+          "kind": "manual",
+          "platforms": ["darwin", "linux", "windows"],
+          "url": "https://github.com/goreleaser/goreleaser/releases/tag/v2.17.1",
+          "instructions": "Download the v2.17.1 prebuilt archive for the target platform and verify the archive against the release's checksums.txt before placing goreleaser on PATH. Do not compile GoReleaser from source with this repository's pinned Go toolchain."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "developer-context",
+  "name": "Developer Context",
+  "description": "Pinned local tooling for the developer-context provider fragments. Context7 uses its hosted MCP endpoint and needs no local installer.",
+  "requirements": [
+    {
+      "id": "gitnexus",
+      "name": "GitNexus",
+      "description": "Local code knowledge graph MCP server. Review its PolyForm Noncommercial license and Node.js compatibility before installing.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["code-knowledge-graph"],
+      "depends_on": [],
+      "detect": {"command": "gitnexus"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "gitnexus",
+          "version": "1.6.9"
+        }
+      ]
+    }
+  ]
+}

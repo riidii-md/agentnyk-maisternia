@@ -1,0 +1,6 @@
+# Review fragment: install under .codex/rules only after reviewing the pinned
+# GoReleaser environment pack and this repository's .goreleaser.yml.
+prefix_rule(
+    pattern = ["goreleaser", "check", "--config", ".goreleaser.yml"],
+    decision = "allow",
+)

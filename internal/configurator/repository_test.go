@@ -52,6 +52,99 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	assertRenderedFile(t, output, ".hermes/skills/work-routing/SKILL.md")
 }
 
+func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	requiredIDs := map[string]bool{
+		"developer-context-codex-mcp":              false,
+		"developer-context-claude-mcp":             false,
+		"developer-context-claude-permissions":     false,
+		"goreleaser-validation-codex-rules":        false,
+		"goreleaser-validation-claude-permissions": false,
+	}
+	for _, resource := range manifest.Resources {
+		if _, required := requiredIDs[resource.ID]; required {
+			requiredIDs[resource.ID] = true
+		}
+	}
+	for id, found := range requiredIDs {
+		if !found {
+			t.Errorf("repository manifest missing required resource %q", id)
+		}
+	}
+
+	output := t.TempDir()
+	if err := Render(repoRoot, output, manifest, "all"); err != nil {
+		t.Fatalf("Render(repository) error = %v", err)
+	}
+	codexMCP := readRenderedFile(t, output, ".codex/maisternia/fragments/developer-context.toml")
+	for _, snippet := range []string{
+		`url = "https://mcp.context7.com/mcp"`,
+		`enabled_tools = ["resolve-library-id", "query-docs"]`,
+		`command = "gitnexus"`,
+		`GITNEXUS_MCP_READ_ONLY = "1"`,
+		`GITNEXUS_MCP_ALLOWED_REPOS`,
+		`approval_mode = "approve"`,
+	} {
+		if !strings.Contains(codexMCP, snippet) {
+			t.Errorf("Codex developer-context fragment missing %q", snippet)
+		}
+	}
+	for _, forbidden := range []string{"@upstash/context7-mcp", `"*"`, "rename", "cypher"} {
+		if strings.Contains(codexMCP, forbidden) {
+			t.Errorf("Codex developer-context fragment contains forbidden value %q", forbidden)
+		}
+	}
+
+	claudeMCP := readRenderedFile(t, output, ".claude/maisternia/fragments/developer-context.mcp.json")
+	for _, snippet := range []string{
+		`"url": "https://mcp.context7.com/mcp"`,
+		`"command": "gitnexus"`,
+		`"GITNEXUS_MCP_READ_ONLY": "1"`,
+		`"GITNEXUS_MCP_ALLOWED_REPOS": "${GITNEXUS_MCP_ALLOWED_REPOS}"`,
+	} {
+		if !strings.Contains(claudeMCP, snippet) {
+			t.Errorf("Claude developer-context MCP fragment missing %q", snippet)
+		}
+	}
+
+	claudePermissions := readRenderedFile(t, output, ".claude/maisternia/fragments/developer-context.permissions.json")
+	for _, permission := range []string{
+		"mcp__context7__resolve-library-id",
+		"mcp__context7__query-docs",
+		"mcp__gitnexus__query",
+		"mcp__gitnexus__context",
+		"mcp__gitnexus__impact",
+		"mcp__gitnexus__trace",
+	} {
+		if !strings.Contains(claudePermissions, permission) {
+			t.Errorf("Claude developer-context permissions missing %q", permission)
+		}
+	}
+	for _, forbidden := range []string{"mcp__context7__*", "mcp__gitnexus__*", "bypassPermissions"} {
+		if strings.Contains(claudePermissions, forbidden) {
+			t.Errorf("Claude developer-context permissions contain forbidden value %q", forbidden)
+		}
+	}
+
+	codexRules := readRenderedFile(t, output, ".codex/maisternia/fragments/goreleaser-validation.rules")
+	if !strings.Contains(codexRules, `pattern = ["goreleaser", "check", "--config", ".goreleaser.yml"]`) ||
+		!strings.Contains(codexRules, `decision = "allow"`) {
+		t.Fatalf("Codex GoReleaser validation rule is not narrowly scoped: %s", codexRules)
+	}
+	for _, forbidden := range []string{`pattern = ["env"`, `pattern = ["go"`} {
+		if strings.Contains(codexRules, forbidden) {
+			t.Errorf("Codex GoReleaser validation rules contain broad command %q", forbidden)
+		}
+	}
+
+	claudeGoReleaser := readRenderedFile(t, output, ".claude/maisternia/fragments/goreleaser-validation.permissions.json")
+	if !strings.Contains(claudeGoReleaser, `Bash(goreleaser check --config .goreleaser.yml)`) {
+		t.Fatalf("Claude GoReleaser validation permission is not exact: %s", claudeGoReleaser)
+	}
+}
+
 func TestRepositoryRemovesProviderBrandedWorkflowCommands(t *testing.T) {
 	t.Parallel()
 
@@ -174,4 +267,13 @@ func assertRenderedFile(t *testing.T, root, relative string) {
 	if !info.Mode().IsRegular() {
 		t.Fatalf("rendered file %s is not regular", relative)
 	}
+}
+
+func readRenderedFile(t *testing.T, root, relative string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+	if err != nil {
+		t.Fatalf("read rendered file %s: %v", relative, err)
+	}
+	return string(data)
 }
