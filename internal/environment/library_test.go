@@ -19,8 +19,8 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Packs) != 1 {
-		t.Fatalf("pack count = %d, want 1", len(library.Packs))
+	if len(library.Packs) != 3 {
+		t.Fatalf("pack count = %d, want 3", len(library.Packs))
 	}
 	if library.Root() != repositoryRoot(t) {
 		t.Fatalf("library root = %q, want %q", library.Root(), repositoryRoot(t))
@@ -86,6 +86,53 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 			requirement.Installers[0].Ref != want.ref {
 			t.Errorf("%s = %#v, want plugin %s from %s@%s", requirementID, requirement, want.pluginID, want.repository, want.ref)
 		}
+	}
+}
+
+func TestRepositoryDeveloperContextAndGoReleaserEnvironmentPacks(t *testing.T) {
+	t.Parallel()
+
+	library, err := LoadLibrary(repositoryRoot(t))
+	if err != nil {
+		t.Fatalf("LoadLibrary() error = %v", err)
+	}
+
+	developerContext, found := library.Get("developer-context")
+	if !found {
+		t.Fatal("developer-context environment pack missing")
+	}
+	gitNexus, found := developerContext.Requirement("gitnexus")
+	if !found {
+		t.Fatal("developer-context GitNexus requirement missing")
+	}
+	if gitNexus.Detect.Command != "gitnexus" || len(gitNexus.Installers) != 1 {
+		t.Fatalf("GitNexus requirement = %#v", gitNexus)
+	}
+	installer := gitNexus.Installers[0]
+	if installer.Kind != InstallerNPMGlobal ||
+		installer.Package != "gitnexus" ||
+		installer.Version != "1.6.9" {
+		t.Fatalf("GitNexus installer = %#v", installer)
+	}
+
+	goReleaserValidation, found := library.Get("goreleaser-validation")
+	if !found {
+		t.Fatal("goreleaser-validation environment pack missing")
+	}
+	goReleaser, found := goReleaserValidation.Requirement("goreleaser")
+	if !found {
+		t.Fatal("goreleaser-validation GoReleaser requirement missing")
+	}
+	if goReleaser.Detect.Command != "goreleaser" || len(goReleaser.Installers) != 1 {
+		t.Fatalf("GoReleaser requirement = %#v", goReleaser)
+	}
+	installer = goReleaser.Installers[0]
+	if installer.Kind != InstallerManual ||
+		installer.URL != "https://github.com/goreleaser/goreleaser/releases/tag/v2.17.1" ||
+		!strings.Contains(installer.Instructions, "v2.17.1") ||
+		!strings.Contains(installer.Instructions, "checksums.txt") ||
+		!strings.Contains(installer.Instructions, "prebuilt") {
+		t.Fatalf("GoReleaser installer = %#v", installer)
 	}
 }
 

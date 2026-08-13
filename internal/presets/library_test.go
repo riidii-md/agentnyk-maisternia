@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 21 {
-		t.Fatalf("preset count = %d, want 21", len(library.Presets))
+	if len(library.Presets) != 23 {
+		t.Fatalf("preset count = %d, want 23", len(library.Presets))
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -432,6 +432,77 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		if got := resource.Targets; len(got) != 4 {
 			t.Fatalf("hook resource %q targets = %v, want 4", resource.ID, got)
 		}
+	}
+}
+
+func TestRepositoryDeveloperContextAndGoReleaserValidationPresets(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	library, err := LoadLibrary(root)
+	if err != nil {
+		t.Fatalf("LoadLibrary() error = %v", err)
+	}
+
+	developerContext, found := library.Get("developer-context")
+	if !found {
+		t.Fatal("developer-context preset missing")
+	}
+	if got := developerContext.Targets; !slices.Equal(got, []string{"codex", "claude"}) {
+		t.Fatalf("developer-context targets = %v", got)
+	}
+	if got := developerContext.Contents.MCPRefs; !slices.Equal(got, []string{
+		"developer-context-codex-mcp",
+		"developer-context-claude-mcp",
+	}) {
+		t.Fatalf("developer-context MCP references = %v", got)
+	}
+	if got := developerContext.Contents.Settings; !slices.Equal(got, []string{
+		"developer-context-claude-permissions",
+	}) {
+		t.Fatalf("developer-context settings = %v", got)
+	}
+	if got := developerContext.EnvironmentPacks; !slices.Equal(got, []string{"developer-context"}) {
+		t.Fatalf("developer-context environment packs = %v", got)
+	}
+
+	goReleaserValidation, found := library.Get("goreleaser-validation")
+	if !found {
+		t.Fatal("goreleaser-validation preset missing")
+	}
+	if _, found := library.Get("release-validation"); found {
+		t.Fatal("generic release-validation preset must be named goreleaser-validation")
+	}
+	if got := goReleaserValidation.Targets; !slices.Equal(got, []string{"codex", "claude"}) {
+		t.Fatalf("goreleaser-validation targets = %v", got)
+	}
+	if got := goReleaserValidation.Contents.Settings; !slices.Equal(got, []string{
+		"goreleaser-validation-codex-rules",
+		"goreleaser-validation-claude-permissions",
+	}) {
+		t.Fatalf("goreleaser-validation settings = %v", got)
+	}
+	if got := goReleaserValidation.EnvironmentPacks; !slices.Equal(got, []string{"goreleaser-validation"}) {
+		t.Fatalf("goreleaser-validation environment packs = %v", got)
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest() error = %v", err)
+	}
+	developerManifest, err := SelectManifest(developerContext, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(developer-context) error = %v", err)
+	}
+	if len(developerManifest.Resources) != 3 {
+		t.Fatalf("developer-context resource count = %d, want 3", len(developerManifest.Resources))
+	}
+	goReleaserManifest, err := SelectManifest(goReleaserValidation, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(goreleaser-validation) error = %v", err)
+	}
+	if len(goReleaserManifest.Resources) != 2 {
+		t.Fatalf("goreleaser-validation resource count = %d, want 2", len(goReleaserManifest.Resources))
 	}
 }
 

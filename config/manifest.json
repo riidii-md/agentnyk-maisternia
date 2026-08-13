@@ -487,6 +487,41 @@
       ]
     },
     {
+      "id": "developer-context-codex-mcp",
+      "source": "config/codex/developer-context/mcp.toml",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/fragments/developer-context.toml"}
+      ]
+    },
+    {
+      "id": "developer-context-claude-mcp",
+      "source": "config/claude/developer-context/mcp.json",
+      "targets": [
+        {"agent": "claude", "path": ".claude/maisternia/fragments/developer-context.mcp.json"}
+      ]
+    },
+    {
+      "id": "developer-context-claude-permissions",
+      "source": "config/claude/developer-context/permissions.json",
+      "targets": [
+        {"agent": "claude", "path": ".claude/maisternia/fragments/developer-context.permissions.json"}
+      ]
+    },
+    {
+      "id": "goreleaser-validation-codex-rules",
+      "source": "config/codex/goreleaser-validation/validation.rules",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/fragments/goreleaser-validation.rules"}
+      ]
+    },
+    {
+      "id": "goreleaser-validation-claude-permissions",
+      "source": "config/claude/goreleaser-validation/permissions.json",
+      "targets": [
+        {"agent": "claude", "path": ".claude/maisternia/fragments/goreleaser-validation.permissions.json"}
+      ]
+    },
+    {
       "id": "codex-lab-mcp-context7",
       "source": "config/codex/resource-lab/mcp-context7.toml",
       "targets": [

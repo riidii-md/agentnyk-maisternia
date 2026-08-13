@@ -117,3 +117,9 @@ and hook decision engine described in
 [Hook and approval roadmap](HOOK-APPROVAL-ROADMAP.md). Doctor and the TUI must
 eventually distinguish `installed`, `compiled`, `active`, `degraded`, and
 `unenforceable`; they must never report a copied definition as active.
+
+The `developer-context` and `goreleaser-validation` presets provide narrow,
+provider-native review fragments within this boundary. They demonstrate exact
+MCP tool allow entries and one repository-scoped validation command without
+claiming that copied fragments are active. See [Preset library](PRESETS.md) for
+their activation requirements and pinned environment packs.

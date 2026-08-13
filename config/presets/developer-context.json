@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "developer-context",
+  "name": "Developer Context",
+  "description": "Reviewable Context7 and read-only GitNexus configuration with exact default approvals for Claude Code and Codex.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [
+      "developer-context-codex-mcp",
+      "developer-context-claude-mcp"
+    ],
+    "commands": [],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": ["developer-context-claude-permissions"]
+  },
+  "targets": ["codex", "claude"],
+  "environment_packs": ["developer-context"]
+}

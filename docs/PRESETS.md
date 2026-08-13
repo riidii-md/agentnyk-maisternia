@@ -60,6 +60,10 @@ The repository starts with:
 - `workflow-routing`: shared `@harness` routing and reusable workflow defaults;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource;
+- `developer-context`: Context7 and read-only, repository-bounded GitNexus
+  review fragments with explicit default approvals for Claude Code and Codex;
+- `goreleaser-validation`: a pinned prebuilt GoReleaser requirement and the
+  narrow release-configuration validation approval for Claude Code and Codex;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
   deny policy with human-only grants;
 - `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
@@ -81,6 +85,8 @@ maisternia preset show multi-lens-review
 maisternia preset show adaptive-readability
 maisternia preset show harness-improvement
 maisternia preset show codex-resource-lab
+maisternia preset show developer-context
+maisternia preset show goreleaser-validation
 maisternia preset show approval-standard
 maisternia preset show hook-standard
 maisternia preset validate all
@@ -91,6 +97,49 @@ prompt and skill install to provider-native locations. Its MCP and hook files
 are review fragments, not active configuration, because maisternia does not yet
 merge structured TOML or JSON. Its settings resource is an opt-in named Codex
 profile and does not replace the user's main `config.toml`.
+
+`developer-context` and `goreleaser-validation` also render review fragments.
+They do not replace or silently merge Codex `config.toml`, Codex rule files,
+Claude `.mcp.json`, or Claude `settings.json`. After applying either preset,
+review and merge only the selected fragments from the provider's
+`maisternia/fragments` directory into active native configuration.
+
+The developer-context fragments use Context7's hosted MCP endpoint and approve
+only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs
+with `GITNEXUS_MCP_READ_ONLY=1`, omits raw Cypher and mutation tools, and
+approves each remaining tool by exact name. Before activation, set
+`GITNEXUS_MCP_ALLOWED_REPOS` to a comma-separated allowlist of canonical indexed
+repository names or absolute paths. Review GitNexus's PolyForm Noncommercial
+license and supported Node.js versions before installing its environment pack.
+
+The GoReleaser preset deliberately names the tool in its ID. It approves only:
+
+```text
+goreleaser check --config .goreleaser.yml
+```
+
+It does not approve `env`, `go mod download`, `go install`, or compiling
+GoReleaser from source. Its environment pack points to the pinned `v2.17.1`
+prebuilt release and requires verification against the release checksums. This
+avoids coupling GoReleaser's own source toolchain to the repository's pinned Go
+toolchain.
+
+Inspect and stage the bundles before merging their native fragments:
+
+```bash
+maisternia environment plan developer-context
+maisternia environment plan goreleaser-validation
+
+maisternia preset plan --scope project --project "$PWD" --target all developer-context
+maisternia preset render --target all --output ./build/developer-context developer-context
+
+maisternia preset plan --scope project --project "$PWD" --target all goreleaser-validation
+maisternia preset render --target all --output ./build/goreleaser-validation goreleaser-validation
+```
+
+Environment installation remains separate and confirmation-required. The
+GitNexus pack has a typed pinned npm installer; the GoReleaser pack intentionally
+provides manual prebuilt-binary and checksum instructions.
 
 Validation rejects unknown fields, unsupported schema versions, invalid IDs,
 duplicate resources, unknown manifest resources, unknown providers, dangling

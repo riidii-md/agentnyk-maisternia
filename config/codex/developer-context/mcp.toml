@@ -1,0 +1,71 @@
+# Review fragment: merge these tables into trusted project or user Codex config.
+# Set GITNEXUS_MCP_ALLOWED_REPOS to a comma-separated allowlist of canonical
+# indexed repository names or absolute paths before enabling GitNexus.
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+enabled_tools = ["resolve-library-id", "query-docs"]
+
+[mcp_servers.context7.tools.resolve-library-id]
+approval_mode = "approve"
+
+[mcp_servers.context7.tools.query-docs]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus]
+command = "gitnexus"
+args = ["mcp"]
+env_vars = ["GITNEXUS_MCP_ALLOWED_REPOS"]
+enabled_tools = [
+  "query",
+  "context",
+  "impact",
+  "trace",
+  "detect_changes",
+  "check",
+  "route_map",
+  "tool_map",
+  "shape_check",
+  "api_impact",
+  "explain",
+  "pdg_query",
+]
+
+[mcp_servers.gitnexus.env]
+GITNEXUS_MCP_READ_ONLY = "1"
+
+[mcp_servers.gitnexus.tools.query]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.context]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.impact]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.trace]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.detect_changes]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.check]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.route_map]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.tool_map]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.shape_check]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.api_impact]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.explain]
+approval_mode = "approve"
+
+[mcp_servers.gitnexus.tools.pdg_query]
+approval_mode = "approve"
