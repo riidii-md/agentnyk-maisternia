@@ -21,16 +21,20 @@
   ],
   "contents": {
     "mcp_refs": [],
-    "commands": ["work-adapt-for-reader", "work-reader-preferences"],
+    "commands": [
+      "work-adapt-for-reader", "work-reader-preferences",
+      "work-routing-preferences"
+    ],
     "prompts": [],
     "skills": [
       "adapt-for-reader-skill",
       "adapt-for-reader-modes",
       "adapt-for-reader-preferences",
-      "adapt-for-reader-principles"
+      "adapt-for-reader-principles",
+      "work-routing-skill", "work-routing-runners"
     ],
     "hooks": [],
-    "settings": ["reader-profile-schema"]
+    "settings": ["reader-profile-schema", "work-routing-profile-schema"]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }

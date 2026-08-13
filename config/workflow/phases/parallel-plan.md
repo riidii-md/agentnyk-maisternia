@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-parallel-plan - Create A Parallel Implementation Plan
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Create an implementation plan that can safely run more than one task at a time.
 Do not edit files or launch implementation workers in this phase.
 

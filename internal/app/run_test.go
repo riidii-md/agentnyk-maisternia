@@ -727,7 +727,6 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	}
 	for _, presetID := range []string{
 		"approval-standard",
-		"codex-compatibility",
 		"codex-resource-lab",
 		"harness-improvement",
 		"harness-profile",
@@ -739,6 +738,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 		"session-audit",
 		"standard-work",
 		"terminal-orchestration",
+		"workflow-routing",
 	} {
 		if !strings.Contains(stdout.String(), presetID) {
 			t.Errorf("preset list output = %q, missing %q", stdout.String(), presetID)
@@ -1283,6 +1283,172 @@ func TestRunPresetUninstallWorksAfterPresetDefinitionIsGone(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "uninstalled preset deleted-preset") {
 		t.Fatalf("preset uninstall output = %q", stdout.String())
+	}
+}
+
+func TestRunRoutingMigrationInstallsCanonicalReplacementBeforeRemovingAlias(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	files := map[string]string{
+		"config/commands/codex-plan.md":                "legacy alias\n",
+		"config/workflow/phases/plan.md":               "old canonical plan\n",
+		"config/workflow/skills/work-routing/SKILL.md": "shared router\n",
+		"config/presets/codex-compatibility.json": `{
+  "schema_version": 1,
+  "id": "codex-compatibility",
+  "name": "Legacy aliases",
+  "description": "Migration fixture.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["codex-plan"],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex"]
+}`,
+		"config/presets/standard-work.json": `{
+  "schema_version": 1,
+  "id": "standard-work",
+  "name": "Standard work",
+  "description": "Migration fixture.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-plan"],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex"]
+}`,
+	}
+	for relative, content := range files {
+		path := filepath.Join(repo, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeManifest := func(includeRouter bool) {
+		t.Helper()
+		resources := []configurator.Resource{
+			{
+				ID:     "codex-plan",
+				Source: "config/commands/codex-plan.md",
+				Targets: []configurator.Target{{
+					Agent: "codex",
+					Path:  ".codex/commands/codex-plan.md",
+				}},
+			},
+			{
+				ID:     "work-plan",
+				Source: "config/workflow/phases/plan.md",
+				Targets: []configurator.Target{{
+					Agent: "codex",
+					Path:  ".codex/commands/work-plan.md",
+				}},
+			},
+		}
+		if includeRouter {
+			resources = append(resources, configurator.Resource{
+				ID:     "work-routing-skill",
+				Source: "config/workflow/skills/work-routing/SKILL.md",
+				Targets: []configurator.Target{{
+					Agent: "codex",
+					Path:  ".codex/skills/work-routing/SKILL.md",
+				}},
+			})
+		}
+		data, err := json.Marshal(configurator.Manifest{
+			SchemaVersion: configurator.ManifestSchemaVersion,
+			Resources:     resources,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(repo, "config", "manifest.json"), data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeManifest(false)
+
+	run := func(args ...string) {
+		t.Helper()
+		var stdout, stderr bytes.Buffer
+		if code := Run(args, &stdout, &stderr); code != 0 {
+			t.Fatalf("Run(%v) code = %d, stdout = %s, stderr = %s", args, code, stdout.String(), stderr.String())
+		}
+	}
+	for _, presetID := range []string{"standard-work", "codex-compatibility"} {
+		run(
+			"preset", "apply", "--repo", repo, "--home", home,
+			"--scope", "user", "--target", "codex", "--yes", presetID,
+		)
+	}
+
+	if err := os.WriteFile(
+		filepath.Join(repo, "config", "workflow", "phases", "plan.md"),
+		[]byte("new canonical plan with work-routing\n"),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	writeManifest(true)
+	if err := os.WriteFile(
+		filepath.Join(repo, "config", "presets", "standard-work.json"),
+		[]byte(`{
+  "schema_version": 1,
+  "id": "standard-work",
+  "name": "Standard work",
+  "description": "Migration fixture.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-plan"],
+    "prompts": [],
+    "skills": ["work-routing-skill"],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex"]
+}`),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(repo, "config", "presets", "codex-compatibility.json")); err != nil {
+		t.Fatal(err)
+	}
+
+	run(
+		"preset", "apply", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "standard-work",
+	)
+	run(
+		"preset", "uninstall", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "codex-compatibility",
+	)
+
+	canonical, err := os.ReadFile(filepath.Join(home, ".codex", "commands", "work-plan.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(canonical), "new canonical plan with work-routing") {
+		t.Fatalf("canonical command was not refreshed: %q", canonical)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".codex", "skills", "work-routing", "SKILL.md")); err != nil {
+		t.Fatalf("shared router was not installed: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".codex", "commands", "codex-plan.md")); !os.IsNotExist(err) {
+		t.Fatalf("legacy alias remains after migration: %v", err)
 	}
 }
 

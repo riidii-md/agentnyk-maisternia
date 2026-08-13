@@ -1,5 +1,7 @@
 # /work-decide - Record the Chosen Direction
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Create a durable decision record that prevents plan and implementation drift.
 
 Input:

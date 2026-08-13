@@ -23,11 +23,11 @@
   ],
   "contents": {
     "mcp_refs": [],
-    "commands": ["work-experiment"],
+    "commands": ["work-experiment", "work-routing-preferences"],
     "prompts": [],
-    "skills": [],
+    "skills": ["work-routing-skill", "work-routing-runners"],
     "hooks": [],
-    "settings": []
+    "settings": ["work-routing-profile-schema"]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentnyk-maisternia.local/schema/work-routing-profile.schema.json",
+  "title": "Provider-neutral workflow routing profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "defaults", "workflows"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "defaults": {"$ref": "#/$defs/route"},
+    "workflows": {
+      "type": "object",
+      "default": {},
+      "propertyNames": {"pattern": "^work-[a-z][a-z0-9-]{0,63}$"},
+      "additionalProperties": {"$ref": "#/$defs/route"},
+      "maxProperties": 128
+    }
+  },
+  "$defs": {
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "harnesses"],
+      "properties": {
+        "policy": {"enum": ["local", "ask", "delegate"]},
+        "harnesses": {
+          "type": "array",
+          "items": {
+            "enum": ["current", "auto", "codex", "claude", "antigravity", "hermes"]
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "strategy": {
+          "enum": ["single", "first-capable", "parallel-independent", "parallel-verify", "pipeline"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"policy": {"const": "local"}}, "required": ["policy"]},
+          "then": {
+            "properties": {
+              "harnesses": {
+                "prefixItems": [{"const": "current"}],
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"harnesses": {"contains": {"const": "current"}}}},
+          "then": {"properties": {"harnesses": {"maxItems": 1}}}
+        },
+        {
+          "if": {"properties": {"harnesses": {"contains": {"const": "auto"}}}},
+          "then": {"properties": {"harnesses": {"maxItems": 1}}}
+        },
+        {
+          "if": {"properties": {"strategy": {"const": "single"}}, "required": ["strategy"]},
+          "then": {"properties": {"harnesses": {"maxItems": 1}}}
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "enum": ["parallel-independent", "parallel-verify", "pipeline"]
+              }
+            },
+            "required": ["strategy"]
+          },
+          "then": {"properties": {"harnesses": {"minItems": 2}}}
+        }
+      ]
+    }
+  }
+}

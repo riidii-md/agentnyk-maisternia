@@ -31,11 +31,19 @@
   ],
   "contents": {
     "mcp_refs": [],
-    "commands": ["work-parallel-plan", "work-parallel-run", "work-speed-loop"],
+    "commands": [
+      "work-parallel-plan", "work-parallel-run", "work-speed-loop",
+      "work-routing-preferences"
+    ],
     "prompts": [],
-    "skills": ["parallel-work-skill"],
+    "skills": [
+      "parallel-work-skill", "work-routing-skill", "work-routing-runners"
+    ],
     "hooks": [],
-    "settings": ["parallel-work-policy", "parallel-plan-schema"]
+    "settings": [
+      "parallel-work-policy", "parallel-plan-schema",
+      "work-routing-profile-schema"
+    ]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }

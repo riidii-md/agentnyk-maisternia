@@ -1052,11 +1052,11 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 
 	fixture := adminFixture()
 	fixture.Config.Conflicts = []configurator.Action{{
-		ResourceID:      "codex-brief",
+		ResourceID:      "work-brief",
 		Agent:           "claude",
-		TargetPath:      ".claude/commands/codex-brief.md",
-		SourcePath:      "/workspace/agentnyk-maisternia/config/workflow/codex-brief.md",
-		DestinationPath: "/home/user/.claude/commands/codex-brief.md",
+		TargetPath:      ".claude/commands/work-brief.md",
+		SourcePath:      "/workspace/agentnyk-maisternia/config/workflow/phases/brief.md",
+		DestinationPath: "/home/user/.claude/commands/work-brief.md",
 		State:           configurator.ActionConflict,
 		Reason:          "existing target is not managed by maisternia",
 	}}
@@ -1077,7 +1077,7 @@ func TestConfigViewExplainsAndDetailsSelectedConflict(t *testing.T) {
 		"AgentnykMaisternia preserves conflicts instead of overwriting them.",
 		"SELECTED CONFLICT",
 		"existing target is not managed by maisternia",
-		"/home/user/.claude/commands/codex-brief.md",
+		"/home/user/.claude/commands/work-brief.md",
 	} {
 		if !strings.Contains(view, expected) {
 			t.Fatalf("config view missing %q:\n%s", expected, view)

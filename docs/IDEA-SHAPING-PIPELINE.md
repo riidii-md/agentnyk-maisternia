@@ -49,7 +49,7 @@ The first runtime slice now includes:
 - shape preset topology and managed resources in `maisternia admin`;
 - `/work-shape`, `/work-source`, `/work-grill`, and `/work-brainstorm` for
   Codex, Claude, Antigravity, and Hermes;
-- `/codex-shape` as a compatibility alias.
+- shared `@harness` routing for explicit cross-provider execution.
 
 Automatic agent dispatch, artifact dependency invalidation, option records,
 automatic mdmaid registration, and post-final reopening remain future work.
@@ -407,8 +407,15 @@ plan, not an endless list of ideas. It is preferable to a provider-prefixed name
 because Claude, Codex, Antigravity, and Hermes should all target the same
 workflow contract.
 
-Provider adapters may install familiar aliases such as `/codex-shape`, but those
-aliases should resolve to the neutral `shape` pipeline.
+Select a harness without changing the workflow name:
+
+```text
+/work-shape @codex -- <idea>
+/work-shape @claude @agy -- <idea>
+```
+
+The shared router preserves the neutral `shape` pipeline and lets the current
+harness coordinate one or several selected runners.
 
 ## Final Artifact
 

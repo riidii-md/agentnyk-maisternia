@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-speed-loop - Fast Parallel Work Loop
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Reduce delivery wall time by executing independent plan tasks concurrently.
 More workers are not automatically faster; parallelize only demonstrated
 independent work.

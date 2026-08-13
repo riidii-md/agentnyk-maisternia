@@ -174,7 +174,7 @@ not treated as proof that Antigravity consumes those files.
 
 ## Prompt Source Boundaries
 
-The command catalog has three layers.
+The command catalog has two workflow layers.
 
 ### Canonical Work Phases
 
@@ -182,51 +182,47 @@ Files under `config/workflow/phases/` define provider-neutral behavior for
 `/work-*`. They describe inputs, gates, outputs, and authority without embedding
 a provider invocation.
 
-The same source can be rendered for Codex, Claude, and Antigravity.
+The same source can be rendered for Codex, Claude, Antigravity, and supported
+Hermes skills.
 
-### Provider Adapters
+### Shared Work Routing
 
-Files under `config/adapters/<provider>/` implement explicit cross-provider
-aliases. Claude's `/codex-*` adapters are complete executable handoffs. They
-must include:
+`config/workflow/skills/work-routing/SKILL.md` resolves optional leading
+`@harness` route blocks for canonical commands. It owns:
 
-- a self-contained conversation handoff;
-- the relevant model environment variable and optional Codex profile;
-- temporary prompt and output files;
-- an explicit `codex exec` call;
-- `read-only` or `workspace-write` sandbox authority appropriate to the phase;
-- phase-specific output and post-run verification.
+- explicit, session, project, and user routing precedence;
+- provider availability and authority checks;
+- minimal redacted handoff packets;
+- safe single- and multi-harness strategies;
+- unavailable-target behavior and routing receipts;
+- coordinator-owned verification and delivery.
 
-These adapters are intentionally longer than canonical phase prompts. Reducing
-an adapter to a short description removes executable behavior.
+The installed harness owns the actual native subagent or provider-runner call.
+The `maisternia` binary still does not dispatch runtime work.
 
-### Reusable Commands
+`/work-routing-preferences` proposes schema-valid global and per-workflow
+profiles. Provider-prefixed workflow commands are not generated; for example,
+use `/work-plan @codex -- <task>` and
+`/work-review @agy @codex @claude -- <target>`.
 
-Files under `config/commands/` contain provider-neutral commands that do not
-perform a cross-provider invocation. The initial catalog uses this layer for
-temporary-file cleanup.
+Repository tests verify the routing inventory, canonical command integration,
+multi-harness review contract, provider-branded command removal, showcase
+presentation integration, and absence of personal absolute paths.
 
-Current managed command coverage:
-
-| Group | Coverage |
-|---|---|
-| Canonical workflow | 16 `/work-*` commands for Codex, Claude, and Antigravity |
-| Claude-to-Codex | 14 commands, including deep research and fleet orchestration |
-| Direct Codex aliases | 12 phase and cleanup aliases |
-
-`codex-deep-research` and `codex-fleet` remain Claude-only because their purpose
-is to orchestrate independent runners. Invoking Codex from the same Codex
-session would not provide an independent lane.
-
-Repository tests verify the expected Claude-to-Codex command inventory,
-required Codex execution primitives, sandbox choice, showcase presentation
-integration, cleanup approval gate, and absence of personal absolute paths.
+Users migrating from the removed `codex-compatibility` preset must first apply
+or reapply the canonical workflow presets they use, including `standard-work`,
+`idea-shaping`, and `parallel-work` for replacement coverage, and only then
+uninstall the remembered alias preset for Codex and Claude. Reapplication lets
+each owning preset refresh its `/work-*` files and reconcile retired resources;
+`workflow-routing` alone cannot update another preset's files. Catalog changes
+never delete provider-home files in the background. Preserve the old Codex and
+Claude target scope by default; `--target all` is an explicit choice to add the
+workflows to every supported provider. A render output directory is likewise
+additive; use a fresh staging directory when checking that retired aliases are
+absent.
 
 Showcase writes durable Markdown under `.agent-runs/showcase/` and registers it
-with `mdmaid-desk`; the terminal environment pack manages that CLI. The cleanup
-helper binary is not managed yet because the current manifest does not preserve
-executable file modes, so cleanup refuses to improvise deletion when its helper
-is missing.
+with `mdmaid-desk`; the terminal environment pack manages that CLI.
 
 ## Managed Data
 

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "workflow-routing",
+  "name": "Workflow Routing",
+  "description": "Provider-neutral @harness routing, safe cross-provider dispatch, reusable defaults, and per-workflow preferences for canonical work commands.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["work-routing-preferences"],
+    "prompts": [],
+    "skills": ["work-routing-skill", "work-routing-runners"],
+    "hooks": [],
+    "settings": ["work-routing-profile-schema"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

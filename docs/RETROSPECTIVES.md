@@ -113,6 +113,11 @@ Each reviewer returns `BOTTLENECK`, `NO_BOTTLENECK`, or
 improvement when a bottleneck exists. Providers without subagents run the same
 lanes sequentially and record that limitation.
 
+When the invocation names external harnesses, for example
+`/work-session-analysis @codex @claude -- <run>`, the shared `work-routing`
+contract owns provider selection, redaction, authority, and fallback. The
+retrospective workflow continues to own lane definitions and synthesis.
+
 The first implementation deliberately does not install provider Stop hooks.
 Automatically starting model review at every stop can recurse, spend tokens
 without a useful task boundary, and disclose transcript content to an

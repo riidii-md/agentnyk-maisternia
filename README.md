@@ -12,7 +12,7 @@ one version-controlled source of truth for:
 - immutable external preset sources from local folders or GitHub repositories;
 - workflow/pipeline DAGs inside presets;
 - MCP references and neutral `/work-*` commands;
-- permanent provider aliases such as `/codex-plan`;
+- provider-neutral `@harness` routing for `/work-*` commands;
 - personal skills and policies;
 - reusable hook packs with explicit user or project installation scope;
 - declarative environment requirements referenced by presets;
@@ -51,7 +51,7 @@ The repository contains the first safe configurator foundation:
 - a strict, versioned preset library under `config/presets`;
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
   multi-lens-review, adaptive-readability, harness-profile, session-audit,
-  harness-improvement, terminal-orchestration, Codex-compatibility, and Codex
+  harness-improvement, terminal-orchestration, workflow-routing, and Codex
   resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
@@ -66,9 +66,9 @@ The repository contains the first safe configurator foundation:
   precedence, CLI explanation, and a standalone installation preset;
 - user-global and repository-local plan/apply with isolated state and backups;
 - a complete initial work-phase catalog;
-- complete Claude-to-Codex command adapters with explicit authority boundaries;
-- direct Codex aliases for the canonical phases;
-- repository tests that prevent command inventory and adapter behavior from
+- a shared work-routing skill with explicit authority and disclosure boundaries;
+- multi-harness `@codex`, `@claude`, `@agy`, and `@hermes` invocation routes;
+- repository tests that prevent command inventory and routing behavior from
   silently shrinking;
 - strict normalized event validation as untrusted input fixtures;
 - provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
@@ -119,7 +119,8 @@ clarification only when ambiguity would materially change the output. Adapted
 documents are kept as Markdown under `.agent-runs/readability/` and registered
 with mdmaid.desk for reading and review. Profiles can select plain-language
 views such as `big-picture` independently from conceptual depth, decide when to
-ask for a view, and keep work local or delegate it to a Codex subagent or AGY.
+ask for a view. Harness selection now uses the same `@harness` router and
+workflow-routing preferences as every other canonical work command.
 
 ## Installation
 
@@ -364,9 +365,9 @@ owned only after drift and shared-ownership checks:
 go run ./cmd/maisternia preset apply --scope user --target codex --yes standard-work
 go run ./cmd/maisternia preset apply \
   --scope user \
-  --conflicts keep \
+  --target all \
   --yes \
-  codex-compatibility
+  workflow-routing
 
 go run ./cmd/maisternia preset uninstall \
   --scope user \
@@ -461,27 +462,21 @@ Neutral commands describe the work:
 /work-run
 /work-plan-review
 /work-review
-/work-delegated-review
+/work-routing-preferences
 ```
 
-Provider aliases force a runner:
+An optional leading route block selects one or several harnesses:
 
 ```text
-/codex-scout
-/codex-shape
-/codex-analyze
-/codex-plan
-/codex-research
-/codex-decision
-/codex-ready
-/codex-work-loop
-/codex-review
-/codex-pr-check
-/codex-showcase
-/codex-cleanup
+/work-plan @codex -- plan the migration
+/work-research @codex @claude -- compare the options
+/work-review @agy @codex @claude -- review this branch
+/work-run @here -- execute the approved plan locally
 ```
 
-The neutral workflow remains canonical. Aliases are provider-specific adapters,
-not independent workflow definitions. Claude adapters are intentionally longer
-because they contain the executable Codex handoff, model/profile selection,
-sandbox authority, temporary-output handling, and result synthesis.
+`@here`, `@auto`, `@codex`, `@claude`, `@agy`, and `@hermes` are resolved by the
+shared `work-routing` skill. Explicit invocation overrides saved per-workflow or
+global preferences. The current harness remains coordinator, verifies returned
+work, and owns any writes not separately delegated and approved. A local command
+with no route signal or saved profile skips the full router; external runner
+instructions load only after an external target is selected.

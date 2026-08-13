@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestRepositoryManifestRendersCanonicalWorkflowAndAliases(t *testing.T) {
+func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	t.Parallel()
 
 	_, currentFile, _, ok := runtime.Caller(0)
@@ -22,10 +22,11 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndAliases(t *testing.T) {
 	}
 
 	requiredIDs := map[string]bool{
-		"work-conductor":    false,
-		"work-plan":         false,
-		"codex-plan-codex":  false,
-		"codex-plan-claude": false,
+		"work-conductor":              false,
+		"work-plan":                   false,
+		"work-routing-preferences":    false,
+		"work-routing-skill":          false,
+		"work-routing-profile-schema": false,
 	}
 	for _, resource := range manifest.Resources {
 		if _, required := requiredIDs[resource.ID]; required {
@@ -45,103 +46,24 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndAliases(t *testing.T) {
 	assertRenderedFile(t, output, ".codex/commands/work-plan.md")
 	assertRenderedFile(t, output, ".claude/commands/work-plan.md")
 	assertRenderedFile(t, output, ".config/agy/prompts/work-plan.md")
-	assertRenderedFile(t, output, ".codex/commands/codex-plan.md")
-	assertRenderedFile(t, output, ".claude/commands/codex-plan.md")
+	assertRenderedFile(t, output, ".codex/commands/work-routing-preferences.md")
+	assertRenderedFile(t, output, ".claude/skills/work-routing/SKILL.md")
+	assertRenderedFile(t, output, ".config/agy/maisternia/work-routing-profile.schema.json")
+	assertRenderedFile(t, output, ".hermes/skills/work-routing/SKILL.md")
 }
 
-func TestRepositoryManagesCompleteClaudeCodexCommandCatalog(t *testing.T) {
+func TestRepositoryRemovesProviderBrandedWorkflowCommands(t *testing.T) {
 	t.Parallel()
 
 	_, manifest := loadRepositoryManifest(t)
-	targets := manifestTargets(manifest, "claude")
-	expected := []string{
-		"codex-analyze.md",
-		"codex-brief.md",
-		"codex-cleanup.md",
-		"codex-decision.md",
-		"codex-deep-research.md",
-		"codex-fleet.md",
-		"codex-plan.md",
-		"codex-pr-check.md",
-		"codex-ready.md",
-		"codex-research.md",
-		"codex-review.md",
-		"codex-scout.md",
-		"codex-showcase.md",
-		"codex-work-loop.md",
-	}
-	for _, name := range expected {
-		relative := ".claude/commands/" + name
-		if _, exists := targets[relative]; !exists {
-			t.Errorf("manifest missing Claude command %q", relative)
+	for _, resource := range manifest.Resources {
+		for _, target := range resource.Targets {
+			name := filepath.Base(filepath.FromSlash(target.Path))
+			if strings.HasPrefix(name, "codex-") {
+				t.Errorf("provider-branded workflow target remains: %s", target.Path)
+			}
 		}
 	}
-}
-
-func TestRepositoryClaudeCodexAdaptersAreExecutable(t *testing.T) {
-	t.Parallel()
-
-	repoRoot, manifest := loadRepositoryManifest(t)
-	targets := manifestTargets(manifest, "claude")
-	readOnlyAdapters := []string{
-		"codex-analyze.md",
-		"codex-brief.md",
-		"codex-decision.md",
-		"codex-deep-research.md",
-		"codex-fleet.md",
-		"codex-plan.md",
-		"codex-pr-check.md",
-		"codex-ready.md",
-		"codex-research.md",
-		"codex-review.md",
-		"codex-scout.md",
-		"codex-showcase.md",
-	}
-
-	for _, name := range readOnlyAdapters {
-		assertAdapterContains(
-			t,
-			repoRoot,
-			targets,
-			name,
-			"codex exec",
-			"mktemp",
-			"$ARGUMENTS",
-			"CODEX_",
-			"--sandbox read-only",
-		)
-	}
-	assertAdapterContains(
-		t,
-		repoRoot,
-		targets,
-		"codex-work-loop.md",
-		"codex exec",
-		"mktemp",
-		"$ARGUMENTS",
-		"CODEX_FAST_MODEL",
-		"--sandbox workspace-write",
-	)
-	assertAdapterContains(
-		t,
-		repoRoot,
-		targets,
-		"codex-showcase.md",
-		"complete Markdown",
-		".agent-runs/showcase",
-		"mdmaid-desk register",
-		"--kind showcase",
-	)
-	assertAdapterContains(
-		t,
-		repoRoot,
-		targets,
-		"codex-cleanup.md",
-		"${CODEX_HOME:-$HOME/.codex}",
-		"--list",
-		"--delete",
-		"explicit approval",
-	)
 }
 
 func TestRepositoryCanonicalShowcaseDeliversMarkdownToMdmaidDesk(t *testing.T) {

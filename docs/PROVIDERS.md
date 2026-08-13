@@ -88,6 +88,35 @@ Capabilities are facts, not preferences. Workflow routing may eventually
 require capabilities, but it must not invent them or broaden authority because a
 preferred provider is unavailable.
 
+## Workflow Routing
+
+Canonical `/work-*` commands use the installed `work-routing` skill rather than
+provider-prefixed command aliases:
+
+```text
+/work-plan @codex -- plan the migration
+/work-research @codex @claude -- compare the options
+/work-review @agy @codex @claude -- review this branch
+```
+
+The router resolves explicit invocation, session, project, and user preferences
+in that order, then checks these provider capability facts. Several harnesses
+select a declared coordination strategy; review uses independent read-only
+lenses plus cross-origin verification by default.
+
+Canonical commands use a lazy routing gate. A normal local `/work-*` invocation
+with no saved routing profile does not load the router's full instructions.
+External runner templates, disclosure checks, and coordination rules live in a
+second-stage reference loaded only after an external target resolves.
+
+An explicit `@harness` is approval of that harness choice and a minimal task
+packet, not approval of sensitive disclosure or write authority. The current
+harness shows a routing receipt, verifies returned results, and owns final
+delivery. It never silently substitutes a provider or broadens authority.
+
+`maisternia` installs this contract and provider metadata. The active harness or
+an external orchestrator performs the native runner call.
+
 ## Current Safety Baseline
 
 | Provider | Headless | Safe for automated headless use | Initial authority |

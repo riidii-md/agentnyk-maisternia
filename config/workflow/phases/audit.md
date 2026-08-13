@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-audit - Audit A Completed Run
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Audit one explicitly supplied run or the current completed task. Treat the
 transcript as an observable event record, not as access to hidden reasoning.
 Do not modify product code or durable agent configuration during the audit.

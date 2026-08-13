@@ -7,6 +7,11 @@ description: Use when an approved implementation can be decomposed into independ
 
 Use this skill to reduce wall-clock delivery time with a dependency-aware plan.
 
+Use the installed `work-routing` skill when an invocation or worker explicitly
+names another harness. The router owns provider eligibility, disclosure,
+authority, and fallback; this skill owns task decomposition, isolation, and
+integration. Do not implement a second cross-provider picker.
+
 1. `/work-parallel-plan` discovers write ownership, dependencies, waves,
    integration, verification, and expected speedup.
 2. `/work-parallel-run` dispatches approved ready tasks with isolated scopes and
@@ -17,6 +22,11 @@ Do not parallelize overlapping write paths, shared generated state, or tasks on
 the same critical dependency chain. Require worktrees or equivalent isolation
 for concurrent writers. Use parallel read-only work and serialized writes when
 the provider cannot isolate write-capable workers.
+
+When several harnesses are named, assign each an explicit task or read-only lane
+and preserve one coordinating harness. Cross-provider writers require approved
+workspace-write authority and disjoint isolated worktrees; otherwise keep their
+lanes read-only and let the coordinator apply verified changes.
 
 Speed is measured after verification. Report extra token and coordination cost,
 and fall back to sequential work when parallel overhead exceeds the likely gain.

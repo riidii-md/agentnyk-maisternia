@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-session-analysis - Find Session Bottlenecks
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Analyze one completed session at the end of the run. Find concrete bottlenecks
 and suggest the smallest measurable improvement for each one. Do not modify
 product code or durable harness configuration during this command.
@@ -25,6 +27,10 @@ provider histories or infer missing events from memory.
 2. Collect the selected transcript, tool and subagent events, provider usage,
    timing, and the active harness profile.
 3. Redact secrets before delegating content to another model or provider.
+
+When any review lane crosses a provider boundary, reuse the route already
+resolved by `work-routing` or explicitly resolve that worker through the same
+skill. Do not maintain a separate provider picker inside session analysis.
 4. Separate measured values, estimates, and unknowns.
 5. Create `.agent-runs/retrospectives/<run-id>/session-analysis.md` and update
    the run's schema-valid `record.json`.

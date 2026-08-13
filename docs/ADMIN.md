@@ -173,7 +173,7 @@ For a single preset, use:
 ```bash
 maisternia preset plan --scope user standard-work
 maisternia preset apply --scope user --yes standard-work
-maisternia preset apply --scope user --conflicts keep --yes codex-compatibility
+maisternia preset apply --scope user --target all --conflicts keep --yes workflow-routing
 maisternia preset uninstall --scope user --target codex --yes standard-work
 ```
 

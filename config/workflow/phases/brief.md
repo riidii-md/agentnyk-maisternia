@@ -1,5 +1,7 @@
 # /work-brief - Quick Task and Session Refresher
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Give a concise plain-language reminder of what the active task or session is
 about, where it stands, and what happened so far. The result must be useful to
 a reader who has not seen the current conversation.

@@ -6,6 +6,8 @@ version: 0.2.0
 
 # /work-review - Multi-Lens Review And Repair
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Review the requested artifact with fresh context. Reviewers are read-only; the
 coordinator applies confirmed fixes and verifies the result.
 
@@ -20,12 +22,21 @@ Accepted modes:
 /work-review plan <plan or design>
 /work-review plan-delta <changed decision or section>
 /work-review implementation <diff, branch, PR, contract, or focus>
+/work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
 Explicit mode and target win. In `auto`, select `implementation` when a diff or
 PR exists, otherwise select `plan` when a plan/design artifact exists. Ask for
 the target only when neither can be established. Never reject an explicit plan
 because no implementation exists. Plan modes follow `/work-plan-review`.
+
+When `work-routing` resolves several harnesses, use `parallel-verify`: distribute
+independent read-only lenses across them, prefer a verifier from a different
+harness than each finding origin, and preserve attribution and disagreement.
+The current harness remains coordinator and owns every confirmed fix.
+Any subset of `@codex`, `@claude`, `@agy`, and `@hermes` may be requested;
+`work-routing` filters it through the current safe-runner contract and never
+silently substitutes an unavailable harness.
 
 ## Establish Evidence
 

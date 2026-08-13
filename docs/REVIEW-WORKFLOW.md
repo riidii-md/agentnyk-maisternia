@@ -15,20 +15,11 @@ subagents, provider calls, permissions, edits, and verification.
 ```text
 /work-plan-review
 /work-review
-/work-delegated-review
+/work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
-`/codex-review` is the provider-specific convenience alias. It accepts the same
-review modes instead of assuming that an implementation diff exists:
-
-```text
-/codex-review auto <target or focus>
-/codex-review plan <plan or design>
-/codex-review plan-delta <changed decision or section>
-/codex-review implementation <diff, PR, contract, or focus>
-```
-
-An explicit plan, design, contract, or decision delta is reviewable even when
+`/work-review` accepts `auto`, `plan`, `plan-delta`, and `implementation`. An
+explicit plan, design, contract, or decision delta is reviewable even when
 there is no code diff.
 
 ## Delivery Gates
@@ -158,29 +149,23 @@ review phase.
 ## Native And Cross-Provider Delegation
 
 Normal review uses native subagents when the current harness supports them and
-runs the same lenses sequentially otherwise. Cross-provider review is explicit:
+runs the same lenses sequentially otherwise. The shared `work-routing` skill
+selects cross-provider reviewers:
 
 ```text
-/work-delegated-review mode=implementation \
-  providers=codex,claude,antigravity <target>
+/work-review @agy @codex @claude -- implementation <target>
 ```
 
-Naming providers approves the disclosed, redacted packet for that run. Before
-dispatch, the coordinator shows the providers, shared files or excerpts,
-sensitive categories, and expected budget. Expanding disclosure requires a new
-decision.
+The route defaults to `parallel-verify`. Each selected harness receives an
+independent read-only lens packet, and the current harness remains coordinator.
+The router owns provider eligibility, redaction, disclosure, authority, budget,
+and unavailable-target behavior; the review workflow owns lens assignment,
+finding refutation, synthesis, and fixes.
 
-Current conservative behavior is:
-
-| Provider | Automatic delegated behavior |
-|---|---|
-| Codex | Ephemeral read-only execution or native subagents |
-| Claude | Plan permission with read-only tools or native subagents |
-| Antigravity (`agy`) | Plan mode with sandbox; text result |
-| Hermes | Interactive only |
-
-Hermes one-shot mode bypasses dangerous-operation approvals, so the checked-in
-adapter does not permit unattended headless delegation. No workflow may widen
+Naming harnesses approves the listed targets and minimal disclosed packet for
+that run. The routing receipt expands to show shared files or excerpts,
+sensitive categories, and expected budget when material. Expanding disclosure
+or granting workspace-write requires a new decision. No workflow may widen
 authority or use dangerous bypass flags to obtain provider diversity.
 
 For high-risk findings, use a verifier from a different selected provider when

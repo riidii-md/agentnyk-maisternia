@@ -148,6 +148,16 @@ may conflict semantically after integration. Every wave therefore has a barrier:
 
 Final repository verification and independent review run after the last wave.
 
+An invocation may select coordinators or worker pools with the shared route:
+
+```text
+/work-parallel-plan @codex @claude -- <approved scope>
+```
+
+`work-routing` owns cross-provider eligibility, disclosure, and authority. The
+parallel-work contract still owns dependency waves, write isolation, and
+integration; selected harnesses do not receive overlapping write scopes.
+
 ## Current Provider Behavior
 
 The checked-in provider contracts currently imply:

@@ -15,7 +15,6 @@
     "verify": {"strategy": "deterministic_first", "authority": "controlled"},
     "review-intake": {"strategy": "multi_lens_read_only_intake", "authority": "read_only"},
     "review": {"strategy": "multi_lens_different_from_builder", "authority": "workspace_write"},
-    "delegated-review": {"strategy": "cross_provider_multi_lens", "authority": "workspace_write"},
     "pr": {"strategy": "provider_aware", "authority": "explicit_approval"}
   }
 }

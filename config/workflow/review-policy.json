@@ -47,22 +47,12 @@
     "unresolved_requires_gate_failure": true
   },
   "delegation": {
+    "routing_contract": "work-routing",
     "native_subagents_allowed": true,
-    "cross_provider_requires_explicit_selection": true,
-    "cross_provider_requires_disclosure_summary": true,
-    "redact_secrets_before_dispatch": true,
-    "minimum_context": true,
+    "cross_provider_strategy": "parallel-verify",
     "prefer_different_provider_for_verification": true,
-    "providers": {
-      "codex": {"automatic_read_only": true, "structured_output": true},
-      "claude": {"automatic_read_only": true, "structured_output": true},
-      "antigravity": {"automatic_read_only": true, "structured_output": false},
-      "hermes": {
-        "automatic_read_only": false,
-        "structured_output": false,
-        "reason": "The current Hermes one-shot runner bypasses approvals and is not safe for unattended headless dispatch."
-      }
-    }
+    "delegates_read_only": true,
+    "coordinator_owns_fixes": true
   },
   "artifacts": {
     "directory": ".agent-runs/reviews/<run-id>",

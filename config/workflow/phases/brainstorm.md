@@ -6,6 +6,8 @@ version: 0.1.0
 
 # /work-brainstorm - Generate Distinct Options
 
+Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
+
 Generate three to five materially different approaches for the current shape
 task. Do not start while critical grill questions remain open.
 
@@ -32,4 +34,3 @@ available.
 
 Move to challenge when the options are genuinely distinct. Return with the
 `weak-options` outcome when challenge shows that the option set is inadequate.
-
