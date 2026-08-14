@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "id": "software-engineer",
+  "name": "Software Engineer",
+  "description": "Discovery, delivery, parallel execution, review, and reader-aware communication workflows for software engineering.",
+  "match": {
+    "all_tags": ["role/software-engineer"]
+  }
+}

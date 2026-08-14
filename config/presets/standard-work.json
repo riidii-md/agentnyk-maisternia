@@ -3,6 +3,7 @@
   "id": "standard-work",
   "name": "Standard Work",
   "description": "Provider-neutral discovery, planning, implementation, verification, review, and PR workflow.",
+  "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
       "id": "delivery",

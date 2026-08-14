@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
+	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
 )
 
@@ -65,8 +66,29 @@ type ResolvedPreset struct {
 	Preset   presets.Preset
 }
 
+type ResolvedCollection struct {
+	Selector   string
+	OwnerID    string
+	Root       string
+	Source     Source
+	Collection collections.Collection
+	Members    []presets.Preset
+	Preset     presets.Preset
+	Targets    []string
+}
+
 type Collection struct {
-	Presets []ResolvedPreset
+	Presets     []ResolvedPreset
+	Collections []ResolvedCollection
+}
+
+func (c Collection) GetCollection(selector string) (ResolvedCollection, bool) {
+	for _, resolved := range c.Collections {
+		if resolved.Selector == selector {
+			return resolved, true
+		}
+	}
+	return ResolvedCollection{}, false
 }
 
 func (c Collection) Get(selector string) (ResolvedPreset, bool) {
@@ -81,4 +103,9 @@ func (c Collection) Get(selector string) (ResolvedPreset, bool) {
 func OwnerID(sourceUID, presetID string) string {
 	digest := sha256.Sum256([]byte(sourceUID + "\x00" + presetID))
 	return "external-" + hex.EncodeToString(digest[:16])
+}
+
+func CollectionOwnerID(sourceUID, collectionID string) string {
+	digest := sha256.Sum256([]byte("collection\x00" + sourceUID + "\x00" + collectionID))
+	return "collection-" + hex.EncodeToString(digest[:16])
 }

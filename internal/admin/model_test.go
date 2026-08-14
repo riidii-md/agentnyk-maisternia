@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
@@ -233,6 +234,54 @@ func TestPresetResourcePreviewCanStartPresetInstall(t *testing.T) {
 	}
 	if view := model.View(); !strings.Contains(view, "SELECT PROVIDERS") {
 		t.Fatalf("install from preview did not open provider selection:\n%s", view)
+	}
+}
+
+func TestPresetLibraryCanSwitchToCollectionsAndInstallWithSameScopeFlow(t *testing.T) {
+	t.Parallel()
+
+	model := loadedAdminModel(t, TabPipelines, 110, 36)
+	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'v'}})
+	model = updated.(Model)
+	view := model.View()
+	for _, expected := range []string{"COLLECTIONS", "Software Engineer", "2 presets", "v presets"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("collection view missing %q:\n%s", expected, view)
+		}
+	}
+
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'i'}})
+	model = updated.(Model)
+	if model.applyDialog.Stage != applyTarget ||
+		model.applyDialog.Request.CollectionID != "software-engineer" ||
+		model.applyDialog.Request.PresetID != "" {
+		t.Fatalf("collection install dialog = %#v", model.applyDialog)
+	}
+	if view = model.View(); !strings.Contains(view, "INSTALL COLLECTION") ||
+		!strings.Contains(view, "SELECT PROVIDERS") {
+		t.Fatalf("collection installer missing shared provider flow:\n%s", view)
+	}
+}
+
+func TestCollectionViewFooterIsNotDerivedFromPresetAtSameCursor(t *testing.T) {
+	t.Parallel()
+
+	fixture := adminFixture()
+	fixture.Presets = fixture.Presets[:1]
+	fixture.Presets[0].Preset.Pipelines = nil
+	fixture.Presets[0].Preset.Contents = presets.Contents{}
+	fixture.Presets[0].Preset.Targets = nil
+	fixture.Presets[0].Preset.EnvironmentPacks = []string{"terminal-orchestration"}
+	model := NewModel(func() Snapshot { return fixture })
+	updated, _ := model.Update(model.Init()())
+	model = updated.(Model)
+	model.tab = TabPipelines
+	updated, _ = model.Update(tea.WindowSizeMsg{Width: 110, Height: 36})
+	model = updated.(Model)
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'v'}})
+	model = updated.(Model)
+	if footer := model.renderFooter(110); !strings.Contains(footer, "v presets") {
+		t.Fatalf("collection footer was replaced by preset footer: %s", footer)
 	}
 }
 
@@ -1395,6 +1444,23 @@ func adminFixture() Snapshot {
 					Counts:      ActionCounts{Create: 8},
 					ActionCount: 8,
 				},
+			},
+		},
+		Collections: []CollectionStatus{
+			{
+				Collection: collections.Collection{
+					SchemaVersion: collections.SchemaVersion,
+					ID:            "software-engineer",
+					Name:          "Software Engineer",
+					Description:   "Complete engineering workflow.",
+					Match: collections.Match{
+						AllTags: []string{"role/software-engineer"},
+					},
+				},
+				Selector:  "software-engineer",
+				Members:   []string{"idea-shaping", "standard-work"},
+				Targets:   []string{"codex", "claude", "antigravity"},
+				Resources: 12,
 			},
 		},
 		Policy: workflow.Policy{

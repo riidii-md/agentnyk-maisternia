@@ -5,8 +5,8 @@ import (
 	"io/fs"
 )
 
-// embeddedCatalog contains the versioned provider, preset, policy, and workflow
-// definitions shipped with every maisternia binary.
+// embeddedCatalog contains the versioned provider, preset, collection, policy,
+// and workflow definitions shipped with every maisternia binary.
 //
 //go:embed config
 var embeddedCatalog embed.FS

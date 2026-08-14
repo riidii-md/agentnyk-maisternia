@@ -10,6 +10,7 @@ import (
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/approvals"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
@@ -25,6 +26,7 @@ Usage:
   maisternia admin [options]
   maisternia approval <command> [options]
   maisternia config <command> [options]
+  maisternia collection <command> [options]
   maisternia environment <command> [options]
   maisternia hook <command> [options]
   maisternia preset <command> [options]
@@ -89,6 +91,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runApprovalCommand(args[1:], stdout, stderr)
 	case "config":
 		return runConfigCommand(args[1:], stdout, stderr)
+	case "collection":
+		return runCollectionCommand(args[1:], stdout, stderr)
 	case "environment":
 		return runEnvironmentCommand(args[1:], stdout, stderr)
 	case "hook":
@@ -182,6 +186,25 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			totalEnvironmentPacks += count
 		}
 		fmt.Fprintf(stdout, "preset library valid: %d presets\n", len(collection.Presets))
+		for _, resolved := range collection.Collections {
+			collectionManifest, err := configurator.LoadManifest(
+				resolved.Root,
+				"config/manifest.json",
+			)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			if _, err := collections.SelectManifest(
+				resolved.Preset,
+				resolved.Targets,
+				collectionManifest,
+			); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+		}
+		fmt.Fprintf(stdout, "collection library valid: %d collections\n", len(collection.Collections))
 		fmt.Fprintf(stdout, "environment pack library valid: %d packs\n", totalEnvironmentPacks)
 
 		hooks, err := hookpacks.LoadLibrary(options.repo)

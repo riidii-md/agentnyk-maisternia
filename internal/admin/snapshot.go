@@ -13,6 +13,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
@@ -85,11 +86,22 @@ type PresetStatus struct {
 	Environments []environment.Plan
 }
 
+type CollectionStatus struct {
+	Collection collections.Collection
+	Selector   string
+	Source     presetsources.Source
+	Members    []string
+	Targets    []string
+	Resources  int
+	Config     ConfigStatus
+}
+
 type PresetInstallRequest struct {
-	PresetID string
-	Targets  []string
-	Scope    configurator.InstallScope
-	Project  string
+	PresetID     string
+	CollectionID string
+	Targets      []string
+	Scope        configurator.InstallScope
+	Project      string
 }
 
 func clonePresetInstallRequest(request PresetInstallRequest) PresetInstallRequest {
@@ -99,6 +111,7 @@ func clonePresetInstallRequest(request PresetInstallRequest) PresetInstallReques
 
 func presetInstallRequestsEqual(left, right PresetInstallRequest) bool {
 	return left.PresetID == right.PresetID &&
+		left.CollectionID == right.CollectionID &&
 		left.Scope == right.Scope &&
 		left.Project == right.Project &&
 		slices.Equal(left.Targets, right.Targets)
@@ -115,6 +128,7 @@ type Snapshot struct {
 	SuggestedProject string
 	Providers        []providers.Inspection
 	Presets          []PresetStatus
+	Collections      []CollectionStatus
 	Policy           workflow.Policy
 	Config           ConfigStatus
 	Issues           []Issue
@@ -278,6 +292,51 @@ func (l Loader) Load() Snapshot {
 				status.Config = summarizePlan(plan)
 				snapshot.Presets = append(snapshot.Presets, status)
 			}
+			for _, resolved := range collection.Collections {
+				status := CollectionStatus{
+					Collection: resolved.Collection,
+					Selector:   resolved.Selector,
+					Source:     resolved.Source,
+					Targets:    append([]string(nil), resolved.Targets...),
+					Resources:  len(resolved.Preset.Contents.ResourceIDs()),
+				}
+				for _, member := range resolved.Members {
+					selector := member.ID
+					if resolved.Source.ID != "" {
+						selector = resolved.Source.ID + "/" + member.ID
+					}
+					status.Members = append(status.Members, selector)
+				}
+				collectionManifest, loadErr := configurator.LoadManifest(
+					resolved.Root,
+					"config/manifest.json",
+				)
+				if loadErr != nil {
+					presetsReady = false
+					snapshot.addIssue(SeverityError, "collection "+resolved.Selector, loadErr)
+					snapshot.Collections = append(snapshot.Collections, status)
+					continue
+				}
+				selected, selectErr := collections.SelectManifest(
+					resolved.Preset,
+					resolved.Targets,
+					collectionManifest,
+				)
+				if selectErr != nil {
+					presetsReady = false
+					snapshot.addIssue(SeverityError, "collection "+resolved.Selector, selectErr)
+					snapshot.Collections = append(snapshot.Collections, status)
+					continue
+				}
+				plan, planErr := configurator.BuildPlan(resolved.Root, l.Home, selected, "all")
+				if planErr != nil {
+					presetsReady = false
+					snapshot.addIssue(SeverityError, "collection "+resolved.Selector, planErr)
+				} else {
+					status.Config = summarizePlan(plan)
+				}
+				snapshot.Collections = append(snapshot.Collections, status)
+			}
 		}
 	}
 
@@ -380,6 +439,12 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 	if err != nil {
 		return configurator.Plan{}, err
 	}
+	if (request.PresetID == "") == (request.CollectionID == "") {
+		return configurator.Plan{}, errors.New("select exactly one preset or collection")
+	}
+	if request.CollectionID != "" {
+		return l.buildCollectionPlan(request, collection)
+	}
 	resolved, exists := collection.Get(request.PresetID)
 	if !exists {
 		return configurator.Plan{}, fmt.Errorf(
@@ -423,6 +488,48 @@ func (l Loader) buildPresetPlan(request PresetInstallRequest) (configurator.Plan
 	if err != nil {
 		return configurator.Plan{}, err
 	}
+	for _, target := range targets {
+		plan, err := configurator.BuildPresetPlanForScope(
+			resolved.Root,
+			root,
+			selected,
+			target,
+			request.Scope,
+			resolved.OwnerID,
+		)
+		if err != nil {
+			return configurator.Plan{}, err
+		}
+		plans = append(plans, plan)
+	}
+	return combinePresetPlans(plans), nil
+}
+
+func (l Loader) buildCollectionPlan(
+	request PresetInstallRequest,
+	catalog presetsources.Collection,
+) (configurator.Plan, error) {
+	resolved, exists := catalog.GetCollection(request.CollectionID)
+	if !exists {
+		return configurator.Plan{}, fmt.Errorf("collection %q does not exist", request.CollectionID)
+	}
+	manifest, err := configurator.LoadManifest(resolved.Root, "config/manifest.json")
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	targets, err := normalizePresetTargets(request.Targets, resolved.Targets)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	root, err := l.installRoot(request)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	selected, err := collections.SelectManifest(resolved.Preset, resolved.Targets, manifest)
+	if err != nil {
+		return configurator.Plan{}, err
+	}
+	plans := make([]configurator.Plan, 0, len(targets))
 	for _, target := range targets {
 		plan, err := configurator.BuildPresetPlanForScope(
 			resolved.Root,

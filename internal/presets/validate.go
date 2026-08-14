@@ -15,6 +15,7 @@ var (
 	pipelinePattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)
 	phasePattern    = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,63}$`)
 	resourcePattern = regexp.MustCompile(`^[a-z][a-z0-9_.-]{0,127}$`)
+	tagPattern      = regexp.MustCompile(`^[a-z][a-z0-9-]{0,31}/[a-z][a-z0-9-]{0,63}$`)
 )
 
 func Validate(preset Preset) error {
@@ -34,6 +35,16 @@ func Validate(preset Preset) error {
 	}
 	if len(preset.Description) > 2048 {
 		return fmt.Errorf("preset %q description exceeds 2048 bytes", preset.ID)
+	}
+	tags := make(map[string]struct{}, len(preset.Tags))
+	for _, tag := range preset.Tags {
+		if err := ValidateTag(tag); err != nil {
+			return fmt.Errorf("preset %q: %w", preset.ID, err)
+		}
+		if _, exists := tags[tag]; exists {
+			return fmt.Errorf("preset %q repeats tag %q", preset.ID, tag)
+		}
+		tags[tag] = struct{}{}
 	}
 
 	targets := make(map[string]struct{}, len(preset.Targets))
@@ -80,6 +91,13 @@ func Validate(preset Preset) error {
 		if err := validatePipeline(preset.ID, pipeline); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func ValidateTag(tag string) error {
+	if !tagPattern.MatchString(tag) {
+		return fmt.Errorf("invalid tag %q", tag)
 	}
 	return nil
 }

@@ -3,6 +3,7 @@
   "id": "parallel-work",
   "name": "Parallel Work",
   "description": "Dependency-aware planning and bounded parallel implementation waves with isolated writes, integration barriers, verification, and sequential fallback.",
+  "tags": ["role/software-engineer", "workflow/parallel-delivery"],
   "pipelines": [
     {
       "id": "speed-loop",

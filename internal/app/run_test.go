@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -805,6 +806,122 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	}
 }
 
+func TestRunCollectionCommandsAndOwnershipLifecycle(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+
+	code := Run([]string{"collection", "list", "--repo", repo, "--home", home}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("collection list code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "software-engineer") ||
+		!strings.Contains(stdout.String(), "Software Engineer") {
+		t.Fatalf("collection list output = %q", stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"collection", "show", "--repo", repo, "--home", home, "software-engineer",
+	}, &stdout, &stderr)
+	if code != 0 || !strings.Contains(stdout.String(), `"role/software-engineer"`) ||
+		!strings.Contains(stdout.String(), `"standard-work"`) {
+		t.Fatalf("collection show code = %d, stdout = %s, stderr = %s", code, stdout.String(), stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"collection", "apply", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "software-engineer",
+	}, &stdout, &stderr)
+	if code != 2 || !strings.Contains(stderr.String(), "requires --yes") {
+		t.Fatalf("unconfirmed collection apply = %d, stderr = %s", code, stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"collection", "apply", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "software-engineer",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("collection apply code = %d, stderr = %s", code, stderr.String())
+	}
+	target := filepath.Join(home, ".codex", "commands", "work-brief.md")
+	if _, err := os.Stat(target); err != nil {
+		t.Fatalf("collection apply target: %v", err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"preset", "apply", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "standard-work",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("direct preset apply code = %d, stderr = %s", code, stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"collection", "uninstall", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "software-engineer",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("collection uninstall code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(target); err != nil {
+		t.Fatalf("collection uninstall removed directly owned target: %v", err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"preset", "uninstall", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "--yes", "standard-work",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("preset uninstall code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(target); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("final target stat error = %v, want not exist", err)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"collection", "uninstall", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "codex", "software-engineer",
+	}, &stdout, &stderr)
+	if code != 0 || !strings.Contains(stdout.String(), "no managed configuration ownership") {
+		t.Fatalf("idempotent collection uninstall = %d, stdout = %s, stderr = %s", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestValidateCollectionTargetUsesCommonProviderAllowlist(t *testing.T) {
+	t.Parallel()
+
+	supported := []string{"codex", "antigravity"}
+	for _, target := range []string{"all", "codex", "agy"} {
+		if err := validateCollectionTarget(target, supported); err != nil {
+			t.Errorf("validateCollectionTarget(%q) error = %v", target, err)
+		}
+	}
+	if err := validateCollectionTarget("claude", supported); err == nil ||
+		!strings.Contains(err.Error(), "common providers") {
+		t.Fatalf("unsupported provider error = %v", err)
+	}
+	if err := validateCollectionTarget("unknown", supported); err == nil ||
+		!strings.Contains(err.Error(), "unknown provider") {
+		t.Fatalf("unknown provider error = %v", err)
+	}
+}
+
 func TestRunEnvironmentCommands(t *testing.T) {
 	t.Parallel()
 
@@ -1088,6 +1205,7 @@ func TestRunPresetAuthoringCommands(t *testing.T) {
 		"create", "--repo", repo,
 		"--name", "Team Workflow",
 		"--description", "Initial description",
+		"--tag", "role/software-engineer",
 		"team-work",
 	); code != 0 {
 		t.Fatalf("preset create code = %d, stderr = %s", code, stderr.String())
@@ -1106,6 +1224,7 @@ func TestRunPresetAuthoringCommands(t *testing.T) {
 	if code := run(
 		"edit", "--repo", repo,
 		"--description", "Updated description",
+		"--tag", "capability/review",
 		"team-work-copy",
 	); code != 0 {
 		t.Fatalf("preset edit code = %d, stderr = %s", code, stderr.String())
@@ -1114,7 +1233,9 @@ func TestRunPresetAuthoringCommands(t *testing.T) {
 		t.Fatalf("preset show code = %d, stderr = %s", code, stderr.String())
 	}
 	if !strings.Contains(stdout.String(), `"name": "Team Workflow Copy"`) ||
-		!strings.Contains(stdout.String(), `"description": "Updated description"`) {
+		!strings.Contains(stdout.String(), `"description": "Updated description"`) ||
+		!strings.Contains(stdout.String(), `"capability/review"`) ||
+		strings.Contains(stdout.String(), `"role/software-engineer"`) {
 		t.Fatalf("edited preset output = %q", stdout.String())
 	}
 

@@ -43,6 +43,7 @@ Options:
   --output <dir>       Staging directory (render)
   --name <name>        Preset display name (create, copy, and edit)
   --description <text> Preset description (create and edit)
+  --tag <tag>          Namespaced preset tag; repeat to set multiple (create and edit)
   --id <id>            External source id (source add; inferred when omitted)
   --ref <ref>          GitHub branch, tag, or commit (source add)
   --conflicts <mode>   abort, keep, or replace when applying or uninstalling
@@ -55,6 +56,21 @@ workflow DAGs; external agent harnesses own execution.
 type optionalString struct {
 	value string
 	set   bool
+}
+
+type optionalStrings struct {
+	values []string
+	set    bool
+}
+
+func (o *optionalStrings) String() string {
+	return strings.Join(o.values, ",")
+}
+
+func (o *optionalStrings) Set(value string) error {
+	o.set = true
+	o.values = append(o.values, strings.TrimSpace(value))
+	return nil
 }
 
 func (o *optionalString) String() string {
@@ -78,6 +94,7 @@ type presetOptions struct {
 	output      string
 	name        optionalString
 	description optionalString
+	tags        optionalStrings
 	conflicts   string
 	yes         bool
 	args        []string
@@ -163,11 +180,13 @@ func parsePresetOptions(
 	case "create":
 		flags.Var(&options.name, "name", "preset display name")
 		flags.Var(&options.description, "description", "preset description")
+		flags.Var(&options.tags, "tag", "namespaced preset tag")
 	case "copy":
 		flags.Var(&options.name, "name", "copied preset display name")
 	case "edit":
 		flags.Var(&options.name, "name", "preset display name")
 		flags.Var(&options.description, "description", "preset description")
+		flags.Var(&options.tags, "tag", "namespaced preset tag")
 	case "delete":
 		flags.BoolVar(&options.yes, "yes", false, "confirm preset deletion")
 	}
@@ -362,6 +381,7 @@ func runPresetAuthoring(
 			ID:          options.args[0],
 			Name:        options.name.value,
 			Description: options.description.value,
+			Tags:        options.tags.values,
 		})
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
@@ -391,20 +411,25 @@ func runPresetAuthoring(
 			fmt.Fprintln(stderr, "error: preset edit requires one preset id")
 			return 2
 		}
-		if !options.name.set && !options.description.set {
-			fmt.Fprintln(stderr, "error: preset edit requires --name or --description")
+		if !options.name.set && !options.description.set && !options.tags.set {
+			fmt.Fprintln(stderr, "error: preset edit requires --name, --description, or --tag")
 			return 2
 		}
 		var name, description *string
+		var tags *[]string
 		if options.name.set {
 			name = &options.name.value
 		}
 		if options.description.set {
 			description = &options.description.value
 		}
+		if options.tags.set {
+			tags = &options.tags.values
+		}
 		preset, err := library.Update(options.args[0], presets.UpdateInput{
 			Name:        name,
 			Description: description,
+			Tags:        tags,
 		})
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)

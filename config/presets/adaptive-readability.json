@@ -3,6 +3,7 @@
   "id": "adaptive-readability",
   "name": "Adaptive Readability",
   "description": "Reader- and task-aware text adaptation with reusable preferences, situation overrides, clarification gates, evidence-preserving modes, and explicit calibration commands.",
+  "tags": ["role/software-engineer", "capability/communication"],
   "pipelines": [
     {
       "id": "reader-adaptation",

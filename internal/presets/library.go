@@ -99,6 +99,7 @@ func (l Library) Create(input CreateInput) (Preset, error) {
 		ID:            strings.TrimSpace(input.ID),
 		Name:          strings.TrimSpace(input.Name),
 		Description:   strings.TrimSpace(input.Description),
+		Tags:          append([]string(nil), input.Tags...),
 		Pipelines:     []Pipeline{},
 		Contents: Contents{
 			MCPRefs:  []string{},
@@ -149,6 +150,9 @@ func (l Library) Update(id string, input UpdateInput) (Preset, error) {
 	}
 	if input.Description != nil {
 		preset.Description = strings.TrimSpace(*input.Description)
+	}
+	if input.Tags != nil {
+		preset.Tags = append([]string(nil), (*input.Tags)...)
 	}
 	if err := Validate(preset); err != nil {
 		return Preset{}, err
