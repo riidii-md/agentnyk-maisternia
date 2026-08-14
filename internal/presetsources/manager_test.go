@@ -68,6 +68,40 @@ func TestAddDirectorySnapshotsAndResolvesQualifiedPreset(t *testing.T) {
 	}
 }
 
+func TestCollectionsResolveWithinTheirOwnCatalogSource(t *testing.T) {
+	t.Parallel()
+
+	primary := writeTestCatalog(t, "primary")
+	external := writeTestCatalog(t, "external")
+	tagged := strings.Replace(presetJSON, `"description": "External test preset.",`, `"description": "External test preset.", "tags": ["role/software-engineer"],`, 1)
+	writeFile(t, filepath.Join(primary, "config", "presets", "external.json"), tagged)
+	writeFile(t, filepath.Join(external, "config", "presets", "external.json"), tagged)
+	definition := `{"schema_version":1,"id":"software-engineer","name":"Software Engineer","description":"Engineering","match":{"all_tags":["role/software-engineer"]}}`
+	writeFile(t, filepath.Join(primary, "config", "collections", "software-engineer.json"), definition)
+	writeFile(t, filepath.Join(external, "config", "collections", "software-engineer.json"), definition)
+
+	home := t.TempDir()
+	source, err := (Manager{Home: home}).Add(context.Background(), AddRequest{ID: "team", Location: external})
+	if err != nil {
+		t.Fatal(err)
+	}
+	catalog, err := LoadCollection(home, primary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	builtIn, found := catalog.GetCollection("software-engineer")
+	if !found || len(builtIn.Members) != 1 || builtIn.Members[0].ID != "external" || builtIn.Source.ID != "" {
+		t.Fatalf("built-in collection = %#v", builtIn)
+	}
+	team, found := catalog.GetCollection("team/software-engineer")
+	if !found || len(team.Members) != 1 || team.Members[0].ID != "external" || team.Source.ID != "team" {
+		t.Fatalf("external collection = %#v", team)
+	}
+	if team.OwnerID != CollectionOwnerID(source.UID, "software-engineer") || team.OwnerID == builtIn.OwnerID {
+		t.Fatalf("collection owners = built-in %q external %q", builtIn.OwnerID, team.OwnerID)
+	}
+}
+
 func TestRefreshKeepsPreviousSnapshotWhenCandidateIsInvalid(t *testing.T) {
 	t.Parallel()
 
@@ -99,14 +133,19 @@ func TestRemoveHidesSourceAndPreservesInstallOwnerIdentity(t *testing.T) {
 
 	home := t.TempDir()
 	manager := Manager{Home: home}
+	sourceRoot := writeTestCatalog(t, "managed")
+	tagged := strings.Replace(presetJSON, `"description": "External test preset.",`, `"description": "External test preset.", "tags": ["role/software-engineer"],`, 1)
+	writeFile(t, filepath.Join(sourceRoot, "config", "presets", "external.json"), tagged)
+	writeFile(t, filepath.Join(sourceRoot, "config", "collections", "software-engineer.json"), `{"schema_version":1,"id":"software-engineer","name":"Software Engineer","description":"Engineering","match":{"all_tags":["role/software-engineer"]}}`)
 	source, err := manager.Add(context.Background(), AddRequest{
 		ID:       "team",
-		Location: writeTestCatalog(t, "managed"),
+		Location: sourceRoot,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantOwner := OwnerID(source.UID, "external")
+	wantCollectionOwner := CollectionOwnerID(source.UID, "software-engineer")
 	if err := manager.Remove("team"); err != nil {
 		t.Fatal(err)
 	}
@@ -118,12 +157,22 @@ func TestRemoveHidesSourceAndPreservesInstallOwnerIdentity(t *testing.T) {
 	if _, found := collection.Get("team/external"); found {
 		t.Fatal("removed source preset remains discoverable")
 	}
+	if _, found := collection.GetCollection("team/software-engineer"); found {
+		t.Fatal("removed source collection remains discoverable")
+	}
 	owner, found, err := OwnerForSelector(home, "team/external")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !found || owner != wantOwner {
 		t.Fatalf("removed source owner = %q, %v; want %q", owner, found, wantOwner)
+	}
+	collectionOwner, found, err := CollectionOwnerForSelector(home, "team/software-engineer")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !found || collectionOwner != wantCollectionOwner {
+		t.Fatalf("removed collection owner = %q, %v; want %q", collectionOwner, found, wantCollectionOwner)
 	}
 	if _, err := manager.Add(context.Background(), AddRequest{
 		ID:       "team",

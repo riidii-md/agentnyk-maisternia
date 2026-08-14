@@ -10,6 +10,7 @@ type Preset struct {
 	ID               string     `json:"id"`
 	Name             string     `json:"name"`
 	Description      string     `json:"description"`
+	Tags             []string   `json:"tags,omitempty"`
 	Pipelines        []Pipeline `json:"pipelines"`
 	Contents         Contents   `json:"contents"`
 	Targets          []string   `json:"targets"`
@@ -86,6 +87,7 @@ type CreateInput struct {
 	ID          string
 	Name        string
 	Description string
+	Tags        []string
 }
 
 type CopyInput struct {
@@ -96,4 +98,5 @@ type CopyInput struct {
 type UpdateInput struct {
 	Name        *string
 	Description *string
+	Tags        *[]string
 }

@@ -131,6 +131,7 @@ type presetApplyDialog struct {
 	StatePath      string
 	Policy         configurator.ConflictPolicy
 	Environment    bool
+	Collection     bool
 	Plans          []environment.Plan
 	Output         string
 	Err            error
@@ -158,6 +159,7 @@ type Model struct {
 	presetSearchEditing  bool
 	presetSearch         string
 	presetFilter         int
+	collectionView       bool
 }
 
 type RunOptions struct {
@@ -281,6 +283,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			if m.tab == TabPipelines &&
+				!m.collectionView &&
 				!m.presetPreview &&
 				len(m.selectedPresetResources()) > 0 {
 				m.presetPreview = true
@@ -303,8 +306,14 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.presetSearchEditing = true
 			}
 		case "f":
-			if m.tab == TabPipelines && !m.presetPreview {
+			if m.tab == TabPipelines && !m.presetPreview && !m.collectionView {
 				m.presetFilter = (m.presetFilter + 1) % len(presetFilters)
+				m.cursor[TabPipelines] = 0
+				m.clampCursor()
+			}
+		case "v":
+			if m.tab == TabPipelines && !m.presetPreview {
+				m.collectionView = !m.collectionView
 				m.cursor[TabPipelines] = 0
 				m.clampCursor()
 			}
@@ -631,6 +640,29 @@ func (m Model) beginPresetPlan(
 }
 
 func (m *Model) openPresetApply() {
+	if m.collectionView {
+		status, found := m.selectedCollection()
+		if !found {
+			return
+		}
+		m.applyDialog = presetApplyDialog{
+			Stage:          applyTarget,
+			PresetID:       status.Selector,
+			Name:           status.Collection.Name,
+			Targets:        append([]string(nil), status.Targets...),
+			TargetSelected: make([]bool, len(status.Targets)),
+			ProjectInput:   strings.TrimSpace(m.snapshot.SuggestedProject),
+			Collection:     true,
+			Request: PresetInstallRequest{
+				CollectionID: status.Selector,
+			},
+			Policy: configurator.ConflictAbort,
+		}
+		if m.applyDialog.ProjectInput != "" {
+			m.applyDialog.ScopeCursor = 1
+		}
+		return
+	}
 	status, found := m.selectedPreset()
 	if !found {
 		return
@@ -681,6 +713,7 @@ func (m *Model) openFirstConflictingPreset() {
 	m.tab = TabPipelines
 	m.presetSearch = ""
 	m.presetFilter = 0
+	m.collectionView = false
 	m.cursor[TabPipelines] = m.presetCursorForSnapshotIndex(index)
 	m.closePresetPreview()
 	m.openPresetApply()
@@ -907,11 +940,42 @@ func (m *Model) closePresetPreview() {
 }
 
 func (m Model) selectedPresetResources() []ResourcePreview {
+	if m.collectionView {
+		return nil
+	}
 	status, found := m.selectedPreset()
 	if !found {
 		return nil
 	}
 	return status.Resources
+}
+
+func (m Model) selectedCollection() (CollectionStatus, bool) {
+	indexes := m.visibleCollectionIndexes()
+	index := m.cursor[TabPipelines]
+	if index < 0 || index >= len(indexes) {
+		return CollectionStatus{}, false
+	}
+	return m.snapshot.Collections[indexes[index]], true
+}
+
+func (m Model) visibleCollectionIndexes() []int {
+	query := strings.ToLower(strings.TrimSpace(m.presetSearch))
+	indexes := make([]int, 0, len(m.snapshot.Collections))
+	for index, status := range m.snapshot.Collections {
+		if query == "" || strings.Contains(strings.ToLower(strings.Join([]string{
+			status.Selector,
+			status.Collection.Name,
+			status.Collection.Description,
+			strings.Join(status.Collection.Match.AllTags, " "),
+			strings.Join(status.Members, " "),
+			status.Source.ID,
+			status.Source.Location,
+		}, " ")), query) {
+			indexes = append(indexes, index)
+		}
+	}
+	return indexes
 }
 
 func (m Model) selectedPreset() (PresetStatus, bool) {
@@ -1007,6 +1071,7 @@ func presetMatchesSearch(preset presets.Preset, query string) bool {
 		preset.Name,
 		preset.Description,
 		strings.Join(preset.Targets, " "),
+		strings.Join(preset.Tags, " "),
 		strings.Join(preset.EnvironmentPacks, " "),
 		strings.Join(preset.Contents.ResourceIDs(), " "),
 		presetContentSummary(preset.Contents),
@@ -1026,6 +1091,9 @@ func presetPrimaryGroup(preset presets.Preset) string {
 func (m Model) itemCount() int {
 	switch m.tab {
 	case TabPipelines:
+		if m.collectionView {
+			return len(m.visibleCollectionIndexes())
+		}
 		return len(m.visiblePresetIndexes())
 	case TabProviders:
 		return len(m.snapshot.Providers)

@@ -3,6 +3,7 @@
   "id": "idea-shaping",
   "name": "Idea Shaping",
   "description": "Continuous source intake, research, focused human questions, option generation, challenge, decision, and planning.",
+  "tags": ["role/software-engineer", "workflow/discovery"],
   "pipelines": [
     {
       "id": "shape",

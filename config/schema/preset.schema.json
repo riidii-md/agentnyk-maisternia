@@ -13,6 +13,14 @@
     "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
     "name": {"type": "string", "minLength": 1, "maxLength": 128},
     "description": {"type": "string", "maxLength": 2048},
+    "tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]{0,31}/[a-z][a-z0-9-]{0,63}$"
+      }
+    },
     "pipelines": {
       "type": "array",
       "items": {"$ref": "#/$defs/pipeline"}

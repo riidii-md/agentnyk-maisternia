@@ -188,8 +188,11 @@ func (m Model) renderFooter(width int) string {
 	}
 	keys := "1-4 view  ←/→ switch  j/k select  r refresh  ? help  q quit"
 	if m.tab == TabPipelines {
-		keys = "i install  s add source  / search  f filter  enter inspect  j/k select  ? help  q quit"
-		if selected, found := m.selectedPreset(); found && selected.Preset.IsEnvironmentOnly() {
+		keys = "i install  v collections  s add source  / search  f filter  enter inspect  j/k select  ? help  q quit"
+		if m.collectionView {
+			keys = "i install  v presets  s add source  / search  j/k select  ? help  q quit"
+		}
+		if selected, found := m.selectedPreset(); !m.collectionView && found && selected.Preset.IsEnvironmentOnly() {
 			keys = "i install  s add source  / search  f filter  j/k select  ? help  q quit"
 		}
 	} else if (m.tab == TabOverview || m.tab == TabConfig) &&
@@ -200,8 +203,11 @@ func (m Model) renderFooter(width int) string {
 	if width < 72 {
 		keys = "1-4 view  j/k select  r refresh  ? help  q quit"
 		if m.tab == TabPipelines {
-			keys = "i install  s source  / search  f filter  enter inspect  j/k select  q quit"
-			if selected, found := m.selectedPreset(); found && selected.Preset.IsEnvironmentOnly() {
+			keys = "i install  v collections  s source  / search  f filter  enter inspect  j/k select  q quit"
+			if m.collectionView {
+				keys = "i install  v presets  s source  / search  j/k select  q quit"
+			}
+			if selected, found := m.selectedPreset(); !m.collectionView && found && selected.Preset.IsEnvironmentOnly() {
 				keys = "i install  s source  / search  f filter  j/k select  q quit"
 			}
 		} else if (m.tab == TabOverview || m.tab == TabConfig) &&
@@ -291,6 +297,9 @@ func (m Model) renderOverview(width int) string {
 }
 
 func (m Model) renderPipelines(width int) string {
+	if m.collectionView {
+		return m.renderCollections(width)
+	}
 	if m.presetPreview {
 		return m.renderPresetResourcePreview(width)
 	}
@@ -308,7 +317,7 @@ func (m Model) renderPipelines(width int) string {
 		search = "none"
 	}
 	discovery := fmt.Sprintf(
-		"Filter: %s  Search: %s  (/ search, f next filter)",
+		"Filter: %s  Search: %s  (/ search, f next filter, v collections)",
 		presetFilters[m.presetFilter],
 		search,
 	)
@@ -355,6 +364,9 @@ func (m Model) renderPipelines(width int) string {
 	details := []string{
 		metric("Description", preset.Description, width),
 		metric("Targets", targets, width),
+	}
+	if len(preset.Tags) > 0 {
+		details = append(details, metric("Tags", strings.Join(preset.Tags, ", "), width))
 	}
 	if selected.Source.ID != "" {
 		details = append(details,
@@ -472,6 +484,67 @@ func (m Model) renderPipelines(width int) string {
 			lines,
 			width,
 		))
+	}
+	return strings.Join(sections, "\n\n")
+}
+
+func (m Model) renderCollections(width int) string {
+	if len(m.snapshot.Collections) == 0 {
+		return section("COLLECTIONS", []string{
+			mutedStyle.Render("No collections found under config/collections."),
+			"v  Return to presets",
+		}, width)
+	}
+	visible := m.visibleCollectionIndexes()
+	search := m.presetSearch
+	if search == "" {
+		search = "none"
+	}
+	discovery := fmt.Sprintf("View: collections  Search: %s  (/ search, v presets)", search)
+	if len(visible) == 0 {
+		return section("COLLECTIONS", []string{
+			truncate(discovery, width),
+			mutedStyle.Render("No collections match the current search."),
+		}, width)
+	}
+	index := m.cursor[TabPipelines]
+	start, end := window(index, len(visible), 6)
+	rows := []string{activeStyle.Render(truncate("COLLECTIONS  "+discovery, width))}
+	for rowIndex := start; rowIndex < end; rowIndex++ {
+		status := m.snapshot.Collections[visible[rowIndex]]
+		line := fmt.Sprintf(
+			"%-30s %-28s %d presets  %d resources",
+			truncate(status.Selector, 29),
+			truncate(status.Collection.Name, 27),
+			len(status.Members),
+			status.Resources,
+		)
+		rows = append(rows, selectable(line, rowIndex == index, width))
+	}
+	selected := m.snapshot.Collections[visible[index]]
+	details := []string{
+		metric("Description", selected.Collection.Description, width),
+		metric("Tags", strings.Join(selected.Collection.Match.AllTags, ", "), width),
+		metric("Targets", strings.Join(selected.Targets, ", "), width),
+		metric("Members", strings.Join(selected.Members, ", "), width),
+		metric("Contents", fmt.Sprintf("%d presets, %d resources", len(selected.Members), selected.Resources), width),
+	}
+	if selected.Source.ID != "" {
+		details = append(details,
+			metric("Collection ID", selected.Selector, width),
+			metric("Source", selected.Source.ID+" ("+string(selected.Source.Kind)+")", width),
+		)
+	}
+	sections := []string{
+		section("COLLECTIONS", rows, width),
+		section(strings.ToUpper(selected.Collection.Name), details, width),
+	}
+	if width >= 90 {
+		sections = append(sections, section("ACTIONS", []string{
+			"i  Install all collection presets for selected providers",
+			"v  Return to individual presets",
+			"s  Add an external preset source",
+		}, width))
 	}
 	return strings.Join(sections, "\n\n")
 }
@@ -806,8 +879,14 @@ func (m Model) renderPresetSourceDialog(width int) string {
 
 func (m Model) renderPresetApplyDialog(width int) string {
 	dialog := m.applyDialog
+	noun := "Preset"
+	installTitle := "INSTALL PRESET"
+	if dialog.Collection {
+		noun = "Collection"
+		installTitle = "INSTALL COLLECTION"
+	}
 	summary := []string{
-		metric("Preset", dialog.Name+" ("+dialog.PresetID+")", width),
+		metric(noun, dialog.Name+" ("+dialog.PresetID+")", width),
 	}
 	if dialog.Environment {
 		packIDs := make([]string, 0, len(dialog.Plans))
@@ -1014,8 +1093,12 @@ func (m Model) renderPresetApplyDialog(width int) string {
 				)),
 			}
 		} else {
+			message := "Applying preset..."
+			if dialog.Collection {
+				message = "Applying collection..."
+			}
 			action = []string{
-				activeStyle.Render("Applying preset..."),
+				activeStyle.Render(message),
 				mutedStyle.Render(truncate(
 					"Plans are rechecked before each file is changed.",
 					width,
@@ -1038,6 +1121,9 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			}
 		} else {
 			heading := "Preset applied"
+			if dialog.Collection {
+				heading = "Collection applied"
+			}
 			description := "Configuration state has been refreshed."
 			if dialog.Environment {
 				heading = "Environment preset installed"
@@ -1074,7 +1160,7 @@ func (m Model) renderPresetApplyDialog(width int) string {
 			title = "ENVIRONMENT INSTALL"
 		}
 	}
-	return section("INSTALL PRESET", summary, width) + "\n\n" +
+	return section(installTitle, summary, width) + "\n\n" +
 		section(title, action, width)
 }
 
@@ -1372,6 +1458,7 @@ func (m Model) renderHelp(width int) string {
 		"space / a / n    toggle, select all, or clear providers in installer",
 		"/                search presets",
 		"f                filter/group presets by resource type",
+		"v                switch between individual presets and collections",
 		"u / p            choose user or project install scope",
 		"                  environment presets target the local machine",
 		"pgup / pgdown    scroll prompt/resource source",

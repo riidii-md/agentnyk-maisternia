@@ -545,6 +545,46 @@ func TestRepositoryGitWorkflowApprovalsPreset(t *testing.T) {
 	}
 }
 
+func TestValidatePresetTags(t *testing.T) {
+	t.Parallel()
+
+	preset := Preset{
+		SchemaVersion: SchemaVersion,
+		ID:            "tagged",
+		Name:          "Tagged",
+		Description:   "Tagged preset",
+		Tags:          []string{"role/software-engineer", "capability/review"},
+		Pipelines:     []Pipeline{},
+		Contents: Contents{
+			MCPRefs: []string{}, Commands: []string{}, Prompts: []string{},
+			Skills: []string{}, Hooks: []string{}, Settings: []string{},
+		},
+		Targets: []string{"codex"},
+	}
+	if err := Validate(preset); err != nil {
+		t.Fatalf("Validate() error = %v", err)
+	}
+
+	tests := []struct {
+		name string
+		tags []string
+		want string
+	}{
+		{name: "missing namespace", tags: []string{"software-engineer"}, want: "invalid tag"},
+		{name: "uppercase", tags: []string{"role/SoftwareEngineer"}, want: "invalid tag"},
+		{name: "duplicate", tags: []string{"role/software-engineer", "role/software-engineer"}, want: "repeats tag"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			candidate := preset
+			candidate.Tags = tt.tags
+			if err := Validate(candidate); err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("Validate() error = %v, want %q", err, tt.want)
+			}
+		})
+	}
+}
+
 func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 	t.Parallel()
 

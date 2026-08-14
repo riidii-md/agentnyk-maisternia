@@ -58,6 +58,8 @@ The repository contains the first safe configurator foundation:
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, guarded apply, ownership reconciliation,
   and uninstall;
+- source-scoped, tag-driven preset collections with guarded batch apply and
+  distinct ownership;
 - local-folder and GitHub preset-source registration, immutable snapshots,
   explicit refresh/removal, qualified IDs, and Admin source addition;
 - strict environment-pack validation, read-only planning, and guarded typed installation;
@@ -291,6 +293,7 @@ Inspect and validate the preset library:
 
 ```bash
 go run ./cmd/maisternia preset list
+go run ./cmd/maisternia collection list
 go run ./cmd/maisternia preset show idea-shaping
 go run ./cmd/maisternia preset show scored-experiment
 go run ./cmd/maisternia preset show parallel-work
@@ -386,7 +389,17 @@ go run ./cmd/maisternia preset uninstall \
   --target codex \
   --yes \
   standard-work
+
+go run ./cmd/maisternia collection apply \
+  --scope user \
+  --target codex \
+  --yes \
+  software-engineer
 ```
+
+Collections resolve tagged presets within one catalog source, enforce the
+providers common to every member, and retain ownership separately from direct
+preset installs. See [Preset Collections](docs/PRESET-COLLECTIONS.md).
 
 Uninstall also works by remembered preset ID after its catalog definition has
 been deleted. It covers all managed preset resource categories. Environment

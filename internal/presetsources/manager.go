@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/catalog"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
@@ -239,6 +240,15 @@ func validateSnapshot(root string) error {
 			return err
 		}
 	}
+	collectionLibrary, err := collections.LoadLibrary(root)
+	if err != nil {
+		return err
+	}
+	for _, collection := range collectionLibrary.Collections {
+		if _, err := collections.Resolve(collection, library); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -255,6 +265,25 @@ func LoadCollection(home, primaryRoot string) (Collection, error) {
 				OwnerID:  preset.ID,
 				Root:     primaryRoot,
 				Preset:   preset,
+			})
+		}
+		collectionLibrary, err := collections.LoadLibrary(primaryRoot)
+		if err != nil {
+			return Collection{}, err
+		}
+		for _, definition := range collectionLibrary.Collections {
+			resolved, err := collections.Resolve(definition, library)
+			if err != nil {
+				return Collection{}, err
+			}
+			collection.Collections = append(collection.Collections, ResolvedCollection{
+				Selector:   definition.ID,
+				OwnerID:    CollectionOwnerID("", definition.ID),
+				Root:       primaryRoot,
+				Collection: definition,
+				Members:    resolved.Members,
+				Preset:     resolved.Preset,
+				Targets:    resolved.Targets,
 			})
 		}
 	}
@@ -282,9 +311,32 @@ func LoadCollection(home, primaryRoot string) (Collection, error) {
 				Preset:   preset,
 			})
 		}
+		collectionLibrary, err := collections.LoadLibrary(source.Snapshot)
+		if err != nil {
+			return Collection{}, fmt.Errorf("preset source %q: %w", source.ID, err)
+		}
+		for _, definition := range collectionLibrary.Collections {
+			resolved, err := collections.Resolve(definition, library)
+			if err != nil {
+				return Collection{}, fmt.Errorf("preset source %q: %w", source.ID, err)
+			}
+			collection.Collections = append(collection.Collections, ResolvedCollection{
+				Selector:   source.ID + "/" + definition.ID,
+				OwnerID:    CollectionOwnerID(source.UID, definition.ID),
+				Root:       source.Snapshot,
+				Source:     source,
+				Collection: definition,
+				Members:    resolved.Members,
+				Preset:     resolved.Preset,
+				Targets:    resolved.Targets,
+			})
+		}
 	}
 	sort.Slice(collection.Presets, func(i, j int) bool {
 		return collection.Presets[i].Selector < collection.Presets[j].Selector
+	})
+	sort.Slice(collection.Collections, func(i, j int) bool {
+		return collection.Collections[i].Selector < collection.Collections[j].Selector
 	})
 	return collection, nil
 }
@@ -304,6 +356,26 @@ func OwnerForSelector(home, selector string) (string, bool, error) {
 		return "", false, nil
 	}
 	return OwnerID(source.UID, parts[1]), true, nil
+}
+
+func CollectionOwnerForSelector(home, selector string) (string, bool, error) {
+	parts := strings.Split(selector, "/")
+	if len(parts) == 1 && presetIDPattern.MatchString(parts[0]) {
+		return CollectionOwnerID("", parts[0]), true, nil
+	}
+	if len(parts) != 2 || !sourceIDPattern.MatchString(parts[0]) ||
+		!presetIDPattern.MatchString(parts[1]) {
+		return "", false, nil
+	}
+	registry, err := Load(home)
+	if err != nil {
+		return "", false, err
+	}
+	_, source, found := registry.find(parts[0])
+	if !found {
+		return "", false, nil
+	}
+	return CollectionOwnerID(source.UID, parts[1]), true, nil
 }
 
 var presetIDPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)

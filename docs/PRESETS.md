@@ -14,6 +14,7 @@ config/presets/<preset-id>.json
 Each file declares:
 
 - an ID, display name, and description;
+- optional namespaced tags used by source-scoped collections;
 - zero or more workflow DAGs;
 - managed resource references grouped as MCPs, commands, prompts, skills,
   hooks, and settings;
@@ -179,6 +180,7 @@ packs stored beside them. Its root must contain:
 ```text
 config/manifest.json
 config/presets/*.json
+config/collections/*.json # optional tag-driven preset collections
 config/environments/*.json   # optional
 config/...                   # files referenced by the manifest
 ```
@@ -273,6 +275,18 @@ maisternia preset edit \
   --description "Delivery workflow for the platform team" \
   team-standard-work
 ```
+
+Use repeatable namespaced tags to include a preset in one or more collections:
+
+```bash
+maisternia preset edit \
+  --tag role/software-engineer \
+  --tag capability/review \
+  team-standard-work
+```
+
+See [Preset Collections](PRESET-COLLECTIONS.md) for tag rules, discovery,
+provider intersection, and guarded batch installation.
 
 Structured content and DAG editing is not yet exposed as a command. Edit the
 JSON file, then run:
