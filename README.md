@@ -12,7 +12,7 @@ one version-controlled source of truth for:
 - immutable external preset sources from local folders or GitHub repositories;
 - workflow/pipeline DAGs inside presets;
 - MCP references and neutral `/work-*` commands;
-- provider-neutral `@harness` routing for `/work-*` commands;
+- provider-neutral `@harness` and per-harness model routing for `/work-*` commands;
 - personal skills and policies;
 - reusable hook packs with explicit user or project installation scope;
 - declarative environment requirements referenced by presets;
@@ -71,6 +71,7 @@ The repository contains the first safe configurator foundation:
 - a complete initial work-phase catalog;
 - a shared work-routing skill with explicit authority and disclosure boundaries;
 - multi-harness `@codex`, `@claude`, `@agy`, and `@hermes` invocation routes;
+- explicit and saved per-harness model choices with visible no-fallback behavior;
 - repository tests that prevent command inventory and routing behavior from
   silently shrinking;
 - strict normalized event validation as untrusted input fixtures;
@@ -494,14 +495,21 @@ An optional leading route block selects one or several harnesses:
 
 ```text
 /work-plan @codex -- plan the migration
+/work-plan @claude @opus -- plan with Claude Opus
 /work-research @codex @claude -- compare the options
 /work-review @agy @codex @claude -- review this branch
 /work-run @here -- execute the approved plan locally
+/work-run @claude @sonnet -- implement with Claude Sonnet
 ```
 
 `@here`, `@auto`, `@codex`, `@claude`, `@agy`, and `@hermes` are resolved by the
-shared `work-routing` skill. Explicit invocation overrides saved per-workflow or
-global preferences. The current harness remains coordinator, verifies returned
-work, and owns any writes not separately delegated and approved. A local command
-with no route signal or saved profile skips the full router; external runner
-instructions load only after an external target is selected.
+shared `work-routing` skill. A model selector follows its harness, so
+`@claude @opus` and `@claude @sonnet` choose models without creating separate
+workflow commands. Explicit invocation overrides saved per-workflow or global
+per-harness model preferences. The current harness remains coordinator, verifies
+returned work, and owns any writes not separately delegated and approved. A
+selected model in the current harness runs in a fresh model-selectable subagent;
+it does not replace the already-running coordinator session or widen authority.
+Configuring a model for each command makes the workflow subagent-backed. A local command with no
+route signal or saved profile skips the full router; external runner instructions
+load only after an external target or fresh model lane is selected.
