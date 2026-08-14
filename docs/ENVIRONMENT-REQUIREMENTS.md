@@ -31,10 +31,16 @@ environment pack. It installs or verifies:
 - Zellij;
 - Tatami;
 - Herdr;
-- [Mdmaid](https://github.com/OleksandrBesan/mdmaid) `0.1.14` through npm;
+- [Mdmaid](https://github.com/OleksandrBesan/mdmaid) `0.1.17` through npm;
 - [mdmaid.desk](https://github.com/riidii-md/mdmaid.desk) `0.1.0` through npm;
 - [Herdr Automatic Rename](https://github.com/qu8n/herdr-automatic-rename);
 - [Herdr Bar](https://github.com/jeffarese/herdr-bar).
+
+Mdmaid `0.1.17` is the minimum managed version because generated showcase and
+readability artifacts must pass `mdmaid validate` before mdmaid.desk
+registration. Detection is presence-based, so an already-installed older
+version is not upgraded automatically; upgrade it explicitly with
+`npm install --global mdmaid@0.1.17`.
 
 The two plugin sources are pinned to immutable Git commit SHAs. Installation
 does not invent their configuration: Herdr Bar still needs a chosen key binding,
