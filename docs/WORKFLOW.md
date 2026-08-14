@@ -149,9 +149,11 @@ Harness selection is invocation metadata, not a second command namespace:
 
 ```text
 /work-plan @codex -- plan the migration
+/work-plan @claude @opus -- plan with Claude Opus
 /work-research @codex @claude -- compare the options
 /work-review @agy @codex @claude -- review this branch
 /work-run @here -- execute locally
+/work-run @claude @sonnet -- implement with Claude Sonnet
 ```
 
 The installed `work-routing` skill accepts `@here`, `@auto`, `@codex`,
@@ -161,12 +163,53 @@ This prevents `using the Codex API` from being mistaken for execution routing.
 
 An explicit invocation route wins over session, project, and user defaults. Use
 `/work-routing-preferences` to configure `local`, `ask`, or `delegate` globally
-or per workflow. Persistent profiles live at:
+or per workflow, plus an optional per-harness model for each route. Persistent
+profiles live at:
 
 ```text
 project: <repository>/.maisternia/work-routing.json
 user:    ${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json
 ```
+
+A model selector follows the harness it configures. Known aliases support the
+compact forms `@claude @opus` and `@claude @sonnet`; provider-native model IDs
+use the router's explicit model form. Model preference resolution is independent
+for each harness and follows invocation, session, project workflow, project
+default, user workflow, user default, phase/role mapping, and provider default.
+This lets a user save Opus for `work-plan` and Sonnet for `work-run` in the same
+Claude harness. User scope is the usual home for preferences shared across
+repositories; project scope is for repository-specific constraints or commands
+installed locally.
+
+For example, one profile can keep both phases in Claude while selecting a model
+per command:
+
+```json
+{
+  "schema_version": 1,
+  "defaults": {"policy": "local", "harnesses": ["current"]},
+  "workflows": {
+    "work-plan": {
+      "policy": "delegate",
+      "harnesses": ["claude"],
+      "models": {"claude": "opus"}
+    },
+    "work-run": {
+      "policy": "delegate",
+      "harnesses": ["claude"],
+      "models": {"claude": "sonnet"}
+    }
+  }
+}
+```
+
+Model selection never changes the workflow or its authority. Because a running
+parent session cannot be replaced by a slash command, a different selected model
+runs in a fresh native same-harness subagent while the current session remains
+coordinator. Selecting a model for every installed workflow makes every configured command subagent-backed. A local command without a model preference
+can still run directly for backward compatibility. An unavailable model or
+model-selectable subagent is reported; the router never silently falls back to
+another model or pretends the parent session changed models.
 
 Routing is progressively disclosed to protect the context budget. Invoking a
 `/work-*` command loads that command's phase instructions. Its small inline gate

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -137,7 +138,7 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 	if frontmatterEnd > 420 {
 		t.Errorf("work-routing discovery metadata is too large: %d bytes", frontmatterEnd)
 	}
-	if len(skillContent) > 5000 {
+	if len(skillContent) > 6800 {
 		t.Errorf("work-routing local-path instructions are too large: %d bytes", len(skillContent))
 	}
 	for _, fragment := range []string{
@@ -192,8 +193,20 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 							Enum []string `json:"enum"`
 						} `json:"items"`
 					} `json:"harnesses"`
+					Models struct {
+						Ref string `json:"$ref"`
+					} `json:"models"`
 				} `json:"properties"`
 			} `json:"route"`
+			Models struct {
+				AdditionalProperties *bool                      `json:"additionalProperties"`
+				Properties           map[string]json.RawMessage `json:"properties"`
+			} `json:"models"`
+			Model struct {
+				Type      string `json:"type"`
+				MaxLength int    `json:"maxLength"`
+				Pattern   string `json:"pattern"`
+			} `json:"model"`
 		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(schemaContent, &schema); err != nil {
@@ -213,6 +226,38 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 	}) {
 		t.Errorf("route harnesses = %v", schema.Defs.Route.Properties.Harnesses.Items.Enum)
 	}
+	if schema.Defs.Route.Properties.Models.Ref != "#/$defs/models" {
+		t.Errorf("route models ref = %q", schema.Defs.Route.Properties.Models.Ref)
+	}
+	if schema.Defs.Models.AdditionalProperties == nil || *schema.Defs.Models.AdditionalProperties {
+		t.Error("model preferences must reject unknown harness keys")
+	}
+	modelHarnesses := make([]string, 0, len(schema.Defs.Models.Properties))
+	for harness := range schema.Defs.Models.Properties {
+		modelHarnesses = append(modelHarnesses, harness)
+	}
+	slices.Sort(modelHarnesses)
+	if !slices.Equal(modelHarnesses, []string{"antigravity", "claude", "codex", "hermes"}) {
+		t.Errorf("model preference harnesses = %v", modelHarnesses)
+	}
+	if schema.Defs.Model.Type != "string" || schema.Defs.Model.MaxLength != 128 ||
+		!strings.HasPrefix(schema.Defs.Model.Pattern, "^[A-Za-z0-9]") {
+		t.Errorf("unsafe or incomplete model identifier contract: %#v", schema.Defs.Model)
+	}
+	modelPattern, err := regexp.Compile(schema.Defs.Model.Pattern)
+	if err != nil {
+		t.Fatalf("compile model identifier pattern: %v", err)
+	}
+	for _, model := range []string{"opus", "sonnet", "gpt-5.6-terra", "provider/model:v2"} {
+		if !modelPattern.MatchString(model) {
+			t.Errorf("safe model identifier %q was rejected", model)
+		}
+	}
+	for _, model := range []string{"-m", "model with spaces", strings.Repeat("a", 129)} {
+		if modelPattern.MatchString(model) {
+			t.Errorf("unsafe model identifier %q was accepted", model)
+		}
+	}
 	compactSchema := &bytes.Buffer{}
 	if err := json.Compact(compactSchema, schemaContent); err != nil {
 		t.Fatal(err)
@@ -224,6 +269,63 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 	} {
 		if !strings.Contains(compactSchema.String(), fragment) {
 			t.Errorf("work routing schema does not constrain contradictory routes with %s", fragment)
+		}
+	}
+
+	preferencesPath := filepath.Join(root, "config", "workflow", "phases", "routing-preferences.md")
+	preferencesContent, err := os.ReadFile(preferencesPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fragment := range []string{
+		"guided setup", "each installed canonical", "provider default",
+		"user-global", "repository-local", "usually recommend user-global",
+		"per-harness model",
+	} {
+		if !strings.Contains(string(preferencesContent), fragment) {
+			t.Errorf("routing preferences are missing %q", fragment)
+		}
+	}
+}
+
+func TestRepositoryWorkRoutingModelSelectionContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/skills/work-routing/SKILL.md": {
+			"@claude @opus", "@claude @sonnet", "model selector",
+			"models are keyed by canonical harness", "Resolve model", "preferences independently",
+			"Never let model selection change authority", "Never silently substitute a model",
+			"Every explicit or saved model choice runs the phase in a fresh same-harness subagent",
+			"parent session remains coordinator",
+		},
+		"config/workflow/skills/work-routing/references/runners.md": {
+			`--model "$MODEL"`, "explicit model selector", "saved model preference",
+			"provider default", "routing receipt", "Never silently substitute a model",
+			"model-selected same-harness work requires a native subagent",
+		},
+		"README.md": {
+			"@claude @opus", "@claude @sonnet", "per-harness model",
+		},
+		"docs/WORKFLOW.md": {
+			"@claude @opus", "@claude @sonnet", "per-harness model",
+			"project", "user", "every configured command subagent-backed",
+		},
+		"docs/CONFIGURATOR.md": {
+			"per-harness model", "/work-routing-preferences", "user-global",
+			"repository-local",
+		},
+	}
+	for relative, fragments := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing model routing contract %q", relative, fragment)
+			}
 		}
 	}
 }

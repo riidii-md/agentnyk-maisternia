@@ -18,11 +18,29 @@ ask me where to run reviews
 ask me where to run adapt-for-reader every time
 keep implementation in the current harness
 use Codex and Claude for independent review
+use Opus for plans in Claude and Sonnet for runs in Claude
 ```
 
 Configure only the material fields: policy (`local`, `ask`, or `delegate`),
-ordered harnesses, and an optional multi-harness strategy. Reuse answers already
-provided and ask in short rounds.
+ordered harnesses, an optional multi-harness strategy, and optional per-harness
+model choices. `models` keys are canonical harness IDs; a model choice does not
+grant that harness or change authority. It opts that command into a fresh
+model-selectable subagent while the current session remains coordinator.
+
+When no narrow change was requested, offer guided setup. Inventory each installed canonical `/work-*` command except this preference command. For each
+command, ask where it should run, then ask for the model in each specific
+harness: a known eligible model, provider default, or no override. Ask in short
+rounds, allow the user to reuse one answer across remaining commands, and show
+the final command-by-command matrix before proposing persistence. Do not require
+a model override for every command. If the user chooses a model for every
+command, state clearly that every command will be subagent-backed.
+
+Choose persistence after the matrix is known: session-only, user-global, or
+repository-local; usually recommend user-global for command sets installed for
+the user or intended across repositories. Recommend repository-local when the
+commands were installed at project scope or the choice expresses a repository
+constraint. An explicit user choice wins; never infer scope from the current
+directory alone.
 
 Use these persistent destinations:
 
@@ -39,7 +57,7 @@ reader-profile removal separately.
 Return:
 
 1. a plain-language routing summary;
-2. global defaults and workflow overrides;
+2. global defaults and workflow overrides, including per-harness model choices;
 3. a schema-valid candidate profile when persistence is wanted;
 4. the exact destination and diff;
 5. any legacy migration proposed.

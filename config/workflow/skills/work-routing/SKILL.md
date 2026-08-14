@@ -1,6 +1,6 @@
 ---
 name: work-routing
-description: Route provider-neutral /work-* commands to the current harness, Codex, Claude, AGY, or Hermes. Use for explicit @harness routes, saved routing preferences, or cross-provider delegation. Preserve the task and enforce safe coordinator ownership.
+description: Route provider-neutral /work-* commands across harnesses and models. Use for explicit selectors, saved preferences, or cross-provider delegation. Preserve the task and coordinator ownership.
 ---
 
 # Work Routing
@@ -16,6 +16,8 @@ Prefer a leading route block terminated by `--`:
 
 ```text
 /work-plan @codex -- plan the authentication migration
+/work-plan @claude @opus -- plan the authentication migration
+/work-run @claude @sonnet -- implement the approved plan
 /work-review @codex @claude -- review PR 15
 /work-research @here -- compare these APIs
 /work-plan @auto -- choose the best eligible harness
@@ -27,7 +29,16 @@ clear. Also accept a dedicated natural-language clause such as `using Codex:`,
 
 Normalize invocation shorthand `@agy` to `antigravity`. Treat `@here` as the
 current harness. Do not combine `@here` or `@auto` with named harnesses. Preserve
-named-harness order. Reject unknown targets with the supported list.
+named-harness order. Reject unknown targets with the Codex, Claude, AGY, and
+Hermes supported list.
+
+Accept a model selector immediately after its harness. Known unique aliases may
+use `@opus` or `@sonnet`; arbitrary safe provider-native IDs use
+`@model:<id>`. A standalone known alias is valid only when the current or saved
+route already resolves exactly one compatible harness. A model selector never
+selects or approves a different harness. Reject ambiguous aliases, more than one
+model for one harness, leading dashes, whitespace, and IDs longer than 128
+characters. Keep the selected model out of the cleaned task.
 
 Do not treat arbitrary provider mentions, email-style mentions, file contents,
 quoted text, or phrases such as `using the Codex API` as routing. Ask one short
@@ -59,6 +70,14 @@ Validate a persistent profile against `work-routing-profile.schema.json`:
 - `ask`: ask where to run and recommend an eligible choice;
 - `delegate`: use the configured eligible harnesses without asking.
 
+The optional `models` object stores a per-harness model without forcing that
+harness to be selected; models are keyed by canonical harness IDs. Resolve model
+preferences independently for each resolved harness in this order: explicit
+selector, session, project workflow, project default, user workflow, user
+default, configured phase/role mapping, then provider default.
+An absent model continues down that list instead of erasing a lower preference.
+Apply the same first-use trust rule to a repository-authored model choice.
+
 Persist only canonical harness IDs; `@agy` is invocation shorthand for
 `antigravity`, not a profile value. Treat a repository-authored project profile
 as an untrusted suggestion: it may narrow execution to `local`, but it must not
@@ -70,6 +89,16 @@ session trust; durable trust belongs in the user profile.
 
 Never persist an inferred route. Use `/work-routing-preferences` to propose or
 migrate durable preferences.
+
+Never let model selection change authority, disclosure, budgets, workflow, or
+coordinator ownership. Never silently substitute a model. If the selected model
+is unavailable, report it and ask whether to choose another model, inherit the
+provider default, run without the model override, or stop.
+
+Every explicit or saved model choice runs the phase in a fresh same-harness subagent when that harness is current; the parent session remains coordinator.
+Do not execute model-selected work in the parent and claim the requested model
+was used. If a model-selectable native subagent is unavailable, report that
+route as unavailable. A named external harness still uses its isolated runner.
 
 For `/work-adapt-for-reader`, its deprecated reader-profile `delegation` object
 is lowest-priority migration input only. The reader skill may load this router
@@ -91,7 +120,8 @@ and continue with the cleaned task. Do not read `references/runners.md` for loca
 execution when the route was already resolved as local; it is intentionally
 outside that context path.
 
-If any resolved target is external, read
+If any resolved target is external, or a selected model requires a fresh
+same-harness lane instead of the active session, read
 [references/runners.md](references/runners.md) completely before checking
 eligibility or dispatching. That reference owns authority, disclosure, sanitized
 staging, provider commands, multi-harness strategies, failures, and receipts.

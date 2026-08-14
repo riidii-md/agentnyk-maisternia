@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "workflow-routing",
   "name": "Workflow Routing",
-  "description": "Provider-neutral @harness routing, safe cross-provider dispatch, reusable defaults, and per-workflow preferences for canonical work commands.",
+  "description": "Provider-neutral @harness and per-harness model routing, safe cross-provider dispatch, reusable defaults, and per-workflow preferences for canonical work commands.",
   "pipelines": [],
   "contents": {
     "mcp_refs": [],
