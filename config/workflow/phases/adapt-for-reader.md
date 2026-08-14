@@ -46,14 +46,30 @@ comparison or relationship-building work.
 
 Always write the complete standalone result to
 `.agent-runs/readability/<timestamp>-adapted.md`; do not edit the supplied source
-unless the user requested an edit. Resolve the current mdmaid.desk workspace
-from `MDMAID_DESK_WORKSPACE` or by matching the canonical project root in
+unless the user requested an edit. Before resolving or writing to mdmaid.desk,
+require mdmaid 0.1.17 or newer and check `mdmaid --version`. An older CLI treats
+`validate` as a filename, so do not treat that failure as invalid document
+content. If mdmaid is missing or older, preserve the Markdown artifact, do not
+register it, and report `npm install --global mdmaid@0.1.17` as the exact
+upgrade command.
+
+With a compatible version, run `mdmaid validate <artifact.md> --json`. Treat
+validation as a hard gate: exit 0 may continue; invalid content at exit 1 must
+be fixed using the source-located diagnostics and revalidated until exit 0;
+exit 2 reports validation runtime unavailable and blocks registration. If
+validation never reaches exit 0, do not register. Preserve the Markdown
+artifact and return its path, the blocker, and the exact validation retry
+command.
+
+Only after validation succeeds, resolve the current mdmaid.desk workspace from
+`MDMAID_DESK_WORKSPACE` or by matching the canonical project root in
 `mdmaid-desk workspace list`. When missing, add the current root once with a
 stable collision-safe workspace ID.
 
-Send the artifact to the desk with `mdmaid-desk register`, selecting the closest
-document kind for the mode and using `--attention review`. Registration is a
-presentation action, not approval. If mdmaid.desk is unavailable or rejects the
-document, keep the Markdown and return its path plus an exact retry command.
+Send the artifact to the desk with `mdmaid-desk register <artifact.md>`,
+selecting the closest document kind for the mode and using `--attention review`.
+Registration is a presentation action, not approval. If mdmaid.desk is
+unavailable or rejects the document, preserve the Markdown artifact and return
+its path plus an exact retry command.
 Return only a short summary, the artifact path, and registration status in the
 terminal unless the user explicitly asks for the full text inline.

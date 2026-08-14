@@ -254,31 +254,60 @@ func TestRepositoryRemovesProviderBrandedWorkflowCommands(t *testing.T) {
 	}
 }
 
-func TestRepositoryCanonicalShowcaseDeliversMarkdownToMdmaidDesk(t *testing.T) {
+func TestRepositoryMdmaidDeskRegistrationRequiresValidMarkdown(t *testing.T) {
 	t.Parallel()
 
 	repoRoot, _ := loadRepositoryManifest(t)
-	data, err := os.ReadFile(filepath.Join(
-		repoRoot,
-		"config",
-		"workflow",
-		"phases",
-		"showcase.md",
-	))
-	if err != nil {
-		t.Fatal(err)
+	contracts := map[string][]string{
+		"config/workflow/phases/showcase.md": {
+			".agent-runs/showcase", "--kind showcase",
+		},
+		"config/workflow/phases/adapt-for-reader.md": {
+			".agent-runs/readability", "--attention review",
+		},
+		"config/workflow/skills/adapt-for-reader/SKILL.md": {
+			".agent-runs/readability", "--attention review",
+		},
 	}
-	content := string(data)
-	for _, snippet := range []string{
-		".agent-runs/showcase",
-		"mdmaid-desk workspace list",
-		"mdmaid-desk register",
-		"--kind showcase",
-		"preserve the Markdown artifact",
-	} {
-		if !strings.Contains(content, snippet) {
-			t.Errorf("canonical showcase missing required content %q", snippet)
-		}
+	for relative, specific := range contracts {
+		relative, specific := relative, specific
+		t.Run(relative, func(t *testing.T) {
+			t.Parallel()
+
+			data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			content := string(data)
+			required := append([]string{
+				"mdmaid 0.1.17 or newer",
+				"mdmaid validate <artifact.md> --json",
+				"exit 0",
+				"invalid content",
+				"runtime unavailable",
+				"mdmaid-desk workspace list",
+				"mdmaid-desk register <artifact.md>",
+				"preserve the Markdown artifact",
+			}, specific...)
+			for _, snippet := range required {
+				if !strings.Contains(content, snippet) {
+					t.Errorf("managed workflow missing required content %q", snippet)
+				}
+			}
+
+			version := strings.Index(content, "mdmaid 0.1.17 or newer")
+			validation := strings.Index(content, "mdmaid validate <artifact.md> --json")
+			registration := strings.Index(content, "mdmaid-desk register <artifact.md>")
+			if version < 0 || validation < 0 || registration < 0 ||
+				version >= validation || validation >= registration {
+				t.Errorf(
+					"version check and validation must precede registration: version=%d validate=%d register=%d",
+					version,
+					validation,
+					registration,
+				)
+			}
+		})
 	}
 }
 

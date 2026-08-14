@@ -164,7 +164,29 @@ root, or the current directory outside a repository, and create:
 .agent-runs/readability/<timestamp>-adapted.md
 ```
 
-When `mdmaid-desk` is available:
+Before resolving or writing to mdmaid.desk, require mdmaid 0.1.17 or newer and
+check it with `mdmaid --version`. An older CLI treats `validate` as a filename;
+do not misclassify that failure as invalid document content. If mdmaid is
+missing or older, preserve the Markdown artifact, do not register it, and
+report `npm install --global mdmaid@0.1.17` as the exact upgrade command.
+
+With a compatible version, validate the durable artifact:
+
+```text
+mdmaid validate <artifact.md> --json
+```
+
+Treat validation as a hard delivery gate:
+
+- Exit 0 means the artifact is valid and registration may continue.
+- Exit 1 means invalid content. Use the source-located diagnostics to fix the
+  Markdown artifact, then repeat validation until it exits 0.
+- Exit 2 reports validation runtime unavailable. Do not register the artifact;
+  preserve the Markdown artifact and report the blocker plus the exact
+  validation retry command.
+
+If validation does not reach exit 0, do not call `mdmaid-desk register`. Only
+after validation succeeds, when `mdmaid-desk` is available:
 
 1. Use `MDMAID_DESK_WORKSPACE` when explicitly configured.
 2. Otherwise match the canonical current root in `mdmaid-desk workspace list`.

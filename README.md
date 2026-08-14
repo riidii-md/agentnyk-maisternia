@@ -134,6 +134,10 @@ views such as `big-picture` independently from conceptual depth, decide when to
 ask for a view. Harness selection now uses the same `@harness` router and
 workflow-routing preferences as every other canonical work command.
 
+Showcase and adapted-reader documents must pass `mdmaid validate` before they
+are registered with mdmaid.desk. Invalid documents are repaired and revalidated;
+missing validation runtime blocks registration while preserving the artifact.
+
 ## Installation
 
 Source installation is available now. Homebrew, `go install ...@latest`, and
