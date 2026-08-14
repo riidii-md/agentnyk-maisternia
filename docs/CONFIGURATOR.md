@@ -191,6 +191,7 @@ Hermes skills.
 `@harness` route blocks for canonical commands. It owns:
 
 - explicit, session, project, and user routing precedence;
+- independent per-harness model precedence at those same scopes;
 - provider availability and authority checks;
 - minimal redacted handoff packets;
 - safe single- and multi-harness strategies;
@@ -201,9 +202,17 @@ The installed harness owns the actual native subagent or provider-runner call.
 The `maisternia` binary still does not dispatch runtime work.
 
 `/work-routing-preferences` proposes schema-valid global and per-workflow
-profiles. Provider-prefixed workflow commands are not generated; for example,
-use `/work-plan @codex -- <task>` and
-`/work-review @agy @codex @claude -- <target>`.
+profiles. Its guided setup walks each installed canonical command, asks for the
+harness and optional per-harness model, then offers session-only, user-global,
+or repository-local persistence with an exact diff. User-global is normally
+recommended for user-installed command sets; repository-local is recommended
+for project-installed commands or repository constraints. A model choice also
+selects a fresh native subagent in the current harness, so choosing models for
+the complete command matrix makes the workflow subagent-backed while the parent
+session coordinates it. Provider-prefixed
+workflow commands are not generated; for example, use
+`/work-plan @claude @opus -- <task>` and
+`/work-run @claude @sonnet -- <approved-plan>`.
 
 Repository tests verify the routing inventory, canonical command integration,
 multi-harness review contract, provider-branded command removal, showcase

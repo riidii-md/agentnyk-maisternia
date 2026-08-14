@@ -5,6 +5,20 @@ Prefer the current harness's native subagent facility when it can select the
 requested provider and enforce the required authority. Otherwise use a locally
 available provider CLI only after the main routing contract passes.
 
+Resolve the model source before launch: explicit model selector, saved model
+preference, configured phase/role mapping, or provider default. Prefer a native
+same-harness worker when it can enforce the selected model and authority. A
+different model cannot replace the already-running coordinator session; it
+requires a fresh lane. Verify model eligibility when the harness exposes that
+evidence. Never silently substitute a model or claim a model was used without
+runner evidence.
+
+For current-harness execution, model-selected same-harness work requires a native subagent that accepts an explicit model. Keep the current session as
+coordinator and give the subagent only the bounded phase packet. If native model
+selection is unavailable, fail visibly; do not run the phase in the parent or
+substitute a CLI while calling it a subagent. Named external harness routes
+continue to use the isolated provider runner below.
+
 ## Check eligibility and authority
 
 Determine the current harness and inspect each requested runner at execution
@@ -86,9 +100,14 @@ codex exec \
   --skip-git-repo-check \
   -C "$STAGING_ROOT" \
   --sandbox read-only \
+  --model "$MODEL" \
   -o "$OUTPUT" \
   - < "$PACKET"
 ```
+
+Include `--model "$MODEL"` only when model resolution did not end at provider
+default. Pass it as a separate process argument; never interpolate it into a
+shell command.
 
 An approved write lane may change only `--sandbox read-only` to
 `--sandbox workspace-write`; it still needs the routing contract's explicit
@@ -111,9 +130,14 @@ claude --print \
   --mcp-config '{"mcpServers":{}}' \
   --permission-mode plan \
   --tools "Read,Grep,Glob" \
+  --model "$MODEL" \
   --no-session-persistence \
   < "$PACKET" > "$OUTPUT"
 ```
+
+Include `--model "$MODEL"` only for a resolved override. Claude aliases such as
+`opus` and `sonnet` remain provider-owned aliases; do not rewrite them to a
+guessed snapshot.
 
 Launch the process with `$STAGING_ROOT` as its current directory. The lane is
 unavailable when the installed Claude version cannot disable customizations and
@@ -194,8 +218,15 @@ Before dispatch, emit a compact routing receipt:
 Route: Codex · delegated · read-only · explicit invocation
 ```
 
+When a model is selected, include it and its source, for example:
+
+```text
+Route: Claude · sonnet · subagent · workspace-write · saved model preference
+```
+
 For several harnesses, include the strategy. Expand the receipt only when the
 user must review files, sensitive categories, budget, or new authority. If a
 target is unavailable or unsafe, ask whether to run locally, choose another
-harness, or stop. Never silently substitute a harness, claim delegation that
-did not occur, or discard the user's route.
+harness or model, inherit the provider default, or stop. Never silently
+substitute a harness or model, claim delegation that did not occur, or discard
+the user's route.

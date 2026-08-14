@@ -34,7 +34,8 @@
         },
         "strategy": {
           "enum": ["single", "first-capable", "parallel-independent", "parallel-verify", "pipeline"]
-        }
+        },
+        "models": {"$ref": "#/$defs/models"}
       },
       "allOf": [
         {
@@ -73,6 +74,23 @@
           "then": {"properties": {"harnesses": {"minItems": 2}}}
         }
       ]
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codex": {"$ref": "#/$defs/model"},
+        "claude": {"$ref": "#/$defs/model"},
+        "antigravity": {"$ref": "#/$defs/model"},
+        "hermes": {"$ref": "#/$defs/model"}
+      },
+      "minProperties": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
     }
   }
 }
