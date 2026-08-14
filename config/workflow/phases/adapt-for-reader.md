@@ -51,9 +51,17 @@ from `MDMAID_DESK_WORKSPACE` or by matching the canonical project root in
 `mdmaid-desk workspace list`. When missing, add the current root once with a
 stable collision-safe workspace ID.
 
-Send the artifact to the desk with `mdmaid-desk register`, selecting the closest
-document kind for the mode and using `--attention review`. Registration is a
-presentation action, not approval. If mdmaid.desk is unavailable or rejects the
-document, keep the Markdown and return its path plus an exact retry command.
-Return only a short summary, the artifact path, and registration status in the
-terminal unless the user explicitly asks for the full text inline.
+Send the artifact to the desk with `mdmaid-desk register`. Use the final
+document's first level-one heading, without the Markdown marker, as the
+semantic `--title`; if no level-one heading exists, derive a concise title from
+the reader contract. Never use the timestamped filename as the catalog title.
+Select the closest document kind for the mode and use `--attention review`.
+Add `--task <id>` when the source has an explicit stable task ID. Add up to
+three short lowercase `--tag <tag>` values only for grounded subject matter not
+already represented by workspace, task, or kind; never tag timestamps,
+filenames, workspace IDs, document kinds, or storage modes. Registration is a
+presentation action, not approval. If mdmaid.desk is unavailable or rejects
+the document, keep the Markdown and return its path plus an exact retry
+command. Return only a short summary, the artifact path, and registration
+status in the terminal unless the user explicitly asks for the full text
+inline.

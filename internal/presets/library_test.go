@@ -593,7 +593,9 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		"config/workflow/skills/adapt-for-reader/SKILL.md": {
 			"materially change", "Do not persist inferred preferences",
 			"references/modes.md", "references/preferences.md",
-			".agent-runs/readability", "mdmaid-desk register",
+			".agent-runs/readability", "mdmaid-desk register", "--title",
+			"--task", "--tag", "first level-one heading",
+			"timestamped filename", "workspace IDs", "storage modes",
 			"big picture", "conceptual depth", "work-routing",
 			"current harness", "coordinating harness",
 			"view_selection", "always-ask",
@@ -614,7 +616,9 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 		},
 		"config/workflow/phases/adapt-for-reader.md": {
 			"$ARGUMENTS", "one focused question", "current request wins",
-			".agent-runs/readability", "mdmaid-desk register",
+			".agent-runs/readability", "mdmaid-desk register", "--title",
+			"--task", "--tag", "first level-one heading",
+			"timestamped filename", "workspace IDs", "storage modes",
 			"big picture", "work-routing", "always-ask", "recommended",
 			"/work-routing-preferences", "coordinating harness",
 		},
