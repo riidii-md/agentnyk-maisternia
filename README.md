@@ -52,8 +52,8 @@ The repository contains the first safe configurator foundation:
 - reusable standard-work, idea-shaping, scored-experiment, parallel-work,
   multi-lens-review, adaptive-readability, harness-profile, session-audit,
   harness-improvement, terminal-orchestration, workflow-routing,
-  `developer-context`, `goreleaser-validation`, `git-workflow-approvals`, and
-  Codex resource-lab presets;
+  `developer-context`, `goreleaser-validation`, `git-workflow-approvals`,
+  `routine-development-approvals`, and Codex resource-lab presets;
 - preset DAG validation with explicit loop edges and cycle rejection;
 - preset create, copy, metadata edit, delete, list, show, and validation commands;
 - preset-scoped plan, staging render, guarded apply, ownership reconciliation,
@@ -110,6 +110,10 @@ fragments for exact MCP tool approvals, the narrow
 `goreleaser check --config .goreleaser.yml` command, and routine Git approval
 boundaries. GitNexus is read-only and repository-bounded; GoReleaser uses
 pinned prebuilt-release instructions rather than the repository Go toolchain.
+The opt-in `routine-development-approvals` preset installs narrow active Codex
+rules for read-only GitHub and npm metadata. Its Claude permissions remain a
+review fragment until structured settings merge is available. Publication, CI
+reruns, secret changes, and global package installation stay prompted.
 See [Preset library](docs/PRESETS.md).
 
 The retrospective presets add read-only harness profiling, evidence-backed run
@@ -308,6 +312,7 @@ go run ./cmd/maisternia preset show codex-resource-lab
 go run ./cmd/maisternia preset show developer-context
 go run ./cmd/maisternia preset show goreleaser-validation
 go run ./cmd/maisternia preset show git-workflow-approvals
+go run ./cmd/maisternia preset show routine-development-approvals
 go run ./cmd/maisternia preset validate all
 ```
 

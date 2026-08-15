@@ -536,6 +536,20 @@
       ]
     },
     {
+      "id": "routine-development-approvals-codex-rules",
+      "source": "config/codex/routine-development-approvals/approval.rules",
+      "targets": [
+        {"agent": "codex", "path": ".codex/rules/routine-development-approvals.rules"}
+      ]
+    },
+    {
+      "id": "routine-development-approvals-claude-permissions",
+      "source": "config/claude/routine-development-approvals/permissions.json",
+      "targets": [
+        {"agent": "claude", "path": ".claude/maisternia/fragments/routine-development-approvals.permissions.json"}
+      ]
+    },
+    {
       "id": "codex-lab-mcp-context7",
       "source": "config/codex/resource-lab/mcp-context7.toml",
       "targets": [

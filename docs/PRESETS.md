@@ -68,6 +68,9 @@ The repository starts with:
 - `git-workflow-approvals`: automatic add, commit, and fetch approval with
   Codex-only read inspection and explicit prompts for push, merge, stash,
   amend, and GitHub pull-request creation;
+- `routine-development-approvals`: active, narrow Codex rules for read-only
+  GitHub and npm metadata; the matching Claude permissions are staged for
+  review;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
   deny policy with human-only grants;
 - `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
@@ -92,6 +95,7 @@ maisternia preset show codex-resource-lab
 maisternia preset show developer-context
 maisternia preset show goreleaser-validation
 maisternia preset show git-workflow-approvals
+maisternia preset show routine-development-approvals
 maisternia preset show approval-standard
 maisternia preset show hook-standard
 maisternia preset validate all
@@ -109,6 +113,12 @@ They do not replace or silently merge Codex `config.toml`, Codex rule files,
 Claude `.mcp.json`, or Claude `settings.json`. After applying any of these
 presets, review and merge only the selected fragments from the provider's
 `maisternia/fragments` directory into active native configuration.
+
+`routine-development-approvals` is deliberately different for Codex. Codex can
+load independent files from `.codex/rules/`, so the preset installs one active
+rules file without merging an existing file. Claude Code permissions still
+require a structured merge into existing settings, so the Claude resource is a
+review fragment and is not reported as active.
 
 The developer-context fragments use Context7's hosted MCP endpoint and approve
 only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs
@@ -145,6 +155,36 @@ normal `sed -i` form remain unmatched. Because prefix policy cannot reject an
 option that appears later in a matched command, operators accept that an
 unusual `sed -n ... -i ...` ordering may still match the allow prefix.
 
+The routine development preset addresses repeated approvals without making the
+sandbox broad. It allows only these exact read-only prefixes:
+
+- `gh pr checks|list|view`;
+- `gh run view|watch`;
+- `npm view`.
+
+It explicitly prompts for `gh pr create`, `gh run rerun`, `gh issue create`,
+`gh secret set`, `npm publish`, and global npm installation. It does not approve
+`gh api`, `npm audit`, generic `npm install`, package scripts, or broad `gh` and
+`npm` prefixes. In particular, a prefix rule for `npm audit` would also match
+the state-changing `npm audit fix` form, so audit remains under the normal
+approval policy.
+
+These read-only commands can still have visible or sensitive effects: `gh ...
+--web` may open a browser, while workflow log options return CI logs to the
+active harness. Select this preset only when those read operations are trusted
+for the repository.
+
+Always anchor a new session to the current repository. A moved or renamed
+repository cannot be repaired by an approval rule because the session's
+writable root was fixed when it started:
+
+```bash
+codex --cd "$PWD"
+```
+
+Restart Codex after installing or changing rule files. Inspect the exact rule
+result with `codex execpolicy check` before accepting later changes.
+
 Inspect and stage the bundles before merging their native fragments:
 
 ```bash
@@ -159,6 +199,9 @@ maisternia preset render --target all --output ./build/goreleaser-validation gor
 
 maisternia preset plan --scope project --project "$PWD" --target all git-workflow-approvals
 maisternia preset render --target all --output ./build/git-workflow-approvals git-workflow-approvals
+
+maisternia preset plan --scope user --target codex routine-development-approvals
+maisternia preset render --target all --output ./build/routine-development-approvals routine-development-approvals
 ```
 
 Environment installation remains separate and confirmation-required. The

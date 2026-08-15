@@ -1,0 +1,86 @@
+# These exact read-only command prefixes may leave the sandbox without asking.
+# More restrictive rules from other active layers still win.
+prefix_rule(
+    pattern = ["gh", "pr", ["checks", "list", "view"]],
+    decision = "allow",
+    justification = "Reading pull request and check metadata is approved for routine development.",
+    match = [
+        "gh pr checks 18 --watch",
+        "gh pr list --state open --json number,title",
+        "gh pr view 18 --json state,url",
+    ],
+    not_match = [
+        "gh pr create --fill",
+        "gh pr merge 18 --squash",
+        "gh pr close 18",
+        "gh pr review 18 --approve",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "run", ["view", "watch"]],
+    decision = "allow",
+    justification = "Reading and watching workflow run metadata is approved for routine development.",
+    match = [
+        "gh run view 123 --log-failed",
+        "gh run watch 123 --exit-status",
+    ],
+    not_match = [
+        "gh run cancel 123",
+        "gh run delete 123",
+        "gh run rerun 123",
+        "gh workflow run ci.yml",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npm", "view"],
+    decision = "allow",
+    justification = "Reading package registry metadata is approved for routine development.",
+    match = ["npm view mdmaid-desk version", "npm view . version --json"],
+    not_match = ["npm audit", "npm publish", "npm install mdmaid-desk"],
+)
+
+# These state-changing prefixes remain human decisions even if another layer is
+# more permissive. The strictest matching decision wins.
+prefix_rule(
+    pattern = ["gh", "pr", "create"],
+    decision = "prompt",
+    justification = "Creating a pull request publishes external state and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["gh", "run", "rerun"],
+    decision = "prompt",
+    justification = "Rerunning CI consumes external resources and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["gh", "issue", "create"],
+    decision = "prompt",
+    justification = "Creating an issue publishes external state and requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["gh", "secret", "set"],
+    decision = "prompt",
+    justification = "Changing repository secrets requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["npm", "publish"],
+    decision = "prompt",
+    justification = "Publishing a package requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["npm", "install", "--global"],
+    decision = "prompt",
+    justification = "Changing globally installed packages requires confirmation.",
+)
+
+prefix_rule(
+    pattern = ["npm", "install", "-g"],
+    decision = "prompt",
+    justification = "Changing globally installed packages requires confirmation.",
+)

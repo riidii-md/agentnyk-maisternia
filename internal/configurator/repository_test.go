@@ -240,6 +240,113 @@ func TestRepositoryRendersGitWorkflowApprovalFragments(t *testing.T) {
 	}
 }
 
+func TestRepositoryRendersRoutineDevelopmentApprovalConfiguration(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	requiredIDs := map[string]bool{
+		"routine-development-approvals-codex-rules":        false,
+		"routine-development-approvals-claude-permissions": false,
+	}
+	for _, resource := range manifest.Resources {
+		if _, required := requiredIDs[resource.ID]; required {
+			requiredIDs[resource.ID] = true
+		}
+	}
+	for id, found := range requiredIDs {
+		if !found {
+			t.Errorf("repository manifest missing required resource %q", id)
+		}
+	}
+
+	output := t.TempDir()
+	if err := Render(repoRoot, output, manifest, "all"); err != nil {
+		t.Fatalf("Render(repository) error = %v", err)
+	}
+
+	codexRules := readRenderedFile(t, output, ".codex/rules/routine-development-approvals.rules")
+	for _, allowed := range []string{
+		`pattern = ["gh", "pr", ["checks", "list", "view"]]`,
+		`pattern = ["gh", "run", ["view", "watch"]]`,
+		`pattern = ["npm", "view"]`,
+	} {
+		if !strings.Contains(codexRules, allowed) {
+			t.Errorf("Codex routine development rules missing allow prefix %q", allowed)
+		}
+	}
+	for _, prompted := range []string{
+		`pattern = ["gh", "pr", "create"]`,
+		`pattern = ["gh", "run", "rerun"]`,
+		`pattern = ["gh", "issue", "create"]`,
+		`pattern = ["gh", "secret", "set"]`,
+		`pattern = ["npm", "publish"]`,
+		`pattern = ["npm", "install", "--global"]`,
+		`pattern = ["npm", "install", "-g"]`,
+	} {
+		if !strings.Contains(codexRules, prompted) {
+			t.Errorf("Codex routine development rules missing prompt prefix %q", prompted)
+		}
+	}
+	for _, forbidden := range []string{
+		`pattern = ["gh"]`,
+		`pattern = ["gh", "pr"]`,
+		`pattern = ["gh", "run"]`,
+		`pattern = ["npm"]`,
+		`pattern = ["npm", "audit"]`,
+		`pattern = ["npm", "install"]`,
+		`approvals_reviewer = "auto_review"`,
+		`approval_policy = "never"`,
+		`sandbox_mode = "danger-full-access"`,
+	} {
+		if strings.Contains(codexRules, forbidden) {
+			t.Errorf("Codex routine development rules contain unsafe policy %q", forbidden)
+		}
+	}
+
+	claudePermissions := readRenderedFile(t, output, ".claude/maisternia/fragments/routine-development-approvals.permissions.json")
+	var claudeFragment struct {
+		Permissions struct {
+			Allow []string `json:"allow"`
+			Ask   []string `json:"ask"`
+		} `json:"permissions"`
+	}
+	if err := json.Unmarshal([]byte(claudePermissions), &claudeFragment); err != nil {
+		t.Fatalf("decode Claude routine development permissions: %v", err)
+	}
+	if got := claudeFragment.Permissions.Allow; !slices.Equal(got, []string{
+		"Bash(gh pr checks *)",
+		"Bash(gh pr list *)",
+		"Bash(gh pr view *)",
+		"Bash(gh run view *)",
+		"Bash(gh run watch *)",
+		"Bash(npm view *)",
+	}) {
+		t.Errorf("Claude routine development allow permissions = %v", got)
+	}
+	if got := claudeFragment.Permissions.Ask; !slices.Equal(got, []string{
+		"Bash(gh pr create *)",
+		"Bash(gh run rerun *)",
+		"Bash(gh issue create *)",
+		"Bash(gh secret set *)",
+		"Bash(npm publish *)",
+		"Bash(npm install --global *)",
+		"Bash(npm install -g *)",
+	}) {
+		t.Errorf("Claude routine development ask permissions = %v", got)
+	}
+	for _, forbidden := range []string{
+		`"Bash(gh *)"`,
+		`"Bash(npm *)"`,
+		`"Bash(npm audit *)"`,
+		`"Bash(npm install *)"`,
+		`"Bash(*)"`,
+	} {
+		if strings.Contains(claudePermissions, forbidden) {
+			t.Errorf("Claude routine development permissions contain broad grant %q", forbidden)
+		}
+	}
+}
+
 func TestRepositoryRemovesProviderBrandedWorkflowCommands(t *testing.T) {
 	t.Parallel()
 
