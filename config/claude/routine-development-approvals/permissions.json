@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr checks *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr view *)",
+      "Bash(gh run view *)",
+      "Bash(gh run watch *)",
+      "Bash(npm view *)"
+    ],
+    "ask": [
+      "Bash(gh pr create *)",
+      "Bash(gh run rerun *)",
+      "Bash(gh issue create *)",
+      "Bash(gh secret set *)",
+      "Bash(npm publish *)",
+      "Bash(npm install --global *)",
+      "Bash(npm install -g *)"
+    ]
+  }
+}
