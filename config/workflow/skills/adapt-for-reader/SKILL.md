@@ -192,9 +192,18 @@ after validation succeeds, when `mdmaid-desk` is available:
 2. Otherwise match the canonical current root in `mdmaid-desk workspace list`.
 3. If it is absent, add the current root once with `mdmaid-desk workspace add`,
    using a stable collision-safe ID derived from the root.
-4. Run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
-   --attention review`. Prefer `decision`, `definition`, `progress`, or `brief`
-   when the selected mode makes the kind clear.
+4. Derive the catalog title from the final document's first level-one heading,
+   removing only the Markdown heading marker. If the document has no level-one
+   heading, write a concise semantic title from the reader contract. Never use
+   the timestamped filename as the catalog title.
+5. Run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
+   --title "<catalog title>" --attention review`. Prefer `decision`,
+   `definition`, `progress`, or `brief` when the selected mode makes the kind
+   clear. Add `--task <id>` when the source has an explicit stable task ID. Add
+   up to three short lowercase `--tag <tag>` values only when they describe
+   grounded subject matter that is not already represented by the workspace,
+   task, or kind. Never use timestamps, filenames, workspace IDs, document
+   kinds, or storage modes as tags.
 
 Registration sends the document to the desk; it does not imply approval and
 does not require starting the TUI or web client. If the CLI is unavailable or
