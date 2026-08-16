@@ -53,7 +53,7 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if len(mdmaid.Installers) != 1 ||
 		mdmaid.Installers[0].Kind != InstallerNPMGlobal ||
 		mdmaid.Installers[0].Package != "mdmaid" ||
-		mdmaid.Installers[0].Version != "0.1.14" {
+		mdmaid.Installers[0].Version != "0.1.17" {
 		t.Fatalf("mdmaid installer = %#v", mdmaid.Installers)
 	}
 	mdmaidDesk, _ := pack.Requirement("mdmaid-desk")
