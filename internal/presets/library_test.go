@@ -63,6 +63,17 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !slices.Contains(standard.Contents.Skills, "multi-lens-review-skill") {
 		t.Error("standard-work is missing the multi-lens review skill")
 	}
+	for _, resourceID := range []string{
+		"approval-policy",
+		"git-workflow-approvals-codex-rules",
+		"git-workflow-approvals-claude-permissions",
+		"routine-development-approvals-codex-rules",
+		"routine-development-approvals-claude-permissions",
+	} {
+		if !slices.Contains(standard.Contents.Settings, resourceID) {
+			t.Errorf("standard-work settings are missing %q", resourceID)
+		}
+	}
 	shape, found := library.Get("idea-shaping")
 	if !found {
 		t.Fatal("idea-shaping preset missing")
@@ -352,8 +363,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		)
 	}
 	for _, resource := range experimentManifest.Resources {
-		if got := resource.Targets; len(got) != 4 {
-			t.Fatalf("scored-experiment resource %q targets = %v, want 4", resource.ID, got)
+		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
+			t.Fatalf("scored-experiment resource %q targets = %v, want %d", resource.ID, got, want)
 		}
 	}
 
@@ -368,8 +379,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		)
 	}
 	for _, resource := range parallelManifest.Resources {
-		if got := resource.Targets; len(got) != 4 {
-			t.Fatalf("parallel-work resource %q targets = %v, want 4", resource.ID, got)
+		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
+			t.Fatalf("parallel-work resource %q targets = %v, want %d", resource.ID, got, want)
 		}
 	}
 
@@ -384,8 +395,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		)
 	}
 	for _, resource := range multiReviewManifest.Resources {
-		if got := resource.Targets; len(got) != 4 {
-			t.Fatalf("multi-lens-review resource %q targets = %v, want 4", resource.ID, got)
+		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
+			t.Fatalf("multi-lens-review resource %q targets = %v, want %d", resource.ID, got, want)
 		}
 	}
 
@@ -400,8 +411,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		)
 	}
 	for _, resource := range adaptiveReadabilityManifest.Resources {
-		if got := resource.Targets; len(got) != 4 {
-			t.Fatalf("adaptive-readability resource %q targets = %v, want 4", resource.ID, got)
+		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
+			t.Fatalf("adaptive-readability resource %q targets = %v, want %d", resource.ID, got, want)
 		}
 	}
 
@@ -416,8 +427,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		)
 	}
 	for _, resource := range improvementManifest.Resources {
-		if got := resource.Targets; len(got) != 4 {
-			t.Fatalf("harness-improvement resource %q targets = %v, want 4", resource.ID, got)
+		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
+			t.Fatalf("harness-improvement resource %q targets = %v, want %d", resource.ID, got, want)
 		}
 	}
 
@@ -429,8 +440,52 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("hook-complete resource count = %d, want 7", len(hookManifest.Resources))
 	}
 	for _, resource := range hookManifest.Resources {
-		if got := resource.Targets; len(got) != 4 {
-			t.Fatalf("hook resource %q targets = %v, want 4", resource.ID, got)
+		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
+			t.Fatalf("hook resource %q targets = %v, want %d", resource.ID, got, want)
+		}
+	}
+}
+
+func repositoryTargetCount(resource configurator.Resource) int {
+	if strings.HasPrefix(resource.ID, "work-") &&
+		resource.ID != "work-routing-skill" &&
+		resource.ID != "work-routing-runners" &&
+		resource.ID != "work-routing-profile-schema" {
+		return 5
+	}
+	return 4
+}
+
+func TestRepositoryStandardWorkCompletionContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	run, err := os.ReadFile(filepath.Join(root, "config", "workflow", "phases", "run.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fragment := range []string{
+		"non-login shell",
+		"build or install",
+		"command -v",
+		"identity or version",
+		"smoke check",
+	} {
+		if !strings.Contains(string(run), fragment) {
+			t.Errorf("work-run completion contract is missing %q", fragment)
+		}
+	}
+	pr, err := os.ReadFile(filepath.Join(root, "config", "workflow", "phases", "pr.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fragment := range []string{
+		"publication checkpoint",
+		"repository, branch, commit, remote, and PR target",
+		"task-bound",
+	} {
+		if !strings.Contains(string(pr), fragment) {
+			t.Errorf("work-pr approval contract is missing %q", fragment)
 		}
 	}
 }

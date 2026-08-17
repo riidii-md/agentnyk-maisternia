@@ -49,6 +49,13 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 			t.Errorf("%s structured output = false, want true", providerID)
 		}
 	}
+	codex, _ := registry.Resolve(Codex)
+	if !contains(codex.Renderer.ResourceKinds, "prompts") {
+		t.Errorf("Codex resource kinds = %v, want prompts", codex.Renderer.ResourceKinds)
+	}
+	if !contains(codex.Capabilities, "config.prompts") {
+		t.Errorf("Codex capabilities = %v, want config.prompts", codex.Capabilities)
+	}
 
 	expectedLoopCapabilities := map[string][]string{
 		Codex: {
@@ -214,6 +221,51 @@ func TestInspectReportsVersionRootsAndMissingExecutable(t *testing.T) {
 	}
 	if missing.Health != "unavailable" || !missing.HasErrors() {
 		t.Fatalf("missing inspection = %#v", missing)
+	}
+}
+
+func TestInspectWarnsAboutLegacyCodexWorkflowCommands(t *testing.T) {
+	t.Parallel()
+
+	registry, err := LoadRegistry(providerRepositoryRoot(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	adapter, _ := registry.Resolve(Codex)
+	home := t.TempDir()
+	commands := filepath.Join(home, ".codex", "commands")
+	if err := os.MkdirAll(commands, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(commands, "work-plan.md"), []byte("legacy"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	inspection, err := Inspect(adapter, "codex", InspectOptions{
+		Home: home,
+		LookPath: func(string) (string, error) {
+			return "/test/bin/codex", nil
+		},
+		RunVersion: func(string, []string, time.Duration) (string, error) {
+			return "codex-cli 0.145.0\n", nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if inspection.Health != "degraded" {
+		t.Fatalf("health = %q, want degraded", inspection.Health)
+	}
+	found := false
+	for _, issue := range inspection.Issues {
+		if issue.Code == "legacy_workflow_commands" {
+			found = true
+			if !strings.Contains(issue.Message, "1") || !strings.Contains(issue.Message, "prompts") {
+				t.Errorf("legacy issue = %#v", issue)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("issues = %#v, want legacy_workflow_commands", inspection.Issues)
 	}
 }
 

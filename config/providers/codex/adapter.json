@@ -19,6 +19,7 @@
       "mcp",
       "plugins",
       "profiles",
+      "prompts",
       "settings",
       "skills"
     ]
@@ -65,6 +66,7 @@
     "config.mcp",
     "config.plugins",
     "config.profiles",
+    "config.prompts",
     "config.settings",
     "config.skills",
     "filesystem.read",

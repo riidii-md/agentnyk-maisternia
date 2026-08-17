@@ -109,11 +109,10 @@
     },
     {
       "id": "permission-escalation",
-      "description": "Require a fresh decision for broader filesystem, network, MCP, sandbox, or tool authority.",
+      "description": "Require a fresh decision for broader filesystem, MCP, sandbox, or tool authority.",
       "operations": [
         "permission.escalate",
         "filesystem.outside_workspace",
-        "network.access",
         "mcp.enable",
         "sandbox.weaken",
         "tool.enable_privileged"
@@ -130,9 +129,24 @@
       }
     },
     {
-      "id": "sensitive-access",
-      "description": "Require a fresh decision before reading secrets or using credentials for a bounded operation.",
-      "operations": ["secret.read", "credential.use"],
+      "id": "bounded-network-access",
+      "description": "Allow one reviewed task-bound grant to reuse network access for the approved target and task.",
+      "operations": ["network.access"],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "task",
+        "ttl_seconds": 900,
+        "max_uses": 20,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "secret-access",
+      "description": "Require a fresh decision before reading a secret.",
+      "operations": ["secret.read"],
       "decision": "ask",
       "risk": "high",
       "requirements": ["human_present"],
@@ -140,6 +154,21 @@
         "scope": "once",
         "ttl_seconds": 300,
         "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "credential-use",
+      "description": "Allow one reviewed task-bound grant to reuse a credential for the approved operation and target without exposing it.",
+      "operations": ["credential.use"],
+      "decision": "ask",
+      "risk": "high",
+      "requirements": ["human_present"],
+      "approval": {
+        "scope": "task",
+        "ttl_seconds": 900,
+        "max_uses": 20,
         "require_preview": true,
         "require_reason": true
       }
@@ -167,16 +196,24 @@
       }
     },
     {
+      "id": "local-git-record",
+      "description": "Allow local commits for the approved task inside the trusted workspace; publication remains separately gated.",
+      "operations": ["git.commit"],
+      "decision": "allow",
+      "risk": "medium",
+      "requirements": ["approved_task_scope", "trusted_repository", "inside_workspace"]
+    },
+    {
       "id": "git-publication",
-      "description": "Require a preview and explicit decision for commits, pushes, and pull-request mutations.",
-      "operations": ["git.commit", "git.push", "pull_request.create", "pull_request.update"],
+      "description": "Require one exact publication checkpoint before task-bound pushes and pull-request mutations.",
+      "operations": ["git.push", "pull_request.create", "pull_request.update"],
       "decision": "ask",
       "risk": "high",
       "requirements": ["human_present"],
       "approval": {
-        "scope": "once",
+        "scope": "task",
         "ttl_seconds": 900,
-        "max_uses": 1,
+        "max_uses": 20,
         "require_preview": true,
         "require_reason": true
       }

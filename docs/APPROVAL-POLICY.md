@@ -24,9 +24,10 @@ decisions.
 | Decision | Examples | Conditions |
 | --- | --- | --- |
 | Allow | trusted repository reads; public research; offline repository checks | Must remain inside declared boundaries and satisfy every requirement |
-| Allow | approved workspace edits; redacted local metrics; bounded read-only delegation | Must have approved task scope or a complete delegation contract |
-| Ask | begin implementation; expand scope; use network or MCP; access credentials | Human present, reason required, target-bound and time-bounded grant |
-| Ask | dependency, hook, CI, security configuration, commit, push, PR, external write | Preview required; normally one use |
+| Allow | approved workspace edits; local task commits; redacted local metrics; bounded read-only delegation | Must have approved task scope or a complete delegation contract |
+| Ask | begin implementation; expand scope; use network or credentials | Human present; task-bound, target-bound, time-bounded grant |
+| Ask | use MCP; read a secret; change dependency, hook, CI, or security configuration | Preview required; fresh one-use decision |
+| Ask | push or mutate a PR | One exact publication checkpoint; task-bound reuse only for the stated target |
 | Ask | destructive local change; reversible production action; write-capable delegation | Preview required; narrow operation and target |
 | Deny | bypass policy, hooks, sandbox, or approvals | Cannot be approved by an agent or delegated reviewer |
 | Deny | export credentials, raw environment, secrets, or private keys | Sensitive material must not become an agent artifact |
@@ -73,9 +74,12 @@ must be:
 - written to a redacted approval record.
 
 The standard default is one use for 15 minutes. Individual rules can narrow or
-expand that within a one-hour hard limit. The implementation gate is task-scoped
-so approved work can continue, while publication, sensitive access, and
-destructive actions require fresh one-use decisions.
+expand that within a one-hour hard limit. The implementation, reviewed network,
+credential-use, and publication gates are task-scoped so approved work can
+continue without repeating the same question. Secret reads, broader authority,
+MCP activation, destructive actions, and scope changes require fresh one-use
+decisions. Local commits are allowed only inside the approved trusted task;
+publishing them remains separately gated.
 
 If a requirement such as `inside_workspace`, `network_disabled`, or
 `approved_task_scope` cannot be proved, the decision becomes `ask`. A future

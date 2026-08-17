@@ -1,3 +1,9 @@
+---
+name: work-research
+description: Research and compare solution directions using current primary evidence, explicit criteria, and tradeoffs.
+version: 0.1.0
+---
+
 # /work-research - Compare Solution Directions
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.

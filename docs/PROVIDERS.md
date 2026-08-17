@@ -99,6 +99,12 @@ provider-prefixed command aliases:
 /work-review @agy @codex @claude -- review this branch
 ```
 
+The `/work-*` spelling is the provider-neutral workflow name and the native
+Claude invocation. Codex receives two managed forms: a discoverable
+`$work-*` skill under `.codex/skills/` and a `/prompts:work-*` compatibility
+prompt under `.codex/prompts/`. `.codex/commands/` is not a supported Codex
+discovery directory. Restart Codex after applying changes.
+
 The router resolves explicit invocation, session, project, and user preferences
 in that order, then checks these provider capability facts. Several harnesses
 select a declared coordination strategy; review uses independent read-only
@@ -142,6 +148,10 @@ adapter, a bounded authority mapping, parser behavior, and tests.
 
 Provider inspection checks paths and file types only. It does not read settings,
 credentials, sessions, or caches.
+
+Codex inspection also counts stale `work*.md` files in `.codex/commands/` and
+reports a degraded diagnostic. Reapply the owning preset to migrate managed
+workflows to native prompts and skills.
 
 | Provider | Inspected roots |
 |---|---|

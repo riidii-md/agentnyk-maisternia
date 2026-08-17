@@ -78,18 +78,22 @@ func Install(home string, assets fs.FS) (string, error) {
 	}
 
 	configRoot := filepath.Join(home, ".config", "maisternia")
-	if err := ensurePrivateDirectory(home, configRoot); err != nil {
-		return "", err
-	}
 	root := filepath.Join(configRoot, "catalogs")
-	if err := ensurePrivateDirectory(home, root); err != nil {
+	destination := filepath.Join(root, digest)
+	if err := validateCatalogDirectoryPath(home, destination); err != nil {
 		return "", err
 	}
-	destination := filepath.Join(root, digest)
 	if exists, err := completeCatalog(destination, digest); err != nil {
 		return "", err
 	} else if exists {
 		return destination, nil
+	}
+
+	if err := ensurePrivateDirectory(home, configRoot); err != nil {
+		return "", err
+	}
+	if err := ensurePrivateDirectory(home, root); err != nil {
+		return "", err
 	}
 
 	staging, err := os.MkdirTemp(root, ".catalog-"+digest[:12]+"-")
@@ -252,8 +256,8 @@ func completeCatalog(destination, digest string) (bool, error) {
 }
 
 func ensurePrivateDirectory(base, directory string) error {
-	if !pathWithin(base, directory) {
-		return errors.New("catalog directory escapes user home")
+	if err := validateCatalogDirectoryPath(base, directory); err != nil {
+		return err
 	}
 	relative, err := filepath.Rel(base, directory)
 	if err != nil {
@@ -270,7 +274,35 @@ func ensurePrivateDirectory(base, directory string) error {
 			if err := os.Mkdir(current, 0o700); err != nil {
 				return fmt.Errorf("create catalog directory: %w", err)
 			}
+		} else if err != nil {
+			return fmt.Errorf("inspect catalog directory: %w", err)
+		} else if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return errors.New("catalog directory traverses a non-directory or symlink")
+		}
+	}
+	if err := os.Chmod(directory, 0o700); err != nil {
+		return fmt.Errorf("secure catalog directory: %w", err)
+	}
+	return nil
+}
+
+func validateCatalogDirectoryPath(base, directory string) error {
+	if !pathWithin(base, directory) {
+		return errors.New("catalog directory escapes user home")
+	}
+	relative, err := filepath.Rel(base, directory)
+	if err != nil {
+		return fmt.Errorf("resolve catalog directory: %w", err)
+	}
+	current := base
+	for _, component := range strings.Split(relative, string(filepath.Separator)) {
+		if component == "" || component == "." {
 			continue
+		}
+		current = filepath.Join(current, component)
+		info, err := os.Lstat(current)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
 		}
 		if err != nil {
 			return fmt.Errorf("inspect catalog directory: %w", err)
@@ -278,9 +310,6 @@ func ensurePrivateDirectory(base, directory string) error {
 		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 			return errors.New("catalog directory traverses a non-directory or symlink")
 		}
-	}
-	if err := os.Chmod(directory, 0o700); err != nil {
-		return fmt.Errorf("secure catalog directory: %w", err)
 	}
 	return nil
 }

@@ -89,7 +89,11 @@ func TestRepositoryWorkRoutingContract(t *testing.T) {
 		for _, target := range resource.Targets {
 			got = append(got, target.Agent)
 		}
-		if !slices.Equal(got, []string{"codex", "claude", "antigravity", "hermes"}) {
+		want := []string{"codex", "claude", "antigravity", "hermes"}
+		if id == "work-routing-preferences" {
+			want = []string{"codex", "codex", "claude", "antigravity", "hermes"}
+		}
+		if !slices.Equal(got, want) {
 			t.Errorf("%s targets = %v", id, got)
 		}
 	}

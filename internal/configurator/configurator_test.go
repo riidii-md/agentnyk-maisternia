@@ -348,6 +348,58 @@ func TestPresetPlanRemovesResourceDeletedFromPreset(t *testing.T) {
 	), "remove")
 }
 
+func TestPresetPlanMigratesManagedResourceTarget(t *testing.T) {
+	t.Parallel()
+
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "work-plan.md"), "workflow")
+	legacy := Manifest{
+		SchemaVersion: ManifestSchemaVersion,
+		Resources: []Resource{{
+			ID: "work-plan", Source: "config/work-plan.md",
+			Targets: []Target{{Agent: "codex", Path: ".codex/commands/work-plan.md"}},
+		}},
+	}
+	plan, err := BuildPresetPlanForScope(repo, home, legacy, "codex", ScopeUser, "standard-work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	native := legacy
+	native.Resources = []Resource{{
+		ID: "work-plan", Source: "config/work-plan.md",
+		Targets: []Target{
+			{Agent: "codex", Path: ".codex/prompts/work-plan.md"},
+			{Agent: "codex", Path: ".codex/skills/work-plan/SKILL.md"},
+		},
+	}}
+	plan, err = BuildPresetPlanForScope(repo, home, native, "codex", ScopeUser, "standard-work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	states := map[string]ActionState{}
+	for _, action := range plan.Actions {
+		states[action.TargetPath] = action.State
+	}
+	if states[".codex/commands/work-plan.md"] != ActionRemove ||
+		states[".codex/prompts/work-plan.md"] != ActionCreate ||
+		states[".codex/skills/work-plan/SKILL.md"] != ActionCreate {
+		t.Fatalf("migration actions = %#v", states)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".codex", "commands", "work-plan.md")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("legacy target remains: %v", err)
+	}
+	assertFileContents(t, filepath.Join(home, ".codex", "prompts", "work-plan.md"), "workflow")
+	assertFileContents(t, filepath.Join(home, ".codex", "skills", "work-plan", "SKILL.md"), "workflow")
+}
+
 func TestPresetRemovalReleasesSharedResourceBeforeDeletingIt(t *testing.T) {
 	t.Parallel()
 

@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -45,6 +46,72 @@ func TestInstallMaterializesContentAddressedCatalog(t *testing.T) {
 	}
 	if info.Mode().Perm() != 0o600 {
 		t.Fatalf("manifest mode = %o, want 600", info.Mode().Perm())
+	}
+}
+
+func TestInstallReusesCompleteCatalogWithoutChangingDirectoryModes(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	assets := fstest.MapFS{
+		"config/manifest.json": {Data: []byte(`{"schema_version":1,"resources":[]}`)},
+	}
+	destination, err := Install(home, assets)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configRoot := filepath.Join(home, ".config", "maisternia")
+	if err := os.Chmod(configRoot, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(configRoot, 0o700) })
+
+	reused, err := Install(home, assets)
+	if err != nil {
+		t.Fatalf("Install(existing) error = %v", err)
+	}
+	if reused != destination {
+		t.Fatalf("Install(existing) = %q, want %q", reused, destination)
+	}
+	info, err := os.Stat(configRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o500 {
+		t.Fatalf("config root mode = %o, want unchanged 500", info.Mode().Perm())
+	}
+}
+
+func TestInstallRejectsCompleteCatalogBehindSymlinkedDirectory(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	assets := fstest.MapFS{
+		"config/manifest.json": {Data: []byte(`{"schema_version":1,"resources":[]}`)},
+	}
+	_, digest, err := readCatalog(assets)
+	if err != nil {
+		t.Fatal(err)
+	}
+	external := t.TempDir()
+	destination := filepath.Join(external, "catalogs", digest)
+	if err := os.MkdirAll(filepath.Join(destination, "config"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(destination, ".complete"), []byte(digest+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(destination, "config", "manifest.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(home, ".config"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(external, filepath.Join(home, ".config", "maisternia")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Install(home, assets); err == nil || !strings.Contains(err.Error(), "symlink") {
+		t.Fatalf("Install() error = %v, want symlink rejection", err)
 	}
 }
 
