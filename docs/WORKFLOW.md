@@ -105,7 +105,7 @@ preset:
     - /work-review
   targets:
     codex:
-      render_as: commands
+      render_as: prompts_and_skills
     claude:
       render_as: slash_commands
     hermes:
@@ -142,6 +142,18 @@ Canonical commands use the `/work-*` namespace:
 
 The command identifies the phase. Provider rendering decides how that command is
 installed in each harness. The harness decides how to execute it at runtime.
+
+Provider-native invocation differs by harness:
+
+| Harness | Invocation | Managed target |
+|---|---|---|
+| Claude Code | `/work-plan` | `.claude/commands/work-plan.md` |
+| Codex | `$work-plan` | `.codex/skills/work-plan/SKILL.md` |
+| Codex prompt shim | `/prompts:work-plan` | `.codex/prompts/work-plan.md` |
+| Hermes | skill selection | `.hermes/skills/work-plan/SKILL.md` |
+
+Codex does not load `.codex/commands/`. Restart Codex after applying a preset so
+new native skills are indexed for suggestions.
 
 ### Route Canonical Commands With `@harness`
 
@@ -308,7 +320,7 @@ flowchart TD
     P --> X[Conflict and drift checks]
     X --> I[Explicit apply]
     I --> CC[Claude commands]
-    I --> CX[Codex commands]
+    I --> CX[Codex prompts + skills]
     I --> H[Hermes skills]
     I --> AGY[Antigravity config]
     CC --> R[Harness-owned execution]

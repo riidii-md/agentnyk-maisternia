@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral discovery, planning, implementation, verification, review, and PR workflow.",
+  "description": "Provider-neutral discovery, planning, implementation, verification, review, and PR workflow with bounded routine approvals.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
@@ -50,7 +50,12 @@
     ],
     "hooks": [],
     "settings": [
-      "review-policy", "review-report-schema", "work-routing-profile-schema"
+      "review-policy", "review-report-schema", "work-routing-profile-schema",
+      "approval-policy",
+      "git-workflow-approvals-codex-rules",
+      "git-workflow-approvals-claude-permissions",
+      "routine-development-approvals-codex-rules",
+      "routine-development-approvals-claude-permissions"
     ]
   },
   "targets": ["codex", "claude", "antigravity"]

@@ -1,3 +1,9 @@
+---
+name: work-adapt-for-reader
+description: Adapt existing text to a specific reader, purpose, medium, and time budget while preserving meaning and evidence.
+version: 0.1.0
+---
+
 # /work-adapt-for-reader - Adapt Text to Its Reader
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.

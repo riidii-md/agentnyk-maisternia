@@ -1,3 +1,9 @@
+---
+name: work-pr
+description: Check pull request readiness and prepare an accurate publication handoff without mutating remote state.
+version: 0.1.0
+---
+
 # /work-pr - Check Pull Request Readiness
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
@@ -19,6 +25,12 @@ Verify:
 - checks actually run;
 - documentation and migration notes;
 - review findings and accepted risk.
+
+Before the first external PR mutation, present one publication checkpoint with
+the exact repository, branch, commit, remote, and PR target. A human approval at
+that checkpoint may be reused only as a task-bound grant for the stated push and
+PR create/update operations. It never includes credential disclosure, force
+pushes, history rewrites, unrelated repositories, or destructive operations.
 
 Return a pass/fail checklist, exact fixes, suggested title and body, provider
 command, and remaining approvals. Do not commit, push, or open a PR without

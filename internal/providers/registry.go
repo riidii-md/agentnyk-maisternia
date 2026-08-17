@@ -27,6 +27,7 @@ var (
 		"mcp":          true,
 		"plugins":      true,
 		"profiles":     true,
+		"prompts":      true,
 		"settings":     true,
 		"skills":       true,
 	}

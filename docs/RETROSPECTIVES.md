@@ -22,7 +22,8 @@ that staging target is not yet proof that Antigravity consumes the files.
 
 ### `harness-profile`
 
-Installs `/work-profile`, the shared `session-retrospective` skill, and the
+Installs the canonical `work-profile` workflow, the shared
+`session-retrospective` skill, and the
 retrospective policy.
 
 The command inventories active instructions, commands, prompts, skills, MCP
@@ -39,7 +40,7 @@ INVENTORY -> MEASURE -> REPORT
 
 ### `session-audit`
 
-Installs `/work-audit`, `/work-session-analysis`, the shared skill, and the
+Installs the canonical `work-audit` and `work-session-analysis` workflows, the shared skill, and the
 policy.
 
 The audit reads one explicitly selected run and returns four independent lanes:
@@ -88,11 +89,16 @@ After installing `harness-improvement`, invoke `/work-retrospective` at the end
 of a completed task. The shared skill also makes the workflow discoverable when
 the harness selects skills from task context.
 
+In Codex, invoke `$work-retrospective` from skill suggestions or use the
+compatibility prompt `/prompts:work-retrospective`. In Claude Code, use
+`/work-retrospective`. Restart the harness after applying the preset.
+
 For a direct analysis of one completed session without running the wider
 improvement lifecycle, invoke:
 
 ```text
-/work-session-analysis <explicit session export or current completed task>
+Codex:  $work-session-analysis <explicit session export or current completed task>
+Claude: /work-session-analysis <explicit session export or current completed task>
 ```
 
 The command delegates seven independent review lanes when the provider supports

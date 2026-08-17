@@ -39,7 +39,8 @@ harness home.
 
 The repository starts with:
 
-- `standard-work`: the provider-neutral delivery workflow;
+- `standard-work`: the provider-neutral delivery workflow with the standard
+  policy and bounded routine Git, GitHub, and npm approval resources;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, and planning;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
@@ -107,18 +108,22 @@ are review fragments, not active configuration, because maisternia does not yet
 merge structured TOML or JSON. Its settings resource is an opt-in named Codex
 profile and does not replace the user's main `config.toml`.
 
-`developer-context`, `goreleaser-validation`, and `git-workflow-approvals` also
-render review fragments.
-They do not replace or silently merge Codex `config.toml`, Codex rule files,
-Claude `.mcp.json`, or Claude `settings.json`. After applying any of these
-presets, review and merge only the selected fragments from the provider's
-`maisternia/fragments` directory into active native configuration.
+`developer-context` and `goreleaser-validation` render review fragments.
+`git-workflow-approvals` installs its independent Codex rule file directly
+under `.codex/rules/`; its Claude permissions remain a review fragment because
+they require a structured merge. None of these presets replaces or silently
+merges Codex `config.toml`, Claude `.mcp.json`, or Claude `settings.json`.
 
 `routine-development-approvals` is deliberately different for Codex. Codex can
 load independent files from `.codex/rules/`, so the preset installs one active
 rules file without merging an existing file. Claude Code permissions still
 require a structured merge into existing settings, so the Claude resource is a
 review fragment and is not reported as active.
+
+`standard-work` includes both Git and routine-development approval resources so
+normal delivery does not require stacking extra development presets. The Codex
+rule files are active independent files. Claude permission fragments remain
+staged for review until structured settings merge is available.
 
 The developer-context fragments use Context7's hosted MCP endpoint and approve
 only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs

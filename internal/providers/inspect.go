@@ -141,7 +141,50 @@ func Inspect(adapter Adapter, requestedAs string, options InspectOptions) (Inspe
 		}
 		inspection.ConfigRoots = append(inspection.ConfigRoots, state)
 	}
+	if adapter.ID == Codex {
+		if err := inspectLegacyCodexCommands(home, &inspection); err != nil {
+			return Inspection{}, err
+		}
+	}
 	return inspection, nil
+}
+
+func inspectLegacyCodexCommands(home string, inspection *Inspection) error {
+	commands := filepath.Join(home, ".codex", "commands")
+	if symlink, err := firstSymlink(home, commands); err != nil {
+		return fmt.Errorf("inspect legacy Codex commands: %w", err)
+	} else if symlink != "" {
+		return nil
+	}
+	entries, err := os.ReadDir(commands)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("inspect legacy Codex commands: %w", err)
+	}
+	count := 0
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.Type().IsRegular() &&
+			(name == "work.md" || strings.HasPrefix(name, "work-") && strings.HasSuffix(name, ".md")) {
+			count++
+		}
+	}
+	if count == 0 {
+		return nil
+	}
+	inspection.Issues = append(inspection.Issues, Issue{
+		Severity: "warning",
+		Code:     "legacy_workflow_commands",
+		Message: fmt.Sprintf(
+			"found %d legacy Codex workflow command(s) in %s; reapply the preset to install discoverable prompts and skills",
+			count,
+			commands,
+		),
+	})
+	setHealth(inspection, "degraded")
+	return nil
 }
 
 func setHealth(inspection *Inspection, health string) {

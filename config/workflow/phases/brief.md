@@ -1,3 +1,9 @@
+---
+name: work-brief
+description: Produce a concise task and session refresher from current evidence, decisions, progress, and remaining work.
+version: 0.1.0
+---
+
 # /work-brief - Quick Task and Session Refresher
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.

@@ -851,9 +851,12 @@ func TestRunCollectionCommandsAndOwnershipLifecycle(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("collection apply code = %d, stderr = %s", code, stderr.String())
 	}
-	target := filepath.Join(home, ".codex", "commands", "work-brief.md")
+	target := filepath.Join(home, ".codex", "prompts", "work-brief.md")
 	if _, err := os.Stat(target); err != nil {
 		t.Fatalf("collection apply target: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".codex", "skills", "work-brief", "SKILL.md")); err != nil {
+		t.Fatalf("collection apply skill target: %v", err)
 	}
 
 	stdout.Reset()
@@ -1050,7 +1053,7 @@ func TestRunApprovalCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("approval validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "approval policy valid: 20 rules") {
+	if !strings.Contains(stdout.String(), "approval policy valid: 23 rules") {
 		t.Fatalf("approval validate output = %q", stdout.String())
 	}
 
@@ -1059,7 +1062,7 @@ func TestRunApprovalCommands(t *testing.T) {
 		want      []string
 	}{
 		{operation: "repository.read", want: []string{"decision: allow", "rule: workspace-discovery", "if requirements are unmet: ask"}},
-		{operation: "git.push", want: []string{"decision: ask", "rule: git-publication", "approval: once scope"}},
+		{operation: "git.push", want: []string{"decision: ask", "rule: git-publication", "approval: task scope"}},
 		{operation: "approval.self_grant", want: []string{"decision: deny", "rule: approval-self-modification"}},
 		{operation: "unknown.operation", want: []string{"decision: ask", "rule: default"}},
 	}
@@ -1778,7 +1781,7 @@ func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
 	t.Parallel()
 
 	repo := appRepositoryRoot(t)
-	targetRelative := filepath.Join(".codex", "commands", "work-experiment.md")
+	targetRelative := filepath.Join(".codex", "prompts", "work-experiment.md")
 
 	t.Run("keep existing", func(t *testing.T) {
 		home := t.TempDir()

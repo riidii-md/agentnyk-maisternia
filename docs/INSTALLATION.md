@@ -176,6 +176,12 @@ backed up and removed; shared targets are retained; local drift becomes a
 conflict. `preset uninstall` uses recorded ownership and therefore still works
 when the preset definition has already been removed from the catalog.
 
+For Codex workflow presets, reapplying migrates managed workflow files from the
+unsupported `.codex/commands/` layout to native `.codex/skills/` entries plus
+`.codex/prompts/` compatibility shims. Restart Codex after apply. Provider
+inspection reports remaining legacy `work*.md` command files as degraded so
+unmanaged leftovers can be reviewed explicitly.
+
 Environment-only presets remain local-machine scoped because they install host
 tools rather than provider configuration.
 

@@ -233,10 +233,15 @@ run it inside the harness you choose:
 
 ```text
 Claude Code: /work-shape
-Codex CLI:   /work-shape
+Codex CLI:   $work-shape (native skill) or /prompts:work-shape (prompt shim)
 Hermes:      work-shape skill
 Antigravity: provider-native prompt/command mapping
 ```
+
+Codex does not discover custom workflows from `.codex/commands`. Maisternia
+installs each workflow both as a native `.codex/skills/<name>/SKILL.md` entry and
+as a `.codex/prompts/<name>.md` compatibility prompt. Restart Codex after
+applying or updating a workflow preset so the new skill appears in suggestions.
 
 Those harnesses own their own sessions, histories, live approval prompts, and
 execution loops. `maisternia` may define approval policy and render configuration
@@ -499,6 +504,11 @@ Neutral commands describe the work:
 /work-review
 /work-routing-preferences
 ```
+
+The names above are canonical workflow names. Invoke them as `/work-*` in
+Claude Code, `$work-*` in Codex, or `/prompts:work-*` through Codex's legacy
+prompt shim. Routing arguments remain the same after the provider-native
+invocation prefix.
 
 An optional leading route block selects one or several harnesses:
 

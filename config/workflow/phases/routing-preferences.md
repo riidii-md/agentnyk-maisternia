@@ -1,3 +1,9 @@
+---
+name: work-routing-preferences
+description: Configure explicit provider-neutral workflow routing preferences without silently delegating current work.
+version: 0.1.0
+---
+
 # /work-routing-preferences - Configure Workflow Routing
 
 Create, revise, or migrate reusable harness-routing preferences from:

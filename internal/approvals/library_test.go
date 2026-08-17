@@ -16,8 +16,8 @@ func TestRepositoryApprovalPolicyIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if len(policy.Rules) != 20 {
-		t.Fatalf("rule count = %d, want 20", len(policy.Rules))
+	if len(policy.Rules) != 23 {
+		t.Fatalf("rule count = %d, want 23", len(policy.Rules))
 	}
 	if policy.DefaultDecision != "ask" {
 		t.Fatalf("default decision = %q, want ask", policy.DefaultDecision)
@@ -40,6 +40,7 @@ func TestRepositoryApprovalPolicyIsValid(t *testing.T) {
 		rule      string
 	}{
 		{operation: "repository.read", decision: "allow", rule: "workspace-discovery"},
+		{operation: "git.commit", decision: "allow", rule: "local-git-record"},
 		{operation: "git.push", decision: "ask", rule: "git-publication"},
 		{operation: "approval.self_grant", decision: "deny", rule: "approval-self-modification"},
 		{operation: "unknown.operation", decision: "ask", rule: ""},
@@ -57,6 +58,19 @@ func TestRepositoryApprovalPolicyIsValid(t *testing.T) {
 		}
 		if resolution.Rule == nil || resolution.Rule.ID != test.rule {
 			t.Errorf("Resolve(%q) rule = %#v, want %q", test.operation, resolution.Rule, test.rule)
+		}
+	}
+
+	for operation, scope := range map[string]string{
+		"network.access": "task",
+		"credential.use": "task",
+		"git.push":       "task",
+		"secret.read":    "once",
+	} {
+		resolution := policy.Resolve(operation)
+		if resolution.Rule == nil || resolution.Rule.Approval == nil ||
+			resolution.Rule.Approval.Scope != scope {
+			t.Errorf("Resolve(%q) approval = %#v, want scope %q", operation, resolution.Rule, scope)
 		}
 	}
 }

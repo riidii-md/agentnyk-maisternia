@@ -45,13 +45,57 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	if err := Render(repoRoot, output, manifest, "all"); err != nil {
 		t.Fatalf("Render(repository) error = %v", err)
 	}
-	assertRenderedFile(t, output, ".codex/commands/work-plan.md")
+	assertRenderedFile(t, output, ".codex/prompts/work-plan.md")
+	assertRenderedFile(t, output, ".codex/skills/work-plan/SKILL.md")
 	assertRenderedFile(t, output, ".claude/commands/work-plan.md")
 	assertRenderedFile(t, output, ".config/agy/prompts/work-plan.md")
-	assertRenderedFile(t, output, ".codex/commands/work-routing-preferences.md")
+	assertRenderedFile(t, output, ".codex/prompts/work-routing-preferences.md")
+	assertRenderedFile(t, output, ".codex/skills/work-routing-preferences/SKILL.md")
 	assertRenderedFile(t, output, ".claude/skills/work-routing/SKILL.md")
 	assertRenderedFile(t, output, ".config/agy/maisternia/work-routing-profile.schema.json")
 	assertRenderedFile(t, output, ".hermes/skills/work-routing/SKILL.md")
+}
+
+func TestRepositoryCodexWorkflowsAvoidLegacyCommandDirectory(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	for _, resource := range manifest.Resources {
+		if !strings.HasPrefix(resource.ID, "work-") ||
+			resource.ID == "work-routing-skill" ||
+			resource.ID == "work-routing-runners" ||
+			resource.ID == "work-routing-profile-schema" {
+			continue
+		}
+		promptName := resource.ID
+		skillName := resource.ID
+		if resource.ID == "work-conductor" {
+			promptName = "work"
+			skillName = "work"
+		}
+		prompt := false
+		skill := false
+		for _, target := range resource.Targets {
+			if target.Agent != "codex" {
+				continue
+			}
+			if strings.HasPrefix(target.Path, ".codex/commands/") {
+				t.Errorf("resource %q retains legacy target %q", resource.ID, target.Path)
+			}
+			prompt = prompt || target.Path == ".codex/prompts/"+promptName+".md"
+			skill = skill || target.Path == ".codex/skills/"+skillName+"/SKILL.md"
+		}
+		if !prompt || !skill {
+			t.Errorf("resource %q Codex targets = %#v, want prompt and skill", resource.ID, resource.Targets)
+		}
+		content, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(resource.Source)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.HasPrefix(string(content), "---\nname: "+skillName+"\n") {
+			t.Errorf("resource %q source is not a native Codex skill", resource.ID)
+		}
+	}
 }
 
 func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testing.T) {
@@ -170,7 +214,7 @@ func TestRepositoryRendersGitWorkflowApprovalFragments(t *testing.T) {
 	if err := Render(repoRoot, output, manifest, "all"); err != nil {
 		t.Fatalf("Render(repository) error = %v", err)
 	}
-	codexRules := readRenderedFile(t, output, ".codex/maisternia/fragments/git-workflow-approvals.rules")
+	codexRules := readRenderedFile(t, output, ".codex/rules/git-workflow-approvals.rules")
 	for _, allowed := range []string{
 		"pattern = [\"sed\", \"-n\"],\n    decision = \"allow\"",
 		"pattern = [\"git\", \"add\"],\n    decision = \"allow\"",
