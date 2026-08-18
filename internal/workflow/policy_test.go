@@ -41,8 +41,8 @@ func TestRepositorySchemasAreValidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(paths) != 20 {
-		t.Fatalf("schema count = %d, want 20", len(paths))
+	if len(paths) != 14 {
+		t.Fatalf("schema count = %d, want 14", len(paths))
 	}
 	for _, path := range paths {
 		data, err := os.ReadFile(path)
@@ -56,6 +56,19 @@ func TestRepositorySchemasAreValidJSON(t *testing.T) {
 		}
 		if schema["$schema"] == nil || schema["$id"] == nil {
 			t.Errorf("%s is missing $schema or $id", path)
+		}
+	}
+	for _, removed := range []string{
+		"context-envelope.schema.json",
+		"outcome.schema.json",
+		"shape-question.schema.json",
+		"shape-source.schema.json",
+		"task-event.schema.json",
+		"task-state.schema.json",
+	} {
+		path := filepath.Join(repositoryRoot(t), "config", "schema", removed)
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Errorf("runtime-only schema %s still exists", removed)
 		}
 	}
 }

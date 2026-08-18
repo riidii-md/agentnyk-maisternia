@@ -332,6 +332,5 @@ ownership and conflict behavior are proven.
 7. Resolve render requirements against provider capability contracts.
 8. Add preset-library authoring, workflow DAG editing, existing provider-config inspection, and provider-native render previews.
 
-The first task-state and manual event-ingestion increment is implemented
-separately from provider configuration. See
-[Event-Driven Workflow](EVENT-WORKFLOW.md).
+Untrusted event envelopes can be checked against the declarative workflow
+policy without creating runtime state. See [Event validation](EVENT-VALIDATION.md).

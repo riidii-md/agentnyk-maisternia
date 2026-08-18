@@ -434,11 +434,55 @@ func TestRunReportsConflicts(t *testing.T) {
 	}
 }
 
-func TestRunEventTaskAndWorkCommands(t *testing.T) {
+func TestRunDoesNotExposeWorkflowRuntimeCommands(t *testing.T) {
+	t.Parallel()
+
+	for _, command := range []string{"pipeline", "source", "grill", "task", "work"} {
+		command := command
+		t.Run(command, func(t *testing.T) {
+			t.Parallel()
+
+			var stdout, stderr bytes.Buffer
+			if code := Run([]string{command}, &stdout, &stderr); code != 2 {
+				t.Fatalf("%s code = %d, want 2", command, code)
+			}
+			want := `unknown command "` + command + `"`
+			if !strings.Contains(stderr.String(), want) {
+				t.Fatalf("%s stderr = %q, want %q", command, stderr.String(), want)
+			}
+		})
+	}
+
+	t.Run("event ingest", func(t *testing.T) {
+		t.Parallel()
+
+		var stdout, stderr bytes.Buffer
+		if code := Run([]string{"event", "ingest"}, &stdout, &stderr); code != 2 {
+			t.Fatalf("event ingest code = %d, want 2", code)
+		}
+		if !strings.Contains(stderr.String(), `unknown event command "ingest"`) {
+			t.Fatalf("event ingest stderr = %q", stderr.String())
+		}
+	})
+
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"help"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("help code = %d, stderr = %s", code, stderr.String())
+	}
+	for _, removed := range []string{
+		"event ingest", "pipeline start", "maisternia source", "maisternia grill",
+		"maisternia task", "maisternia work next",
+	} {
+		if strings.Contains(stdout.String(), removed) {
+			t.Errorf("help still advertises removed runtime command %q", removed)
+		}
+	}
+}
+
+func TestRunEventValidateCommand(t *testing.T) {
 	t.Parallel()
 
 	repo := appRepositoryRoot(t)
-	home := t.TempDir()
 	event := workflow.TriggerEvent{
 		SchemaVersion: 1,
 		EventID:       "github:delivery:cli-test",
@@ -480,182 +524,6 @@ func TestRunEventTaskAndWorkCommands(t *testing.T) {
 	if !strings.Contains(stdout.String(), "issue.opened") &&
 		!strings.Contains(stdout.String(), "scout") {
 		t.Fatalf("event validate output = %q", stdout.String())
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"event", "ingest",
-		"--repo", repo,
-		"--home", home,
-		eventPath,
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("event ingest code = %d, stderr = %s", code, stderr.String())
-	}
-	if !strings.Contains(stdout.String(), "no phase executed") {
-		t.Fatalf("event ingest output = %q", stdout.String())
-	}
-
-	store, err := workflow.NewStore(home, workflow.StoreOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	taskID := workflow.TaskID(event)
-	if _, err := store.LoadTask(taskID); err != nil {
-		t.Fatalf("ingested task missing: %v", err)
-	}
-
-	for _, command := range []struct {
-		args []string
-		want string
-	}{
-		{args: []string{"task", "list", "--home", home}, want: taskID},
-		{args: []string{"task", "show", "--home", home, taskID}, want: `"phase": "scout"`},
-		{args: []string{"task", "context", "--home", home, taskID}, want: `"status": "unresolved"`},
-		{args: []string{"work", "next", "--home", home, taskID}, want: "dispatch: disabled"},
-	} {
-		stdout.Reset()
-		stderr.Reset()
-		code = Run(command.args, &stdout, &stderr)
-		if code != 0 {
-			t.Fatalf("%v code = %d, stderr = %s", command.args, code, stderr.String())
-		}
-		if !strings.Contains(stdout.String(), command.want) {
-			t.Fatalf("%v output = %q, want %q", command.args, stdout.String(), command.want)
-		}
-	}
-}
-
-func TestRunShapeSourceAndGrillCommands(t *testing.T) {
-	t.Parallel()
-
-	home := t.TempDir()
-	var stdout, stderr bytes.Buffer
-	code := Run([]string{
-		"pipeline", "start", "shape",
-		"--home", home,
-		"--task-id", "shape-cli-test",
-		"--title", "Improve idea development",
-		"--repository", "kagi-labs/agentnyk-maisternia",
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("pipeline start code = %d, stderr = %s", code, stderr.String())
-	}
-	if !strings.Contains(stdout.String(), "task: shape-cli-test") ||
-		!strings.Contains(stdout.String(), "pipeline: shape") {
-		t.Fatalf("pipeline start output = %q", stdout.String())
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"pipeline", "transition",
-		"--home", home,
-		"shape-cli-test",
-		"research",
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("pipeline transition code = %d, stderr = %s", code, stderr.String())
-	}
-	if !strings.Contains(stdout.String(), "phase: research") {
-		t.Fatalf("pipeline transition output = %q", stdout.String())
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"source", "add",
-		"--home", home,
-		"shape-cli-test",
-		"https://example.com/evidence",
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("source add code = %d, stderr = %s", code, stderr.String())
-	}
-	if !strings.Contains(stdout.String(), "source: src-") {
-		t.Fatalf("source add output = %q", stdout.String())
-	}
-
-	store, err := workflow.NewStore(home, workflow.StoreOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	sources, err := store.ListSources("shape-cli-test")
-	if err != nil || len(sources) != 1 {
-		t.Fatalf("sources = %#v, error = %v", sources, err)
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"source", "classify",
-		"--home", home,
-		"shape-cli-test",
-		sources[0].SourceID,
-		"requirement-changing",
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("source classify code = %d, stderr = %s", code, stderr.String())
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"grill", "ask",
-		"--home", home,
-		"--category", "constraints",
-		"--why", "It changes which options are viable.",
-		"--critical",
-		"shape-cli-test",
-		"What cannot change?",
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("grill ask code = %d, stderr = %s", code, stderr.String())
-	}
-
-	questions, err := store.ListQuestions("shape-cli-test")
-	if err != nil || len(questions) != 1 {
-		t.Fatalf("questions = %#v, error = %v", questions, err)
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"grill", "next",
-		"--home", home,
-		"shape-cli-test",
-	}, &stdout, &stderr)
-	if code != 0 || !strings.Contains(stdout.String(), "What cannot change?") {
-		t.Fatalf("grill next code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"grill", "answer",
-		"--home", home,
-		"--action", "answer",
-		"--text", "The existing aliases.",
-		"shape-cli-test",
-		questions[0].QuestionID,
-	}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("grill answer code = %d, stderr = %s", code, stderr.String())
-	}
-	if !strings.Contains(stdout.String(), "status: answered") {
-		t.Fatalf("grill answer output = %q", stdout.String())
-	}
-
-	stdout.Reset()
-	stderr.Reset()
-	code = Run([]string{
-		"source", "list",
-		"--home", home,
-		"shape-cli-test",
-	}, &stdout, &stderr)
-	if code != 0 || !strings.Contains(stdout.String(), "requirement-changing") {
-		t.Fatalf("source list code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
 	}
 }
 
@@ -1881,7 +1749,7 @@ func TestRunPresetApplyCanKeepOrReplaceConflicts(t *testing.T) {
 	})
 }
 
-func TestRunEventRejectsUnsupportedTriggerWithoutWriting(t *testing.T) {
+func TestRunEventValidateRejectsUnsupportedTrigger(t *testing.T) {
 	t.Parallel()
 
 	event := workflow.TriggerEvent{
@@ -1909,23 +1777,17 @@ func TestRunEventRejectsUnsupportedTriggerWithoutWriting(t *testing.T) {
 	if err := os.WriteFile(eventPath, data, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	home := t.TempDir()
-
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{
-		"event", "ingest",
+		"event", "validate",
 		"--repo", appRepositoryRoot(t),
-		"--home", home,
 		eventPath,
 	}, &stdout, &stderr)
 	if code != 1 {
-		t.Fatalf("event ingest code = %d, want 1", code)
+		t.Fatalf("event validate code = %d, want 1", code)
 	}
 	if !strings.Contains(stderr.String(), "unsupported trigger") {
 		t.Fatalf("stderr = %q, want unsupported trigger", stderr.String())
-	}
-	if _, err := os.Stat(filepath.Join(home, ".agent-workflow")); !os.IsNotExist(err) {
-		t.Fatalf("unsupported event created workflow state, stat error = %v", err)
 	}
 }
 

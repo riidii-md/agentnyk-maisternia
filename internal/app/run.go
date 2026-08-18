@@ -36,18 +36,10 @@ Usage:
   maisternia render [options] --output <dir>
   maisternia apply [options] --yes
   maisternia event validate [options] <event.json>
-  maisternia event ingest [options] <event.json>
-  maisternia pipeline start shape [options]
-  maisternia source <command> [options]
-  maisternia grill <command> [options]
   maisternia provider list [options]
   maisternia provider inspect [options] <provider>
   maisternia provider doctor [options] [provider|all]
   maisternia provider capabilities [options] <provider>
-  maisternia task list [options]
-  maisternia task show [options] <task-id>
-  maisternia task context [options] <task-id>
-  maisternia work next [options] <task-id>
 
 Common options:
   --repo <dir>       Configuration catalog override
@@ -101,18 +93,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runPresetCommand(args[1:], stdout, stderr)
 	case "event":
 		return runEventCommand(args[1:], stdout, stderr)
-	case "pipeline":
-		return runPipelineCommand(args[1:], stdout, stderr)
-	case "source":
-		return runSourceCommand(args[1:], stdin, stdout, stderr)
-	case "grill":
-		return runGrillCommand(args[1:], stdin, stdout, stderr)
 	case "provider":
 		return runProviderCommand(args[1:], stdout, stderr)
-	case "task":
-		return runTaskCommand(args[1:], stdout, stderr)
-	case "work":
-		return runWorkCommand(args[1:], stdout, stderr)
 	case "doctor", "inventory", "plan", "render", "apply":
 		// These commands use the shared manifest-backed path below.
 	default:

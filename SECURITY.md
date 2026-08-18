@@ -36,12 +36,8 @@ Current controls:
 - unsupported-trigger, unsafe-path, credential-pattern, and URL-userinfo
   rejection;
 - read-only trigger authority enforcement;
-- source-event separation from generated runner context;
-- event idempotency checksums;
-- private task-state permissions, atomic replacement, and append-only logs;
-- per-event and per-task writer leases with stale-process recovery on Unix;
 - private, symlink-rejecting local settings storage;
-- terminal-control sanitization before untrusted task data is rendered;
+- terminal-control sanitization before untrusted configuration data is rendered;
 - an observational admin TUI with no approval, apply, dispatch, or external
   write controls.
 
@@ -73,8 +69,7 @@ Changes to these areas require focused security review:
 - plugin installation;
 - runner subprocess execution;
 - permission routing;
-- normalized event validation and idempotency;
-- durable task state, indexes, and leases;
+- normalized event and policy validation;
 - terminal rendering of event-derived data;
 - local repository settings and discovery;
 - preset-library authoring, workflow DAG editing, existing provider-config inspection, and provider-native render previews.

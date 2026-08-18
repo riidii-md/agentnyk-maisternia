@@ -16,12 +16,14 @@ Input:
 
 For each pass:
 
-1. Read durable progress and select the first unfinished unblocked task.
+1. Read the approved plan or handoff plus the current session's progress and
+   select the first unfinished unblocked task.
 2. Reconfirm the task against current code and repository rules.
 3. Implement only that task.
 4. Add or update focused tests.
 5. Run the task criteria and smallest relevant checks.
-6. Record result, files, checks, attempt count, and next action.
+6. Report result, files, checks, attempt count, and next action to the
+   coordinating session.
 7. Repeat.
 
 Prefer non-login shell execution for routine commands so startup scripts do not
@@ -43,3 +45,6 @@ parked, all remaining work is blocked, or the configured run cap is reached.
 
 Do not commit, push, open a PR, weaken criteria, touch production data, or
 perform destructive actions without explicit authorization.
+
+Do not create or update a Maisternia runtime task. Use a progress artifact only
+when the approved plan explicitly supplies one.

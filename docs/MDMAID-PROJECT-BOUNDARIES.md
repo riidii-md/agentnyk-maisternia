@@ -29,14 +29,14 @@ server lifecycle.
 
 ```mermaid
 flowchart TD
-    A[CLI agent workflow] -->|artifact events| S[mdmaid.desk]
+    A[Agent harness or collaboration runtime] -->|documents and artifact events| S[mdmaid.desk]
     N[mdmaid.nvim] -->|register and open| S
     X[Scripts and other tools] -->|register documents| S
     S -->|render Markdown and Mermaid| M[mdmaid]
     S --> C[(Document catalog)]
     S --> B[Browser workspace]
     B --> H[Human]
-    H -->|explicit decision| W[Workflow approval state]
+    H -->|explicit decision| W[Harness or collaboration approval state]
 ```
 
 ### `mdmaid`
@@ -104,14 +104,13 @@ BufEnter *.md
 
 The Neovim process no longer owns the persistent server.
 
-### CLI Agent Workflow Project
+### Agent Harness or Collaboration Runtime
 
 Responsibility:
 
-- provider-neutral workflow commands;
-- provider configuration;
-- durable task state;
-- append-only task history;
+- live agent sessions and roles;
+- task or room state when persistence is required;
+- conversation and steering history;
 - model and runner routing;
 - artifact production;
 - artifact events;
@@ -119,7 +118,7 @@ Responsibility:
 - approval gates;
 - execution coordination.
 
-It emits a generic event:
+A runtime may emit a generic event:
 
 ```json
 {
@@ -139,8 +138,23 @@ open when policy requires
 return stable URL
 ```
 
-The workflow project remains the authority for approvals. `mdmaid.desk` is the
-human review surface, not the task-state authority.
+The selected harness or collaboration runtime remains the authority for live
+execution and approvals. `mdmaid.desk` is the human review surface and may grow
+collaboration-room capabilities under its own contract.
+
+### AgentnykMaisternia
+
+Responsibility:
+
+- provider-neutral workflow definitions;
+- provider adapters and capability metadata;
+- preset and collection composition;
+- rendering, validation, conflict inspection, and guarded installation;
+- installing the `readable-output` integration and mdmaid.desk client settings.
+
+Maisternia does not own live task state, artifact-event history, execution
+coordination, approval queues, or collaboration rooms. It configures the
+harness or collaboration service that owns those concerns.
 
 ## Why Not Put Everything in `mdmaid.nvim`
 
@@ -205,28 +219,24 @@ The separate executable avoids coupling the `mdmaid` renderer/validator and
 
 ### AgentnykMaisternia
 
-The workflow product is branded **AgentnykMaisternia**, with **Maisternia** as
-the short name.
+The configuration product is branded **AgentnykMaisternia**, with
+**Maisternia** as the short name.
 
 ```text
 Product brand:      AgentnykMaisternia
 Repository:         agentnyk-maisternia
-CLI/state namespace: maisternia
-Workflow commands:  /work-brief, /work-plan, /work-run
-Presentation:       mdmaid.desk
+CLI/config namespace: maisternia
+Installed commands:  /work-brief, /work-plan, /work-run
+Reading hub:         mdmaid.desk
 ```
 
-The name covers both the current configuration foundation and the intended
-workflow scope:
+The name covers its configuration workshop scope:
 
 - manifests and provider targets;
 - safe rendering and guarded installation;
-- workflow orchestration;
-- durable task state;
-- artifact events;
-- approvals;
-- runner selection;
-- resumable execution.
+- declarative workflow DAGs and provider-native resources;
+- preset and collection composition;
+- provider capability and existing-configuration inspection.
 
 ## Recommended Suite
 
@@ -241,7 +251,10 @@ mdmaid.nvim
   Optional Neovim client for mdmaid.desk
 
 maisternia
-  Provider-neutral workflow, configuration, state, routing, and approvals
+  Provider-neutral workflow configuration, rendering, validation, and installation
+
+agent harness or collaboration runtime
+  Live sessions, routing execution, shared context, steering, and approvals
 ```
 
 ## Relationship to Human-in-the-Loop Workflow
@@ -250,7 +263,7 @@ maisternia
 Agent produces artifact
         |
         v
-Workflow records artifact event
+Harness or collaboration runtime produces a document or artifact event
         |
         v
 mdmaid.desk registers document
@@ -263,16 +276,16 @@ mdmaid.desk registers document
                          human reviews
                               |
                               v
-                    explicit workflow decision
+                    explicit runtime decision
 ```
 
 Important invariants:
 
 1. Registration does not interrupt the user.
 2. Opening does not imply approval.
-3. Approval belongs to workflow state.
+3. Approval belongs to the selected harness or collaboration runtime.
 4. Mdmaid remains usable without the agent workflow.
-5. The agent workflow remains usable without mdmaid.
+5. The agent harness remains usable without mdmaid.
 6. Neovim is an optional client, not infrastructure.
 
 ## Document Wording Correction

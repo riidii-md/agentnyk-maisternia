@@ -97,6 +97,22 @@ or unknown. It should help the user decide what to import or overwrite, but it
 should not treat provider runtime caches, sessions, transcripts, or histories as
 maisternia-owned configuration.
 
+## Removed Legacy Runtime
+
+An earlier experimental slice created local tasks, ingested events, managed
+shape sources and questions, and performed phase transitions. Those commands,
+storage types, and runtime schemas have been removed because they crossed this
+configuration boundary.
+
+Read-only event-envelope validation remains. Existing legacy files are not
+silently migrated or deleted; see
+[Runtime-boundary migration](RUNTIME-BOUNDARY-MIGRATION.md).
+
+Future live collaboration belongs in a dedicated collaboration product or
+execution harness. Maisternia may render the client configuration for that
+integration, but it must not own rooms, conversations, participant presence,
+steering events, task execution, or collaboration history.
+
 ## Implemented Slice
 
 The first preset-library implementation provides:

@@ -21,10 +21,17 @@ continue to use the isolated provider runner below.
 
 ## Check eligibility and authority
 
-Determine the current harness and inspect each requested runner at execution
-time. Use `maisternia provider inspect --json <harness>` or equivalent local
-capability evidence when available. Do not run a provider's native doctor or
-initialize configuration automatically.
+Determine the current harness and start with native capability evidence already
+exposed to the coordinating session: available subagent tools, explicit model
+selection, authority controls, and the selected harness's runner result. Do not
+invoke Maisternia merely because a route or model was selected.
+
+Use read-only provider-configuration inspection only when the user requested a
+configuration diagnosis or when an external route remains genuinely unresolved
+after native evidence and local executable checks. Such inspection may explain
+eligibility, but it is not a runtime prerequisite and must not create task
+state. Do not run a provider's native doctor or initialize configuration
+automatically.
 
 Match the workflow's required authority:
 
