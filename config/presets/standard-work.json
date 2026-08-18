@@ -45,7 +45,7 @@
     ],
     "prompts": [],
     "skills": [
-      "multi-lens-review-skill", "work-routing-skill",
+      "multi-lens-review-skill", "readable-output-skill", "work-routing-skill",
       "work-routing-runners"
     ],
     "hooks": [],

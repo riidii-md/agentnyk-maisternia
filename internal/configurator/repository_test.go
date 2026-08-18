@@ -462,6 +462,71 @@ func TestRepositoryMdmaidDeskRegistrationRequiresValidMarkdown(t *testing.T) {
 	}
 }
 
+func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	const source = "config/workflow/skills/readable-output/SKILL.md"
+	data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(source)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	for _, snippet := range []string{
+		"response, plan, review, analysis, research report, or command output",
+		".agent-runs/readable-output",
+		"mdmaid validate <artifact.md> --json",
+		"mdmaid-desk workspace list",
+		"mdmaid-desk register <artifact.md>",
+		"mdmaid-desk import <artifact.md>",
+		"Do not claim",
+		"temporary HTML",
+		"exact repair and retry commands",
+	} {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("readable-output skill is missing %q", snippet)
+		}
+	}
+
+	validation := strings.Index(content, "mdmaid validate <artifact.md> --json")
+	registration := strings.Index(content, "mdmaid-desk register <artifact.md>")
+	if validation < 0 || registration < 0 || validation >= registration {
+		t.Errorf(
+			"validation must precede desk delivery: validate=%d register=%d",
+			validation,
+			registration,
+		)
+	}
+
+	targets := manifestTargets(manifest, "codex")
+	if got := targets[".codex/skills/readable-output/SKILL.md"]; got != source {
+		t.Errorf("Codex readable-output source = %q, want %q", got, source)
+	}
+}
+
+func TestRepositoryActiveShapingWorkflowsUseMdmaidDesk(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, _ := loadRepositoryManifest(t)
+	for _, relative := range []string{
+		"config/workflow/phases/brainstorm.md",
+		"config/workflow/phases/shape.md",
+	} {
+		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		content := string(data)
+		if strings.Contains(content, "mdmaid.show") {
+			t.Errorf("%s still references retired mdmaid.show", relative)
+		}
+		if !strings.Contains(content, "readable-output") ||
+			!strings.Contains(content, "mdmaid-desk") {
+			t.Errorf("%s does not route readable artifacts to mdmaid-desk", relative)
+		}
+	}
+}
+
 func TestRepositoryManagedPromptsContainNoPersonalAbsolutePaths(t *testing.T) {
 	t.Parallel()
 

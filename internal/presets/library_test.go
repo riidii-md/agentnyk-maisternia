@@ -60,8 +60,13 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 			t.Errorf("standard-work commands are missing %q", resourceID)
 		}
 	}
-	if !slices.Contains(standard.Contents.Skills, "multi-lens-review-skill") {
-		t.Error("standard-work is missing the multi-lens review skill")
+	for _, resourceID := range []string{
+		"multi-lens-review-skill",
+		"readable-output-skill",
+	} {
+		if !slices.Contains(standard.Contents.Skills, resourceID) {
+			t.Errorf("standard-work skills are missing %q", resourceID)
+		}
 	}
 	for _, resourceID := range []string{
 		"approval-policy",
@@ -80,6 +85,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if len(shape.Pipelines) != 1 || shape.Pipelines[0].ID != "shape" {
 		t.Fatalf("idea-shaping pipelines = %#v", shape.Pipelines)
+	}
+	if !slices.Contains(shape.Contents.Skills, "readable-output-skill") {
+		t.Error("idea-shaping is missing the readable-output skill")
 	}
 	experiment, found := library.Get("scored-experiment")
 	if !found {
@@ -189,6 +197,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"adapt-for-reader-modes",
 		"adapt-for-reader-preferences",
 		"adapt-for-reader-principles",
+		"readable-output-skill",
 		"work-routing-skill",
 		"work-routing-runners",
 	}) {
@@ -404,9 +413,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(adaptive-readability) error = %v", err)
 	}
-	if len(adaptiveReadabilityManifest.Resources) != 11 {
+	if len(adaptiveReadabilityManifest.Resources) != 12 {
 		t.Fatalf(
-			"adaptive-readability resource count = %d, want 11",
+			"adaptive-readability resource count = %d, want 12",
 			len(adaptiveReadabilityManifest.Resources),
 		)
 	}

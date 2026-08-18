@@ -29,8 +29,8 @@ For each option record:
 - unresolved questions.
 
 Avoid cosmetic variations of one preferred answer. Write the result to the
-task's `artifacts/brainstorm.md` and open it through `mdmaid.show` when
-available.
+task's `artifacts/brainstorm.md`. Use the installed `readable-output` skill to
+validate it and deliver it through `mdmaid-desk`; presentation is not approval.
 
 Move to challenge when the options are genuinely distinct. Return with the
 `weak-options` outcome when challenge shows that the option set is inadequate.

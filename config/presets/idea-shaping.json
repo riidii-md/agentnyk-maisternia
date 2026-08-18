@@ -35,7 +35,9 @@
       "work-routing-preferences"
     ],
     "prompts": [],
-    "skills": ["work-routing-skill", "work-routing-runners"],
+    "skills": [
+      "readable-output-skill", "work-routing-skill", "work-routing-runners"
+    ],
     "hooks": [],
     "settings": ["work-routing-profile-schema"]
   },

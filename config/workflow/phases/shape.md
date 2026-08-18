@@ -74,5 +74,6 @@ Never force a transition that maisternia rejects.
 
 ## Presentation
 
-Generate readable Markdown artifacts as phases complete. Register or open them
-through `mdmaid.show` when available. Document presentation is not approval.
+Generate readable Markdown artifacts as phases complete. Use the installed
+`readable-output` skill to deliver them through `mdmaid-desk`. Document
+presentation is not approval.

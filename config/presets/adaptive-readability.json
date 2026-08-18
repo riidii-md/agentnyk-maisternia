@@ -32,6 +32,7 @@
       "adapt-for-reader-modes",
       "adapt-for-reader-preferences",
       "adapt-for-reader-principles",
+      "readable-output-skill",
       "work-routing-skill", "work-routing-runners"
     ],
     "hooks": [],

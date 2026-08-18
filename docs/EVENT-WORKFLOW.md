@@ -210,7 +210,7 @@ The next implementation should add:
 3. approval records and user overrides;
 4. read-only phase dispatch;
 5. structured phase outcomes;
-6. artifact registration with `mdmaid.show`.
+6. artifact registration with `mdmaid-desk`.
 
 Provider webhooks, background daemons, and automatic write phases remain later
 work.
