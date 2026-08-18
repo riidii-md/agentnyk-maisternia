@@ -382,18 +382,20 @@ If Claude Code, Codex CLI, Hermes, or Antigravity can run a pipeline from their
 own native configuration, `maisternia` should configure those harnesses directly
 instead of introducing a new runner.
 
-## Current Experimental State Commands
+## Runtime Boundary
 
-The repository currently contains `event`, `task`, `work next`, and
-`pipeline start/transition` commands from an earlier state-machine slice. Treat
-these as experimental schema fixtures while the configuration model settles.
-They should not be presented as the product runtime, and new work should avoid
-expanding them into dispatch, observation, approval, or control features.
+Earlier task ingestion, inspection, and phase-transition commands have been
+removed. Workflow commands use the current harness session and explicitly
+supplied artifacts; they do not require a Maisternia task database.
 
-Future changes should either:
+`maisternia event validate` remains as a read-only configuration check. It
+validates an event envelope against declarative trigger and capability policy
+without ingesting it or dispatching work.
 
-1. narrow those commands to configuration authoring and schema validation; or
-2. move runtime execution concerns into a separate harness such as Kaji.
+If future skills need cross-session or multi-harness live collaboration, they
+should opt into a dedicated collaboration service. That service may exchange
+documents and context with harnesses, while Maisternia remains responsible only
+for defining, rendering, validating, and installing the integration settings.
 
 ## Implementation Status
 

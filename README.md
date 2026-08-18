@@ -247,12 +247,10 @@ Those harnesses own their own sessions, histories, live approval prompts, and
 execution loops. `maisternia` may define approval policy and render configuration
 for them, but it must not become a controller or observer of live runs.
 
-The current `event`, `task`, `work next`, and `pipeline start/transition`
-commands are retained as experimental state-model fixtures while the
-configuration model settles. They should not be presented as the product
-runtime, and new TUI work should focus on structured preset and workflow DAG
-editing, MCP/config bundle editing, existing provider-file classification,
-render previews, provider mappings, drift, and conflicts.
+Legacy task-state commands have been removed. Maisternia stores only its
+catalog, installation ownership, backups, and reviewed configuration; it does
+not create workflow tasks or phase history. See
+[Runtime-boundary migration](docs/RUNTIME-BOUNDARY-MIGRATION.md).
 
 ## Test
 
@@ -442,28 +440,17 @@ go run ./cmd/maisternia apply --target codex --conflicts replace --yes
 Do not run `apply` against a real home directory until the displayed plan has
 been reviewed.
 
-## Experimental State Fixtures
+## Event Envelope Validation
 
-The repository still contains earlier state-machine commands for event
-validation, manual ingestion, task inspection, and idea-shaping transitions:
+Maisternia can validate an untrusted event envelope against the declarative
+trigger and capability policy:
 
 ```bash
 go run ./cmd/maisternia event validate ./examples/events/issue-opened.json
-go run ./cmd/maisternia event ingest ./examples/events/issue-opened.json
-go run ./cmd/maisternia task list
-go run ./cmd/maisternia work next <task-id>
-maisternia pipeline start shape --title "Improve agent workflow"
 ```
 
-Treat these as experimental schema fixtures, not the product runtime. They are
-useful for validating untrusted event envelopes and exploring state shapes, but
-new product work should focus on preset-library authoring, workflow DAG editing,
-MCP/config bundle editing, existing provider-configuration inspection,
-provider-native rendering, configuration previews, drift/conflict handling, and
-explicit apply.
-
-`maisternia` should not expand these commands into live observation, phase
-control, approval queues, or agent dispatch. Existing harnesses own execution.
+Validation is read-only. It does not ingest an event, create a task, choose a
+runner, or execute a workflow. See [Event validation](docs/EVENT-VALIDATION.md).
 
 ## Documentation
 
@@ -476,13 +463,13 @@ control, approval queues, or agent dispatch. Existing harnesses own execution.
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
 - [Admin terminal interface](docs/ADMIN.md)
-- [Event-driven workflow](docs/EVENT-WORKFLOW.md)
+- [Event validation](docs/EVENT-VALIDATION.md)
+- [Runtime-boundary migration](docs/RUNTIME-BOUNDARY-MIGRATION.md)
 - [Configurator architecture](docs/CONFIGURATOR.md)
 - [Configuration boundary](docs/CONFIGURATION-BOUNDARY.md)
 - [Provider adapters](docs/PROVIDERS.md)
 - [Installation](docs/INSTALLATION.md)
 - [Release process](docs/RELEASING.md)
-- [Mdmaid human-in-the-loop integration](docs/MDMAID-HUMAN-IN-THE-LOOP.md)
 - [Mdmaid project boundaries and naming](docs/MDMAID-PROJECT-BOUNDARIES.md)
 - [Security](SECURITY.md)
 - [Contributing](CONTRIBUTING.md)

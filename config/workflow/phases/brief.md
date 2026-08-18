@@ -16,10 +16,11 @@ Input:
 
 `$ARGUMENTS`
 
-Use the current conversation, durable task state, event history, repository,
-branch, Git status, recent relevant commits, and explicitly referenced
-artifacts. Infer a task identifier from arguments, branch, path, or conversation
-when possible. Separate facts from assumptions and use read-only checks only.
+Use the current conversation, repository, branch, Git status, recent relevant
+commits, and explicitly referenced artifacts. Infer a task identifier from
+arguments, branch, path, or conversation when possible. Separate facts from
+assumptions and use read-only checks only; do not require an external task-state
+store.
 
 Return:
 
