@@ -460,6 +460,16 @@
       ]
     },
     {
+      "id": "readable-output-skill",
+      "source": "config/workflow/skills/readable-output/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/readable-output/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/readable-output/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/readable-output/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/readable-output/SKILL.md"}
+      ]
+    },
+    {
       "id": "reader-profile-schema",
       "source": "config/schema/reader-profile.schema.json",
       "targets": [

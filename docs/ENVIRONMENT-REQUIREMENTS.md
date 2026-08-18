@@ -36,11 +36,14 @@ environment pack. It installs or verifies:
 - [Herdr Automatic Rename](https://github.com/qu8n/herdr-automatic-rename);
 - [Herdr Bar](https://github.com/jeffarese/herdr-bar).
 
-Mdmaid `0.1.17` is the minimum managed version because generated showcase and
-readability artifacts must pass `mdmaid validate` before mdmaid.desk
-registration. Detection is presence-based, so an already-installed older
-version is not upgraded automatically; upgrade it explicitly with
-`npm install --global mdmaid@0.1.17`.
+Mdmaid `0.1.17` is the minimum managed version because generated showcase,
+readability, and readable-output artifacts must pass `mdmaid validate` before
+mdmaid.desk registration. Detection is presence-based, so an already-installed
+older version is not upgraded automatically; upgrade it explicitly:
+
+```bash
+npm install --global mdmaid@0.1.17
+```
 
 The two plugin sources are pinned to immutable Git commit SHAs. Installation
 does not invent their configuration: Herdr Bar still needs a chosen key binding,

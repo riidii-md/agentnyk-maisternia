@@ -40,9 +40,10 @@ harness home.
 The repository starts with:
 
 - `standard-work`: the provider-neutral delivery workflow with the standard
-  policy and bounded routine Git, GitHub, and npm approval resources;
+  policy, mdmaid.desk delivery for readable documents, and bounded routine Git,
+  GitHub, and npm approval resources;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
-  decision, and planning;
+  decision, planning, and mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution
@@ -52,8 +53,8 @@ The repository starts with:
 - `multi-lens-review`: plan and implementation review with independent lenses,
   per-finding refutation, applied fixes, and optional provider delegation;
 - `adaptive-readability`: reader- and task-aware text transformation with
-  reusable defaults, situation overrides, explicit calibration, and a
-  clarification gate for materially ambiguous intent;
+  reusable defaults, situation overrides, explicit calibration, a clarification
+  gate for materially ambiguous intent, and mdmaid.desk as the reading hub;
 - `harness-profile`: read-only configuration, capability, and usage profiling;
 - `session-audit`: evidence-backed correctness, trajectory, process/safety, and
   cost review plus delegated bottleneck analysis for one completed run;
@@ -124,6 +125,11 @@ review fragment and is not reported as active.
 normal delivery does not require stacking extra development presets. The Codex
 rule files are active independent files. Claude permission fragments remain
 staged for review until structured settings merge is available.
+
+`standard-work`, `adaptive-readability`, and `idea-shaping` install the managed
+`readable-output` skill. It replaces older temp-file-only Codex behavior:
+`mdmaid` remains the validator/renderer, while successful `mdmaid-desk register`
+or `mdmaid-desk import` is required before an agent reports hub delivery.
 
 The developer-context fragments use Context7's hosted MCP endpoint and approve
 only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs

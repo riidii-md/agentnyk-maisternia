@@ -432,7 +432,7 @@ The generated final document should contain:
 9. Recommended implementation plan
 10. Revision and finalization metadata
 
-`mdmaid.show` should register the artifacts as they are produced so the human
+`mdmaid.desk` should register the artifacts as they are produced so the human
 can follow progress without waiting for the final phase. Presentation remains
 separate from approval.
 
@@ -467,7 +467,7 @@ separate from approval.
 ### Increment 5: Presentation
 
 - Generate phase artifacts automatically.
-- Register artifacts with `mdmaid.show`.
+- Validate artifacts with `mdmaid`, then register them with `mdmaid-desk`.
 - Add links and document status to the TUI.
 
 ### Increment 6: Agent dispatch

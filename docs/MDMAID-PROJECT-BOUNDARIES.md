@@ -2,9 +2,10 @@
 
 ## Status
 
-Accepted direction. The workflow product is branded **AgentnykMaisternia**, its
-repository is `agentnyk-maisternia`, its CLI is `maisternia`, and the
-presentation service starts as the separate `mdmaid-show` repository.
+Accepted and implemented direction. The workflow product is branded
+**AgentnykMaisternia**, its repository is `agentnyk-maisternia`, its CLI is
+`maisternia`, and the presentation service is the separate `mdmaid.desk`
+repository with the `mdmaid-desk` CLI.
 
 ## Decision Direction
 
@@ -28,7 +29,7 @@ server lifecycle.
 
 ```mermaid
 flowchart TD
-    A[CLI agent workflow] -->|artifact events| S[mdmaid.show]
+    A[CLI agent workflow] -->|artifact events| S[mdmaid.desk]
     N[mdmaid.nvim] -->|register and open| S
     X[Scripts and other tools] -->|register documents| S
     S -->|render Markdown and Mermaid| M[mdmaid]
@@ -55,7 +56,7 @@ It should not own:
 - provider routing;
 - persistent agent artifact policy.
 
-### `mdmaid.show`
+### `mdmaid.desk`
 
 Responsibility:
 
@@ -87,7 +88,7 @@ It should eventually support two modes:
 
 ```text
 daemon mode:
-  use mdmaid.show
+  use mdmaid.desk
 
 standalone compatibility mode:
   start the existing per-Neovim preview server
@@ -97,8 +98,8 @@ In daemon mode:
 
 ```text
 BufEnter *.md
-  -> mdmaid.show register <file>
-  -> optional mdmaid.show open <file>
+  -> mdmaid-desk register <file> --workspace <id>
+  -> open the returned or existing desk URL when policy requires
 ```
 
 The Neovim process no longer owns the persistent server.
@@ -138,7 +139,7 @@ open when policy requires
 return stable URL
 ```
 
-The workflow project remains the authority for approvals. `mdmaid.show` is the
+The workflow project remains the authority for approvals. `mdmaid.desk` is the
 human review surface, not the task-state authority.
 
 ## Why Not Put Everything in `mdmaid.nvim`
@@ -177,29 +178,30 @@ server and prevents the renderer from becoming an agent orchestration system.
 Preferred product name:
 
 ```text
-mdmaid.show
+mdmaid.desk
 ```
 
-Suggested technical names:
+Technical names:
 
 ```text
-Git repository: mdmaid-show
-Package:        @mdmaid/show
-Initial CLI:    mdmaid-show
-Product/UI:     mdmaid.show
+Git repository: mdmaid.desk
+Package:        mdmaid-desk
+CLI:            mdmaid-desk
+Product/UI:     mdmaid.desk
 ```
 
-Possible future umbrella commands:
+Current CLI shape includes:
 
 ```bash
-mdmaid show daemon ensure
-mdmaid show register plan.md
-mdmaid show open plan.md
-mdmaid show list --task PROJECT-123
+mdmaid-desk daemon start
+mdmaid-desk workspace add /path/to/repository --id project-id
+mdmaid-desk register plan.md --workspace project-id
+mdmaid-desk list --task PROJECT-123
+mdmaid-desk web
 ```
 
-Using a separate executable initially avoids coupling the `mdmaid` and
-`mdmaid.show` release cycles. The main `mdmaid` CLI can delegate later.
+The separate executable avoids coupling the `mdmaid` renderer/validator and
+`mdmaid.desk` catalog release cycles.
 
 ### AgentnykMaisternia
 
@@ -211,7 +213,7 @@ Product brand:      AgentnykMaisternia
 Repository:         agentnyk-maisternia
 CLI/state namespace: maisternia
 Workflow commands:  /work-brief, /work-plan, /work-run
-Presentation:       mdmaid.show
+Presentation:       mdmaid.desk
 ```
 
 The name covers both the current configuration foundation and the intended
@@ -232,11 +234,11 @@ workflow scope:
 mdmaid
   Rendering engine and reusable preview primitives
 
-mdmaid.show
+mdmaid.desk
   Persistent local document workspace and presentation service
 
 mdmaid.nvim
-  Optional Neovim client for mdmaid.show
+  Optional Neovim client for mdmaid.desk
 
 maisternia
   Provider-neutral workflow, configuration, state, routing, and approvals
@@ -251,7 +253,7 @@ Agent produces artifact
 Workflow records artifact event
         |
         v
-mdmaid.show registers document
+mdmaid.desk registers document
         |
         +--> passive artifact: catalog only
         |
@@ -279,25 +281,22 @@ The broader human-in-the-loop proposal should describe `mdmaid.nvim` as a
 reference implementation:
 
 > `mdmaid.nvim` validates the multi-file preview model, but is neither required
-> by nor responsible for the agent presentation service. `mdmaid.show`
+> by nor responsible for the agent presentation service. `mdmaid.desk`
 > generalizes the reusable daemon and catalog layer; `mdmaid.nvim` may become
 > one of its clients later.
 
-## Remaining Decisions
+## Current Boundary
 
-The project and repository split is accepted. Implementation still needs to
-decide:
-
-1. whether the first presentation executable is `mdmaid-show` or `mdshow`;
-2. whether the daemon is always user-global or can also run workspace-local;
-3. which repository owns the generic `artifact.produced` event schema.
-
-The starting point is:
+The implemented split is:
 
 ```text
-new repository: mdmaid-show
-product name:   mdmaid.show
-scope:          daemon, catalog, watcher, browser workspace, CLI/API
-renderer:       depend on mdmaid
-first clients:  CLI agent adapter and mdmaid.nvim
+repository:   mdmaid.desk
+product name: mdmaid.desk
+CLI/package:  mdmaid-desk
+scope:        daemon, catalog, browser workspace, TUI, CLI/API
+renderer:     mdmaid
+clients:      agent workflows, scripts, humans, and future editor adapters
 ```
+
+The generic artifact-event ownership and any workspace-local daemon mode remain
+separate design decisions; they do not change the reading-hub contract.
