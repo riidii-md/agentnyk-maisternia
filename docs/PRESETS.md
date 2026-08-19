@@ -39,9 +39,10 @@ harness home.
 
 The repository starts with:
 
-- `standard-work`: the provider-neutral delivery workflow with the standard
-  policy, mdmaid.desk delivery for readable documents, and bounded routine Git,
-  GitHub, and npm approval resources;
+- `standard-work`: the provider-neutral adaptive delivery workflow with
+  optional research, expanded proof, handoff, and PR preparation; a reviewed
+  plan delivered through mdmaid.desk before explicit human approval; and the
+  standard bounded routine approval resources;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, planning, and mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
