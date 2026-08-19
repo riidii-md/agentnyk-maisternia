@@ -10,14 +10,16 @@ import (
 	"strings"
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
 )
 
 const hookUsage = `Usage:
   maisternia hook list [--repo <dir>]
   maisternia hook show [--repo <dir>] <hook-pack>
   maisternia hook validate [--repo <dir>] [hook-pack|all]
-  maisternia hook plan [options] <hook-preset>
-  maisternia hook apply [options] --yes <hook-preset>
+  maisternia hook plan [options] <hook-selection>
+  maisternia hook apply [options] --yes <hook-selection>
 
 Install options:
   --scope <scope>      user or project (required)
@@ -26,9 +28,10 @@ Install options:
   --target <agent>     all, codex, claude, antigravity (agy), or hermes
   --conflicts <mode>   abort, keep, or replace when applying
 
-Hook packs are provider-neutral managed definitions. Applying a hook preset
-installs its definition under provider configuration roots; native activation
-remains disabled until a provider renderer can merge existing settings safely.
+Hook selections are hook-standard, hook-complete, or hook-<pack-id>. Applying
+one installs its provider-neutral definitions under provider configuration
+roots; native activation remains disabled until a provider renderer can merge
+existing settings safely.
 `
 
 func runHookCommand(args []string, stdout, stderr io.Writer) int {
@@ -47,10 +50,10 @@ func runHookCommand(args []string, stdout, stderr io.Writer) int {
 			return code
 		}
 		if len(options.args) != 1 || !strings.HasPrefix(options.args[0], "hook-") {
-			fmt.Fprintf(stderr, "error: hook %s requires one hook preset id (hook-*)\n", command)
+			fmt.Fprintf(stderr, "error: hook %s requires one hook selection (hook-*)\n", command)
 			return 2
 		}
-		return runPresetInstallation(command, options, stdout, stderr)
+		return runHookInstallation(command, options, stdout, stderr)
 	}
 	if command != "list" && command != "show" && command != "validate" {
 		fmt.Fprintf(stderr, "unknown hook command %q\n\n%s", command, hookUsage)
@@ -149,6 +152,70 @@ func runHookCommand(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 2
+}
+
+func runHookInstallation(
+	command string,
+	options presetOptions,
+	stdout, stderr io.Writer,
+) int {
+	collection, err := presetsources.LoadCollection(options.home, options.repo)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	selector := options.args[0]
+	if resolved, exists := collection.Get(selector); exists {
+		return runResolvedPresetInstallation(command, options, resolved, stdout, stderr)
+	}
+
+	library, err := hookpacks.LoadLibrary(options.repo)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: %v\n", err)
+		return 1
+	}
+	pack, exists := library.Get(strings.TrimPrefix(selector, "hook-"))
+	if !exists {
+		return presetNotFound(selector, stderr)
+	}
+	return runResolvedPresetInstallation(
+		command,
+		options,
+		presetsources.ResolvedPreset{
+			Selector: selector,
+			OwnerID:  selector,
+			Root:     options.repo,
+			Preset:   focusedHookPreset(pack),
+		},
+		stdout,
+		stderr,
+	)
+}
+
+func focusedHookPreset(pack hookpacks.Pack) presets.Preset {
+	settings := []string{}
+	for _, rule := range pack.Rules {
+		if rule.Effect == "ask" {
+			settings = append(settings, "approval-policy")
+			break
+		}
+	}
+	return presets.Preset{
+		SchemaVersion: presets.SchemaVersion,
+		ID:            "hook-" + pack.ID,
+		Name:          pack.Name,
+		Description:   pack.Description,
+		Pipelines:     []presets.Pipeline{},
+		Contents: presets.Contents{
+			MCPRefs:  []string{},
+			Commands: []string{},
+			Prompts:  []string{},
+			Skills:   []string{},
+			Hooks:    []string{"hook-pack-" + pack.ID},
+			Settings: settings,
+		},
+		Targets: []string{"codex", "claude", "antigravity", "hermes"},
+	}
 }
 
 func packProviders(pack hookpacks.Pack) []string {

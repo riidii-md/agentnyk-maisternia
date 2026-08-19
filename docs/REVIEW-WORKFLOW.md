@@ -28,20 +28,34 @@ The standard delivery DAG now distinguishes the two gates:
 
 ```mermaid
 flowchart LR
-    PLAN[PLAN] --> PROVE[PROVE]
-    PROVE --> PLANREVIEW[PLAN REVIEW]
-    PLANREVIEW -->|pass| HANDOFF[HANDOFF]
+    PLAN[PLAN] -->|expanded proof needed| PROVE[PROVE]
+    PLAN -->|proof included| PLANREVIEW[PLAN REVIEW]
+    PLAN -->|review not required| PRESENT[PRESENT FINAL PLAN]
+    PROVE --> PLANREVIEW
+    PLANREVIEW -->|pass| PRESENT
     PLANREVIEW -->|changes| PLAN
-    HANDOFF --> RUN[RUN]
+    PRESENT --> DECIDE{HUMAN DECISION}
+    DECIDE -->|changes| PLAN
+    DECIDE -->|approved| READY[READY]
+    READY -->|new executor| HANDOFF[HANDOFF]
+    READY -->|continuous session| RUN[RUN]
+    HANDOFF --> RUN
     RUN --> VERIFY[VERIFY]
     VERIFY --> IMPLREVIEW[IMPLEMENTATION REVIEW]
-    IMPLREVIEW -->|pass| PR[PR]
+    IMPLREVIEW -->|pass and publication requested| PR[PR]
     IMPLREVIEW -->|changes| RUN
 ```
 
-`/work-prove` defines acceptance evidence. `/work-plan-review` adversarially
-checks whether the plan is correct, complete, internally consistent, grounded
-in the current code, and testable. They are complementary gates.
+The plan contains the normal acceptance contract. `/work-prove` expands it only
+when risk requires more detailed evidence. When independent review is required,
+`/work-plan-review` adversarially checks whether the plan is correct, complete,
+internally consistent, grounded in the current code, and testable.
+
+After review passes, the exact final plan revision is validated and delivered
+through mdmaid.desk for human attention. Presentation does not imply approval.
+The human approves, requests changes, or rejects the exact content hash; only an
+approved revision can pass `READY`. `HANDOFF` is required only when execution
+moves to a fresh agent, provider, worktree, or later session.
 
 ## Plan Lenses
 

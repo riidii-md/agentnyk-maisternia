@@ -1,7 +1,7 @@
 ---
 name: work
 description: Conduct provider-neutral work through the smallest useful discovery, decision, execution, verification, and review phases.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work - Provider-Neutral Work Conductor
@@ -21,15 +21,22 @@ Input:
 2. Infer completed and pending work from evidence available in the current
    session; do not create bookkeeping merely to run the workflow.
 3. Report the current phase, status, blockers, approvals, and next action.
-4. Validate that required inputs for the next phase exist.
-5. Recommend exactly one next phase.
-6. Ask before implementation, permission escalation, commit, push, PR, or a
+4. Validate that required artifacts for the next phase exist.
+5. Recommend exactly one next phase. Treat research, expanded proof,
+   plan review, handoff, and PR preparation as conditional work selected by
+   evidence, risk, executor continuity, and publication intent.
+6. Before implementation, require the exact reviewed plan revision to be
+   presented for human attention, record the explicit decision against its
+   content hash, and pass the implementation-readiness gate.
+7. Ask before implementation, permission escalation, commit, push, PR, or a
    destructive operation when approval is not already recorded.
-7. Dispatch through the configured runner policy or honor an explicit runner.
-8. Report the phase result and next action to the coordinating session.
+8. Dispatch through the configured runner policy or honor an explicit runner.
+9. Report the phase result and next action to the coordinating session.
 
-Do not silently skip readiness, proof, approval, verification, or independent
-review gates.
+Do not silently skip required readiness, acceptance evidence, approval,
+verification, or independent review gates. Do not manufacture separate
+artifacts when the approved plan already contains sufficient evidence, and do
+not require a handoff when the same agent continues in the same session.
 
 ## Output
 

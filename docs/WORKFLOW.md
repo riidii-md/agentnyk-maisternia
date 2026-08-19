@@ -86,9 +86,11 @@ preset:
     default:
       dag:
         scout: [plan]
-        plan: [prove]
+        plan: [prove, plan-review, decide]
         prove: [plan-review]
-        plan-review: [handoff, plan]
+        plan-review: [decide, plan]
+        decide: [ready, plan]
+        ready: [handoff, run, plan]
         handoff: [run]
         run: [verify]
         verify: [review, run]

@@ -63,8 +63,8 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	if snapshot.Config.ActionCount == 0 || snapshot.Config.Counts.Create == 0 {
 		t.Fatalf("config summary = %#v, want create actions", snapshot.Config)
 	}
-	if len(snapshot.Presets) != 25 {
-		t.Fatalf("presets = %d, want 25", len(snapshot.Presets))
+	if len(snapshot.Presets) != 19 {
+		t.Fatalf("presets = %d, want 19", len(snapshot.Presets))
 	}
 	for _, preset := range snapshot.Presets {
 		if preset.Preset.ID == "terminal-orchestration" {
@@ -359,7 +359,7 @@ func TestLoaderPlansAndAppliesPresetForSelectedProvidersAndProject(t *testing.T)
 		Cwd:  t.TempDir(),
 	}
 	request := PresetInstallRequest{
-		PresetID: "hook-safety",
+		PresetID: "hook-standard",
 		Targets:  []string{"codex", "claude"},
 		Scope:    configurator.ScopeProject,
 		Project:  project,
@@ -368,7 +368,7 @@ func TestLoaderPlansAndAppliesPresetForSelectedProvidersAndProject(t *testing.T)
 	if err != nil {
 		t.Fatalf("PlanPreset() error = %v", err)
 	}
-	if plan.ActionCount != 4 || len(plan.ByProvider) != 2 ||
+	if plan.ActionCount != 8 || len(plan.ByProvider) != 2 ||
 		plan.ByProvider[0].Provider != "claude" ||
 		plan.ByProvider[1].Provider != "codex" {
 		t.Fatalf("project plan = %#v", plan)
@@ -412,7 +412,7 @@ func TestLoaderLeavesUnselectedInstalledProvidersUntouched(t *testing.T) {
 		Cwd:  t.TempDir(),
 	}
 	request := PresetInstallRequest{
-		PresetID: "hook-safety",
+		PresetID: "hook-standard",
 		Targets:  []string{"codex"},
 		Scope:    configurator.ScopeProject,
 		Project:  project,
@@ -462,7 +462,7 @@ func TestLoaderRejectsPresetTargetOutsideDeclarationAndMissingProject(t *testing
 	}
 
 	_, err = loader.PlanPreset(PresetInstallRequest{
-		PresetID: "hook-safety",
+		PresetID: "hook-standard",
 		Targets:  []string{"codex"},
 		Scope:    configurator.ScopeProject,
 		Project:  filepath.Join(t.TempDir(), "missing"),

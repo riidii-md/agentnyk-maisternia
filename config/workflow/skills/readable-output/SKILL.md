@@ -75,6 +75,11 @@ there, run:
 mdmaid-desk import <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review
 ```
 
+`review` is the default attention state. Honor an explicit workflow request for
+`approval`, `failure`, or `changes_requested` when the artifact has that role.
+Attention controls presentation priority only; even `approval` never records or
+implies a human decision.
+
 Prefer `decision`, `definition`, `progress`, `brief`, or `showcase` when the
 document clearly matches one. Use the first level-one heading as the title,
 without the Markdown marker. Add `--task <id>` only for an explicit stable task

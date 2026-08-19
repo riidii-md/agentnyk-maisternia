@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral discovery, planning, implementation, verification, review, and PR workflow with bounded routine approvals.",
+  "description": "Provider-neutral adaptive delivery workflow with a reviewed-plan human decision gate, implementation verification, review, and optional PR preparation.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
@@ -10,26 +10,33 @@
       "name": "Delivery",
       "entry_phases": ["brief", "scout"],
       "phases": [
-        "brief", "scout", "analyze", "research", "decide", "ready", "plan",
-        "prove", "plan-review", "handoff", "run", "verify", "review", "pr"
+        "brief", "scout", "analyze", "research", "plan", "prove",
+        "plan-review", "decide", "ready", "handoff", "run", "verify",
+        "review", "pr"
       ],
       "edges": [
         {"from": "brief", "to": "scout"},
         {"from": "scout", "to": "analyze"},
-        {"from": "analyze", "to": "research"},
-        {"from": "research", "to": "decide"},
-        {"from": "decide", "to": "ready"},
-        {"from": "ready", "to": "plan"},
-        {"from": "plan", "to": "prove"},
+        {"from": "analyze", "to": "research", "condition": "research needed"},
+        {"from": "analyze", "to": "plan", "condition": "defined"},
+        {"from": "research", "to": "plan"},
+        {"from": "plan", "to": "prove", "condition": "expanded proof needed"},
+        {"from": "plan", "to": "plan-review", "condition": "proof included"},
+        {"from": "plan", "to": "decide", "condition": "review not required"},
         {"from": "prove", "to": "plan-review"},
-        {"from": "plan-review", "to": "handoff", "condition": "pass"},
+        {"from": "plan-review", "to": "decide", "condition": "pass"},
         {"from": "plan-review", "to": "plan", "condition": "changes", "loop": true},
-        {"from": "handoff", "to": "run", "condition": "approval"},
+        {"from": "decide", "to": "ready", "condition": "approved"},
+        {"from": "decide", "to": "plan", "condition": "changes", "loop": true},
+        {"from": "decide", "to": "analyze", "condition": "rejected and reshape requested", "loop": true},
+        {"from": "ready", "to": "handoff", "condition": "new executor"},
+        {"from": "ready", "to": "run", "condition": "continuous session"},
+        {"from": "ready", "to": "plan", "condition": "not ready", "loop": true},
+        {"from": "handoff", "to": "run"},
         {"from": "run", "to": "verify"},
         {"from": "verify", "to": "review", "condition": "pass"},
-        {"from": "review", "to": "pr", "condition": "pass"},
-        {"from": "ready", "to": "research", "condition": "not ready", "loop": true},
         {"from": "verify", "to": "analyze", "condition": "failed", "loop": true},
+        {"from": "review", "to": "pr", "condition": "pass and publication requested"},
         {"from": "review", "to": "run", "condition": "changes", "loop": true}
       ]
     }

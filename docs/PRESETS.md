@@ -39,9 +39,10 @@ harness home.
 
 The repository starts with:
 
-- `standard-work`: the provider-neutral delivery workflow with the standard
-  policy, mdmaid.desk delivery for readable documents, and bounded routine Git,
-  GitHub, and npm approval resources;
+- `standard-work`: the provider-neutral adaptive delivery workflow with
+  optional research, expanded proof, handoff, and PR preparation; a reviewed
+  plan delivered through mdmaid.desk before explicit human approval; and the
+  standard bounded routine approval resources;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, planning, and mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
@@ -75,12 +76,16 @@ The repository starts with:
   review;
 - `approval-standard`: the provider-neutral least-privilege allow, ask, and
   deny policy with human-only grants;
-- `hook-safety`, `hook-continuity`, `hook-quality`, `hook-delegation`,
-  `hook-maintenance`, and `hook-observability`: focused hook definitions;
 - `hook-standard`: the recommended safety, continuity, and repository-quality
   bundle, including the approval policy;
 - `hook-complete`: all six hook packs plus the approval policy for explicit
   inspection and selection.
+
+The focused hook IDs (`hook-safety`, `hook-continuity`, `hook-quality`,
+`hook-delegation`, `hook-maintenance`, and `hook-observability`) are selections
+provided by `maisternia hook plan/apply`, not separate catalog presets. They are
+built from the corresponding hook-pack definition so the preset catalog only
+needs the two meaningful bundles.
 
 Inspect them:
 
@@ -403,8 +408,8 @@ maisternia preset apply --scope user --target codex --yes standard-work
 # when the preset definition is no longer present in the catalog.
 maisternia preset uninstall --scope user --target codex --yes standard-work
 
-# Install a preset into one repository instead of the provider user home.
-maisternia preset apply \
+# Install one focused hook pack into a repository instead of the provider home.
+maisternia hook apply \
   --scope project \
   --project /path/to/repository \
   --target codex \

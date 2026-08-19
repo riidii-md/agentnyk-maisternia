@@ -1,7 +1,7 @@
 ---
 name: work-plan-review
 description: Adversarially review a full plan or targeted plan delta against the actual repository, verify every candidate finding, and apply confirmed corrections to the plan artifact.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-plan-review - Review A Plan Before Implementation
@@ -84,3 +84,10 @@ Re-read the edited plan, rerun affected consistency and acceptance checks, and
 set the gate to `pass`, `fail`, or `blocked`. Write `review.md` and schema-valid
 `review.json` under `.agent-runs/reviews/<run-id>/`, including confirmed,
 refuted, applied, and blocked findings.
+
+On `pass`, preserve the final reviewed plan as durable Markdown and invoke
+`readable-output` to validate and deliver that exact revision through
+mdmaid.desk with attention `approval`. Record its path and content hash, then
+report `waiting_for_approval`. Registration is not approval: do not infer a
+decision from the document being registered, opened, or closed, and do not
+begin implementation until the human decision is recorded.

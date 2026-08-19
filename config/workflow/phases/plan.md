@@ -1,14 +1,16 @@
 ---
 name: work-plan
-description: Create an evidence-grounded implementation plan with ordered changes, tests, risks, and verification gates.
-version: 0.1.0
+description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
+version: 0.2.0
 ---
 
 # /work-plan - Create the Implementation Plan
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
-Produce an actionable implementation specification for the accepted direction.
+Produce an actionable implementation proposal. An earlier direction decision
+may constrain it, but the implementation proposal itself is not approved until
+the human reviews the final revision and makes an explicit decision.
 
 When `work-routing` resolves several harnesses, request independent plans and
 let the current coordinating harness synthesize one plan while preserving
@@ -29,12 +31,23 @@ Return:
 
 - Discovered repository rules
 - Scope and exclusions
+- Proposed direction and rationale
+- Material alternatives and tradeoffs
 - Files and patterns to inspect
 - Ordered implementation tasks
 - Risk and blast-radius checks
 - Migration or rollout concerns
-- Expected verification
+- Acceptance contract with observable evidence and expected verification
 - Stop conditions
-- Inputs for `/work prove`
+- Open decisions requiring human judgment
+- Whether `/work-prove` is needed as an optional expansion
 
-Do not edit files.
+Write the complete plan as durable Markdown at the explicit task artifact path
+when one exists, otherwise under `.agent-runs/readable-output/`. For complex or
+high-risk work, recommend `/work-review plan` before presentation. When no
+separate plan review is needed, use `readable-output` to validate and deliver
+the plan through mdmaid.desk with attention `approval`, then report
+`waiting_for_approval`.
+
+Registration or presentation is not approval. Do not implement code, mark the
+direction accepted, or claim implementation readiness.

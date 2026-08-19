@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
 )
@@ -640,7 +641,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "25 presets valid") {
+	if !strings.Contains(stdout.String(), "19 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
 
@@ -980,8 +981,90 @@ func TestRunHookRejectsNonHookPreset(t *testing.T) {
 	if code != 2 {
 		t.Fatalf("hook plan code = %d, want 2", code)
 	}
-	if !strings.Contains(stderr.String(), "hook preset id") {
+	if !strings.Contains(stderr.String(), "hook selection") {
 		t.Fatalf("hook plan stderr = %q", stderr.String())
+	}
+}
+
+func TestFocusedHookPresetBuildsFromHookPack(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		effect           string
+		wantApprovalRule bool
+	}{
+		{name: "guard pack", effect: "ask", wantApprovalRule: true},
+		{name: "notification pack", effect: "notify", wantApprovalRule: false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			pack := hookpacks.Pack{
+				ID:          "example",
+				Name:        "Example Hooks",
+				Description: "Example hook pack.",
+				Rules:       []hookpacks.Rule{{Effect: test.effect}},
+			}
+			preset := focusedHookPreset(pack)
+			if preset.ID != "hook-example" ||
+				!strings.Contains(preset.Name, pack.Name) ||
+				preset.Description != pack.Description {
+				t.Fatalf("focusedHookPreset() identity = %#v", preset)
+			}
+			if got := preset.Contents.Hooks; len(got) != 1 || got[0] != "hook-pack-example" {
+				t.Fatalf("focusedHookPreset() hooks = %v", got)
+			}
+			if got := strings.Join(preset.Targets, ","); got != "codex,claude,antigravity,hermes" {
+				t.Fatalf("focusedHookPreset() targets = %q", got)
+			}
+			gotApprovalRule := len(preset.Contents.Settings) == 1 &&
+				preset.Contents.Settings[0] == "approval-policy"
+			if gotApprovalRule != test.wantApprovalRule {
+				t.Fatalf(
+					"focusedHookPreset() approval policy = %v, want %v",
+					preset.Contents.Settings,
+					test.wantApprovalRule,
+				)
+			}
+		})
+	}
+}
+
+func TestRunHookPlansEveryFocusedPackWithoutPresetWrappers(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	for _, packID := range []string{
+		"safety",
+		"continuity",
+		"quality",
+		"delegation",
+		"maintenance",
+		"observability",
+	} {
+		t.Run(packID, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			code := Run([]string{
+				"hook", "plan",
+				"--repo", repo,
+				"--home", t.TempDir(),
+				"--scope", "user",
+				"--target", "codex",
+				"hook-" + packID,
+			}, &stdout, &stderr)
+			if code != 0 {
+				t.Fatalf("focused hook plan code = %d, stderr = %s", code, stderr.String())
+			}
+			if !strings.Contains(stdout.String(), ".codex/maisternia/hook-packs/"+packID+".json") {
+				t.Fatalf("focused hook plan output = %q", stdout.String())
+			}
+			wantApproval := packID == "safety" || packID == "delegation"
+			gotApproval := strings.Contains(stdout.String(), ".codex/maisternia/policy/approval.json")
+			if gotApproval != wantApproval {
+				t.Fatalf("focused hook approval policy = %v, want %v; output = %q", gotApproval, wantApproval, stdout.String())
+			}
+		})
 	}
 }
 
@@ -1023,6 +1106,31 @@ func TestHookApplySupportsProjectScope(t *testing.T) {
 	if _, err := os.Stat(configurator.StatePath(home)); !os.IsNotExist(err) {
 		t.Fatalf("project apply wrote user state, stat error = %v", err)
 	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = Run([]string{
+		"preset", "uninstall",
+		"--repo", repo,
+		"--home", home,
+		"--scope", "project",
+		"--project", project,
+		"--target", "codex",
+		"--yes",
+		"hook-safety",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("focused hook uninstall code = %d, stderr = %s", code, stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(
+		project,
+		".codex",
+		"maisternia",
+		"hook-packs",
+		"safety.json",
+	)); !os.IsNotExist(err) {
+		t.Fatalf("focused hook pack survived uninstall, stat error = %v", err)
+	}
 }
 
 func TestPresetPlanRejectsInvalidScope(t *testing.T) {
@@ -1050,7 +1158,7 @@ func TestConfigurationPresetPlanRequiresExplicitScope(t *testing.T) {
 		"preset", "plan",
 		"--repo", appRepositoryRoot(t),
 		"--target", "codex",
-		"hook-safety",
+		"hook-standard",
 	}, &stdout, &stderr)
 	if code != 2 {
 		t.Fatalf("preset plan code = %d, want 2; stdout = %s; stderr = %s", code, stdout.String(), stderr.String())
@@ -1834,7 +1942,7 @@ func TestRunExternalPresetSourceLifecycle(t *testing.T) {
 	if code := Run([]string{"doctor", "--repo", primary, "--home", home}, &stdout, &stderr); code != 0 {
 		t.Fatalf("doctor code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "preset library valid: 26 presets") {
+	if !strings.Contains(stdout.String(), "preset library valid: 20 presets") {
 		t.Fatalf("doctor did not validate external preset: %s", stdout.String())
 	}
 

@@ -21,8 +21,20 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 25 {
-		t.Fatalf("preset count = %d, want 25", len(library.Presets))
+	if len(library.Presets) != 19 {
+		t.Fatalf("preset count = %d, want 19", len(library.Presets))
+	}
+	for _, removedID := range []string{
+		"hook-safety",
+		"hook-continuity",
+		"hook-quality",
+		"hook-delegation",
+		"hook-maintenance",
+		"hook-observability",
+	} {
+		if _, found := library.Get(removedID); found {
+			t.Errorf("focused hook wrapper %q should not be a catalog preset", removedID)
+		}
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
@@ -32,24 +44,41 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("standard-work pipelines = %#v", standard.Pipelines)
 	}
 	delivery := standard.Pipelines[0]
-	if !slices.Contains(delivery.Phases, "plan-review") {
-		t.Fatalf("standard-work phases = %v, want plan-review", delivery.Phases)
+	wantPhases := []string{
+		"brief", "scout", "analyze", "research", "plan", "prove",
+		"plan-review", "decide", "ready", "handoff", "run", "verify",
+		"review", "pr",
 	}
-	wantPlanReviewEdges := map[string]bool{
-		"prove:plan-review":   false,
-		"plan-review:handoff": false,
-		"plan-review:plan":    false,
+	if !slices.Equal(delivery.Phases, wantPhases) {
+		t.Fatalf("standard-work phases = %v, want %v", delivery.Phases, wantPhases)
 	}
-	for _, edge := range delivery.Edges {
-		key := edge.From + ":" + edge.To
-		if _, exists := wantPlanReviewEdges[key]; exists {
-			wantPlanReviewEdges[key] = true
-		}
+	wantEdges := []Edge{
+		{From: "brief", To: "scout"},
+		{From: "scout", To: "analyze"},
+		{From: "analyze", To: "research", Condition: "research needed"},
+		{From: "analyze", To: "plan", Condition: "defined"},
+		{From: "research", To: "plan"},
+		{From: "plan", To: "prove", Condition: "expanded proof needed"},
+		{From: "plan", To: "plan-review", Condition: "proof included"},
+		{From: "plan", To: "decide", Condition: "review not required"},
+		{From: "prove", To: "plan-review"},
+		{From: "plan-review", To: "decide", Condition: "pass"},
+		{From: "plan-review", To: "plan", Condition: "changes", Loop: true},
+		{From: "decide", To: "ready", Condition: "approved"},
+		{From: "decide", To: "plan", Condition: "changes", Loop: true},
+		{From: "decide", To: "analyze", Condition: "rejected and reshape requested", Loop: true},
+		{From: "ready", To: "handoff", Condition: "new executor"},
+		{From: "ready", To: "run", Condition: "continuous session"},
+		{From: "ready", To: "plan", Condition: "not ready", Loop: true},
+		{From: "handoff", To: "run"},
+		{From: "run", To: "verify"},
+		{From: "verify", To: "review", Condition: "pass"},
+		{From: "verify", To: "analyze", Condition: "failed", Loop: true},
+		{From: "review", To: "pr", Condition: "pass and publication requested"},
+		{From: "review", To: "run", Condition: "changes", Loop: true},
 	}
-	for edge, found := range wantPlanReviewEdges {
-		if !found {
-			t.Errorf("standard-work is missing edge %s", edge)
-		}
+	if !slices.Equal(delivery.Edges, wantEdges) {
+		t.Fatalf("standard-work edges = %#v, want %#v", delivery.Edges, wantEdges)
 	}
 	for _, resourceID := range []string{
 		"work-plan-review",
@@ -451,6 +480,50 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resource := range hookManifest.Resources {
 		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
 			t.Fatalf("hook resource %q targets = %v, want %d", resource.ID, got, want)
+		}
+	}
+}
+
+func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/plan.md": {
+			"implementation proposal", "Acceptance contract", "durable Markdown",
+			"readable-output", "attention `approval`", "waiting_for_approval",
+			"Do not implement code",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"final reviewed plan", "readable-output", "attention `approval`",
+			"waiting_for_approval", "Registration is not approval",
+		},
+		"config/workflow/phases/decide.md": {
+			"direction", "reviewed plan revision", "approve, request changes, or reject",
+			"content hash", "human", "agent approve its own plan",
+		},
+		"config/workflow/phases/ready.md": {
+			"implementation readiness", "approved plan content hash",
+			"not a phase that creates or approves", "Do not use readiness to approve",
+		},
+		"config/workflow/phases/prove.md": {
+			"optional expansion", "plan's acceptance contract",
+			"candidate plan", "implement code or approve",
+		},
+		"config/workflow/phases/handoff.md": {
+			"fresh executor", "same agent", "approved plan",
+			"do not require a handoff",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
 		}
 	}
 }
