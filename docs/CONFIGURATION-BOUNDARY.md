@@ -126,7 +126,8 @@ The first preset-library implementation provides:
 - create, copy, metadata edit, delete, list, show, and validate commands;
 - preset-scoped plan, staging render, and guarded apply;
 - user-global and repository-local plan/apply with separate install state;
-- validated provider-neutral hook packs and installable hook presets;
+- validated provider-neutral hook packs, focused CLI selections, and two
+  installable hook bundles;
 - a strict provider-neutral approval policy with inspect, explain, validate,
   plan, and apply commands;
 - a Presets TUI backed by the same library and planner, with guarded apply;

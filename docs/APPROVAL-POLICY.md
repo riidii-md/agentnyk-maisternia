@@ -57,8 +57,8 @@ maisternia approval plan \
   --target claude
 ```
 
-The `approval-standard` preset contains only this policy. The safety,
-delegation, standard, and complete hook presets include it because those hooks
+The `approval-standard` preset contains only this policy. The focused safety
+and delegation selections and both hook bundles include it because those hooks
 refer to the same authority boundary.
 
 ## Approval Grants

@@ -9,7 +9,8 @@ guarantees.
 
 The current implementation establishes the configuration layer:
 
-- six strict provider-neutral hook packs and scoped hook presets;
+- six strict provider-neutral hook packs, focused CLI selections, and two
+  scoped catalog bundles;
 - a strict allow/ask/deny approval policy and an `approval-standard` preset;
 - user-global and repository-local planning and installation;
 - CLI inspection, validation, explanation, and conflict-safe apply;

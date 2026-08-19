@@ -483,6 +483,15 @@ func runPresetInstallation(
 	if !exists {
 		return presetNotFound(options.args[0], stderr)
 	}
+	return runResolvedPresetInstallation(command, options, resolved, stdout, stderr)
+}
+
+func runResolvedPresetInstallation(
+	command string,
+	options presetOptions,
+	resolved presetsources.ResolvedPreset,
+	stdout, stderr io.Writer,
+) int {
 	preset := resolved.Preset
 	selector := resolved.Selector
 	environmentLibrary, err := environment.LoadLibrary(resolved.Root)

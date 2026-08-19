@@ -63,8 +63,9 @@ The repository contains the first safe configurator foundation:
 - local-folder and GitHub preset-source registration, immutable snapshots,
   explicit refresh/removal, qualified IDs, and Admin source addition;
 - strict environment-pack validation, read-only planning, and guarded typed installation;
-- six validated hook packs and eight hook presets spanning safety, continuity,
-  quality, delegation, maintenance, and redacted local observability;
+- six validated hook packs, six focused CLI selections, and two catalog bundles
+  spanning safety, continuity, quality, delegation, maintenance, and redacted
+  local observability;
 - a strict human-only approval policy definition with bounded grants, deny
   precedence, CLI explanation, and a standalone installation preset;
 - user-global and repository-local plan/apply with isolated state and backups;

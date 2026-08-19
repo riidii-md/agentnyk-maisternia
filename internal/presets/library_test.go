@@ -21,8 +21,20 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 25 {
-		t.Fatalf("preset count = %d, want 25", len(library.Presets))
+	if len(library.Presets) != 19 {
+		t.Fatalf("preset count = %d, want 19", len(library.Presets))
+	}
+	for _, removedID := range []string{
+		"hook-safety",
+		"hook-continuity",
+		"hook-quality",
+		"hook-delegation",
+		"hook-maintenance",
+		"hook-observability",
+	} {
+		if _, found := library.Get(removedID); found {
+			t.Errorf("focused hook wrapper %q should not be a catalog preset", removedID)
+		}
 	}
 	standard, found := library.Get("standard-work")
 	if !found {
