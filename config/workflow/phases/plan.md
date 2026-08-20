@@ -48,10 +48,13 @@ high-risk work, recommend `/work-review plan` before presentation. When no
 separate plan review is needed, use `readable-output` to validate and deliver
 the plan through mdmaid.desk in explicit `plan-decision` mode. Include a useful
 request message, record the request ID and exact revision, and wait for the
-durable result. While pending, report `waiting_for_approval`. Preserve the
-human response text for every outcome: approval continues to `/work-decide`,
-requested changes return to planning, rejection stops or reshapes the work,
-and a stale request requires publication of the current revision.
+durable result; keep the current agent turn open while the foreground waiter is
+pending. `waiting_for_approval` is an intermediate update, never a final
+response. If the execution tool yields a process/session ID, resume that same
+process until it exits. Surface the outcome and human response text immediately
+when it returns: approval continues to `/work-decide`, requested changes return
+to planning, rejection stops or reshapes the work, and a stale request requires
+publication of the current revision.
 
 Registration or presentation is not approval. Do not implement code, mark the
 direction accepted, or claim implementation readiness.

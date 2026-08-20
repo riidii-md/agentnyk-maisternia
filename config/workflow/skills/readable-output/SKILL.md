@@ -113,12 +113,30 @@ or `import` command and retain its JSON receipt:
 ```
 
 Read `reviewRequest.id` from the successful result, record it with the document
-ID, revision, artifact path, and locally computed content hash, then wait
-without consuming model turns:
+ID, revision, artifact path, and locally computed content hash, then start the
+wait in the foreground of the current agent turn:
 
 ```bash
 mdmaid-desk review wait <review-id> --json
 ```
+
+Run it and keep the current agent turn open until that command returns the
+durable result. The external command may sleep without model reasoning, but the
+enclosing turn must remain active. Do not background or detach the waiter.
+Do not return a final response while the review is pending; a
+`waiting_for_approval` receipt is an intermediate update only.
+
+If the execution tool yields a process or session ID instead of completed JSON,
+poll or resume that same process until it exits. A yielded ID proves only that
+the waiter is still running; it is not permission to finish the turn. When the
+command exits, surface the received outcome and human response text immediately,
+then apply the outcome routing below. Do not wait for another user chat message
+to inspect a completed waiter.
+
+If the active harness cannot keep a foreground tool process attached across the
+human pause, report that limitation before claiming live continuation. The
+durable request remains recoverable, but a detached waiter cannot by itself
+start a new model turn without an external supervisor.
 
 For a live session that does not need the request receipt before blocking, the
 same publication command may include `--wait --json`. The two-step form is
