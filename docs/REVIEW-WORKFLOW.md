@@ -34,7 +34,7 @@ flowchart LR
     PROVE --> PLANREVIEW
     PLANREVIEW -->|pass| PRESENT
     PLANREVIEW -->|changes| PLAN
-    PRESENT --> WAIT[WAIT ON MDMAID.DESK]
+    PRESENT --> WAIT[FOREGROUND WAIT ON MDMAID.DESK]
     WAIT --> DECIDE{HUMAN DECISION + TEXT}
     DECIDE -->|changes| PLAN
     DECIDE -->|approved| READY[READY]
@@ -55,13 +55,18 @@ internally consistent, grounded in the current code, and testable.
 After review passes, the exact final plan revision is validated and delivered
 through mdmaid.desk with an explicit `plan-decision` request. Passive documents
 still have no workflow actions. The producer records the request ID and exact
-revision, waits on durable state, and receives both the human outcome and
-response text. Presentation, opening, and reading do not imply approval. The
-human approves, requests changes, or rejects the exact content hash; only an
-approved revision can pass `READY`. Requested changes return to planning,
-rejection stops or reshapes the work, and a stale request requires a new review
-of the current revision. `HANDOFF` is required only when execution moves to a
-fresh agent, provider, worktree, or later session.
+revision, keeps its current agent turn open on the foreground waiter, and
+receives both the human outcome and response text. A yielded execution-process
+ID must be resumed until completion; it is not a reason to finish the turn.
+`waiting_for_approval` is an intermediate status only. As soon as the waiter
+returns, the producer surfaces the decision and text and continues the mapped
+workflow without requiring another chat message. Presentation, opening, and
+reading do not imply approval. The human approves, requests changes, or rejects
+the exact content hash; only an approved revision can pass `READY`. Requested
+changes return to planning, rejection stops or reshapes the work, and a stale
+request requires a new review of the current revision. `HANDOFF` is required
+only when execution moves to a fresh agent, provider, worktree, or later
+session.
 
 ## Plan Lenses
 

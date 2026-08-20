@@ -492,13 +492,14 @@ func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
 		"config/workflow/phases/plan.md": {
 			"implementation proposal", "Acceptance contract", "durable Markdown",
 			"readable-output", "plan-decision", "human response text",
-			"waiting_for_approval",
+			"waiting_for_approval", "keep the current agent turn open",
 			"Do not implement code",
 		},
 		"config/workflow/phases/plan-review.md": {
 			"final reviewed plan", "readable-output", "plan-decision",
 			"human response text",
-			"waiting_for_approval", "Registration is not approval",
+			"waiting_for_approval", "keep the current agent turn open",
+			"Registration is not approval",
 		},
 		"config/workflow/phases/decide.md": {
 			"direction", "reviewed plan revision", "approve, request changes, or reject",

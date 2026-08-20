@@ -88,11 +88,12 @@ refuted, applied, and blocked findings.
 On `pass`, preserve the final reviewed plan as durable Markdown and invoke
 `readable-output` to validate and deliver that exact revision through
 mdmaid.desk in explicit `plan-decision` mode. Record its path, content hash,
-document revision, and review request ID, then report `waiting_for_approval`
-while the request is pending. Preserve the human response text returned by the
-gate. Approval continues to `/work-decide`; `changes_requested` returns to the
-plan and review loop; rejection stops or reshapes the work; and a stale request
-requires a fresh review of the current revision. Registration is not approval:
-do not infer a decision from the document being registered, opened, marked
-done, or closed, and do not begin implementation until the human decision is
-recorded.
+document revision, and review request ID, then keep the current agent turn open
+on the foreground waiter. Report `waiting_for_approval` only as an intermediate
+update, never as a final response. Resume a yielded process/session ID until it
+exits, then surface the outcome and human response text immediately. Approval
+continues to `/work-decide`; `changes_requested` returns to the plan and review
+loop; rejection stops or reshapes the work; and a stale request requires a
+fresh review of the current revision. Registration is not approval: do not
+infer a decision from the document being registered, opened, marked done, or
+closed, and do not begin implementation until the human decision is recorded.
