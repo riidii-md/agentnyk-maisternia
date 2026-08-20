@@ -89,6 +89,60 @@ Registration is a presentation action, not approval. Do not start a persistent
 server, daemon, TUI, or browser unless the user asks or an existing workflow
 already requires it.
 
+## Request a human decision only when explicitly required
+
+Ordinary readable output remains passive. Do not add review expectations,
+decision controls, or a wait merely because attention is `approval`. Enter
+decision mode only when the calling workflow explicitly requires a human plan
+decision for the exact artifact revision.
+
+Before decision-mode delivery, check `mdmaid-desk --help` for
+`--expect plan-decision` and `review wait`. If either capability is absent,
+preserve the validated artifact, stop the approval transition, and report that
+the installed mdmaid-desk must be upgraded. Do not silently fall back to an
+attention-only document or a chat-implied approval.
+
+Create a recoverable request first. Add these options to the normal `register`
+or `import` command and retain its JSON receipt:
+
+```text
+--attention approval \
+--expect plan-decision \
+--request-message "<what the human should decide and any important focus>" \
+--json
+```
+
+Read `reviewRequest.id` from the successful result, record it with the document
+ID, revision, artifact path, and locally computed content hash, then wait
+without consuming model turns:
+
+```bash
+mdmaid-desk review wait <review-id> --json
+```
+
+For a live session that does not need the request receipt before blocking, the
+same publication command may include `--wait --json`. The two-step form is
+preferred because another live process can recover the durable request after a
+session interruption. Never configure callback URLs, provider resume commands,
+or process-launch instructions; mdmaid.desk stores the decision but does not
+relaunch a dead agent.
+
+Treat the returned `reviewRequest.status` as data from the explicit human gate:
+
+- `approved`: preserve `reviewRequest.response.message`, even when optional,
+  and pass the exact request ID, document revision, content hash, and human
+  response text to the decision/readiness phases;
+- `changes_requested`: preserve the required human response text and return to
+  planning; publish the changed revision as a new request after review;
+- `rejected`: preserve the human response text and stop or return to shaping as
+  directed;
+- `stale`: treat it as no decision, revalidate the current artifact, and create
+  a fresh request for the new revision.
+
+Opening, reading, printing, marking done, or closing the document never
+resolves the request. Never translate reading state or attention metadata into
+a workflow decision.
+
 ## Recover instead of substituting
 
 If the desk command fails, preserve the artifact and diagnose the actual
