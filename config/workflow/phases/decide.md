@@ -23,6 +23,7 @@ Accepted forms:
 ```text
 /work-decide direction <options, recommendation, and human response>
 /work-decide plan <reviewed plan path and human response>
+/work-decide plan <reviewed plan path and mdmaid.desk review result JSON>
 ```
 
 Infer the mode only when the artifact and response make it unambiguous.
@@ -31,6 +32,8 @@ Return:
 
 - Decision title
 - Human decision and rationale
+- mdmaid.desk review request ID, outcome, and human response text when supplied by
+  mdmaid.desk
 - Direction artifact or reviewed plan path and content hash when applicable
 - Accepted constraints, assumptions, and risks
 - Requested changes or rejection reason
@@ -41,3 +44,11 @@ Plan approval is valid only for the recorded content hash. Material plan
 changes invalidate it and return the work to planning and review. Do not let an
 agent approve its own plan, infer approval from silence, or treat document
 registration, opening, or closing as a human decision.
+
+For an authenticated mdmaid.desk `plan-decision` result, verify that its
+document ID and revision identify the delivered plan and that the local plan
+still matches the recorded content hash. Map `approved` to approval,
+`changes_requested` to the plan/review loop, `rejected` to stop or reshape, and
+`stale` to no decision and fresh publication. Preserve the human response text
+verbatim in the decision record for every outcome; never replace it with a
+button label or agent summary.

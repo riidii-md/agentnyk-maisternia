@@ -30,11 +30,12 @@ The standard delivery DAG now distinguishes the two gates:
 flowchart LR
     PLAN[PLAN] -->|expanded proof needed| PROVE[PROVE]
     PLAN -->|proof included| PLANREVIEW[PLAN REVIEW]
-    PLAN -->|review not required| PRESENT[PRESENT FINAL PLAN]
+    PLAN -->|review not required| PRESENT[PUBLISH FINAL PLAN]
     PROVE --> PLANREVIEW
     PLANREVIEW -->|pass| PRESENT
     PLANREVIEW -->|changes| PLAN
-    PRESENT --> DECIDE{HUMAN DECISION}
+    PRESENT --> WAIT[WAIT ON MDMAID.DESK]
+    WAIT --> DECIDE{HUMAN DECISION + TEXT}
     DECIDE -->|changes| PLAN
     DECIDE -->|approved| READY[READY]
     READY -->|new executor| HANDOFF[HANDOFF]
@@ -52,10 +53,15 @@ when risk requires more detailed evidence. When independent review is required,
 internally consistent, grounded in the current code, and testable.
 
 After review passes, the exact final plan revision is validated and delivered
-through mdmaid.desk for human attention. Presentation does not imply approval.
-The human approves, requests changes, or rejects the exact content hash; only an
-approved revision can pass `READY`. `HANDOFF` is required only when execution
-moves to a fresh agent, provider, worktree, or later session.
+through mdmaid.desk with an explicit `plan-decision` request. Passive documents
+still have no workflow actions. The producer records the request ID and exact
+revision, waits on durable state, and receives both the human outcome and
+response text. Presentation, opening, and reading do not imply approval. The
+human approves, requests changes, or rejects the exact content hash; only an
+approved revision can pass `READY`. Requested changes return to planning,
+rejection stops or reshapes the work, and a stale request requires a new review
+of the current revision. `HANDOFF` is required only when execution moves to a
+fresh agent, provider, worktree, or later session.
 
 ## Plan Lenses
 
