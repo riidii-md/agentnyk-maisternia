@@ -47,7 +47,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	wantPhases := []string{
 		"brief", "scout", "analyze", "research", "plan", "prove",
 		"plan-review", "decide", "ready", "handoff", "run", "verify",
-		"review", "pr",
+		"review", "pr", "session-analysis",
 	}
 	if !slices.Equal(delivery.Phases, wantPhases) {
 		t.Fatalf("standard-work phases = %v, want %v", delivery.Phases, wantPhases)
@@ -76,6 +76,10 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		{From: "verify", To: "analyze", Condition: "failed", Loop: true},
 		{From: "review", To: "pr", Condition: "pass and publication requested"},
 		{From: "review", To: "run", Condition: "changes", Loop: true},
+		{
+			From: "pr", To: "session-analysis",
+			Condition: "PR created and user accepts analysis",
+		},
 	}
 	if !slices.Equal(delivery.Edges, wantEdges) {
 		t.Fatalf("standard-work edges = %#v, want %#v", delivery.Edges, wantEdges)
@@ -83,6 +87,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resourceID := range []string{
 		"work-plan-review",
 		"work-review",
+		"work-session-analysis",
 		"work-routing-preferences",
 	} {
 		if !slices.Contains(standard.Contents.Commands, resourceID) {
@@ -92,6 +97,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resourceID := range []string{
 		"multi-lens-review-skill",
 		"readable-output-skill",
+		"session-retrospective-skill",
 	} {
 		if !slices.Contains(standard.Contents.Skills, resourceID) {
 			t.Errorf("standard-work skills are missing %q", resourceID)
@@ -101,6 +107,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"approval-policy",
 		"git-workflow-approvals-codex-rules",
 		"git-workflow-approvals-claude-permissions",
+		"retrospective-policy",
+		"retrospective-record-schema",
 		"routine-development-approvals-codex-rules",
 		"routine-development-approvals-claude-permissions",
 	} {
@@ -569,6 +577,10 @@ func TestRepositoryStandardWorkCompletionContract(t *testing.T) {
 		"publication checkpoint",
 		"repository, branch, commit, remote, and PR target",
 		"task-bound",
+		"successful PR creation",
+		"`/work-session-analysis`",
+		"Do not start analysis automatically",
+		"readiness-only review, failed publication, or a PR update",
 	} {
 		if !strings.Contains(string(pr), fragment) {
 			t.Errorf("work-pr approval contract is missing %q", fragment)

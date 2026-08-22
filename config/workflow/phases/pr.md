@@ -35,3 +35,16 @@ pushes, history rewrites, unrelated repositories, or destructive operations.
 Return a pass/fail checklist, exact fixes, suggested title and body, provider
 command, and remaining approvals. Do not commit, push, or open a PR without
 explicit authorization.
+
+## Offer Optional Session Analysis After Publication
+
+After a successful PR creation, preserve publication as the completed
+result and ask whether the user wants to run `/work-session-analysis` on the
+completed session to assess how well the harness behaved.
+Do not start analysis automatically. PR success must not depend on accepting or
+completing it.
+
+Do not make this offer after a readiness-only review, failed publication, or a PR update.
+If the user accepts, continue through the installed session-analysis command
+and preserve its evidence selection, transcript redaction, routing, artifact,
+and proposal-only mutation boundaries.

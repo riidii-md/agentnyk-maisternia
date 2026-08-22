@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral adaptive delivery workflow with a reviewed-plan human decision gate, implementation verification, review, and optional PR preparation.",
+  "description": "Provider-neutral adaptive delivery workflow with a reviewed-plan human decision gate, implementation verification, review, optional PR preparation, and an optional post-publication session analysis.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
@@ -12,7 +12,7 @@
       "phases": [
         "brief", "scout", "analyze", "research", "plan", "prove",
         "plan-review", "decide", "ready", "handoff", "run", "verify",
-        "review", "pr"
+        "review", "pr", "session-analysis"
       ],
       "edges": [
         {"from": "brief", "to": "scout"},
@@ -37,7 +37,8 @@
         {"from": "verify", "to": "review", "condition": "pass"},
         {"from": "verify", "to": "analyze", "condition": "failed", "loop": true},
         {"from": "review", "to": "pr", "condition": "pass and publication requested"},
-        {"from": "review", "to": "run", "condition": "changes", "loop": true}
+        {"from": "review", "to": "run", "condition": "changes", "loop": true},
+        {"from": "pr", "to": "session-analysis", "condition": "PR created and user accepts analysis"}
       ]
     }
   ],
@@ -47,13 +48,13 @@
       "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-verify",
-      "work-review", "work-pr", "work-showcase", "work-cleanup",
+      "work-review", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
       "work-routing-preferences"
     ],
     "prompts": [],
     "skills": [
-      "multi-lens-review-skill", "readable-output-skill", "work-routing-skill",
-      "work-routing-runners"
+      "multi-lens-review-skill", "readable-output-skill",
+      "session-retrospective-skill", "work-routing-skill", "work-routing-runners"
     ],
     "hooks": [],
     "settings": [
@@ -61,6 +62,7 @@
       "approval-policy",
       "git-workflow-approvals-codex-rules",
       "git-workflow-approvals-claude-permissions",
+      "retrospective-policy", "retrospective-record-schema",
       "routine-development-approvals-codex-rules",
       "routine-development-approvals-claude-permissions"
     ]
