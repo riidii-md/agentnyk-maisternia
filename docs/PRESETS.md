@@ -42,7 +42,8 @@ The repository starts with:
 - `standard-work`: the provider-neutral adaptive delivery workflow with
   optional research, expanded proof, handoff, and PR preparation; a reviewed
   plan delivered through mdmaid.desk before explicit human approval; and the
-  standard bounded routine approval resources;
+  standard bounded routine approval resources. After a PR is successfully
+  created, it offers an optional evidence-backed session analysis;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, planning, and mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
@@ -130,6 +131,14 @@ review fragment and is not reported as active.
 normal delivery does not require stacking extra development presets. The Codex
 rule files are active independent files. Claude permission fragments remain
 staged for review until structured settings merge is available.
+
+`standard-work` also installs `work-session-analysis` and its retrospective
+policy, schema, and shared skill. Its delivery DAG offers analysis only after
+successful PR creation and explicit user acceptance. Readiness-only review,
+failed publication, and later PR updates do not trigger the offer, and analysis
+never runs automatically or changes the PR result. The focused `session-audit`
+and `harness-improvement` presets remain available for broader retrospective
+and configuration-improvement workflows.
 
 `standard-work`, `adaptive-readability`, and `idea-shaping` install the managed
 `readable-output` skill. It replaces older temp-file-only Codex behavior:

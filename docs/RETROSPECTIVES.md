@@ -85,6 +85,12 @@ to proposal design. Only the human-accepted branch reaches installation.
 
 ## After Each Run
 
+The `standard-work` delivery workflow offers `/work-session-analysis` as an
+optional next step after a PR is successfully created. The user must accept the
+offer; PR readiness alone, failed publication, or later PR updates do not start
+analysis automatically. Publication remains successful even if the user
+declines or the later analysis fails.
+
 After installing `harness-improvement`, invoke `/work-retrospective` at the end
 of a completed task. The shared skill also makes the workflow discoverable when
 the harness selects skills from task context.
