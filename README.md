@@ -463,6 +463,7 @@ runner, or execute a workflow. See [Event validation](docs/EVENT-VALIDATION.md).
 - [Hook packs and installation scopes](docs/HOOKS.md)
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
 - [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
+- [Interactive pipeline studio proposal](docs/INTERACTIVE-PIPELINE-STUDIO.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Event validation](docs/EVENT-VALIDATION.md)
 - [Runtime-boundary migration](docs/RUNTIME-BOUNDARY-MIGRATION.md)
