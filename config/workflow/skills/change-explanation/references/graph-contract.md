@@ -158,3 +158,8 @@ meaningful ordered interaction. Use `animated: true` only on the few changed
 connections or flow messages whose movement aids understanding. Include
 unchanged neighbours when they explain blast radius, but do not turn the graph
 into a symbol inventory.
+
+This same document is the source for both presentation modes. `pr-lens render`
+projects it as animated SVG for the web; `pr-lens mermaid` projects the selected
+view as static Mermaid for a terminal. Do not change graph scope or content to
+make one projection tell a different story.

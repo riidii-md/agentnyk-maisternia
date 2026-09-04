@@ -28,6 +28,15 @@ use it to shape density, conceptual depth, terminology, and ordering. It may
 change presentation, but it must not change the evidence set or what the diff
 means.
 
+Resolve a PR Lens presentation once for the run. Precedence is: **Explicit current request**,
+project
+`workflows.work-explain-change.presentation` preference, user preference, then
+the default `animated-web`. The other supported value is `static-tui`. Validate
+stored profiles with `reader-profile.schema.json`; report and ignore invalid
+values. Do not ask when no preference exists because the web default is
+defined. Use exactly one presentation: animated SVGs for `animated-web`, or
+fenced Mermaid rendered in the terminal for `static-tui`, never both.
+
 Keep all generated files under
 `.agent-runs/change-explanations/<timestamp>-<change-id>/`. Do not alter source
 files, the selected revisions, `.gitignore`, or remote state. Do not run
@@ -37,12 +46,14 @@ configured model provider. Do not upload assets, post a PR comment, or call
 action.
 
 The durable output is `explanation.md`. When a system relationship or ordered
-interaction merits PR Lens, accompany it with `graph.json`,
-`rendered/manifest.json`, `rendered/drawn.graph.json`, and selected local SVG
-assets. Validate the graph with `pr-lens validate`, render it with
-`pr-lens render`, and inspect `manifest.json` rather than predicting generated
-asset names. For a small local change, prefer a compact code-shape visual and
-state why a graph was not useful.
+interaction merits PR Lens, always accompany it with `graph.json` and validate
+the graph with `pr-lens validate`. In `animated-web`, render it with
+`pr-lens render`, retain `rendered/manifest.json`, `rendered/drawn.graph.json`,
+and the selected local SVG assets, and inspect the manifest rather than
+predicting asset names. In `static-tui`, use `pr-lens mermaid` for the selected
+view or lens, retain each `.mmd` source, and embed it once in a fenced Mermaid
+block. For a small local change, prefer a compact code-shape visual and state
+why a graph was not useful.
 
 Before presentation, require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.12 or
 newer. Check both installed versions. Then run:
@@ -70,5 +81,7 @@ report an exact retry or upgrade command. Never claim that the animated view is
 available until compatible registration succeeds.
 
 Return a concise summary, the artifact and graph paths, the explained base and
-head/snapshot, validation status, and mdmaid.desk registration status. Do not
-duplicate the full explanation in the terminal unless the user asks for it.
+head/snapshot, chosen presentation, validation status, and mdmaid.desk
+registration status. For `static-tui`, also return the exact `mdmaid tui`
+command. Do not duplicate the full explanation in the terminal unless the user
+asks for it.
