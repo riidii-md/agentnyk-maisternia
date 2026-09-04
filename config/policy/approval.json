@@ -254,6 +254,32 @@
       }
     },
     {
+      "id": "docker-cleanup-destructive",
+      "description": "Require a fresh exact-target decision for task-owned cleanup on a local non-production Docker engine.",
+      "operations": [
+        "docker.container.stop",
+        "docker.container.remove",
+        "docker.network.remove",
+        "docker.volume.remove",
+        "docker.image.remove"
+      ],
+      "decision": "ask",
+      "risk": "critical",
+      "requirements": [
+        "human_present",
+        "approved_task_scope",
+        "trusted_repository",
+        "non_sensitive_target"
+      ],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
       "id": "production-access",
       "description": "Require a fresh exact-target decision for read-only production access or a reversible production deployment.",
       "operations": ["production.read", "production.deploy_reversible"],
