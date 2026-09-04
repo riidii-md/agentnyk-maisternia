@@ -90,6 +90,25 @@ errors, ordering, compatibility, and relevant tests. Run every normal
 implementation lens plus `best-practices`; do not trade correctness, security,
 or edge-case coverage for a smaller diff.
 
+Before selecting practices or checks, discover the target's active languages,
+frameworks, build systems, and generated surfaces. Keep this discovery
+language-agnostic, evidence-led and fallible; it is not a deterministic
+language-to-command lookup. Inspect repository instructions, CI and hooks,
+build and package manifests, lockfiles, source and generated-file markers, and
+the changed paths. Record the result as `detected`, `mixed`, or `unknown`, with
+supporting evidence, confidence, and unresolved ambiguity. Do not infer an
+ecosystem from a file extension alone. In a multi-language repository, resolve
+the context and checks for every materially affected surface.
+
+Prefer repository-owned commands declared by instructions, CI, hooks, or build
+configuration. When those are incomplete, consider only already-available
+tools relevant to the discovered context and label supplementary checks as
+such. Do not install or enable tooling, access the network, or turn a remembered
+ecosystem convention into a required gate without approval and authoritative
+support. Preserve `unknown` instead of inventing certainty. Record every
+selected command, why it applies, and its result so execution remains
+reproducible even when context discovery is uncertain.
+
 Deepen the focused lenses as follows:
 
 - `consistency` and `best-practices`: enforce repository rules and established

@@ -29,6 +29,17 @@ ownership boundaries, and repository-practice violations. Distinguish repeated
 knowledge from incidental duplication. Propose an abstraction only when it
 reduces concepts or coupling; reject speculative helpers and indirection.
 
+Discover languages, frameworks, build systems, and generated surfaces before
+choosing practices or checks. Discovery must be language-agnostic,
+evidence-led, and confidence-aware rather than a fixed language-to-tool table.
+Use repository instructions, CI and hooks, manifests, lockfiles, source
+markers, and changed paths; a file extension alone is insufficient. Record
+`detected`, `mixed`, or `unknown`, the evidence and confidence, and cover each
+affected surface in a multi-language repository. Prefer repository-owned
+commands. Use only relevant, already-available supplementary tools, never
+install or enable one without approval, and preserve uncertainty rather than
+inventing a required gate.
+
 Every maintainability candidate must include concrete evidence, the minimal
 fix, the expected net simplification, regression risk, and a verification plan
 for preserved behavior. Ground best-practices claims in repository rules,

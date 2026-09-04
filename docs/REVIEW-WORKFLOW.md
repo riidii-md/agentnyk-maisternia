@@ -141,6 +141,27 @@ speculative reuse, style-only preferences, and abstractions that merely move
 complexity are refuted. `NO_FINDINGS` remains valid when the current solution
 is already the simplest behavior-preserving design supported by the evidence.
 
+### Language And Tool Discovery
+
+The maintainability profile is language-agnostic. Before choosing best
+practices or verification checks, it discovers the languages, frameworks,
+build systems, and generated surfaces that are material to the target. It uses
+repository instructions, CI and hook configuration, build and package
+manifests, lockfiles, source and generated-file markers, and the changed paths.
+
+This is evidence-led heuristic discovery, not a deterministic lookup table.
+The review records `detected`, `mixed`, or `unknown`, along with its evidence,
+confidence, and remaining ambiguity. A file extension by itself is not enough,
+and a multi-language change is evaluated per affected surface. Unknown context
+stays unknown rather than being replaced by a familiar ecosystem assumption.
+
+Verification starts with repository-owned commands declared by instructions,
+CI, hooks, or build configuration. Relevant tools that are already available
+may provide supplementary evidence, but the workflow does not install tools,
+enable services, access the network, or promote a remembered convention into a
+required gate without approval and authoritative support. The exact commands,
+selection rationale, and results are recorded for reproducibility.
+
 The alias also accepts normal routing syntax:
 
 ```text

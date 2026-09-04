@@ -1135,6 +1135,14 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				Goals                 []string `json:"goals"`
 				CandidateRequirements []string `json:"candidate_requirements"`
 				Guardrails            []string `json:"guardrails"`
+				ContextDiscovery      struct {
+					Strategy         string   `json:"strategy"`
+					LanguageAgnostic bool     `json:"language_agnostic"`
+					MultiLanguage    bool     `json:"multi_language"`
+					Sources          []string `json:"sources"`
+					Outcomes         []string `json:"outcomes"`
+					Rules            []string `json:"rules"`
+				} `json:"context_discovery"`
 			} `json:"maintainability"`
 		} `json:"profiles"`
 		Verification struct {
@@ -1200,6 +1208,34 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}) {
 		t.Fatalf("maintainability guardrails = %v", maintainability.Guardrails)
 	}
+	discovery := maintainability.ContextDiscovery
+	if discovery.Strategy != "evidence-led-heuristic" ||
+		!discovery.LanguageAgnostic ||
+		!discovery.MultiLanguage {
+		t.Fatalf("maintainability context discovery = %#v", discovery)
+	}
+	if !slices.Equal(discovery.Sources, []string{
+		"repository-instructions",
+		"ci-and-hooks",
+		"build-and-package-manifests",
+		"lockfiles",
+		"source-and-generated-file-markers",
+		"changed-paths",
+	}) {
+		t.Fatalf("maintainability context discovery sources = %v", discovery.Sources)
+	}
+	if !slices.Equal(discovery.Outcomes, []string{"detected", "mixed", "unknown"}) {
+		t.Fatalf("maintainability context discovery outcomes = %v", discovery.Outcomes)
+	}
+	if !slices.Equal(discovery.Rules, []string{
+		"record-evidence-and-confidence",
+		"prefer-repository-owned-commands",
+		"no-extension-only-inference",
+		"no-unapproved-tool-installation",
+		"preserve-unknowns",
+	}) {
+		t.Fatalf("maintainability context discovery rules = %v", discovery.Rules)
+	}
 	if policy.Delegation.RoutingContract != "work-routing" ||
 		policy.Delegation.CrossProviderStrategy != "parallel-verify" ||
 		!policy.Delegation.NativeSubagentsAllowed ||
@@ -1217,7 +1253,9 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"dependency-currency", "diff-analysis", "is_real", "grounded",
 			"@agy @codex @claude", "parallel-verify", "@hermes",
 			"--profile maintainability", "knowledge duplication", "net simplification",
-			"observable behavior", "speculative abstraction",
+			"observable behavior", "speculative abstraction", "language-agnostic",
+			"evidence-led and fallible", "detected`, `mixed`, or `unknown",
+			"repository-owned commands", "multi-language",
 		},
 		"config/workflow/phases/review-simplify.md": {
 			"name: work-review-simplify", "$ARGUMENTS", "work-review",
@@ -1227,6 +1265,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"Critical", "High", "refuted", "Apply every confirmed fix",
 			"work-routing", "@agy @codex @claude", "maintainability",
 			"best-practices", "behavior contract", "net simplification",
+			"language-agnostic", "repository-owned", "confidence",
 		},
 	}
 	for relative, required := range contracts {

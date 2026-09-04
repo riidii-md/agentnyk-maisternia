@@ -131,8 +131,9 @@ See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
 The `multi-lens-review` preset adds separate plan and implementation gates,
 independent review lenses, a behavior-preserving maintainability profile for
 DRY, abstraction, complexity, and best-practice checks, per-finding refutation,
-coordinator-applied fixes, and explicit cross-provider delegation. Invoke the
-profile directly with `/work-review-simplify`. See
+confidence-aware language and tooling discovery, coordinator-applied fixes,
+and explicit cross-provider delegation. Invoke the profile directly with
+`/work-review-simplify`. See
 [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md).
 
 The `adaptive-readability` preset adds the `adapt-for-reader` skill,

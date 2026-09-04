@@ -53,7 +53,28 @@
         "no-incidental-dry",
         "no-speculative-abstractions",
         "no-style-only-findings"
-      ]
+      ],
+      "context_discovery": {
+        "strategy": "evidence-led-heuristic",
+        "language_agnostic": true,
+        "multi_language": true,
+        "sources": [
+          "repository-instructions",
+          "ci-and-hooks",
+          "build-and-package-manifests",
+          "lockfiles",
+          "source-and-generated-file-markers",
+          "changed-paths"
+        ],
+        "outcomes": ["detected", "mixed", "unknown"],
+        "rules": [
+          "record-evidence-and-confidence",
+          "prefer-repository-owned-commands",
+          "no-extension-only-inference",
+          "no-unapproved-tool-installation",
+          "preserve-unknowns"
+        ]
+      }
     }
   },
   "domain_lenses": {
