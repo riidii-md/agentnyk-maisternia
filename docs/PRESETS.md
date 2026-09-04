@@ -43,7 +43,9 @@ The repository starts with:
   optional research, expanded proof, handoff, and PR preparation; a reviewed
   plan delivered through mdmaid.desk before explicit human approval; and the
   standard bounded routine approval resources. After a PR is successfully
-  created, it offers an optional evidence-backed session analysis;
+  created, it offers an optional evidence-backed session analysis. It also
+  installs the on-demand `/work-explain-change` command and its local PR Lens
+  visualization contract;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, planning, and mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
@@ -52,6 +54,8 @@ The repository starts with:
   waves with isolated writes, integration barriers, and sequential fallback;
 - `terminal-orchestration`: provider-neutral machine setup for Zellij, Tatami,
   Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr plugins;
+- `change-explanation-tools`: provider-neutral machine setup for the pinned PR
+  Lens, Mdmaid, and mdmaid.desk versions used by `/work-explain-change`;
 - `multi-lens-review`: plan and implementation review with independent lenses,
   per-finding refutation, applied fixes, and optional provider delegation;
 - `adaptive-readability`: reader- and task-aware text transformation with
@@ -97,6 +101,7 @@ maisternia preset show idea-shaping
 maisternia preset show scored-experiment
 maisternia preset show parallel-work
 maisternia preset show terminal-orchestration
+maisternia preset show change-explanation-tools
 maisternia preset show multi-lens-review
 maisternia preset show adaptive-readability
 maisternia preset show harness-improvement
@@ -147,6 +152,14 @@ failed publication, and later PR updates do not trigger the offer, and analysis
 never runs automatically or changes the PR result. The focused `session-audit`
 and `harness-improvement` presets remain available for broader retrospective
 and configuration-improvement workflows.
+
+`standard-work` installs `/work-explain-change` as an on-demand understanding
+tool, not a mandatory delivery phase and not an approval gate. It explains a
+PR, commit, range, or working tree with evidence, selected short code, and
+local PR Lens architecture/data-flow SVGs. The optional `adapt-for-reader`
+profile changes presentation only. See [Change explanations](CHANGE-EXPLANATIONS.md).
+The separate environment-only `change-explanation-tools` preset owns the
+external tools, so applying `standard-work` never installs packages implicitly.
 
 `standard-work`, `adaptive-readability`, and `idea-shaping` install the managed
 `readable-output` skill. It replaces older temp-file-only Codex behavior:

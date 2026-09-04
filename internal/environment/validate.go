@@ -13,6 +13,8 @@ var (
 	commandPattern  = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$`)
 	valuePattern    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9@+._/-]{0,255}$`)
 	pathPartPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`)
+	npmScopePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,99}$`)
+	npmNamePattern  = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,99}$`)
 	versionPattern  = regexp.MustCompile(`^v?[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$`)
 	commitPattern   = regexp.MustCompile(`^[0-9a-fA-F]{7,64}$`)
 	validKinds      = stringSet(string(KindBinary), string(KindHostPlugin))
@@ -277,6 +279,15 @@ func validatePluginRepository(value string) error {
 }
 
 func validateNPMPackage(value string) error {
+	if strings.HasPrefix(value, "@") {
+		parts := strings.Split(value[1:], "/")
+		if len(parts) != 2 ||
+			!npmScopePattern.MatchString(parts[0]) ||
+			!npmNamePattern.MatchString(parts[1]) {
+			return fmt.Errorf("has invalid package %q", value)
+		}
+		return nil
+	}
 	if err := validateValue("package", value); err != nil {
 		return err
 	}

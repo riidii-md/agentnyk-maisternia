@@ -143,6 +143,13 @@ views such as `big-picture` independently from conceptual depth, decide when to
 ask for a view. Harness selection now uses the same `@harness` router and
 workflow-routing preferences as every other canonical work command.
 
+`standard-work` also adds the on-demand `/work-explain-change` command. It
+turns a PR, commit, range, or working-tree snapshot into an evidence-grounded
+Markdown explanation with selected code and locally rendered, animated PR Lens
+architecture/data-flow SVGs. It stays separate from defect review and approval,
+and can use `adapt-for-reader` to adjust presentation without changing evidence.
+See [Change explanations](docs/CHANGE-EXPLANATIONS.md).
+
 Showcase and adapted-reader documents must pass `mdmaid validate` before they
 are registered with mdmaid.desk. Invalid documents are repaired and revalidated;
 missing validation runtime blocks registration while preserving the artifact.

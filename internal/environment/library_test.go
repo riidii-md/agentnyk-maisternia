@@ -19,8 +19,8 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Packs) != 3 {
-		t.Fatalf("pack count = %d, want 3", len(library.Packs))
+	if len(library.Packs) != 4 {
+		t.Fatalf("pack count = %d, want 4", len(library.Packs))
 	}
 	if library.Root() != repositoryRoot(t) {
 		t.Fatalf("library root = %q, want %q", library.Root(), repositoryRoot(t))
@@ -61,7 +61,7 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 		len(mdmaidDesk.Installers) != 1 ||
 		mdmaidDesk.Installers[0].Kind != InstallerNPMGlobal ||
 		mdmaidDesk.Installers[0].Package != "mdmaid-desk" ||
-		mdmaidDesk.Installers[0].Version != "0.1.0" {
+		mdmaidDesk.Installers[0].Version != "0.1.12" {
 		t.Fatalf("mdmaid-desk requirement = %#v", mdmaidDesk)
 	}
 	plugins := map[string]struct {
@@ -86,6 +86,49 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 			requirement.Installers[0].Ref != want.ref {
 			t.Errorf("%s = %#v, want plugin %s from %s@%s", requirementID, requirement, want.pluginID, want.repository, want.ref)
 		}
+	}
+}
+
+func TestRepositoryChangeExplanationEnvironmentPack(t *testing.T) {
+	t.Parallel()
+
+	library, err := LoadLibrary(repositoryRoot(t))
+	if err != nil {
+		t.Fatalf("LoadLibrary() error = %v", err)
+	}
+	pack, found := library.Get("change-explanation")
+	if !found {
+		t.Fatal("change-explanation environment pack missing")
+	}
+	if len(pack.Requirements) != 3 {
+		t.Fatalf("requirements = %d, want 3", len(pack.Requirements))
+	}
+	want := map[string]struct {
+		command string
+		pkg     string
+		version string
+	}{
+		"pr-lens":     {command: "pr-lens", pkg: "@coldtea/pr-lens-cli", version: "0.2.0"},
+		"mdmaid":      {command: "mdmaid", pkg: "mdmaid", version: "0.1.17"},
+		"mdmaid-desk": {command: "mdmaid-desk", pkg: "mdmaid-desk", version: "0.1.12"},
+	}
+	for requirementID, expected := range want {
+		requirement, found := pack.Requirement(requirementID)
+		if !found {
+			t.Errorf("requirement %q missing", requirementID)
+			continue
+		}
+		if !requirement.Required || requirement.Detect.Command != expected.command ||
+			len(requirement.Installers) != 1 ||
+			requirement.Installers[0].Kind != InstallerNPMGlobal ||
+			requirement.Installers[0].Package != expected.pkg ||
+			requirement.Installers[0].Version != expected.version {
+			t.Errorf("requirement %q = %#v", requirementID, requirement)
+		}
+	}
+	mdmaidDesk, _ := pack.Requirement("mdmaid-desk")
+	if !slices.Contains(mdmaidDesk.DependsOn, "mdmaid") {
+		t.Fatalf("mdmaid-desk dependencies = %v, want mdmaid", mdmaidDesk.DependsOn)
 	}
 }
 
@@ -419,6 +462,58 @@ func TestValidateRejectsUnsafeOrAmbiguousEnvironmentPacks(t *testing.T) {
 			test.mutate(&pack)
 			if err := Validate(pack); err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("Validate() error = %v, want %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestValidateAllowsCanonicalScopedNPMPackage(t *testing.T) {
+	t.Parallel()
+
+	pack := validPack()
+	pack.Requirements[0].Installers = []Installer{{
+		ID:        "npm",
+		Kind:      InstallerNPMGlobal,
+		Platforms: []string{"darwin", "linux", "windows"},
+		Package:   "@coldtea/pr-lens-cli",
+		Version:   "0.2.0",
+	}}
+	if err := Validate(pack); err != nil {
+		t.Fatalf("Validate(scoped npm package) error = %v", err)
+	}
+	command := planInstaller(pack.Requirements[0].Installers[0]).Commands
+	if !slices.EqualFunc(command, [][]string{{
+		"npm", "install", "--global", "@coldtea/pr-lens-cli@0.2.0",
+	}}, slices.Equal[[]string]) {
+		t.Fatalf("scoped npm command = %#v", command)
+	}
+}
+
+func TestValidateRejectsMalformedScopedNPMPackages(t *testing.T) {
+	t.Parallel()
+
+	for _, packageName := range []string{
+		"@coldtea/pr-lens-cli@latest",
+		"@coldtea/../pr-lens-cli",
+		"@coldtea/pr-lens-cli/extra",
+		"@coldtea//pr-lens-cli",
+		"@/pr-lens-cli",
+		"@ColdTea/pr-lens-cli",
+		"@coldtea/--global",
+	} {
+		packageName := packageName
+		t.Run(packageName, func(t *testing.T) {
+			t.Parallel()
+			pack := validPack()
+			pack.Requirements[0].Installers = []Installer{{
+				ID:        "npm",
+				Kind:      InstallerNPMGlobal,
+				Platforms: []string{"darwin"},
+				Package:   packageName,
+				Version:   "0.2.0",
+			}}
+			if err := Validate(pack); err == nil || !strings.Contains(err.Error(), "invalid package") {
+				t.Fatalf("Validate(%q) error = %v, want invalid package", packageName, err)
 			}
 		})
 	}
