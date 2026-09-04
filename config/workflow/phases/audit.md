@@ -85,3 +85,7 @@ Include:
 Do not emit one universal accuracy score. If model judges are used, record their
 identity, blind generator identity where possible, randomize pair ordering, and
 send disputed high-risk findings to a human.
+
+After the local report and record validate, use the installed
+`session-retrospective` skill's `Centralize Completed Packages` procedure to
+refresh the curated central copy. Report the central path and record status.

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -145,6 +146,150 @@ func TestBuildPlanClassifiesCreateUnchangedAndConflict(t *testing.T) {
 	}
 	if got := plan.Actions[0].Reason; got != "existing target is not managed by maisternia" {
 		t.Fatalf("conflict reason = %q", got)
+	}
+}
+
+func TestJSONArrayUnionMergePreservesExistingSettings(t *testing.T) {
+	t.Parallel()
+	repo := t.TempDir()
+	home := t.TempDir()
+	source := filepath.Join(repo, "config", "permissions.json")
+	destination := filepath.Join(home, ".claude", "settings.json")
+	writeFile(t, source, `{"permissions":{"allow":["mcp__gitnexus__query","mcp__gitnexus__context"]}}`)
+	writeFile(t, destination, `{"theme":"dark","permissions":{"allow":["mcp__atlassian__search"]}}`)
+	manifest := jsonArrayUnionManifest("config/permissions.json")
+
+	plan, err := BuildPresetPlanForScope(repo, home, manifest, "claude", ScopeUser, "developer-context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionUpdate)
+	if plan.HasConflicts() {
+		t.Fatalf("merge plan has conflicts: %#v", plan.Actions)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	settings := decodeJSONObject(t, destination)
+	if got := settings["theme"]; got != "dark" {
+		t.Fatalf("theme = %#v, want preserved dark setting", got)
+	}
+	allow := settings["permissions"].(map[string]any)["allow"].([]any)
+	want := []any{"mcp__atlassian__search", "mcp__gitnexus__query", "mcp__gitnexus__context"}
+	if !slices.Equal(allow, want) {
+		t.Fatalf("permissions.allow = %#v, want %#v", allow, want)
+	}
+	nextPlan, err := BuildPresetPlanForScope(repo, home, manifest, "claude", ScopeUser, "developer-context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, nextPlan, ActionUnchanged)
+}
+
+func TestJSONArrayUnionMergeAcceptsUnrelatedTargetDrift(t *testing.T) {
+	t.Parallel()
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "permissions.json"), `{"permissions":{"allow":["mcp__gitnexus__query"]}}`)
+	manifest := jsonArrayUnionManifest("config/permissions.json")
+	plan, err := BuildPresetPlanForScope(repo, home, manifest, "claude", ScopeUser, "developer-context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	destination := filepath.Join(home, ".claude", "settings.json")
+	writeFile(t, destination, `{"theme":"light","permissions":{"allow":["mcp__gitnexus__query"]}}`)
+	plan, err = BuildPresetPlanForScope(repo, home, manifest, "claude", ScopeUser, "developer-context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionUnchanged)
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	if got := decodeJSONObject(t, destination)["theme"]; got != "light" {
+		t.Fatalf("theme = %#v, want unrelated user change preserved", got)
+	}
+}
+
+func TestJSONArrayUnionMergeFailsClosed(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name, source, destination string
+	}{
+		{"malformed destination", `{"permissions":{"allow":["mcp__gitnexus__query"]}}`, `{not-json`},
+		{"destination wrong type", `{"permissions":{"allow":["mcp__gitnexus__query"]}}`, `{"permissions":{"allow":"all"}}`},
+		{"source wrong type", `{"permissions":{"allow":"all"}}`, `{"permissions":{"allow":[]}}`},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			repo := t.TempDir()
+			home := t.TempDir()
+			writeFile(t, filepath.Join(repo, "config", "permissions.json"), tt.source)
+			destination := filepath.Join(home, ".claude", "settings.json")
+			writeFile(t, destination, tt.destination)
+			if _, err := BuildPlan(repo, home, jsonArrayUnionManifest("config/permissions.json"), "claude"); err == nil {
+				t.Fatal("BuildPlan() error = nil, want fail-closed merge error")
+			}
+			assertFileContents(t, destination, tt.destination)
+		})
+	}
+}
+
+func TestJSONArrayUnionMergeRemovalReleasesSettingsWithoutDeleting(t *testing.T) {
+	t.Parallel()
+	repo := t.TempDir()
+	home := t.TempDir()
+	writeFile(t, filepath.Join(repo, "config", "permissions.json"), `{"permissions":{"allow":["mcp__gitnexus__query"]}}`)
+	manifest := jsonArrayUnionManifest("config/permissions.json")
+	plan, err := BuildPresetPlanForScope(repo, home, manifest, "claude", ScopeUser, "developer-context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	plan, err = BuildPresetRemovalPlanForScope(home, "claude", ScopeUser, "developer-context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertOnlyAction(t, plan, ActionRelease)
+	if err := Apply(plan, ApplyOptions{Confirmed: true}); err != nil {
+		t.Fatal(err)
+	}
+	settings := decodeJSONObject(t, filepath.Join(home, ".claude", "settings.json"))
+	allow := settings["permissions"].(map[string]any)["allow"].([]any)
+	if !slices.Equal(allow, []any{"mcp__gitnexus__query"}) {
+		t.Fatalf("permissions.allow = %#v", allow)
+	}
+}
+
+func TestManifestRejectsInvalidJSONArrayUnionMerge(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		merge *MergeSpec
+	}{
+		{"unsupported strategy", &MergeSpec{Strategy: "replace", JSONPointer: "/permissions/allow"}},
+		{"relative pointer", &MergeSpec{Strategy: MergeJSONArrayUnion, JSONPointer: "permissions/allow"}},
+		{"empty pointer", &MergeSpec{Strategy: MergeJSONArrayUnion}},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			repo := t.TempDir()
+			writeFile(t, filepath.Join(repo, "config", "permissions.json"), `{"permissions":{"allow":[]}}`)
+			manifest := jsonArrayUnionManifest("config/permissions.json")
+			manifest.Resources[0].Targets[0].Merge = tt.merge
+			if err := ValidateManifest(repo, manifest); err == nil {
+				t.Fatal("ValidateManifest() error = nil, want invalid merge error")
+			}
+		})
 	}
 }
 
@@ -1621,6 +1766,27 @@ func validManifest(source, agent, targetPath string) Manifest {
 			}},
 		}},
 	}
+}
+
+func jsonArrayUnionManifest(source string) Manifest {
+	manifest := validManifest(source, "claude", ".claude/settings.json")
+	manifest.Resources[0].Targets[0].Merge = &MergeSpec{
+		Strategy: MergeJSONArrayUnion, JSONPointer: "/permissions/allow",
+	}
+	return manifest
+}
+
+func decodeJSONObject(t *testing.T, path string) map[string]any {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var value map[string]any
+	if err := json.Unmarshal(data, &value); err != nil {
+		t.Fatalf("decode %s: %v", path, err)
+	}
+	return value
 }
 
 func writeManifest(t *testing.T, repo string, manifest Manifest) string {

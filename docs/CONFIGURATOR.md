@@ -272,7 +272,13 @@ Whole-file replacement is not sufficient for every provider:
 - Claude `settings.json` mixes stable permission and UI preferences with values
   that Claude may update.
 
-A later manifest version will declare managed keys and use format-aware merge:
+The manifest supports one deliberately narrow structured merge today:
+`json-array-union`. It adds declared JSON values at an explicit JSON pointer,
+preserves unknown keys and existing array values, backs up before updates, and
+fails closed on malformed or wrongly typed documents. `developer-context` uses
+it for Claude's `/permissions/allow` array.
+
+Broader object and TOML merging still requires the full format-aware lifecycle:
 
 ```text
 parse installed file

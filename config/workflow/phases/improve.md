@@ -72,3 +72,8 @@ Finish with one decision request: `accept`, `reject`, `revise`, or `collect more
 evidence`. Do not install, push, publish, or mutate provider configuration until
 the user explicitly accepts the reviewed proposal. After acceptance, use the
 normal `maisternia` plan, conflict-resolution, backup, apply, and rollback flow.
+
+Before requesting the decision, use the installed `session-retrospective`
+skill's `Centralize Completed Packages` procedure to refresh the curated
+proposal and record in the central store. This evidence copy does not authorize
+installation.

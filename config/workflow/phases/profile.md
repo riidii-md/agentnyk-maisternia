@@ -77,3 +77,6 @@ Include:
 7. evidence paths and commands used.
 
 End with observations only. Do not recommend or apply changes in this phase.
+After the local report and record validate, use the installed
+`session-retrospective` skill's `Centralize Completed Packages` procedure to
+refresh the curated central copy. Report the central path and record status.

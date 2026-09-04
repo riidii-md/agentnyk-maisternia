@@ -64,6 +64,9 @@ func Apply(plan Plan, options ApplyOptions) error {
 	for _, action := range plan.Actions {
 		if action.State == ActionRelease {
 			releasePresetOwnership(state, plan.PresetID, action)
+			if action.PreserveTarget {
+				forgetResourceIfUnowned(state, action)
+			}
 			continue
 		}
 		if action.Removal {
@@ -108,7 +111,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 			if err := backupTarget(plan.Home, scope, action, appliedAt); err != nil {
 				return err
 			}
-			if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
+			if err := writeAction(action); err != nil {
 				return fmt.Errorf("replace %s: %w", action.TargetPath, err)
 			}
 			recordInstalledResource(state, plan.PresetID, action, appliedAt)
@@ -125,7 +128,7 @@ func Apply(plan Plan, options ApplyOptions) error {
 				return err
 			}
 		}
-		if err := atomicCopy(action.SourcePath, action.DestinationPath); err != nil {
+		if err := writeAction(action); err != nil {
 			return fmt.Errorf("install %s: %w", action.TargetPath, err)
 		}
 		recordInstalledResource(state, plan.PresetID, action, appliedAt)
@@ -146,9 +149,10 @@ func recordInstalledResource(
 	targetRelative := filepath.FromSlash(action.TargetPath)
 	key := stateKey(action.Agent, targetRelative)
 	state.Resources[key] = installedResource{
-		Checksum:  action.SourceChecksum,
+		Checksum:  action.DesiredChecksum,
 		Source:    action.SourcePath,
 		Installed: installedAt,
+		Merge:     action.Merge != nil,
 	}
 	delete(state.Resolutions, key)
 	for _, alias := range providers.LegacyAliases(action.Agent) {
@@ -309,6 +313,9 @@ func verifyPresetOwnershipStillValid(
 		if plan.PresetID == "" || action.State == ActionConflict {
 			return nil
 		}
+		if action.Merge != nil {
+			return nil
+		}
 		key := stateKey(action.Agent, filepath.FromSlash(action.TargetPath))
 		installed, managed := state.Resources[key]
 		if managed && installed.Checksum != action.SourceChecksum &&
@@ -326,7 +333,7 @@ func verifyPresetOwnershipStillValid(
 		return fmt.Errorf("%w: preset no longer owns %s", ErrPlanStale, action.TargetPath)
 	}
 	otherOwners := otherPresetOwners(state, plan.PresetID, key)
-	if action.State == ActionRelease && len(otherOwners) == 0 {
+	if action.State == ActionRelease && len(otherOwners) == 0 && !action.PreserveTarget {
 		return fmt.Errorf("%w: shared target no longer has another owner", ErrPlanStale)
 	}
 	if action.State != ActionRelease && len(otherOwners) > 0 {
@@ -371,6 +378,29 @@ func atomicCopy(source, destination string) error {
 	if len(data) > maxManagedFileSize {
 		return fmt.Errorf("source exceeds %d bytes", maxManagedFileSize)
 	}
+	return atomicWrite(data, destination, info.Mode().Perm())
+}
+
+func writeAction(action Action) error {
+	if action.Merge == nil {
+		return atomicCopy(action.SourcePath, action.DestinationPath)
+	}
+	mode := os.FileMode(0o644)
+	if info, err := os.Lstat(action.DestinationPath); err == nil {
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("target is not a regular file")
+		}
+		mode = info.Mode().Perm()
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return atomicWrite(action.DesiredContent, action.DestinationPath, mode)
+}
+
+func atomicWrite(data []byte, destination string, mode os.FileMode) error {
+	if len(data) > maxManagedFileSize {
+		return fmt.Errorf("content exceeds %d bytes", maxManagedFileSize)
+	}
 	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
 		return err
 	}
@@ -385,7 +415,7 @@ func atomicCopy(source, destination string) error {
 		temp.Close()
 		return err
 	}
-	if err := temp.Chmod(info.Mode().Perm()); err != nil {
+	if err := temp.Chmod(mode.Perm()); err != nil {
 		temp.Close()
 		return err
 	}

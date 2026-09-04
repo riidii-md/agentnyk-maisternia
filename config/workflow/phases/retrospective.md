@@ -30,7 +30,10 @@ Input:
    or a high-severity escaped defect.
 6. Produce one review index linking the profile, audit, evidence, and any
    proposal.
-7. Stop at the human decision gate.
+7. Use the installed `session-retrospective` skill's
+   `Centralize Completed Packages` procedure to refresh the curated central
+   package and report its path and record status.
+8. Stop at the human decision gate.
 
 The four report lanes remain separate:
 

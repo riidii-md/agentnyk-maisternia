@@ -106,10 +106,12 @@ plugins without coupling machine setup to a workflow preset. See
 [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md).
 
 The `developer-context`, `goreleaser-validation`, and
-`git-workflow-approvals` presets stage reviewable Claude Code and Codex
-fragments for exact MCP tool approvals, the narrow
+`git-workflow-approvals` presets provide narrow Claude Code and Codex resources
+for exact MCP tool approvals, the narrow
 `goreleaser check --config .goreleaser.yml` command, and routine Git approval
-boundaries. GitNexus is read-only and repository-bounded; GoReleaser uses
+boundaries. `developer-context` safely unions its exact Claude permissions into
+the active `settings.json` while preserving unrelated keys; its MCP definition
+remains a review fragment. GitNexus is read-only and repository-bounded; GoReleaser uses
 pinned prebuilt-release instructions rather than the repository Go toolchain.
 The opt-in `routine-development-approvals` preset installs narrow active Codex
 rules for read-only GitHub and npm metadata. Its Claude permissions remain a
@@ -121,7 +123,9 @@ The retrospective presets add read-only harness profiling, evidence-backed run
 audits, and proposal-only improvement with held-out replay and human approval.
 `/work-session-analysis` provides the direct end-of-session bottleneck review
 for token cost, repetition, skills, user friction, setup, commands, and
-delegated subagents.
+delegated subagents. Curated report packages are also copied to the private XDG
+state store so `/work-findings` can compare evidence across repositories
+without collecting transcripts.
 See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
 
 The `multi-lens-review` preset adds separate plan and implementation gates,
