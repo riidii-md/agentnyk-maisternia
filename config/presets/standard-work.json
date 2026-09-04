@@ -48,11 +48,12 @@
       "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-verify",
-      "work-review", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
+      "work-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
       "work-routing-preferences"
     ],
     "prompts": [],
     "skills": [
+      "change-explanation-skill", "change-explanation-graph-contract",
       "multi-lens-review-skill", "readable-output-skill",
       "session-retrospective-skill", "work-routing-skill", "work-routing-runners"
     ],

@@ -114,7 +114,7 @@
           "kind": "npm-global",
           "platforms": ["darwin", "linux", "windows"],
           "package": "mdmaid-desk",
-          "version": "0.1.0"
+          "version": "0.1.12"
         }
       ]
     },

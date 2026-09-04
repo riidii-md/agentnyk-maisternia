@@ -32,7 +32,7 @@ environment pack. It installs or verifies:
 - Tatami;
 - Herdr;
 - [Mdmaid](https://github.com/OleksandrBesan/mdmaid) `0.1.17` through npm;
-- [mdmaid.desk](https://github.com/riidii-md/mdmaid.desk) `0.1.0` through npm;
+- [mdmaid.desk](https://github.com/riidii-md/mdmaid.desk) `0.1.12` through npm;
 - [Herdr Automatic Rename](https://github.com/qu8n/herdr-automatic-rename);
 - [Herdr Bar](https://github.com/jeffarese/herdr-bar).
 
@@ -43,6 +43,20 @@ older version is not upgraded automatically; upgrade it explicitly:
 
 ```bash
 npm install --global mdmaid@0.1.17
+```
+
+The environment-only `change-explanation-tools` preset references the smaller
+`change-explanation` pack used by the optional `/work-explain-change` command.
+That pack pins PR Lens CLI `0.2.0`, Mdmaid `0.1.17`, and mdmaid.desk `0.1.12`.
+The desk version provides authenticated workspace-local SVG media needed for
+the animated diagrams. Presence-based detection does not upgrade older
+commands; the workflow checks versions and reports these explicit upgrades
+when needed:
+
+```bash
+npm install --global @coldtea/pr-lens-cli@0.2.0
+npm install --global mdmaid@0.1.17
+npm install --global mdmaid-desk@0.1.12
 ```
 
 The two plugin sources are pinned to immutable Git commit SHAs. Installation
@@ -57,6 +71,7 @@ List and inspect the library:
 ```bash
 maisternia environment list
 maisternia environment show terminal-orchestration
+maisternia environment show change-explanation
 maisternia environment validate all
 ```
 
@@ -64,6 +79,7 @@ Build a plan for the current machine:
 
 ```bash
 maisternia environment plan terminal-orchestration
+maisternia environment plan change-explanation
 maisternia preset plan terminal-orchestration
 ```
 

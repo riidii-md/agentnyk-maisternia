@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 19 {
-		t.Fatalf("preset count = %d, want 19", len(library.Presets))
+	if len(library.Presets) != 20 {
+		t.Fatalf("preset count = %d, want 20", len(library.Presets))
 	}
 	for _, removedID := range []string{
 		"hook-safety",
@@ -87,6 +87,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resourceID := range []string{
 		"work-plan-review",
 		"work-review",
+		"work-explain-change",
 		"work-session-analysis",
 		"work-routing-preferences",
 	} {
@@ -95,6 +96,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		}
 	}
 	for _, resourceID := range []string{
+		"change-explanation-skill",
+		"change-explanation-graph-contract",
 		"multi-lens-review-skill",
 		"readable-output-skill",
 		"session-retrospective-skill",
@@ -102,6 +105,17 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		if !slices.Contains(standard.Contents.Skills, resourceID) {
 			t.Errorf("standard-work skills are missing %q", resourceID)
 		}
+	}
+	if len(standard.EnvironmentPacks) != 0 {
+		t.Errorf("standard-work must remain a configuration-only preset, got environment packs %v", standard.EnvironmentPacks)
+	}
+	changeTools, found := library.Get("change-explanation-tools")
+	if !found {
+		t.Fatal("change-explanation-tools preset missing")
+	}
+	if !changeTools.IsEnvironmentOnly() ||
+		!slices.Equal(changeTools.EnvironmentPacks, []string{"change-explanation"}) {
+		t.Errorf("change-explanation-tools preset = %#v", changeTools)
 	}
 	for _, resourceID := range []string{
 		"approval-policy",
@@ -490,6 +504,77 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resource := range hookManifest.Resources {
 		if got, want := resource.Targets, repositoryTargetCount(resource); len(got) != want {
 			t.Fatalf("hook resource %q targets = %v, want %d", resource.ID, got, want)
+		}
+	}
+}
+
+func TestRepositoryChangeExplanationContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/explain-change.md": {
+			"$ARGUMENTS", "pull request", "commit", "working tree",
+			"change-explanation", "adapt-for-reader", "pr-lens validate",
+			"pr-lens render", "mdmaid validate", "mdmaid-desk register",
+			"mdmaid-desk 0.1.12", ".agent-runs/change-explanations",
+			"does not approve", "pr-lens analyze",
+		},
+		"config/workflow/skills/change-explanation/SKILL.md": {
+			"architecture", "data-flow", "selected code", "graph-contract.md",
+			"pr-lens validate", "pr-lens render", "manifest.json",
+			"animated", "evidence", "report findings", "the graph",
+			"smallest visual", "pseudocode", "call tree", "component tree",
+			"file tree", "diff-shaped",
+		},
+		"config/workflow/skills/change-explanation/references/graph-contract.md": {
+			`"schemaVersion": "0.1.0"`, `"kind": "graph"`,
+			`"lenses"`, `"provenance"`, `"lanes"`, `"nodes"`,
+			`"edges"`, `"flows"`, `"views"`, `"animated": true`,
+		},
+	}
+	for relative, fragments := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest(repository) error = %v", err)
+	}
+	for _, resourceID := range []string{
+		"work-explain-change",
+		"change-explanation-skill",
+		"change-explanation-graph-contract",
+	} {
+		var resource configurator.Resource
+		found := false
+		for _, candidate := range manifest.Resources {
+			if candidate.ID == resourceID {
+				resource = candidate
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("manifest resource %q missing", resourceID)
+			continue
+		}
+		for _, agent := range []string{"codex", "claude", "antigravity"} {
+			supported := false
+			for _, target := range resource.Targets {
+				supported = supported || target.Agent == agent
+			}
+			if !supported {
+				t.Errorf("resource %q does not support %s", resourceID, agent)
+			}
 		}
 	}
 }

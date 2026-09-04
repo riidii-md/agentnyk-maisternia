@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "id": "change-explanation",
+  "name": "Change Explanation",
+  "description": "Pinned local rendering and presentation tools for evidence-grounded, animated change explanations.",
+  "requirements": [
+    {
+      "id": "pr-lens",
+      "name": "PR Lens",
+      "description": "Validates change graph documents and renders deterministic self-contained SVG architecture and data-flow diagrams.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["change-visualization"],
+      "depends_on": [],
+      "detect": {"command": "pr-lens"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "@coldtea/pr-lens-cli",
+          "version": "0.2.0"
+        }
+      ]
+    },
+    {
+      "id": "mdmaid",
+      "name": "Mdmaid",
+      "description": "Validates the standalone Markdown explanation before presentation.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["artifact-presentation"],
+      "depends_on": [],
+      "detect": {"command": "mdmaid"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "mdmaid",
+          "version": "0.1.17"
+        }
+      ]
+    },
+    {
+      "id": "mdmaid-desk",
+      "name": "mdmaid.desk",
+      "description": "Presents the Markdown explanation and its authenticated workspace-local SVG diagrams.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["artifact-inbox", "authenticated-local-svg-media"],
+      "depends_on": ["mdmaid"],
+      "detect": {"command": "mdmaid-desk"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "mdmaid-desk",
+          "version": "0.1.12"
+        }
+      ]
+    }
+  ]
+}

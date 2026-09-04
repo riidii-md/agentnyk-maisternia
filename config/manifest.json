@@ -409,6 +409,37 @@
       ]
     },
     {
+      "id": "work-explain-change",
+      "source": "config/workflow/phases/explain-change.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-explain-change.md"},
+        {"agent": "codex", "path": ".codex/skills/work-explain-change/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-explain-change.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-explain-change.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-explain-change/SKILL.md"}
+      ]
+    },
+    {
+      "id": "change-explanation-skill",
+      "source": "config/workflow/skills/change-explanation/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/change-explanation/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/change-explanation/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/change-explanation/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/change-explanation/SKILL.md"}
+      ]
+    },
+    {
+      "id": "change-explanation-graph-contract",
+      "source": "config/workflow/skills/change-explanation/references/graph-contract.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/change-explanation/references/graph-contract.md"},
+        {"agent": "claude", "path": ".claude/skills/change-explanation/references/graph-contract.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/change-explanation/references/graph-contract.md"},
+        {"agent": "hermes", "path": ".hermes/skills/change-explanation/references/graph-contract.md"}
+      ]
+    },
+    {
       "id": "multi-lens-review-skill",
       "source": "config/workflow/skills/multi-lens-review.md",
       "targets": [

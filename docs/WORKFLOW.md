@@ -105,6 +105,7 @@ preset:
     - /work-run
     - /work-verify
     - /work-review
+    - /work-explain-change
   targets:
     codex:
       render_as: prompts_and_skills
@@ -136,6 +137,7 @@ Canonical commands use the `/work-*` namespace:
 /work-run
 /work-verify
 /work-review
+/work-explain-change
 /work-pr
 /work-showcase
 /work-cleanup
@@ -144,6 +146,12 @@ Canonical commands use the `/work-*` namespace:
 
 The command identifies the phase. Provider rendering decides how that command is
 installed in each harness. The harness decides how to execute it at runtime.
+
+`/work-explain-change` is an on-demand companion to the delivery DAG rather
+than a required phase. It explains a PR, commit, range, or working-tree snapshot
+with verified narrative, selected code, and local animated architecture or
+data-flow diagrams. It does not approve the change or replace `/work-review`.
+See [Change explanations](CHANGE-EXPLANATIONS.md).
 
 Provider-native invocation differs by harness:
 

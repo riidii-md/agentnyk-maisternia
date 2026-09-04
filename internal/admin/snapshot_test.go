@@ -63,11 +63,11 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	if snapshot.Config.ActionCount == 0 || snapshot.Config.Counts.Create == 0 {
 		t.Fatalf("config summary = %#v, want create actions", snapshot.Config)
 	}
-	if len(snapshot.Presets) != 19 {
-		t.Fatalf("presets = %d, want 19", len(snapshot.Presets))
+	if len(snapshot.Presets) != 20 {
+		t.Fatalf("presets = %d, want 20", len(snapshot.Presets))
 	}
 	for _, preset := range snapshot.Presets {
-		if preset.Preset.ID == "terminal-orchestration" {
+		if preset.Preset.IsEnvironmentOnly() {
 			if preset.Config.ActionCount != 0 || len(preset.Resources) != 0 {
 				t.Fatalf("environment-only preset has configuration = %#v", preset)
 			}
@@ -106,6 +106,12 @@ func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {
 	}
 	if got := plannedRequirementByID(t, plan.Requirements, "tatami"); got.State != environment.StateMissing {
 		t.Fatalf("tatami state = %s", got.State)
+	}
+	changeExplanation := presetStatusByID(t, snapshot.Presets, "change-explanation-tools")
+	if len(changeExplanation.Environments) != 1 ||
+		changeExplanation.Environments[0].PackID != "change-explanation" ||
+		len(changeExplanation.Environments[0].Requirements) != 3 {
+		t.Fatalf("change-explanation environment plan = %#v", changeExplanation.Environments)
 	}
 	if !snapshot.LoadedAt.Equal(loadedAt) {
 		t.Fatalf("loaded at = %s, want %s", snapshot.LoadedAt, loadedAt)
