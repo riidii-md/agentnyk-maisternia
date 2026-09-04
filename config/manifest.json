@@ -226,6 +226,17 @@
       ]
     },
     {
+      "id": "work-findings",
+      "source": "config/workflow/phases/findings.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-findings.md"},
+        {"agent": "codex", "path": ".codex/skills/work-findings/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-findings.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-findings.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-findings/SKILL.md"}
+      ]
+    },
+    {
       "id": "retrospective-policy",
       "source": "config/workflow/retrospective-policy.json",
       "targets": [
@@ -243,6 +254,16 @@
         {"agent": "claude", "path": ".claude/maisternia/retrospective-record.schema.json"},
         {"agent": "antigravity", "path": ".config/agy/maisternia/retrospective-record.schema.json"},
         {"agent": "hermes", "path": ".hermes/maisternia/retrospective-record.schema.json"}
+      ]
+    },
+    {
+      "id": "retrospective-source-schema",
+      "source": "config/schema/retrospective-source.schema.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/retrospective-source.schema.json"},
+        {"agent": "claude", "path": ".claude/maisternia/retrospective-source.schema.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/retrospective-source.schema.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/retrospective-source.schema.json"}
       ]
     },
     {
@@ -547,7 +568,14 @@
       "id": "developer-context-claude-permissions",
       "source": "config/claude/developer-context/permissions.json",
       "targets": [
-        {"agent": "claude", "path": ".claude/maisternia/fragments/developer-context.permissions.json"}
+        {
+          "agent": "claude",
+          "path": ".claude/settings.json",
+          "merge": {
+            "strategy": "json-array-union",
+            "json_pointer": "/permissions/allow"
+          }
+        }
       ]
     },
     {

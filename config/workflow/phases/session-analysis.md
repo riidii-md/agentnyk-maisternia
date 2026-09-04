@@ -135,3 +135,7 @@ End with:
 The command produces analysis and proposals only. It must not automatically edit
 prompts, skills, commands, MCP configuration, hooks, settings, provider routing,
 or global instructions.
+
+After the local report and record validate, use the installed
+`session-retrospective` skill's `Centralize Completed Packages` procedure to
+refresh the curated central copy. Report the central path and record status.

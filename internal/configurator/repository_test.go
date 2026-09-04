@@ -155,7 +155,7 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 		}
 	}
 
-	claudePermissions := readRenderedFile(t, output, ".claude/maisternia/fragments/developer-context.permissions.json")
+	claudePermissions := readRenderedFile(t, output, ".claude/settings.json")
 	for _, permission := range []string{
 		"mcp__context7__resolve-library-id",
 		"mcp__context7__query-docs",

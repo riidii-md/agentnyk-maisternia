@@ -64,6 +64,7 @@ Installs the complete command set:
 /work-profile
 /work-audit
 /work-session-analysis
+/work-findings
 /work-improve
 /work-retrospective
 ```
@@ -71,7 +72,7 @@ Installs the complete command set:
 Its lifecycle is:
 
 ```text
-PROFILE -> AUDIT -> AGGREGATE -> PROPOSE -> REPLAY -> APPROVE
+PROFILE -> AUDIT -> FINDINGS -> AGGREGATE -> PROPOSE -> REPLAY -> APPROVE
                                                        | accepted
                                                        v
                                                     INSTALL
@@ -164,8 +165,39 @@ record.json       # structured metrics, findings, proposals, and decisions
 ```
 
 `record.json` follows the installed versioned schema. Improvement runs scan
-these per-run records instead of scraping Markdown or appending to one shared
-file, so concurrent sessions do not compete for a global history index.
+these per-run records instead of scraping Markdown.
+
+After validation, each producing command copies only the curated files into:
+
+```text
+${XDG_STATE_HOME:-$HOME/.local/state}/maisternia/findings/
+  runs/<provider>/<run-id>/
+    source.json
+    record.json
+    profile.md
+    audit.md
+    session-analysis.md
+    proposal.md
+    index.md
+```
+
+`source.json` records the original directory, import time, record status, and
+SHA-256 checksum for each copied file. The store has no mutable global index,
+so concurrent sessions write separate run directories. An identical import is
+a no-op. A refresh from the same source retains the prior package under
+`history/`; the same run ID from a different source aborts for human review.
+
+Only those allowlisted report files are copied. Transcripts, provider histories,
+events, runtime databases, credentials, tokens, logs, and caches are excluded.
+A current schema-valid record is labeled `valid`. An older record is preserved
+byte-for-byte and labeled `legacy`; legacy evidence may suggest a hypothesis but
+does not satisfy the repeated-valid-run threshold.
+
+Run `/work-findings analyze` from the AgentnykMaisternia repository to group
+equivalent findings across current central packages and prepare the smallest
+owned preset or workflow proposal. The command remains proposal-only: held-out
+replay, explicit human approval, `$work-run`, and a separate opt-in preset apply
+remain required before durable configuration changes.
 
 Reports should preserve evidence references and exact commands without copying
 unrelated source content. Projects that do not want these artifacts committed
@@ -273,4 +305,11 @@ Or run only the concrete session bottleneck analysis:
 
 ```text
 /work-session-analysis <explicit session export or current completed task>
+```
+
+Import an existing curated package or analyze all centralized findings:
+
+```text
+/work-findings import .agent-runs/retrospectives/<run-id>
+/work-findings analyze
 ```

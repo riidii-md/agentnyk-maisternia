@@ -127,6 +127,25 @@ func ValidateManifest(repoRoot string, manifest Manifest) error {
 					filepath.ToSlash(root),
 				)
 			}
+			if err := validateMergeSpec(target.Merge); err != nil {
+				return fmt.Errorf(
+					"resource %q target %q merge: %w",
+					resource.ID,
+					target.Agent,
+					err,
+				)
+			}
+			if target.Merge != nil {
+				if filepath.Ext(sourceRelative) != ".json" || filepath.Ext(targetRelative) != ".json" {
+					return fmt.Errorf(
+						"resource %q merge source and target must be JSON files",
+						resource.ID,
+					)
+				}
+				if err := validateJSONArrayUnionSource(sourcePath, target.Merge); err != nil {
+					return fmt.Errorf("resource %q target merge: %w", resource.ID, err)
+				}
+			}
 			key := canonicalAgent + ":" + filepath.ToSlash(targetRelative)
 			if previous, exists := destinations[key]; exists {
 				return fmt.Errorf(

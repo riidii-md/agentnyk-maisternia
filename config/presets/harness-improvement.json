@@ -9,12 +9,13 @@
       "name": "Improve Harness",
       "entry_phases": ["profile"],
       "phases": [
-        "profile", "audit", "aggregate", "propose", "replay", "approve",
+        "profile", "audit", "findings", "aggregate", "propose", "replay", "approve",
         "install", "monitor", "final"
       ],
       "edges": [
         {"from": "profile", "to": "audit"},
-        {"from": "audit", "to": "aggregate"},
+        {"from": "audit", "to": "findings"},
+        {"from": "findings", "to": "aggregate"},
         {"from": "aggregate", "to": "propose"},
         {"from": "propose", "to": "replay"},
         {"from": "replay", "to": "approve", "condition": "evidence sufficient"},
@@ -30,7 +31,7 @@
   "contents": {
     "mcp_refs": [],
     "commands": [
-      "work-profile", "work-audit", "work-session-analysis", "work-improve",
+      "work-profile", "work-audit", "work-session-analysis", "work-findings", "work-improve",
       "work-retrospective", "work-routing-preferences"
     ],
     "prompts": [],
@@ -40,7 +41,7 @@
     ],
     "hooks": [],
     "settings": [
-      "retrospective-policy", "retrospective-record-schema",
+      "retrospective-policy", "retrospective-record-schema", "retrospective-source-schema",
       "work-routing-profile-schema"
     ]
   },

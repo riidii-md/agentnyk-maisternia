@@ -46,7 +46,7 @@
     ],
     "hooks": [],
     "settings": [
-      "retrospective-policy", "retrospective-record-schema",
+      "retrospective-policy", "retrospective-record-schema", "retrospective-source-schema",
       "work-routing-profile-schema"
     ]
   },

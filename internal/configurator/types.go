@@ -7,9 +7,11 @@ import (
 
 const (
 	ManifestSchemaVersion = 1
-	StateSchemaVersion    = 3
+	StateSchemaVersion    = 4
 	maxManagedFileSize    = 2 << 20
 )
+
+const MergeJSONArrayUnion = "json-array-union"
 
 var (
 	ErrConfirmationRequired = errors.New("explicit confirmation required")
@@ -29,8 +31,14 @@ type Resource struct {
 }
 
 type Target struct {
-	Agent string `json:"agent"`
-	Path  string `json:"path"`
+	Agent string     `json:"agent"`
+	Path  string     `json:"path"`
+	Merge *MergeSpec `json:"merge,omitempty"`
+}
+
+type MergeSpec struct {
+	Strategy    string `json:"strategy"`
+	JSONPointer string `json:"json_pointer"`
 }
 
 type ActionState string
@@ -67,10 +75,14 @@ type Action struct {
 	SourcePath      string
 	DestinationPath string
 	SourceChecksum  string
+	DesiredChecksum string
+	DesiredContent  []byte
+	Merge           *MergeSpec
 	CurrentChecksum string
 	State           ActionState
 	Reason          string
 	Removal         bool
+	PreserveTarget  bool
 }
 
 type Plan struct {
@@ -106,6 +118,7 @@ type installedResource struct {
 	Checksum  string    `json:"checksum"`
 	Source    string    `json:"source"`
 	Installed time.Time `json:"installed_at"`
+	Merge     bool      `json:"merge,omitempty"`
 }
 
 type presetInstallation struct {

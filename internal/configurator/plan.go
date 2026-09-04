@@ -121,6 +121,8 @@ func buildPlanForScope(
 				SourcePath:      sourcePath,
 				DestinationPath: destination,
 				SourceChecksum:  sourceChecksum,
+				DesiredChecksum: sourceChecksum,
+				Merge:           target.Merge,
 			}
 
 			if symlinkPath, found, err := firstSymlink(targetRoot, destination); err != nil {
@@ -134,6 +136,19 @@ func buildPlanForScope(
 
 			info, err := os.Lstat(destination)
 			if errors.Is(err, os.ErrNotExist) {
+				if target.Merge != nil {
+					desiredContent, desiredChecksum, _, err := buildJSONArrayUnion(
+						sourcePath,
+						destination,
+						target.Merge,
+						false,
+					)
+					if err != nil {
+						return Plan{}, fmt.Errorf("prepare merge for %q: %w", resource.ID, err)
+					}
+					action.DesiredContent = desiredContent
+					action.DesiredChecksum = desiredChecksum
+				}
 				action.State = ActionCreate
 				action.Reason = "target does not exist"
 				plan.Actions = append(plan.Actions, action)
@@ -154,6 +169,29 @@ func buildPlanForScope(
 				return Plan{}, fmt.Errorf("checksum target %s: %w", destination, err)
 			}
 			action.CurrentChecksum = currentChecksum
+			if target.Merge != nil {
+				desiredContent, desiredChecksum, changed, err := buildJSONArrayUnion(
+					sourcePath,
+					destination,
+					target.Merge,
+					true,
+				)
+				if err != nil {
+					return Plan{}, fmt.Errorf("prepare merge for %q: %w", resource.ID, err)
+				}
+				if !changed {
+					action.DesiredChecksum = currentChecksum
+					action.State = ActionUnchanged
+					action.Reason = "target contains every managed JSON array value"
+				} else {
+					action.DesiredContent = desiredContent
+					action.DesiredChecksum = desiredChecksum
+					action.State = ActionUpdate
+					action.Reason = "managed JSON array is missing values"
+				}
+				plan.Actions = append(plan.Actions, action)
+				continue
+			}
 			installed, managed := installedStateResource(state, canonicalAgent, targetRelative)
 			if presetID != "" && managed && installed.Checksum != sourceChecksum {
 				if owners := otherPresetOwners(state, presetID, key); len(owners) > 0 {
@@ -308,10 +346,17 @@ func appendRemovedPresetResources(
 			DestinationPath: filepath.Join(targetRoot, targetRelative),
 			SourceChecksum:  installed.Checksum,
 			Removal:         true,
+			PreserveTarget:  installed.Merge,
 		}
 		if owners := otherPresetOwners(state, presetID, key); len(owners) > 0 {
 			action.State = ActionRelease
 			action.Reason = "target is still required by preset " + strings.Join(owners, ", ")
+			plan.Actions = append(plan.Actions, action)
+			continue
+		}
+		if installed.Merge {
+			action.State = ActionRelease
+			action.Reason = "merged values remain in the mixed provider settings file"
 			plan.Actions = append(plan.Actions, action)
 			continue
 		}
@@ -438,7 +483,10 @@ func loadStateForScope(root string, scope InstallScope) (installState, error) {
 	if err := decoder.Decode(&state); err != nil {
 		return installState{}, fmt.Errorf("decode install state: %w", err)
 	}
-	if state.SchemaVersion != 1 && state.SchemaVersion != 2 && state.SchemaVersion != StateSchemaVersion {
+	if state.SchemaVersion != 1 &&
+		state.SchemaVersion != 2 &&
+		state.SchemaVersion != 3 &&
+		state.SchemaVersion != StateSchemaVersion {
 		return installState{}, fmt.Errorf("unsupported install state schema %d", state.SchemaVersion)
 	}
 	state.SchemaVersion = StateSchemaVersion

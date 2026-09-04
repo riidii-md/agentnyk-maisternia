@@ -170,9 +170,11 @@ eventually distinguish `installed`, `compiled`, `active`, `degraded`, and
 `unenforceable`; they must never report a copied definition as active.
 
 The `developer-context`, `goreleaser-validation`, and
-`git-workflow-approvals` presets provide narrow, provider-native review
-fragments within this boundary. They demonstrate exact MCP tool entries, one
+`git-workflow-approvals` presets provide narrow provider-native resources within
+this boundary. Developer context activates only its exact Claude permission
+array through a defensive structured merge; its MCP definition remains a
+review fragment. Together the presets demonstrate exact MCP tool entries, one
 repository-scoped validation command, and deliberate allow/ask Git command
-prefixes without claiming that copied fragments are active. See
+prefixes without claiming that every copied fragment is active. See
 [Preset library](PRESETS.md) for activation requirements and environment-pack
 details.

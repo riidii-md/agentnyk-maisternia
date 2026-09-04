@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentnyk.dev/schemas/retrospective-source.schema.json",
+  "title": "AgentnykMaisternia Retrospective Source",
+  "type": "object",
+  "required": [
+    "schema_version", "run_id", "provider", "source_directory",
+    "imported_at", "record_status", "files"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {
+      "type": "string", "minLength": 1, "maxLength": 160,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "provider": {
+      "type": "string",
+      "enum": ["codex", "claude", "antigravity", "hermes", "unknown"]
+    },
+    "source_directory": {"type": "string", "minLength": 1},
+    "imported_at": {"type": "string", "format": "date-time"},
+    "record_status": {"type": "string", "enum": ["valid", "legacy"]},
+    "files": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "enum": [
+          "record.json", "index.md", "profile.md", "audit.md",
+          "session-analysis.md", "proposal.md"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string", "pattern": "^[a-f0-9]{64}$"
+      }
+    }
+  },
+  "additionalProperties": false
+}

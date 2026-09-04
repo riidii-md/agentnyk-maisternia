@@ -66,7 +66,8 @@ The repository starts with:
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource;
 - `developer-context`: Context7 and read-only, repository-bounded GitNexus
-  review fragments with explicit default approvals for Claude Code and Codex;
+  configuration with exact Claude Code permissions merged into active settings
+  and reviewable MCP fragments for Claude Code and Codex;
 - `goreleaser-validation`: a pinned prebuilt GoReleaser requirement and the
   narrow release-configuration validation approval for Claude Code and Codex;
 - `git-workflow-approvals`: automatic add, commit, and fetch approval with
@@ -115,11 +116,18 @@ are review fragments, not active configuration, because maisternia does not yet
 merge structured TOML or JSON. Its settings resource is an opt-in named Codex
 profile and does not replace the user's main `config.toml`.
 
-`developer-context` and `goreleaser-validation` render review fragments.
+`developer-context` renders reviewable MCP fragments and uses the manifest's
+`json-array-union` strategy to add exact entries under Claude
+`settings.json` `/permissions/allow`. The merge preserves unrelated settings,
+backs up an existing file, aborts on malformed or wrongly typed JSON, and never
+removes the mixed settings file during preset uninstall.
+
+`goreleaser-validation` renders review fragments.
 `git-workflow-approvals` installs its independent Codex rule file directly
 under `.codex/rules/`; its Claude permissions remain a review fragment because
-they require a structured merge. None of these presets replaces or silently
-merges Codex `config.toml`, Claude `.mcp.json`, or Claude `settings.json`.
+they require a separate structured merge. None of these presets replaces Codex
+`config.toml` or Claude `.mcp.json`; only the declared Claude permission array is
+merged into `settings.json`.
 
 `routine-development-approvals` is deliberately different for Codex. Codex can
 load independent files from `.codex/rules/`, so the preset installs one active
@@ -145,7 +153,7 @@ and configuration-improvement workflows.
 `mdmaid` remains the validator/renderer, while successful `mdmaid-desk register`
 or `mdmaid-desk import` is required before an agent reports hub delivery.
 
-The developer-context fragments use Context7's hosted MCP endpoint and approve
+The developer-context resources use Context7's hosted MCP endpoint and approve
 only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs
 with `GITNEXUS_MCP_READ_ONLY=1`, omits raw Cypher and mutation tools, and
 approves each remaining tool by exact name. Before activation, set

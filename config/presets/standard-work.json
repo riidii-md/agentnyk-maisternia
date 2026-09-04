@@ -62,7 +62,7 @@
       "approval-policy",
       "git-workflow-approvals-codex-rules",
       "git-workflow-approvals-claude-permissions",
-      "retrospective-policy", "retrospective-record-schema",
+      "retrospective-policy", "retrospective-record-schema", "retrospective-source-schema",
       "routine-development-approvals-codex-rules",
       "routine-development-approvals-claude-permissions"
     ]

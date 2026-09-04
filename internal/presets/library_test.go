@@ -109,6 +109,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"git-workflow-approvals-claude-permissions",
 		"retrospective-policy",
 		"retrospective-record-schema",
+		"retrospective-source-schema",
 		"routine-development-approvals-codex-rules",
 		"routine-development-approvals-claude-permissions",
 	} {
@@ -257,10 +258,11 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}) {
 		t.Fatalf("harness-profile commands = %v", got)
 	}
-	if got := profile.Contents.Settings; len(got) != 3 ||
+	if got := profile.Contents.Settings; len(got) != 4 ||
 		got[0] != "retrospective-policy" ||
 		got[1] != "retrospective-record-schema" ||
-		got[2] != "work-routing-profile-schema" {
+		got[2] != "retrospective-source-schema" ||
+		got[3] != "work-routing-profile-schema" {
 		t.Fatalf("harness-profile settings = %v", got)
 	}
 	if got := profile.Contents.Skills; !slices.Equal(got, []string{
@@ -299,8 +301,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		improvement.Pipelines[0].ID != "improve-harness" {
 		t.Fatalf("harness-improvement pipelines = %#v", improvement.Pipelines)
 	}
-	if got := improvement.Contents.Commands; len(got) != 6 {
-		t.Fatalf("harness-improvement commands = %v, want 6", got)
+	if got := improvement.Contents.Commands; len(got) != 7 {
+		t.Fatalf("harness-improvement commands = %v, want 7", got)
 	}
 	if got := improvement.Targets; len(got) != 4 {
 		t.Fatalf("harness-improvement targets = %v, want all four providers", got)
@@ -466,9 +468,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
 	}
-	if len(improvementManifest.Resources) != 12 {
+	if len(improvementManifest.Resources) != 14 {
 		t.Fatalf(
-			"harness-improvement resource count = %d, want 12",
+			"harness-improvement resource count = %d, want 14",
 			len(improvementManifest.Resources),
 		)
 	}
@@ -1125,6 +1127,7 @@ func TestRepositoryRetrospectiveJSONIsValid(t *testing.T) {
 	root := repositoryRoot(t)
 	paths := []string{
 		"config/schema/retrospective-record.schema.json",
+		"config/schema/retrospective-source.schema.json",
 		"config/workflow/retrospective-policy.json",
 	}
 	for _, relative := range paths {
@@ -1144,6 +1147,88 @@ func TestRepositoryRetrospectiveJSONIsValid(t *testing.T) {
 				t.Fatalf("%s has no schema marker", relative)
 			}
 		})
+	}
+}
+
+func TestRepositoryCentralizedRetrospectiveFindingsContract(t *testing.T) {
+	t.Parallel()
+	root := repositoryRoot(t)
+	policyContent, err := os.ReadFile(filepath.Join(root, "config", "workflow", "retrospective-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var raw struct {
+		CentralStore struct {
+			BaseDirectory    string   `json:"base_directory"`
+			RunDirectory     string   `json:"run_directory"`
+			ProvenanceFile   string   `json:"provenance_file"`
+			AllowedArtifacts []string `json:"allowed_artifacts"`
+			LegacyPolicy     string   `json:"legacy_record_policy"`
+			CollisionPolicy  string   `json:"run_id_collision_policy"`
+		} `json:"central_store"`
+	}
+	if err := json.Unmarshal(policyContent, &raw); err != nil {
+		t.Fatal(err)
+	}
+	store := raw.CentralStore
+	if store.BaseDirectory != "${XDG_STATE_HOME:-$HOME/.local/state}/maisternia/findings" ||
+		store.RunDirectory != "runs/<provider>/<run-id>" || store.ProvenanceFile != "source.json" {
+		t.Fatalf("central store policy = %#v", store)
+	}
+	for _, artifact := range []string{"record.json", "index.md", "profile.md", "audit.md", "session-analysis.md", "proposal.md"} {
+		if !slices.Contains(store.AllowedArtifacts, artifact) {
+			t.Errorf("central allowed artifacts are missing %q", artifact)
+		}
+	}
+	if store.LegacyPolicy != "preserve-and-label" || store.CollisionPolicy != "same-source-refresh-otherwise-abort" {
+		t.Fatalf("central import safety policy = %#v", store)
+	}
+
+	library, err := LoadLibrary(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	improvement, found := library.Get("harness-improvement")
+	if !found || !slices.Contains(improvement.Contents.Commands, "work-findings") {
+		t.Fatal("harness-improvement does not install work-findings")
+	}
+	pipeline := improvement.Pipelines[0]
+	if !slices.Contains(pipeline.Phases, "findings") {
+		t.Fatal("harness-improvement pipeline has no findings phase")
+	}
+	for _, edge := range []Edge{{From: "audit", To: "findings"}, {From: "findings", To: "aggregate"}} {
+		if !slices.Contains(pipeline.Edges, edge) {
+			t.Errorf("harness-improvement pipeline missing edge %#v", edge)
+		}
+	}
+	for _, presetID := range []string{"standard-work", "harness-profile", "session-audit", "harness-improvement"} {
+		preset, found := library.Get(presetID)
+		if !found || !slices.Contains(preset.Contents.Settings, "retrospective-source-schema") {
+			t.Errorf("preset %q does not install retrospective source schema", presetID)
+		}
+	}
+
+	contracts := map[string][]string{
+		"config/workflow/phases/findings.md": {
+			"explicitly named retrospective directories",
+			"${XDG_STATE_HOME:-$HOME/.local/state}/maisternia/findings",
+			"source.json", "legacy", "Never copy transcripts", "proposal only",
+			"held-out replay", "explicit human approval", "$work-run",
+		},
+		"config/workflow/skills/session-retrospective.md": {
+			"Centralize Completed Packages", "same-source refresh", "different source", "Never copy transcripts",
+		},
+	}
+	for relative, fragments := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
 	}
 }
 

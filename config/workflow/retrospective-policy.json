@@ -3,6 +3,17 @@
   "mode": "post-run",
   "output_directory": ".agent-runs/retrospectives",
   "record_glob": ".agent-runs/retrospectives/*/record.json",
+  "central_store": {
+    "base_directory": "${XDG_STATE_HOME:-$HOME/.local/state}/maisternia/findings",
+    "run_directory": "runs/<provider>/<run-id>",
+    "provenance_file": "source.json",
+    "allowed_artifacts": [
+      "record.json", "index.md", "profile.md", "audit.md",
+      "session-analysis.md", "proposal.md"
+    ],
+    "legacy_record_policy": "preserve-and-label",
+    "run_id_collision_policy": "same-source-refresh-otherwise-abort"
+  },
   "mutation_policy": "proposal-only",
   "minimum_repeated_findings": 2,
   "allow_single_critical_finding": true,
