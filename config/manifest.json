@@ -409,6 +409,17 @@
       ]
     },
     {
+      "id": "work-review-simplify",
+      "source": "config/workflow/phases/review-simplify.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-review-simplify.md"},
+        {"agent": "codex", "path": ".codex/skills/work-review-simplify/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-review-simplify.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-review-simplify.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-review-simplify/SKILL.md"}
+      ]
+    },
+    {
       "id": "work-explain-change",
       "source": "config/workflow/phases/explain-change.md",
       "targets": [

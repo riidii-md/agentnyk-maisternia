@@ -21,6 +21,62 @@
     "best-practices",
     "acceptance-testability"
   ],
+  "profiles": {
+    "maintainability": {
+      "applies_to": ["implementation"],
+      "uses_lenses": "implementation_lenses",
+      "additional_lenses": ["best-practices"],
+      "focus_lenses": [
+        "correctness",
+        "consistency",
+        "architecture",
+        "simplicity-dry",
+        "tests-verification"
+      ],
+      "goals": [
+        "preserve-observable-behavior",
+        "reduce-knowledge-duplication",
+        "improve-abstraction-boundaries",
+        "remove-unnecessary-complexity",
+        "follow-grounded-best-practices"
+      ],
+      "candidate_requirements": [
+        "behavior-contract",
+        "concrete-evidence",
+        "minimal-fix",
+        "net-simplification",
+        "regression-risk",
+        "verification-plan"
+      ],
+      "guardrails": [
+        "no-functional-regressions",
+        "no-incidental-dry",
+        "no-speculative-abstractions",
+        "no-style-only-findings"
+      ],
+      "context_discovery": {
+        "strategy": "evidence-led-heuristic",
+        "language_agnostic": true,
+        "multi_language": true,
+        "sources": [
+          "repository-instructions",
+          "ci-and-hooks",
+          "build-and-package-manifests",
+          "lockfiles",
+          "source-and-generated-file-markers",
+          "changed-paths"
+        ],
+        "outcomes": ["detected", "mixed", "unknown"],
+        "rules": [
+          "record-evidence-and-confidence",
+          "prefer-repository-owned-commands",
+          "no-extension-only-inference",
+          "no-unapproved-tool-installation",
+          "preserve-unknowns"
+        ]
+      }
+    }
+  },
   "domain_lenses": {
     "accessibility": "user interface or user interaction changes",
     "privacy-pii-soc2": "personal, sensitive, regulated, audit, or access-control data",

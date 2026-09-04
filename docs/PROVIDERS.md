@@ -97,6 +97,7 @@ provider-prefixed command aliases:
 /work-plan @codex -- plan the migration
 /work-research @codex @claude -- compare the options
 /work-review @agy @codex @claude -- review this branch
+/work-review-simplify @agy @codex -- simplify this branch
 ```
 
 The `/work-*` spelling is the provider-neutral workflow name and the native

@@ -57,7 +57,10 @@ The repository starts with:
 - `change-explanation-tools`: provider-neutral machine setup for the pinned PR
   Lens, Mdmaid, and mdmaid.desk versions used by `/work-explain-change`;
 - `multi-lens-review`: plan and implementation review with independent lenses,
-  per-finding refutation, applied fixes, and optional provider delegation;
+  a behavior-preserving maintainability profile for DRY, abstraction,
+  complexity, and grounded best-practice checks, confidence-aware language and
+  tooling discovery, per-finding refutation, applied fixes, and optional
+  provider delegation;
 - `adaptive-readability`: reader- and task-aware text transformation with
   reusable defaults, situation overrides, explicit calibration, a clarification
   gate for materially ambiguous intent, and mdmaid.desk as the reading hub;
@@ -525,8 +528,9 @@ See [Session retrospectives and harness improvement](RETROSPECTIVES.md) for the
 profiling, audit, post-run artifact, replay, and human-approval contracts.
 
 See [Multi-lens review workflow](REVIEW-WORKFLOW.md) for plan and implementation
-gates, evidence rules, verifier/refutation passes, applied fixes, domain lenses,
-and controlled cross-provider delegation.
+gates, the behavior-preserving maintainability profile, evidence rules,
+language-agnostic context discovery, verifier/refutation passes, applied fixes,
+domain lenses, and controlled cross-provider delegation.
 
 See [Hook packs and installation scopes](HOOKS.md) for hook policy,
 provider-layer mappings, and the native activation boundary.

@@ -105,6 +105,7 @@ preset:
     - /work-run
     - /work-verify
     - /work-review
+    - /work-review-simplify
     - /work-explain-change
   targets:
     codex:
@@ -137,6 +138,7 @@ Canonical commands use the `/work-*` namespace:
 /work-run
 /work-verify
 /work-review
+/work-review-simplify
 /work-explain-change
 /work-pr
 /work-showcase
