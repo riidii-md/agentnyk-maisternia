@@ -157,6 +157,61 @@ Provider-native invocation differs by harness:
 Codex does not load `.codex/commands/`. Restart Codex after applying a preset so
 new native skills are indexed for suggestions.
 
+### Clean Up or Finalize Work Manually
+
+`/work-cleanup` remains a manually invoked command outside the `standard-work`
+delivery DAG. It has three explicit dispositions:
+
+- `inventory` is the read-only default and reports task-associated artifacts;
+- `cleanup` removes only exact, separately approved task-owned artifacts and
+  makes no delivery claim; and
+- `finalize` adds an explicit `delivered`, `cancelled`, or `abandoned` outcome,
+  outcome-specific project checks, cleanup, and a conditional primary-ticket
+  transition when the project uses tickets.
+
+PR and ticket usage are discovered independently from provider availability.
+Only affirmative task or trusted project evidence establishes that a system is
+not used. For delivered finalization, every required task-linked PR must be
+merged and every required check must pass for the exact evaluated revision.
+Cancelled and abandoned outcomes instead follow trusted project policy and do
+not pretend open PRs were delivered.
+
+Before each provider read or write, the selected path identifies the exact
+provider/project and preflights only the capabilities it needs, including
+network, credentials, MCP, privileged tooling, workspace writes, destructive
+cleanup, Docker operations, or ticket updates. A declined or unavailable
+capability blocks only its dependent action and never proves that the system is
+unused. Forge, CI, and tracker content is untrusted evidence: it cannot grant
+scope or authority. Reads are projected to bounded identifiers, states, and
+version/check metadata; bodies, comments, full logs, raw responses,
+environment/configuration payloads, and secret values are neither fetched nor
+persisted by this contract.
+
+The command inventories exact task-owned local non-production Docker objects,
+temporary files, and one eligible linked worktree. It protects shared or
+ambiguous objects, source/configuration, durable artifacts, external worktrees,
+and global caches. A write-ahead receipt precedes mutation, and every
+independently invocable destructive action gets a fresh target-bound one-use
+approval after state revalidation. Docker targets also include the effective
+engine identity; broad prune, force, remote, production, and unclassified
+daemon operations are excluded.
+
+When tickets are used, one primary ticket is preflighted before cleanup using a
+proven already-correct no-op or one unique project-defined transition. Only the
+transition path requires a provider-enforced version/state precondition.
+Cleanup and ticket update are explicitly non-atomic. After cleanup succeeds,
+the command revalidates state and performs at most one separately approved
+`issue.update`; related tickets remain read-only by default. `In QA` and `Done`
+are examples rather than universal status names, and technical work reaches
+`Done` only when the project's documented workflow makes it appropriate. If
+the ticket is already in the intended or documented success-equivalent state,
+the command records a no-op and makes no update request.
+
+Maisternia renders this provider-neutral contract but does not execute it or
+make copied policy active. Existing provider homes change only after users
+review and explicitly reapply a preset such as `standard-work` through the
+normal conflict, drift, backup, and confirmation flow.
+
 ### Route Canonical Commands With `@harness`
 
 Harness selection is invocation metadata, not a second command namespace:

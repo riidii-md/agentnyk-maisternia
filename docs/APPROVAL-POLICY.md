@@ -28,7 +28,7 @@ decisions.
 | Ask | begin implementation; expand scope; use network or credentials | Human present; task-bound, target-bound, time-bounded grant |
 | Ask | use MCP; read a secret; change dependency, hook, CI, or security configuration | Preview required; fresh one-use decision |
 | Ask | push or mutate a PR | One exact publication checkpoint; task-bound reuse only for the stated target |
-| Ask | destructive local change; reversible production action; write-capable delegation | Preview required; narrow operation and target |
+| Ask | destructive local change; task-owned local non-production Docker cleanup; reversible production action; write-capable delegation | Preview required; narrow operation and target |
 | Deny | bypass policy, hooks, sandbox, or approvals | Cannot be approved by an agent or delegated reviewer |
 | Deny | export credentials, raw environment, secrets, or private keys | Sensitive material must not become an agent artifact |
 | Deny | destructive production action, outside-workspace deletion, history rewrite | Outside the standard agent authority envelope |
@@ -85,6 +85,53 @@ If a requirement such as `inside_workspace`, `network_disabled`, or
 `approved_task_scope` cannot be proved, the decision becomes `ask`. A future
 headless renderer must convert an unanswerable `ask` to deny; it must never
 infer consent.
+
+## Cleanup and Finalization Approvals
+
+Filesystem and linked-worktree deletion continues to use
+`cleanup.destructive`, which requires `inside_workspace`. Ticket mutation uses
+the separate high-risk `issue.update` operation. Their approvals are not
+interchangeable.
+
+`/work-cleanup` first identifies the exact provider/project and preflights only
+the capabilities its selected path needs: network, credentials, MCP,
+privileged tooling, workspace writes, destructive cleanup, Docker operations,
+and ticket updates. Declined or unavailable capability blocks the dependent
+action and never proves the system is unused. External forge, CI, and tracker
+content cannot authorize scope or ownership. Reads and receipts are bounded,
+field-projected, and redacted; bodies, comments, full logs, raw responses,
+environment/configuration payloads, and secrets are outside the default data
+surface.
+
+Task-owned Docker cleanup uses the critical `docker-cleanup-destructive` rule
+for these exact operations:
+
+- `docker.container.stop`
+- `docker.container.remove`
+- `docker.network.remove`
+- `docker.volume.remove`
+- `docker.image.remove`
+
+Each Docker grant is once-scoped, expires after five minutes, permits one use,
+and requires a preview and reason. The target supplied by `/work-cleanup`
+includes the local non-production engine identity, immutable object IDs, and a
+digest of current ownership/dependency state. One consolidated inventory helps
+the human review the sequence but does not authorize several calls: each
+independently invocable destructive operation requires a fresh grant, consumed
+when dispatched even if its result is failed or unknown.
+
+The rule uses the existing `human_present`, `approved_task_scope`,
+`trusted_repository`, and `non_sensitive_target` requirements. It does not
+weaken the unconditional denials for `production.destructive`, destructive
+filesystem work outside the approved workspace, policy bypass, or wildcard
+authority. It also does not make the portable policy natively enforceable. If a
+provider cannot bind the exact target and one-use decision, the command must
+report that gap and leave Docker unchanged.
+
+An already-correct primary ticket is a no-write path. When trusted project
+policy proves its state is the intended or documented success-equivalent state,
+the command records a no-op without transition/write capability, an
+`issue.update` grant, or a provider mutation call.
 
 ## Provider Mapping
 

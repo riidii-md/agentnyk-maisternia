@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -16,8 +17,8 @@ func TestRepositoryApprovalPolicyIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if len(policy.Rules) != 23 {
-		t.Fatalf("rule count = %d, want 23", len(policy.Rules))
+	if len(policy.Rules) != 24 {
+		t.Fatalf("rule count = %d, want 24", len(policy.Rules))
 	}
 	if policy.DefaultDecision != "ask" {
 		t.Fatalf("default decision = %q, want ask", policy.DefaultDecision)
@@ -72,6 +73,114 @@ func TestRepositoryApprovalPolicyIsValid(t *testing.T) {
 			resolution.Rule.Approval.Scope != scope {
 			t.Errorf("Resolve(%q) approval = %#v, want scope %q", operation, resolution.Rule, scope)
 		}
+	}
+}
+
+func TestRepositoryCleanupApprovalPolicyContract(t *testing.T) {
+	t.Parallel()
+
+	policy, err := Load(repositoryRoot(t))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	tests := []struct {
+		operation    string
+		rule         string
+		risk         string
+		requirements []string
+		ttlSeconds   int
+	}{
+		{
+			operation:    "cleanup.destructive",
+			rule:         "destructive-local-change",
+			risk:         "critical",
+			requirements: []string{"human_present", "inside_workspace"},
+			ttlSeconds:   300,
+		},
+		{
+			operation:    "issue.update",
+			rule:         "external-write",
+			risk:         "high",
+			requirements: []string{"human_present"},
+			ttlSeconds:   600,
+		},
+	}
+	dockerOperations := []string{
+		"docker.container.stop",
+		"docker.container.remove",
+		"docker.network.remove",
+		"docker.volume.remove",
+		"docker.image.remove",
+	}
+	for _, operation := range dockerOperations {
+		tests = append(tests, struct {
+			operation    string
+			rule         string
+			risk         string
+			requirements []string
+			ttlSeconds   int
+		}{
+			operation:    operation,
+			rule:         "docker-cleanup-destructive",
+			risk:         "critical",
+			requirements: []string{"human_present", "approved_task_scope", "trusted_repository", "non_sensitive_target"},
+			ttlSeconds:   300,
+		})
+	}
+
+	var dockerRule *Rule
+	for index := range policy.Rules {
+		if policy.Rules[index].ID == "docker-cleanup-destructive" {
+			dockerRule = &policy.Rules[index]
+			break
+		}
+	}
+	if dockerRule == nil {
+		t.Fatal("docker-cleanup-destructive rule missing")
+	}
+	if !slices.Equal(dockerRule.Operations, dockerOperations) {
+		t.Errorf("docker-cleanup-destructive operations = %v, want exactly %v", dockerRule.Operations, dockerOperations)
+	}
+
+	for _, test := range tests {
+		resolution := policy.Resolve(test.operation)
+		if resolution.Decision != "ask" || resolution.Rule == nil {
+			t.Errorf("Resolve(%q) = %#v, want ask rule %q", test.operation, resolution, test.rule)
+			continue
+		}
+		rule := resolution.Rule
+		if rule.ID != test.rule || rule.Risk != test.risk {
+			t.Errorf("Resolve(%q) rule = %#v, want id %q risk %q", test.operation, rule, test.rule, test.risk)
+		}
+		if !slices.Equal(rule.Requirements, test.requirements) {
+			t.Errorf("Resolve(%q) requirements = %v, want %v", test.operation, rule.Requirements, test.requirements)
+		}
+		if rule.Approval == nil {
+			t.Errorf("Resolve(%q) approval is nil", test.operation)
+			continue
+		}
+		if rule.Approval.Scope != "once" ||
+			rule.Approval.TTLSeconds != test.ttlSeconds ||
+			rule.Approval.MaxUses != 1 ||
+			!rule.Approval.RequirePreview ||
+			!rule.Approval.RequireReason {
+			t.Errorf("Resolve(%q) approval = %#v", test.operation, rule.Approval)
+		}
+	}
+
+	for _, operation := range []string{
+		"filesystem.outside_workspace_destructive",
+		"production.destructive",
+		"policy.bypass",
+	} {
+		if resolution := policy.Resolve(operation); resolution.Decision != "deny" {
+			t.Errorf("Resolve(%q) = %#v, want deny", operation, resolution)
+		}
+	}
+
+	if !slices.Contains(policy.GrantPolicy.BindTo, "target") {
+		t.Errorf("grant bindings = %v, want target", policy.GrantPolicy.BindTo)
 	}
 }
 

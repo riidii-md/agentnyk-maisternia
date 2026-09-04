@@ -922,7 +922,7 @@ func TestRunApprovalCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("approval validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "approval policy valid: 23 rules") {
+	if !strings.Contains(stdout.String(), "approval policy valid: 24 rules") {
 		t.Fatalf("approval validate output = %q", stdout.String())
 	}
 
