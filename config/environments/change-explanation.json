@@ -7,7 +7,7 @@
     {
       "id": "pr-lens",
       "name": "PR Lens",
-      "description": "Validates change graph documents and projects deterministic animated SVG or static Mermaid architecture and data-flow diagrams.",
+      "description": "Validates change graph documents and renders deterministic self-contained animated SVG architecture and data-flow diagrams.",
       "kind": "binary",
       "required": true,
       "provides": ["change-visualization"],
@@ -19,7 +19,7 @@
           "kind": "npm-global",
           "platforms": ["darwin", "linux", "windows"],
           "package": "@coldtea/pr-lens-cli",
-          "version": "0.3.0"
+          "version": "0.2.0"
         }
       ]
     },

@@ -516,14 +516,14 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 		"config/workflow/phases/explain-change.md": {
 			"$ARGUMENTS", "pull request", "commit", "working tree",
 			"change-explanation", "adapt-for-reader", "pr-lens validate",
-			"pr-lens render", "pr-lens mermaid", "mdmaid validate", "mdmaid-desk register",
+			"pr-lens render", "author Mermaid directly", "mdmaid validate", "mdmaid-desk register",
 			"mdmaid-desk 0.1.12", ".agent-runs/change-explanations",
 			"does not approve", "pr-lens analyze", "animated-web", "static-tui",
 			"Explicit current request", "project", "user", "exactly one",
 		},
 		"config/workflow/skills/change-explanation/SKILL.md": {
 			"architecture", "data-flow", "selected code", "graph-contract.md",
-			"pr-lens validate", "pr-lens render", "pr-lens mermaid", "manifest.json",
+			"pr-lens validate", "pr-lens render", "author Mermaid directly", "manifest.json",
 			"animated", "evidence", "report findings", "the graph",
 			"smallest visual", "pseudocode", "call tree", "component tree",
 			"file tree", "diff-shaped", "animated-web", "static-tui",
@@ -535,6 +535,10 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			`"lenses"`, `"provenance"`, `"lanes"`, `"nodes"`,
 			`"edges"`, `"flows"`, `"views"`, `"animated": true`,
 		},
+		"docs/CHANGE-EXPLANATIONS.md": {
+			"animated-web", "static-tui", "author Mermaid directly",
+			"exactly one", "@coldtea/pr-lens-cli` 0.2.0",
+		},
 	}
 	for relative, fragments := range contracts {
 		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
@@ -545,6 +549,9 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			if !strings.Contains(string(content), fragment) {
 				t.Errorf("%s is missing %q", relative, fragment)
 			}
+		}
+		if strings.Contains(string(content), "pr-lens mermaid") {
+			t.Errorf("%s must not depend on the withdrawn PR Lens Mermaid converter", relative)
 		}
 	}
 
@@ -1031,7 +1038,7 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			"work-adapt-for-reader", "work-explain-change", "animated-web", "static-tui",
 		},
 		"docs/CHANGE-EXPLANATIONS.md": {
-			"animated-web", "static-tui", "pr-lens mermaid", "exactly one",
+			"animated-web", "static-tui", "author Mermaid directly", "exactly one",
 			"project preference", "user preference",
 		},
 	}

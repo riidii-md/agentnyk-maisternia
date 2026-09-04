@@ -156,10 +156,10 @@ and configuration-improvement workflows.
 `standard-work` installs `/work-explain-change` as an on-demand understanding
 tool, not a mandatory delivery phase and not an approval gate. It explains a
 PR, commit, range, or working tree with evidence, selected short code, and
-local PR Lens architecture/data-flow diagrams. A stored reader preference
-chooses animated SVG for the web or static Mermaid for a terminal without
-duplicating both. The optional `adapt-for-reader` profile changes presentation
-only. See [Change explanations](CHANGE-EXPLANATIONS.md).
+architecture/data-flow diagrams. A stored reader preference chooses local PR
+Lens animated SVG for the web or directly authored static Mermaid for a
+terminal without duplicating both. The optional `adapt-for-reader` profile
+changes presentation only. See [Change explanations](CHANGE-EXPLANATIONS.md).
 The separate environment-only `change-explanation-tools` preset owns the
 external tools, so applying `standard-work` never installs packages implicitly.
 

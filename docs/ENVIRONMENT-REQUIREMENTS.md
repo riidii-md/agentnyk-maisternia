@@ -47,14 +47,14 @@ npm install --global mdmaid@0.1.17
 
 The environment-only `change-explanation-tools` preset references the smaller
 `change-explanation` pack used by the optional `/work-explain-change` command.
-That pack pins PR Lens CLI `0.3.0`, Mdmaid `0.1.17`, and mdmaid.desk `0.1.12`.
+That pack pins PR Lens CLI `0.2.0`, Mdmaid `0.1.17`, and mdmaid.desk `0.1.12`.
 The desk version provides authenticated workspace-local SVG media needed for
 the animated diagrams. Presence-based detection does not upgrade older
 commands; the workflow checks versions and reports these explicit upgrades
 when needed:
 
 ```bash
-npm install --global @coldtea/pr-lens-cli@0.3.0
+npm install --global @coldtea/pr-lens-cli@0.2.0
 npm install --global mdmaid@0.1.17
 npm install --global mdmaid-desk@0.1.12
 ```

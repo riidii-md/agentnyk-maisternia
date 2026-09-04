@@ -159,7 +159,6 @@ connections or flow messages whose movement aids understanding. Include
 unchanged neighbours when they explain blast radius, but do not turn the graph
 into a symbol inventory.
 
-This same document is the source for both presentation modes. `pr-lens render`
-projects it as animated SVG for the web; `pr-lens mermaid` projects the selected
-view as static Mermaid for a terminal. Do not change graph scope or content to
-make one projection tell a different story.
+This graph contract applies to the `animated-web` presentation. The
+`static-tui` presentation authors Mermaid directly from the same inspected
+evidence and does not require a PR Lens graph or converter.

@@ -108,7 +108,7 @@ func TestRepositoryChangeExplanationEnvironmentPack(t *testing.T) {
 		pkg     string
 		version string
 	}{
-		"pr-lens":     {command: "pr-lens", pkg: "@coldtea/pr-lens-cli", version: "0.3.0"},
+		"pr-lens":     {command: "pr-lens", pkg: "@coldtea/pr-lens-cli", version: "0.2.0"},
 		"mdmaid":      {command: "mdmaid", pkg: "mdmaid", version: "0.1.17"},
 		"mdmaid-desk": {command: "mdmaid-desk", pkg: "mdmaid-desk", version: "0.1.12"},
 	}

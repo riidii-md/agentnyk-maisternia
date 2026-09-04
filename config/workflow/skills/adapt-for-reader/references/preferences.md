@@ -30,8 +30,8 @@ let a profile weaken a safety, accuracy, accessibility, or repository rule.
 Workflow-specific preferences use the same scope and precedence without
 becoming general reader defaults. The supported workflow setting is
 `workflows.work-explain-change.presentation`, with `animated-web` or
-`static-tui`. It selects one PR Lens projection and viewing medium; it does not
-change narrative evidence or the general `visuals` preference.
+`static-tui`. It selects one diagram presentation and viewing medium; it does
+not change narrative evidence or the general `visuals` preference.
 
 ## Preference dimensions
 
