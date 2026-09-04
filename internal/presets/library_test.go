@@ -518,21 +518,28 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 		"config/workflow/phases/explain-change.md": {
 			"$ARGUMENTS", "pull request", "commit", "working tree",
 			"change-explanation", "adapt-for-reader", "pr-lens validate",
-			"pr-lens render", "mdmaid validate", "mdmaid-desk register",
+			"pr-lens render", "author Mermaid directly", "mdmaid validate", "mdmaid-desk register",
 			"mdmaid-desk 0.1.12", ".agent-runs/change-explanations",
-			"does not approve", "pr-lens analyze",
+			"does not approve", "pr-lens analyze", "animated-web", "static-tui",
+			"Explicit current request", "project", "user", "exactly one",
 		},
 		"config/workflow/skills/change-explanation/SKILL.md": {
 			"architecture", "data-flow", "selected code", "graph-contract.md",
-			"pr-lens validate", "pr-lens render", "manifest.json",
+			"pr-lens validate", "pr-lens render", "author Mermaid directly", "manifest.json",
 			"animated", "evidence", "report findings", "the graph",
 			"smallest visual", "pseudocode", "call tree", "component tree",
-			"file tree", "diff-shaped",
+			"file tree", "diff-shaped", "animated-web", "static-tui",
+			"Explicit current request", "project preference", "user preference",
+			"exactly one presentation",
 		},
 		"config/workflow/skills/change-explanation/references/graph-contract.md": {
 			`"schemaVersion": "0.1.0"`, `"kind": "graph"`,
 			`"lenses"`, `"provenance"`, `"lanes"`, `"nodes"`,
 			`"edges"`, `"flows"`, `"views"`, `"animated": true`,
+		},
+		"docs/CHANGE-EXPLANATIONS.md": {
+			"animated-web", "static-tui", "author Mermaid directly",
+			"exactly one", "@coldtea/pr-lens-cli` 0.2.0",
 		},
 	}
 	for relative, fragments := range contracts {
@@ -544,6 +551,9 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			if !strings.Contains(string(content), fragment) {
 				t.Errorf("%s is missing %q", relative, fragment)
 			}
+		}
+		if strings.Contains(string(content), "pr-lens mermaid") {
+			t.Errorf("%s must not depend on the withdrawn PR Lens Mermaid converter", relative)
 		}
 	}
 
@@ -1027,7 +1037,11 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			"explicit approval", "reader-profile.schema.json", "Do not write",
 			"conceptual depth", "/work-routing-preferences", "migration",
 			"view-selection policy", "explicit-command", "all-invocations",
-			"work-adapt-for-reader",
+			"work-adapt-for-reader", "work-explain-change", "animated-web", "static-tui",
+		},
+		"docs/CHANGE-EXPLANATIONS.md": {
+			"animated-web", "static-tui", "author Mermaid directly", "exactly one",
+			"project preference", "user preference",
 		},
 	}
 	for relative, required := range contracts {
@@ -1054,6 +1068,7 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 			SchemaVersion json.RawMessage `json:"schema_version"`
 			Defaults      json.RawMessage `json:"defaults"`
 			Situations    json.RawMessage `json:"situations"`
+			Workflows     json.RawMessage `json:"workflows"`
 		} `json:"properties"`
 		Defs struct {
 			Preferences struct {
@@ -1073,6 +1088,18 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 					} `json:"target"`
 				} `json:"properties"`
 			} `json:"delegation"`
+			Workflows struct {
+				Properties struct {
+					ExplainChange struct {
+						Required   []string `json:"required"`
+						Properties struct {
+							Presentation struct {
+								Enum []string `json:"enum"`
+							} `json:"presentation"`
+						} `json:"properties"`
+					} `json:"work-explain-change"`
+				} `json:"properties"`
+			} `json:"workflows"`
 		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(schemaContent, &schema); err != nil {
@@ -1081,7 +1108,8 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 	if schema.Schema == "" || schema.Type != "object" ||
 		len(schema.Properties.SchemaVersion) == 0 ||
 		len(schema.Properties.Defaults) == 0 ||
-		len(schema.Properties.Situations) == 0 {
+		len(schema.Properties.Situations) == 0 ||
+		len(schema.Properties.Workflows) == 0 {
 		t.Fatalf("reader profile schema is incomplete: %#v", schema)
 	}
 	for _, property := range []string{"view", "depth", "view_selection", "delegation"} {
@@ -1100,6 +1128,12 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 	}
 	if !slices.Equal(schema.Defs.Delegation.Properties.Target.Enum, []string{"auto", "current", "codex", "claude", "agy", "codex-subagent"}) {
 		t.Errorf("delegation targets = %v", schema.Defs.Delegation.Properties.Target.Enum)
+	}
+	if !slices.Equal(schema.Defs.Workflows.Properties.ExplainChange.Required, []string{"presentation"}) {
+		t.Errorf("work-explain-change required fields = %v, want presentation", schema.Defs.Workflows.Properties.ExplainChange.Required)
+	}
+	if !slices.Equal(schema.Defs.Workflows.Properties.ExplainChange.Properties.Presentation.Enum, []string{"animated-web", "static-tui"}) {
+		t.Errorf("work-explain-change presentations = %v", schema.Defs.Workflows.Properties.ExplainChange.Properties.Presentation.Enum)
 	}
 }
 

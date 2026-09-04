@@ -24,6 +24,13 @@ view-selection policy (`infer`, `ask-when-ambiguous`, or `always-ask`) and its
 scope (`explicit-command` or `all-invocations`). Ask in short rounds and reuse
 supplied answers.
 
+When the user wants a durable diagram choice for `/work-explain-change`, also
+offer the workflow-specific `presentation` preference: `animated-web` opens
+PR Lens motion in mdmaid.desk, while `static-tui` embeds Mermaid that mdmaid
+renders in a terminal. Store it only at
+`workflows.work-explain-change.presentation`; do not turn it into a general
+visuals or medium preference.
+
 Do not configure harness delegation in the reader profile. Direct the user to
 `/work-routing-preferences`, which is the single routing system. If the existing
 reader profile contains a legacy `delegation` object, offer a migration to the

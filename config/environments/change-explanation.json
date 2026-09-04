@@ -7,7 +7,7 @@
     {
       "id": "pr-lens",
       "name": "PR Lens",
-      "description": "Validates change graph documents and renders deterministic self-contained SVG architecture and data-flow diagrams.",
+      "description": "Validates change graph documents and renders deterministic self-contained animated SVG architecture and data-flow diagrams.",
       "kind": "binary",
       "required": true,
       "provides": ["change-visualization"],

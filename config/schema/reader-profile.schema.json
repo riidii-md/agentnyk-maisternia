@@ -18,6 +18,9 @@
         "$ref": "#/$defs/situation"
       },
       "maxItems": 64
+    },
+    "workflows": {
+      "$ref": "#/$defs/workflows"
     }
   },
   "$defs": {
@@ -103,6 +106,22 @@
         },
         "target": {
           "enum": ["auto", "current", "codex", "claude", "agy", "codex-subagent"]
+        }
+      }
+    },
+    "workflows": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "work-explain-change": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["presentation"],
+          "properties": {
+            "presentation": {
+              "enum": ["animated-web", "static-tui"]
+            }
+          }
         }
       }
     },

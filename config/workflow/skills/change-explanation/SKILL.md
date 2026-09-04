@@ -1,7 +1,6 @@
 ---
 name: change-explanation
-description: Build an evidence-grounded explanation of a pull request, commit, range, or working-tree change with selected code and PR Lens architecture or data-flow visuals.
-version: 0.1.0
+description: Build an evidence-grounded explanation of a pull request, commit, range, or working-tree change with selected code and architecture or data-flow visuals.
 ---
 
 # Change Explanation
@@ -56,6 +55,41 @@ Use the reader's language and time budget when supplied. If `adapt-for-reader`
 is installed, apply its resolved profile to the narrative only after the facts
 are stable. Preserve evidence, caveats, and change meaning.
 
+## Presentation preference
+
+When a change diagram is useful, resolve its presentation once for the whole
+run. Use this precedence, from highest to lowest:
+
+1. **Explicit current request**, including `presentation=animated-web`,
+   `presentation=static-tui`, or an equally clear request for animated web or
+   terminal-native diagrams.
+2. The project preference at
+   `.maisternia/reader-profile.json` under
+   `workflows.work-explain-change.presentation`.
+3. The user preference at
+   `${XDG_CONFIG_HOME:-~/.config}/maisternia/reader-profile.json` under the
+   same key.
+4. `animated-web` when no preference exists.
+
+Validate a stored profile against `reader-profile.schema.json` before using
+it. An invalid stored value does not become a preference; report it and fall
+through to the next source. Do not ask merely because the preference is
+absent, and do not persist a choice inferred from one request. Use
+`/work-reader-preferences` when the user wants to save or change it.
+
+Both modes start from the same inspected evidence and explain the same relevant
+relationships or ordered interaction. Choose exactly one presentation in a
+run:
+
+- `animated-web` authors a PR Lens graph, embeds selected local SVG assets, and
+  is intended for mdmaid.desk in a browser. Do not also include Mermaid
+  versions.
+- `static-tui` authors Mermaid directly in `explanation.md` so mdmaid can render
+  it in a terminal. Do not create or link PR Lens assets for this mode.
+
+The preference changes diagram representation and viewing medium only. It never
+changes the evidence set, diagram meaning, narrative claims, or review scope.
+
 ## Representation gate
 
 Choose the smallest visual that answers each important question. Use several
@@ -70,22 +104,24 @@ only when they explain materially different aspects; do not create every form:
 - a short complete code block when most of the unit is new, omitted context
   would hide ownership or order, or the reader needs a copyable target shape;
 - PR Lens for system relationships, blast radius, or an ordered interaction
-  whose motion materially improves understanding.
+  whose motion materially improves understanding in `animated-web`;
+- a Mermaid flowchart for static relationships or a sequence diagram for an
+  ordered interaction in `static-tui`.
 
 Place each visual next to the text it supports. Remove incidental calls, files,
 props, states, and boundaries. A small function-only change may need a
 diff-shaped sketch and no PR Lens graph; say why the graph was omitted rather
 than manufacturing architecture.
 
-## PR Lens boundary
+## Diagram generation boundary
 
-PR Lens is the visualization layer, not the reviewer. Do not report findings in
-the graph. Put risks, uncertainties, or review observations in clearly labelled
-prose backed by evidence, and use `/work-review` when the user asks for defect
-finding or merge advice.
+PR Lens and Mermaid are visualization layers, not reviewers. Do not report findings
+in a graph or diagram. Put risks, uncertainties, or review observations in
+clearly labelled prose backed by evidence, and use `/work-review` when the user
+asks for defect finding or merge advice.
 
-When the representation gate selects PR Lens, author `graph.json` from the
-inspected evidence, then run:
+For `animated-web`, author `graph.json` from the inspected evidence, validate
+it, render it, and validate the rendered contract:
 
 ```text
 pr-lens validate <run-dir>/graph.json
@@ -104,8 +140,25 @@ from `explanation.md` with descriptive alt text. Do not guess the
 content-addressed filename. The `animated` edges and messages should illuminate
 the changed interaction, not decorate every connection.
 
-Keep the graph small enough to read: usually three or four lanes, changed nodes
-plus necessary unchanged neighbours, and at most two hero edges. A function or
+For `static-tui`, author Mermaid directly from the inspected evidence. Use a
+`flowchart` for architecture or blast radius and `sequenceDiagram` only when
+order matters. Keep labels concise, distinguish new, changed, and removed
+elements when the diff supports that distinction, and omit incidental nodes.
+Save each diagram as `<run-dir>/<diagram-id>.mmd`, then verify terminal
+rendering:
+
+```text
+mdmaid render-mermaid <run-dir>/<diagram-id>.mmd --backend beautiful-mermaid --width 120 --no-color
+```
+
+Place the same source in a fenced `mermaid` block next to the prose it supports.
+Keep the `.mmd` file as reproducible output, but do not add an SVG link or an
+animated duplicate to the Markdown. This path has no dependency on a PR Lens
+Mermaid converter or an unpublished PR Lens release.
+
+Keep the selected diagram small enough to read. A PR Lens graph usually needs
+only three or four lanes, changed nodes plus necessary unchanged neighbours,
+and at most two hero edges; use equivalent restraint in Mermaid. A function or
 class belongs in the diagram only when it represents an important changed
 boundary; list the rest in the abstraction inventory.
 
@@ -116,14 +169,17 @@ The bundle is complete only when:
 - resolved scope and diff agree;
 - every material narrative claim has code, test, metadata, or explicit intent
   evidence;
-- when PR Lens was selected, `pr-lens validate` accepts the authored and drawn
-  graph documents and manifest;
-- every generated Markdown image refers to an asset named by `manifest.json`;
+- in `animated-web`, `pr-lens validate` accepts the source and drawn graphs and
+  manifest, and every Markdown image refers to an asset named by
+  `manifest.json`;
+- in `static-tui`, each selected Mermaid diagram is present exactly once in the
+  Markdown and renders through mdmaid's terminal backend;
 - selected code is short, relevant, and non-sensitive;
-- the text explains animation content for readers who cannot see motion;
+- in `animated-web`, the text explains animation content for readers who
+  cannot see motion;
 - `mdmaid validate` accepts the final Markdown before desk registration.
 
-If rendering fails, preserve `graph.json` and the diagnostics, correct only
-evidence-supported contract errors, and retry. If a required tool remains
+If rendering fails, preserve the mode-specific source and diagnostics, correct
+only evidence-supported contract errors, and retry. If a required tool remains
 unavailable, deliver the narrative and exact blocker without pretending the
-animated artifact exists.
+visual artifact exists.

@@ -27,6 +27,12 @@ A specific situation override beats a general default at the same scope.
 Project preferences beat user preferences because they are more local. Never
 let a profile weaken a safety, accuracy, accessibility, or repository rule.
 
+Workflow-specific preferences use the same scope and precedence without
+becoming general reader defaults. The supported workflow setting is
+`workflows.work-explain-change.presentation`, with `animated-web` or
+`static-tui`. It selects one diagram presentation and viewing medium; it does
+not change narrative evidence or the general `visuals` preference.
+
 ## Preference dimensions
 
 Store only communication preferences that change output:
@@ -145,6 +151,11 @@ current task or session.
       "when": {"task": "operate"},
       "overrides": {"density": "compact", "answer_position": "first"}
     }
-  ]
+  ],
+  "workflows": {
+    "work-explain-change": {
+      "presentation": "animated-web"
+    }
+  }
 }
 ```
