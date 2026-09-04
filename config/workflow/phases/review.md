@@ -1,7 +1,7 @@
 ---
 name: work-review
-description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, independently refute every candidate finding, and apply confirmed fixes.
-version: 0.2.0
+description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with an optional behavior-preserving maintainability profile, independent refutation, and applied fixes.
+version: 0.3.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -22,6 +22,7 @@ Accepted modes:
 /work-review plan <plan or design>
 /work-review plan-delta <changed decision or section>
 /work-review implementation <diff, branch, PR, contract, or focus>
+/work-review implementation --profile maintainability <diff, branch, PR, or focus>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
@@ -29,6 +30,13 @@ Explicit mode and target win. In `auto`, select `implementation` when a diff or
 PR exists, otherwise select `plan` when a plan/design artifact exists. Ask for
 the target only when neither can be established. Never reject an explicit plan
 because no implementation exists. Plan modes follow `/work-plan-review`.
+
+The default profile is `standard`. `--profile maintainability` is available
+only for implementation review. It keeps all implementation lenses, adds a
+grounded `best-practices` lens, and deepens the correctness, consistency,
+architecture, `simplicity-dry`, and `tests-verification` lenses. In `auto`, use
+this profile only when the resolved target is an implementation; otherwise ask
+for an implementation target instead of silently changing the profile.
 
 When `work-routing` resolves several harnesses, use `parallel-verify`: distribute
 independent read-only lenses across them, prefer a verifier from a different
@@ -74,6 +82,36 @@ Add domain lenses when warranted: accessibility, privacy/PII/SOC 2 evidence,
 performance/scalability, migration safety, API compatibility, data integrity,
 or operational observability. Do not claim compliance from generic practices.
 
+## Run The Maintainability Profile
+
+For `--profile maintainability`, first establish the observable behavior that
+must remain unchanged: public and internal contracts, outputs, side effects,
+errors, ordering, compatibility, and relevant tests. Run every normal
+implementation lens plus `best-practices`; do not trade correctness, security,
+or edge-case coverage for a smaller diff.
+
+Deepen the focused lenses as follows:
+
+- `consistency` and `best-practices`: enforce repository rules and established
+  local patterns. Ground external practices in authoritative documentation.
+  Reject taste-only or cargo-cult findings.
+- `simplicity-dry`: identify knowledge duplication, repeated decision logic,
+  and unnecessary branches, state, indirection, or configuration. Distinguish
+  those from incidental duplication that merely looks similar.
+- `architecture`: propose a better abstraction only when it creates clear
+  ownership, reduces coupling, or removes repeated knowledge. Reject a
+  speculative abstraction, single-use generic helper, or extra layer that
+  increases the number of concepts.
+- `correctness` and `tests-verification`: prove that a proposed simplification
+  preserves the established behavior contract, including failure paths.
+
+Every candidate from this profile must identify the preserved behavior and
+concrete evidence of the duplication or complexity. It must state the minimal
+fix and net simplification, regression risk, and the exact verification plan.
+Prefer deletion, direct control flow, and existing abstractions when they solve
+the problem. `NO_FINDINGS` is correct when no evidence-grounded simplification
+improves the code.
+
 Every reviewer reads the actual code and returns candidates with severity,
 claim, impact, proposed fix, and concrete `file:line`, short verbatim quote,
 command/test, or authoritative-document evidence. `NO_FINDINGS` is valid.
@@ -103,4 +141,5 @@ fixes are applied and checks pass; otherwise return `fail` or `blocked`.
 Write `review.md` and schema-valid `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings and applied fixes
 first, followed by refuted findings and rationale, checks, residual risk,
-provider/model attribution, and gate status.
+provider/model attribution, selected profile (`standard` or
+`maintainability`), and gate status.

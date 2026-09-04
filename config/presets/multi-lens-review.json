@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "multi-lens-review",
   "name": "Multi-Lens Review",
-  "description": "Plan and implementation review with independent lenses, adversarial finding verification, applied fixes, domain-aware checks, and optional cross-provider delegation.",
+  "description": "Plan and implementation review with independent lenses, a behavior-preserving maintainability profile, adversarial finding verification, applied fixes, domain-aware checks, and optional cross-provider delegation.",
   "tags": ["role/software-engineer", "capability/review"],
   "pipelines": [
     {
@@ -30,7 +30,8 @@
   "contents": {
     "mcp_refs": [],
     "commands": [
-      "work-plan-review", "work-review", "work-routing-preferences"
+      "work-plan-review", "work-review", "work-review-simplify",
+      "work-routing-preferences"
     ],
     "prompts": [],
     "skills": [

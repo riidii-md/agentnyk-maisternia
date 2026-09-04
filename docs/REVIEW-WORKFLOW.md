@@ -7,6 +7,11 @@ decision deltas, diffs, pull requests, and implementations. It separates
 candidate generation from finding verification and separates read-only review
 workers from the coordinator that applies fixes.
 
+Implementation reviews can select a focused `maintainability` profile. It
+looks harder for duplicated knowledge, avoidable complexity, weak abstractions,
+and grounded best-practice violations while requiring proof that observable
+behavior remains unchanged.
+
 `maisternia` installs this workflow. The selected CLI agent harness owns runtime
 subagents, provider calls, permissions, edits, and verification.
 
@@ -15,12 +20,19 @@ subagents, provider calls, permissions, edits, and verification.
 ```text
 /work-plan-review
 /work-review
+/work-review-simplify <target or focus>
+/work-review implementation --profile maintainability <target or focus>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
 `/work-review` accepts `auto`, `plan`, `plan-delta`, and `implementation`. An
 explicit plan, design, contract, or decision delta is reviewable even when
-there is no code diff.
+there is no code diff. The default profile is `standard`; `maintainability`
+applies only to implementation targets.
+
+`/work-review-simplify` is a thin alias for `/work-review implementation
+--profile maintainability`. It reads the canonical review workflow rather than
+duplicating its lenses, verification, repair, or authority rules.
 
 ## Delivery Gates
 
@@ -104,6 +116,36 @@ Every implementation review runs independent read-only lenses for:
 Dependency-currency findings require lockfile evidence and an official registry
 or primary project source. The reviewer cannot declare a dependency stale from
 model memory or recommend an upgrade without compatibility evidence.
+
+## Maintainability Profile
+
+`--profile maintainability` runs every implementation lens, adds a grounded
+best-practices lens, and intensifies correctness, consistency, architecture,
+simplicity/DRY, and test verification. Before suggesting a change, reviewers
+record the behavior contract that must be preserved: outputs, side effects,
+errors, ordering, compatibility, and covered failure paths.
+
+The profile looks specifically for:
+
+- duplicated knowledge or repeated decision logic, not merely similar-looking
+  code;
+- unnecessary branches, state, indirection, configuration, or abstractions;
+- ownership boundaries that create coupling or scatter one responsibility;
+- deviations from repository rules, established neighboring patterns, or
+  authoritative technical guidance.
+
+Every candidate explains its evidence, minimal fix, net simplification,
+regression risk, and verification plan. A proposed abstraction must remove
+repeated knowledge or reduce coupling and concepts. Single-use generic helpers,
+speculative reuse, style-only preferences, and abstractions that merely move
+complexity are refuted. `NO_FINDINGS` remains valid when the current solution
+is already the simplest behavior-preserving design supported by the evidence.
+
+The alias also accepts normal routing syntax:
+
+```text
+/work-review-simplify @agy @codex @claude -- <target>
+```
 
 ## Domain Lenses
 

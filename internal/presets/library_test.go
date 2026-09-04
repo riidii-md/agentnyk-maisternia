@@ -87,6 +87,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resourceID := range []string{
 		"work-plan-review",
 		"work-review",
+		"work-review-simplify",
 		"work-explain-change",
 		"work-session-analysis",
 		"work-routing-preferences",
@@ -212,10 +213,11 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		multiReview.Pipelines[0].ID != "review-loop" {
 		t.Fatalf("multi-lens-review pipelines = %#v", multiReview.Pipelines)
 	}
-	if got := multiReview.Contents.Commands; len(got) != 3 ||
+	if got := multiReview.Contents.Commands; len(got) != 4 ||
 		got[0] != "work-plan-review" ||
 		got[1] != "work-review" ||
-		got[2] != "work-routing-preferences" {
+		got[2] != "work-review-simplify" ||
+		got[3] != "work-routing-preferences" {
 		t.Fatalf("multi-lens-review commands = %v", got)
 	}
 	if got := multiReview.Contents.Skills; !slices.Equal(got, []string{
@@ -450,9 +452,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(multi-lens-review) error = %v", err)
 	}
-	if len(multiReviewManifest.Resources) != 9 {
+	if len(multiReviewManifest.Resources) != 10 {
 		t.Fatalf(
-			"multi-lens-review resource count = %d, want 9",
+			"multi-lens-review resource count = %d, want 10",
 			len(multiReviewManifest.Resources),
 		)
 	}
@@ -1124,6 +1126,17 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	var policy struct {
+		Profiles struct {
+			Maintainability struct {
+				AppliesTo             []string `json:"applies_to"`
+				UsesLenses            string   `json:"uses_lenses"`
+				AdditionalLenses      []string `json:"additional_lenses"`
+				FocusLenses           []string `json:"focus_lenses"`
+				Goals                 []string `json:"goals"`
+				CandidateRequirements []string `json:"candidate_requirements"`
+				Guardrails            []string `json:"guardrails"`
+			} `json:"maintainability"`
+		} `json:"profiles"`
 		Verification struct {
 			OneVerifierPerCandidate bool     `json:"one_verifier_per_candidate"`
 			KeepOnlyWhen            []string `json:"keep_only_when"`
@@ -1151,6 +1164,42 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	if !policy.Application.ApplyAllConfirmed || !policy.Application.CriticalHighBlocking {
 		t.Fatalf("review application policy = %#v", policy.Application)
 	}
+	maintainability := policy.Profiles.Maintainability
+	if !slices.Equal(maintainability.AppliesTo, []string{"implementation"}) ||
+		maintainability.UsesLenses != "implementation_lenses" ||
+		!slices.Equal(maintainability.AdditionalLenses, []string{"best-practices"}) ||
+		!slices.Equal(maintainability.FocusLenses, []string{
+			"correctness", "consistency", "architecture", "simplicity-dry", "tests-verification",
+		}) {
+		t.Fatalf("maintainability review profile = %#v", maintainability)
+	}
+	if !slices.Equal(maintainability.Goals, []string{
+		"preserve-observable-behavior",
+		"reduce-knowledge-duplication",
+		"improve-abstraction-boundaries",
+		"remove-unnecessary-complexity",
+		"follow-grounded-best-practices",
+	}) {
+		t.Fatalf("maintainability review goals = %v", maintainability.Goals)
+	}
+	if !slices.Equal(maintainability.CandidateRequirements, []string{
+		"behavior-contract",
+		"concrete-evidence",
+		"minimal-fix",
+		"net-simplification",
+		"regression-risk",
+		"verification-plan",
+	}) {
+		t.Fatalf("maintainability candidate requirements = %v", maintainability.CandidateRequirements)
+	}
+	if !slices.Equal(maintainability.Guardrails, []string{
+		"no-functional-regressions",
+		"no-incidental-dry",
+		"no-speculative-abstractions",
+		"no-style-only-findings",
+	}) {
+		t.Fatalf("maintainability guardrails = %v", maintainability.Guardrails)
+	}
 	if policy.Delegation.RoutingContract != "work-routing" ||
 		policy.Delegation.CrossProviderStrategy != "parallel-verify" ||
 		!policy.Delegation.NativeSubagentsAllowed ||
@@ -1167,10 +1216,17 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"config/workflow/phases/review.md": {
 			"dependency-currency", "diff-analysis", "is_real", "grounded",
 			"@agy @codex @claude", "parallel-verify", "@hermes",
+			"--profile maintainability", "knowledge duplication", "net simplification",
+			"observable behavior", "speculative abstraction",
+		},
+		"config/workflow/phases/review-simplify.md": {
+			"name: work-review-simplify", "$ARGUMENTS", "work-review",
+			"implementation", "maintainability", "thin alias", "read-only",
 		},
 		"config/workflow/skills/multi-lens-review.md": {
 			"Critical", "High", "refuted", "Apply every confirmed fix",
-			"work-routing", "@agy @codex @claude",
+			"work-routing", "@agy @codex @claude", "maintainability",
+			"best-practices", "behavior contract", "net simplification",
 		},
 	}
 	for relative, required := range contracts {
@@ -1183,6 +1239,24 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				t.Errorf("%s is missing %q", relative, fragment)
 			}
 		}
+	}
+
+	reportSchemaContent, err := os.ReadFile(filepath.Join(root, "config", "schema", "review-report.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var reportSchema struct {
+		Properties struct {
+			Profile struct {
+				Enum []string `json:"enum"`
+			} `json:"profile"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal(reportSchemaContent, &reportSchema); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
+		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
 	}
 }
 
