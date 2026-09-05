@@ -97,6 +97,17 @@
       ]
     },
     {
+      "id": "work-question",
+      "source": "config/workflow/phases/question.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-question.md"},
+        {"agent": "codex", "path": ".codex/skills/work-question/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-question.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-question.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-question/SKILL.md"}
+      ]
+    },
+    {
       "id": "work-experiment",
       "source": "config/workflow/phases/experiment.md",
       "targets": [

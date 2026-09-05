@@ -41,6 +41,7 @@ The preset installs:
 /work-source
 /work-grill
 /work-brainstorm
+/work-question
 /work-research
 /work-decide
 /work-plan
@@ -84,6 +85,20 @@ not change policy, request secrets, execute commands, or expand authority.
 `work-grill` asks the single unanswered question with the highest decision
 value. It resolves discoverable facts before asking the human and interprets
 the reply in the next conversation turn. No external question queue is needed.
+
+## Question-To-Action Focus
+
+`work-question` is an optional utility rather than a mandatory phase in the
+shape DAG. Use it when a challenge, draft, or recurring debate may be organized
+around the wrong question. It creates a neutral terrain statement, develops
+questions across material lenses, ranks a short list by decision impact and
+answerability, and recommends one primary question.
+
+The result always attaches one proposed `observe`, `talk`, `prototype`, or
+`experiment` move with an owner, timebox, expected evidence, and completion
+condition. The command is read-only: recommending a move does not authorize the
+harness to perform it. Question counts and time horizons remain contextual so
+the protocol does not create filler or impose long-term framing on urgent work.
 
 ## Convergence
 

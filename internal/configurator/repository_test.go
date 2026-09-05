@@ -537,6 +537,56 @@ func TestRepositoryActiveShapingWorkflowsUseMdmaidDesk(t *testing.T) {
 	}
 }
 
+func TestRepositoryQuestionWorkflowHasActionableOutputContract(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	const source = "config/workflow/phases/question.md"
+	data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(source)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	for _, snippet := range []string{
+		"terrain sentence",
+		"do not pad",
+		"decision impact",
+		"observable evidence",
+		"recurring debate",
+		"observe",
+		"talk",
+		"prototype",
+		"experiment",
+		"Owner",
+		"Timebox",
+		"Evidence expected",
+		"Done when",
+		"Do not force a one-year horizon",
+		"Do not execute the next move",
+	} {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("work-question is missing required content %q", snippet)
+		}
+	}
+
+	wantTargets := map[string]string{
+		"codex:.codex/prompts/work-question.md":            source,
+		"codex:.codex/skills/work-question/SKILL.md":       source,
+		"claude:.claude/commands/work-question.md":         source,
+		"antigravity:.config/agy/prompts/work-question.md": source,
+		"hermes:.hermes/skills/work-question/SKILL.md":     source,
+	}
+	for key, wantSource := range wantTargets {
+		agent, target, found := strings.Cut(key, ":")
+		if !found {
+			t.Fatalf("invalid test target %q", key)
+		}
+		if got := manifestTargets(manifest, agent)[target]; got != wantSource {
+			t.Errorf("manifest target %s = %q, want %q", key, got, wantSource)
+		}
+	}
+}
+
 func TestRepositoryManagedPromptsContainNoPersonalAbsolutePaths(t *testing.T) {
 	t.Parallel()
 

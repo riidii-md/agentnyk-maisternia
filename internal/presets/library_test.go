@@ -142,6 +142,12 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !slices.Contains(shape.Contents.Skills, "readable-output-skill") {
 		t.Error("idea-shaping is missing the readable-output skill")
 	}
+	if !slices.Contains(shape.Contents.Commands, "work-question") {
+		t.Error("idea-shaping is missing the work-question command")
+	}
+	if slices.Contains(shape.Pipelines[0].Phases, "question") {
+		t.Error("work-question must remain an optional utility outside the shape DAG")
+	}
 	experiment, found := library.Get("scored-experiment")
 	if !found {
 		t.Fatal("scored-experiment preset missing")

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "idea-shaping",
   "name": "Idea Shaping",
-  "description": "Conversation-local evidence review, focused human questions, option generation, challenge, decision, and planning.",
+  "description": "Conversation-local evidence review, question-to-action focusing, focused human questions, option generation, challenge, decision, and planning.",
   "tags": ["role/software-engineer", "workflow/discovery"],
   "pipelines": [
     {
@@ -31,7 +31,7 @@
     "mcp_refs": [],
     "commands": [
       "work-shape", "work-source", "work-grill", "work-brainstorm",
-      "work-research", "work-decide", "work-plan",
+      "work-question", "work-research", "work-decide", "work-plan",
       "work-routing-preferences"
     ],
     "prompts": [],
