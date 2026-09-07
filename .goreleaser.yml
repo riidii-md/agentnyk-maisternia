@@ -127,4 +127,3 @@ homebrew_casks:
     url:
       template: "https://github.com/kagi-labs/agentnyk-maisternia/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
       using: MaisterniaGitHubPrivateRepositoryReleaseDownloadStrategy
-      verified: github.com/kagi-labs/agentnyk-maisternia/

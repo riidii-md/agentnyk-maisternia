@@ -141,6 +141,43 @@ speculative reuse, style-only preferences, and abstractions that merely move
 complexity are refuted. `NO_FINDINGS` remains valid when the current solution
 is already the simplest behavior-preserving design supported by the evidence.
 
+### Simplification Decision Ladder
+
+After the reviewer establishes the behavior contract, it evaluates options in
+order and stops at the first behavior-preserving option that fully satisfies
+the contract:
+
+1. apply YAGNI: skip or delete behavior and structure that is not required;
+2. reuse an established repository abstraction, helper, or pattern;
+3. use the active language's standard library;
+4. use a native platform capability from the browser, database, operating
+   system, framework, or protocol;
+5. use an already-installed dependency with a compatible reviewed contract;
+6. use straightforward local code and direct control flow;
+7. introduce or retain an abstraction only when it removes proven repeated
+   knowledge, creates clear ownership, or materially reduces coupling.
+
+An earlier fit wins only when it preserves required security, validation,
+accessibility, data-loss prevention, errors, compatibility, and verification.
+The reviewer does not continue down the ladder merely to find a shorter option.
+A line count can support a net-simplification estimate, but it cannot be the
+sole decision metric.
+
+Applicable simplification findings record one kind:
+
+| Kind | Meaning |
+|---|---|
+| `delete` | Remove behavior or code with no accepted requirement |
+| `reuse` | Replace a duplicate with existing repository-owned behavior |
+| `stdlib` | Replace custom behavior with the active language's standard library |
+| `native` | Use a platform, framework, database, OS, browser, or protocol capability |
+| `dependency` | Reuse an already-installed, reviewed dependency |
+| `yagni` | Remove speculative behavior, configuration, layers, or abstractions |
+| `shrink` | Express the same behavior with more direct local control flow |
+
+The kind is a triage field, not a substitute for severity, evidence,
+behavior-preservation proof, or independent refutation.
+
 ### Language And Tool Discovery
 
 The maintainability profile is language-agnostic. Before choosing best

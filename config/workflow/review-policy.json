@@ -40,19 +40,40 @@
         "remove-unnecessary-complexity",
         "follow-grounded-best-practices"
       ],
+      "selection_rule": "stop-at-first-behavior-preserving-fit",
+      "selection_ladder": [
+        "apply-yagni",
+        "reuse-existing",
+        "use-standard-library",
+        "use-native-platform",
+        "use-installed-dependency",
+        "use-direct-control-flow",
+        "introduce-abstraction-last"
+      ],
+      "simplification_kinds": [
+        "delete",
+        "reuse",
+        "stdlib",
+        "native",
+        "dependency",
+        "yagni",
+        "shrink"
+      ],
       "candidate_requirements": [
         "behavior-contract",
         "concrete-evidence",
         "minimal-fix",
         "net-simplification",
         "regression-risk",
-        "verification-plan"
+        "verification-plan",
+        "simplification-kind-when-applicable"
       ],
       "guardrails": [
         "no-functional-regressions",
         "no-incidental-dry",
         "no-speculative-abstractions",
-        "no-style-only-findings"
+        "no-style-only-findings",
+        "no-line-count-only-decisions"
       ],
       "context_discovery": {
         "strategy": "evidence-led-heuristic",

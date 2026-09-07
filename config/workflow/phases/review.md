@@ -109,6 +109,30 @@ support. Preserve `unknown` instead of inventing certainty. Record every
 selected command, why it applies, and its result so execution remains
 reproducible even when context discovery is uncertain.
 
+After establishing the behavior contract, evaluate simplifications in this
+order and stop at the first behavior-preserving option that fully satisfies it:
+
+1. apply YAGNI: skip or delete behavior and structure that no accepted
+   requirement, caller, or invariant needs;
+2. reuse an established repository abstraction, helper, or pattern;
+3. use the active language's standard library;
+4. use a native platform capability from the browser, database, operating
+   system, framework, or protocol;
+5. use an already-installed dependency when its reviewed contract fits;
+6. use straightforward local code and direct control flow;
+7. introduce or retain an abstraction only when it removes proven repeated
+   knowledge, creates clear ownership, or materially reduces coupling.
+
+Do not continue down the ladder merely because a later option is shorter. The
+first fit must still preserve security, validation, accessibility, data-loss
+prevention, error behavior, compatibility, and required verification. For an
+applicable simplification candidate, record one kind: `delete`, `reuse`,
+`stdlib`, `native`, `dependency`, `yagni`, or `shrink`. Use `yagni` for
+speculative behavior or structure and `shrink` for the same behavior expressed
+more directly. The kind aids triage; it does not replace severity, evidence, or
+independent refutation. A line count may support the net-simplification estimate
+but is never sufficient evidence or the sole decision metric.
+
 Deepen the focused lenses as follows:
 
 - `consistency` and `best-practices`: enforce repository rules and established

@@ -1167,6 +1167,9 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				AdditionalLenses      []string `json:"additional_lenses"`
 				FocusLenses           []string `json:"focus_lenses"`
 				Goals                 []string `json:"goals"`
+				SelectionRule         string   `json:"selection_rule"`
+				SelectionLadder       []string `json:"selection_ladder"`
+				SimplificationKinds   []string `json:"simplification_kinds"`
 				CandidateRequirements []string `json:"candidate_requirements"`
 				Guardrails            []string `json:"guardrails"`
 				ContextDiscovery      struct {
@@ -1224,6 +1227,25 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}) {
 		t.Fatalf("maintainability review goals = %v", maintainability.Goals)
 	}
+	if maintainability.SelectionRule != "stop-at-first-behavior-preserving-fit" {
+		t.Fatalf("maintainability selection rule = %q", maintainability.SelectionRule)
+	}
+	if !slices.Equal(maintainability.SelectionLadder, []string{
+		"apply-yagni",
+		"reuse-existing",
+		"use-standard-library",
+		"use-native-platform",
+		"use-installed-dependency",
+		"use-direct-control-flow",
+		"introduce-abstraction-last",
+	}) {
+		t.Fatalf("maintainability selection ladder = %v", maintainability.SelectionLadder)
+	}
+	if !slices.Equal(maintainability.SimplificationKinds, []string{
+		"delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink",
+	}) {
+		t.Fatalf("maintainability simplification kinds = %v", maintainability.SimplificationKinds)
+	}
 	if !slices.Equal(maintainability.CandidateRequirements, []string{
 		"behavior-contract",
 		"concrete-evidence",
@@ -1231,6 +1253,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"net-simplification",
 		"regression-risk",
 		"verification-plan",
+		"simplification-kind-when-applicable",
 	}) {
 		t.Fatalf("maintainability candidate requirements = %v", maintainability.CandidateRequirements)
 	}
@@ -1239,6 +1262,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"no-incidental-dry",
 		"no-speculative-abstractions",
 		"no-style-only-findings",
+		"no-line-count-only-decisions",
 	}) {
 		t.Fatalf("maintainability guardrails = %v", maintainability.Guardrails)
 	}
@@ -1290,6 +1314,9 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"observable behavior", "speculative abstraction", "language-agnostic",
 			"evidence-led and fallible", "detected`, `mixed`, or `unknown",
 			"repository-owned commands", "multi-language",
+			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
+			"already-installed dependency", "direct control flow", "line count",
+			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 		"config/workflow/phases/review-simplify.md": {
 			"name: work-review-simplify", "$ARGUMENTS", "work-review",
@@ -1299,7 +1326,15 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"Critical", "High", "refuted", "Apply every confirmed fix",
 			"work-routing", "@agy @codex @claude", "maintainability",
 			"best-practices", "behavior contract", "net simplification",
-			"language-agnostic", "repository-owned", "confidence",
+			"language-agnostic", "repository-owned", "confidence", "correctness",
+			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
+			"already-installed dependency", "direct control flow", "line count",
+			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
+		},
+		"docs/REVIEW-WORKFLOW.md": {
+			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
+			"already-installed dependency", "direct control flow", "line count",
+			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 	}
 	for relative, required := range contracts {
@@ -1324,12 +1359,26 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				Enum []string `json:"enum"`
 			} `json:"profile"`
 		} `json:"properties"`
+		Defs struct {
+			Finding struct {
+				Properties struct {
+					SimplificationKind struct {
+						Enum []string `json:"enum"`
+					} `json:"simplification_kind"`
+				} `json:"properties"`
+			} `json:"finding"`
+		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(reportSchemaContent, &reportSchema); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
+	}
+	if !slices.Equal(reportSchema.Defs.Finding.Properties.SimplificationKind.Enum, []string{
+		"delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink",
+	}) {
+		t.Fatalf("review report simplification kinds = %v", reportSchema.Defs.Finding.Properties.SimplificationKind.Enum)
 	}
 }
 
