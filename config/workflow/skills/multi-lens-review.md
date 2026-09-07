@@ -1,7 +1,7 @@
 ---
 name: lens-review
 description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, evidence-grounded findings, behavior-preserving maintainability review, adversarial verification, and applied fixes.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Lens Review
@@ -42,6 +42,18 @@ the candidate as `delete`, `reuse`, `stdlib`, `native`, `dependency`, `yagni`,
 or `shrink`; use `yagni` for speculative behavior or structure and `shrink` for
 equivalent behavior expressed more directly. The tag does not replace severity,
 evidence, or verification.
+
+For comments, preserve irreducible rationale such as non-obvious decisions,
+invariants and trust boundaries, compatibility or safety constraints, and
+deliberate limitations. Prefer names, types, assertions, tests, or clearer
+structure when they can express the same fact. Shorten useful prose to the
+constraint and consequence; move cross-cutting decisions to durable documentation
+and leave a local pointer when needed. Treat narration, stale or
+contradictory prose, commented-out code, duplicated history, and speculative
+guidance as candidates for `delete`, `shrink`, `reuse`, or `yagni` as
+appropriate. Never remove security, validation, accessibility, data-loss, or
+compatibility rationale without a durable equivalent, and never decide from
+comment volume or line count alone.
 
 Discover languages, frameworks, build systems, and generated surfaces before
 choosing practices or checks. Discovery must be language-agnostic,

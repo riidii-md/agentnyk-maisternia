@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with an optional behavior-preserving maintainability profile, independent refutation, and applied fixes.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -132,6 +132,25 @@ speculative behavior or structure and `shrink` for the same behavior expressed
 more directly. The kind aids triage; it does not replace severity, evidence, or
 independent refutation. A line count may support the net-simplification estimate
 but is never sufficient evidence or the sole decision metric.
+
+Treat comments as maintainability assets, not free documentation or a line-count
+problem. Preserve irreducible rationale: non-obvious local decisions,
+invariants and trust boundaries, compatibility or safety constraints, and
+deliberate limitations or upgrade paths that the implementation cannot express.
+Before retaining explanatory prose, prefer names, types, assertions, tests, or
+clearer structure when they can make the same fact executable or self-evident.
+Shorten useful but verbose comments to the constraint and consequence. Move
+cross-cutting tradeoffs or decision history to durable documentation and leave
+a short local pointer when discoverability matters.
+
+Flag code narration, stale or contradictory comments, commented-out code,
+speculative future guidance, and duplicated decision history only when there is
+concrete evidence of a maintainability cost. Classify redundant or stale prose
+as `delete`, useful but verbose rationale as `shrink`, centralized rationale as
+`reuse`, and speculative guidance as `yagni`. Do not remove security,
+validation, accessibility, data-loss, or compatibility rationale without an
+equally durable equivalent. Comment volume and line count are never sufficient
+evidence by themselves.
 
 Deepen the focused lenses as follows:
 

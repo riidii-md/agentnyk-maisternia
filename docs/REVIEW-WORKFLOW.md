@@ -178,6 +178,34 @@ Applicable simplification findings record one kind:
 The kind is a triage field, not a substitute for severity, evidence,
 behavior-preservation proof, or independent refutation.
 
+### Comment Simplification
+
+Comments are maintainability assets when they preserve irreducible rationale;
+they are not automatically valuable documentation or automatically wasteful
+lines. Reviewers keep comments that explain non-obvious local decisions,
+invariants and trust boundaries, compatibility or safety constraints, and
+deliberate limitations or upgrade paths that the implementation cannot express.
+
+The reviewer first asks whether names, types, assertions, tests, or clearer
+structure can express the same fact. Useful but verbose prose is shortened to
+the constraint and consequence. Cross-cutting tradeoffs and decision history
+move to durable documentation, with a short local pointer when discoverability
+matters.
+
+The existing simplification kinds describe the proposed treatment:
+
+| Comment case | Kind | Treatment |
+|---|---|---|
+| Narration, stale prose, or commented-out code | `delete` | Remove information that is redundant, misleading, or recoverable from version control |
+| Useful but verbose local rationale | `shrink` | Retain the constraint and consequence close to the code |
+| Cross-cutting or duplicated rationale | `reuse` | Centralize it in durable documentation and leave a local pointer if needed |
+| Speculative future guidance | `yagni` | Remove guidance for an unaccepted future requirement |
+
+A reviewer must show a concrete maintainability cost; comment volume and line
+count alone are insufficient. Security, validation, accessibility, data-loss,
+and compatibility rationale stays in place until an equally durable equivalent
+exists.
+
 ### Language And Tool Discovery
 
 The maintainability profile is language-agnostic. Before choosing best

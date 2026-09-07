@@ -75,6 +75,38 @@
         "no-style-only-findings",
         "no-line-count-only-decisions"
       ],
+      "comment_policy": {
+        "selection_rule": "preserve-irreducible-rationale",
+        "keep_when": [
+          "non-obvious-local-rationale",
+          "invariants-and-trust-boundaries",
+          "compatibility-or-safety-constraints",
+          "deliberate-limitations-and-upgrade-paths"
+        ],
+        "simplify_by": [
+          "prefer-names-types-tests-assertions-or-structure",
+          "shorten-to-constraint-and-consequence",
+          "move-cross-cutting-decisions-to-durable-documentation",
+          "leave-a-local-pointer-when-discoverability-matters"
+        ],
+        "remove_when": [
+          "code-narration",
+          "stale-or-contradictory-comments",
+          "commented-out-code",
+          "speculative-future-guidance",
+          "duplicated-decision-history"
+        ],
+        "finding_kinds": {
+          "delete": "redundant-stale-or-commented-out-code",
+          "shrink": "useful-but-verbose-local-rationale",
+          "reuse": "centralize-cross-cutting-or-duplicated-rationale",
+          "yagni": "speculative-future-guidance"
+        },
+        "guardrails": [
+          "no-comment-volume-or-line-count-only-decisions",
+          "no-removal-of-security-validation-accessibility-data-loss-or-compatibility-rationale-without-durable-equivalent"
+        ]
+      },
       "context_discovery": {
         "strategy": "evidence-led-heuristic",
         "language_agnostic": true,
