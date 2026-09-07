@@ -1172,7 +1172,20 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				SimplificationKinds   []string `json:"simplification_kinds"`
 				CandidateRequirements []string `json:"candidate_requirements"`
 				Guardrails            []string `json:"guardrails"`
-				ContextDiscovery      struct {
+				CommentPolicy         struct {
+					SelectionRule string   `json:"selection_rule"`
+					KeepWhen      []string `json:"keep_when"`
+					SimplifyBy    []string `json:"simplify_by"`
+					RemoveWhen    []string `json:"remove_when"`
+					FindingKinds  struct {
+						Delete string `json:"delete"`
+						Shrink string `json:"shrink"`
+						Reuse  string `json:"reuse"`
+						YAGNI  string `json:"yagni"`
+					} `json:"finding_kinds"`
+					Guardrails []string `json:"guardrails"`
+				} `json:"comment_policy"`
+				ContextDiscovery struct {
 					Strategy         string   `json:"strategy"`
 					LanguageAgnostic bool     `json:"language_agnostic"`
 					MultiLanguage    bool     `json:"multi_language"`
@@ -1266,6 +1279,47 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}) {
 		t.Fatalf("maintainability guardrails = %v", maintainability.Guardrails)
 	}
+	comments := maintainability.CommentPolicy
+	if comments.SelectionRule != "preserve-irreducible-rationale" {
+		t.Fatalf("comment selection rule = %q", comments.SelectionRule)
+	}
+	if !slices.Equal(comments.KeepWhen, []string{
+		"non-obvious-local-rationale",
+		"invariants-and-trust-boundaries",
+		"compatibility-or-safety-constraints",
+		"deliberate-limitations-and-upgrade-paths",
+	}) {
+		t.Fatalf("comment keep policy = %v", comments.KeepWhen)
+	}
+	if !slices.Equal(comments.SimplifyBy, []string{
+		"prefer-names-types-tests-assertions-or-structure",
+		"shorten-to-constraint-and-consequence",
+		"move-cross-cutting-decisions-to-durable-documentation",
+		"leave-a-local-pointer-when-discoverability-matters",
+	}) {
+		t.Fatalf("comment simplification policy = %v", comments.SimplifyBy)
+	}
+	if !slices.Equal(comments.RemoveWhen, []string{
+		"code-narration",
+		"stale-or-contradictory-comments",
+		"commented-out-code",
+		"speculative-future-guidance",
+		"duplicated-decision-history",
+	}) {
+		t.Fatalf("comment removal policy = %v", comments.RemoveWhen)
+	}
+	if comments.FindingKinds.Delete != "redundant-stale-or-commented-out-code" ||
+		comments.FindingKinds.Shrink != "useful-but-verbose-local-rationale" ||
+		comments.FindingKinds.Reuse != "centralize-cross-cutting-or-duplicated-rationale" ||
+		comments.FindingKinds.YAGNI != "speculative-future-guidance" {
+		t.Fatalf("comment finding kinds = %#v", comments.FindingKinds)
+	}
+	if !slices.Equal(comments.Guardrails, []string{
+		"no-comment-volume-or-line-count-only-decisions",
+		"no-removal-of-security-validation-accessibility-data-loss-or-compatibility-rationale-without-durable-equivalent",
+	}) {
+		t.Fatalf("comment guardrails = %v", comments.Guardrails)
+	}
 	discovery := maintainability.ContextDiscovery
 	if discovery.Strategy != "evidence-led-heuristic" ||
 		!discovery.LanguageAgnostic ||
@@ -1316,6 +1370,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"repository-owned commands", "multi-language",
 			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
 			"already-installed dependency", "direct control flow", "line count",
+			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
+			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 		"config/workflow/phases/review-simplify.md": {
@@ -1329,11 +1385,15 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"language-agnostic", "repository-owned", "confidence", "correctness",
 			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
 			"already-installed dependency", "direct control flow", "line count",
+			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
+			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 		"docs/REVIEW-WORKFLOW.md": {
 			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
 			"already-installed dependency", "direct control flow", "line count",
+			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
+			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 	}
