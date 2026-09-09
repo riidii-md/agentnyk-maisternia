@@ -41,11 +41,11 @@ The repository starts with:
 
 - `standard-work`: the provider-neutral adaptive delivery workflow with
   optional research, expanded proof, handoff, and PR preparation; a reviewed
-  plan delivered through mdmaid.desk before explicit human approval; and the
-  standard bounded routine approval resources. After a PR is successfully
-  created, it offers an optional evidence-backed session analysis. It also
-  installs the on-demand `/work-explain-change` command and its local PR Lens
-  visualization contract;
+  plan delivered through mdmaid.desk before explicit human approval; standard
+  and opt-in simplicity-focused execution commands; and the standard bounded
+  routine approval resources. After a PR is successfully created, it offers an
+  optional evidence-backed session analysis. It also installs the on-demand
+  `/work-explain-change` command and its local PR Lens visualization contract;
 - `idea-shaping`: source intake, research, grill, brainstorm, challenge,
   decision, planning, and mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,

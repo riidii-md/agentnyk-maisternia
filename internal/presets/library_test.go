@@ -86,6 +86,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	for _, resourceID := range []string{
 		"work-plan-review",
+		"work-run-simplify",
 		"work-review",
 		"work-review-simplify",
 		"work-explain-change",
@@ -683,6 +684,102 @@ func TestRepositoryStandardWorkCompletionContract(t *testing.T) {
 	} {
 		if !strings.Contains(string(pr), fragment) {
 			t.Errorf("work-pr approval contract is missing %q", fragment)
+		}
+	}
+}
+
+func TestRepositorySimplestImplementationContracts(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/plan.md": {
+			"simplest viable direction",
+			"materially changes behavior",
+			"ask the user",
+			"equivalent implementation details",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"YAGNI",
+			"existing repository",
+			"standard library",
+			"native platform",
+			"already-installed dependency",
+			"direct control flow",
+			"abstraction",
+		},
+		"config/workflow/phases/run-simplify.md": {
+			"name: work-run-simplify",
+			"thin alias",
+			"work-run",
+			"first behavior-preserving option",
+			"approved behavior",
+			"ask the user",
+			"line count",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest(repository) error = %v", err)
+	}
+	for _, resource := range manifest.Resources {
+		if resource.ID != "work-run-simplify" {
+			continue
+		}
+		for _, agent := range []string{"codex", "claude", "antigravity"} {
+			supported := false
+			for _, target := range resource.Targets {
+				supported = supported || target.Agent == agent
+			}
+			if !supported {
+				t.Errorf("resource %q does not support %s", resource.ID, agent)
+			}
+		}
+		return
+	}
+	t.Fatal("manifest resource \"work-run-simplify\" missing")
+}
+
+func TestRepositoryWorkRunRationalePlacementContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/run.md": {
+			"Prefer code that explains itself",
+			"why the constraint exists",
+			"line-by-line narration",
+			"durable Markdown",
+			"ticket",
+			"commit or pull-request",
+			"only source",
+		},
+		"config/workflow/phases/run-simplify.md": {
+			"comment-and-rationale policy",
+			"irreducible local rationale",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
 		}
 	}
 }
