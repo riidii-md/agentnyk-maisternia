@@ -7,7 +7,7 @@ branch.
 
 ## Reporting
 
-Report vulnerabilities privately to the Kagi Labs repository maintainers. Do
+Report vulnerabilities privately to the repository maintainers. Do
 not open a public issue containing credentials, personal configuration, or an
 exploit against a real home directory.
 
