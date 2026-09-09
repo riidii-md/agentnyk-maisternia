@@ -1,7 +1,7 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-plan - Create the Implementation Plan
@@ -23,6 +23,21 @@ Input:
 Discover repository rules before assuming paths, base branches, ticket formats,
 tools, tests, or PR conventions.
 
+Before choosing the direction, inspect the affected code and propose the
+simplest viable direction that satisfies the accepted scope and safeguards.
+Prefer omitting speculative work and reusing existing repository code. Use the
+standard library, a native platform capability, an already-installed dependency,
+or direct local code before introducing a new abstraction. Explain the evidence
+for the selected direction and the complexity it avoids.
+
+Simplicity does not authorize narrowing requested behavior or weakening
+correctness, validation, security, accessibility, compatibility, data-loss
+prevention, or verification. When a simpler direction materially changes behavior
+or an accepted constraint, risk, user experience, compatibility, or
+long-term ownership, present the concrete alternatives and ask the user before
+finalizing the plan. Choose between equivalent implementation details without
+asking.
+
 Plan in dependency order. Each task should describe observable behavior, fit one
 focused implementation loop, and keep the repository runnable. Identify a thin
 end-to-end slice first when appropriate.
@@ -31,6 +46,7 @@ Return:
 
 - Discovered repository rules
 - Scope and exclusions
+- Simplest viable direction, evidence, and complexity avoided
 - Proposed direction and rationale
 - Material alternatives and tradeoffs
 - Files and patterns to inspect

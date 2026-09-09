@@ -93,6 +93,14 @@ Every plan review runs independent read-only lenses for:
 | Best practices | Repository and domain practices without cargo-cult additions |
 | Acceptance and testability | Important claims have observable proof |
 
+The architecture-and-simplicity lens challenges proposed features,
+dependencies, configuration, layers, abstractions, and new files before code is
+written. It prefers YAGNI, existing repository behavior, the standard library,
+native platform capabilities, installed dependencies, and direct control flow
+in that order. A simpler plan remains valid only when it preserves the accepted
+behavior and safeguards; a material scope or design change returns to the human
+decision gate.
+
 `plan-delta` reviews remain focused on the changed decision and affected tasks.
 The workflow escalates to full plan review only when the delta invalidates wider
 scope, interfaces, dependencies, acceptance criteria, or proof.
