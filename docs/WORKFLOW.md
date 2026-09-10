@@ -103,6 +103,7 @@ preset:
     - /work-plan
     - /work-plan-review
     - /work-run
+    - /work-run-simplify
     - /work-verify
     - /work-review
     - /work-review-simplify
@@ -137,6 +138,7 @@ Canonical commands use the `/work-*` namespace:
 /work-plan-review
 /work-handoff
 /work-run
+/work-run-simplify
 /work-verify
 /work-review
 /work-review-simplify
@@ -239,7 +241,21 @@ Harness selection is invocation metadata, not a second command namespace:
 /work-review @agy @codex @claude -- review this branch
 /work-run @here -- execute locally
 /work-run @claude @sonnet -- implement with Claude Sonnet
+/work-run-simplify @here -- choose the simplest concrete implementation
 ```
+
+`/work-run` follows the approved implementation contract directly.
+`/work-run-simplify` is an opt-in thin alias that preserves the same execution
+and verification gates while applying the simplicity ladder before each task.
+This allows the two execution behaviors to be selected and compared without
+changing the normal delivery DAG.
+
+Both execution commands prefer clear code over explanatory narration. Local
+comments remain for non-obvious constraints and consequences. Cross-cutting
+design belongs in durable Markdown or an ADR, product scope belongs in the
+ticket, and change history belongs in a commit or pull-request description.
+Tickets and Git history do not replace rationale that must be visible to modify
+the code safely.
 
 The installed `work-routing` skill accepts `@here`, `@auto`, `@codex`,
 `@claude`, `@agy`/`@antigravity`, and `@hermes`. Put a route block immediately

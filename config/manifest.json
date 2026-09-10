@@ -388,6 +388,16 @@
       ]
     },
     {
+      "id": "work-run-simplify",
+      "source": "config/workflow/phases/run-simplify.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-run-simplify.md"},
+        {"agent": "codex", "path": ".codex/skills/work-run-simplify/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-run-simplify.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-run-simplify.md"}
+      ]
+    },
+    {
       "id": "work-verify",
       "source": "config/workflow/phases/verify.md",
       "targets": [

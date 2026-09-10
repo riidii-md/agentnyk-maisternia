@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with an optional behavior-preserving maintainability profile, independent refutation, and applied fixes.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -108,6 +108,49 @@ ecosystem convention into a required gate without approval and authoritative
 support. Preserve `unknown` instead of inventing certainty. Record every
 selected command, why it applies, and its result so execution remains
 reproducible even when context discovery is uncertain.
+
+After establishing the behavior contract, evaluate simplifications in this
+order and stop at the first behavior-preserving option that fully satisfies it:
+
+1. apply YAGNI: skip or delete behavior and structure that no accepted
+   requirement, caller, or invariant needs;
+2. reuse an established repository abstraction, helper, or pattern;
+3. use the active language's standard library;
+4. use a native platform capability from the browser, database, operating
+   system, framework, or protocol;
+5. use an already-installed dependency when its reviewed contract fits;
+6. use straightforward local code and direct control flow;
+7. introduce or retain an abstraction only when it removes proven repeated
+   knowledge, creates clear ownership, or materially reduces coupling.
+
+Do not continue down the ladder merely because a later option is shorter. The
+first fit must still preserve security, validation, accessibility, data-loss
+prevention, error behavior, compatibility, and required verification. For an
+applicable simplification candidate, record one kind: `delete`, `reuse`,
+`stdlib`, `native`, `dependency`, `yagni`, or `shrink`. Use `yagni` for
+speculative behavior or structure and `shrink` for the same behavior expressed
+more directly. The kind aids triage; it does not replace severity, evidence, or
+independent refutation. A line count may support the net-simplification estimate
+but is never sufficient evidence or the sole decision metric.
+
+Treat comments as maintainability assets, not free documentation or a line-count
+problem. Preserve irreducible rationale: non-obvious local decisions,
+invariants and trust boundaries, compatibility or safety constraints, and
+deliberate limitations or upgrade paths that the implementation cannot express.
+Before retaining explanatory prose, prefer names, types, assertions, tests, or
+clearer structure when they can make the same fact executable or self-evident.
+Shorten useful but verbose comments to the constraint and consequence. Move
+cross-cutting tradeoffs or decision history to durable documentation and leave
+a short local pointer when discoverability matters.
+
+Flag code narration, stale or contradictory comments, commented-out code,
+speculative future guidance, and duplicated decision history only when there is
+concrete evidence of a maintainability cost. Classify redundant or stale prose
+as `delete`, useful but verbose rationale as `shrink`, centralized rationale as
+`reuse`, and speculative guidance as `yagni`. Do not remove security,
+validation, accessibility, data-loss, or compatibility rationale without an
+equally durable equivalent. Comment volume and line count are never sufficient
+evidence by themselves.
 
 Deepen the focused lenses as follows:
 

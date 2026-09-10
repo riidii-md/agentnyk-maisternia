@@ -86,6 +86,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	for _, resourceID := range []string{
 		"work-plan-review",
+		"work-run-simplify",
 		"work-review",
 		"work-review-simplify",
 		"work-explain-change",
@@ -693,6 +694,102 @@ func TestRepositoryStandardWorkCompletionContract(t *testing.T) {
 	}
 }
 
+func TestRepositorySimplestImplementationContracts(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/plan.md": {
+			"simplest viable direction",
+			"materially changes behavior",
+			"ask the user",
+			"equivalent implementation details",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"YAGNI",
+			"existing repository",
+			"standard library",
+			"native platform",
+			"already-installed dependency",
+			"direct control flow",
+			"abstraction",
+		},
+		"config/workflow/phases/run-simplify.md": {
+			"name: work-run-simplify",
+			"thin alias",
+			"work-run",
+			"first behavior-preserving option",
+			"approved behavior",
+			"ask the user",
+			"line count",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest(repository) error = %v", err)
+	}
+	for _, resource := range manifest.Resources {
+		if resource.ID != "work-run-simplify" {
+			continue
+		}
+		for _, agent := range []string{"codex", "claude", "antigravity"} {
+			supported := false
+			for _, target := range resource.Targets {
+				supported = supported || target.Agent == agent
+			}
+			if !supported {
+				t.Errorf("resource %q does not support %s", resource.ID, agent)
+			}
+		}
+		return
+	}
+	t.Fatal("manifest resource \"work-run-simplify\" missing")
+}
+
+func TestRepositoryWorkRunRationalePlacementContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/run.md": {
+			"Prefer code that explains itself",
+			"why the constraint exists",
+			"line-by-line narration",
+			"durable Markdown",
+			"ticket",
+			"commit or pull-request",
+			"only source",
+		},
+		"config/workflow/phases/run-simplify.md": {
+			"comment-and-rationale policy",
+			"irreducible local rationale",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+}
+
 func TestRepositoryWorkCleanupContract(t *testing.T) {
 	t.Parallel()
 
@@ -1173,9 +1270,25 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				AdditionalLenses      []string `json:"additional_lenses"`
 				FocusLenses           []string `json:"focus_lenses"`
 				Goals                 []string `json:"goals"`
+				SelectionRule         string   `json:"selection_rule"`
+				SelectionLadder       []string `json:"selection_ladder"`
+				SimplificationKinds   []string `json:"simplification_kinds"`
 				CandidateRequirements []string `json:"candidate_requirements"`
 				Guardrails            []string `json:"guardrails"`
-				ContextDiscovery      struct {
+				CommentPolicy         struct {
+					SelectionRule string   `json:"selection_rule"`
+					KeepWhen      []string `json:"keep_when"`
+					SimplifyBy    []string `json:"simplify_by"`
+					RemoveWhen    []string `json:"remove_when"`
+					FindingKinds  struct {
+						Delete string `json:"delete"`
+						Shrink string `json:"shrink"`
+						Reuse  string `json:"reuse"`
+						YAGNI  string `json:"yagni"`
+					} `json:"finding_kinds"`
+					Guardrails []string `json:"guardrails"`
+				} `json:"comment_policy"`
+				ContextDiscovery struct {
 					Strategy         string   `json:"strategy"`
 					LanguageAgnostic bool     `json:"language_agnostic"`
 					MultiLanguage    bool     `json:"multi_language"`
@@ -1230,6 +1343,25 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}) {
 		t.Fatalf("maintainability review goals = %v", maintainability.Goals)
 	}
+	if maintainability.SelectionRule != "stop-at-first-behavior-preserving-fit" {
+		t.Fatalf("maintainability selection rule = %q", maintainability.SelectionRule)
+	}
+	if !slices.Equal(maintainability.SelectionLadder, []string{
+		"apply-yagni",
+		"reuse-existing",
+		"use-standard-library",
+		"use-native-platform",
+		"use-installed-dependency",
+		"use-direct-control-flow",
+		"introduce-abstraction-last",
+	}) {
+		t.Fatalf("maintainability selection ladder = %v", maintainability.SelectionLadder)
+	}
+	if !slices.Equal(maintainability.SimplificationKinds, []string{
+		"delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink",
+	}) {
+		t.Fatalf("maintainability simplification kinds = %v", maintainability.SimplificationKinds)
+	}
 	if !slices.Equal(maintainability.CandidateRequirements, []string{
 		"behavior-contract",
 		"concrete-evidence",
@@ -1237,6 +1369,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"net-simplification",
 		"regression-risk",
 		"verification-plan",
+		"simplification-kind-when-applicable",
 	}) {
 		t.Fatalf("maintainability candidate requirements = %v", maintainability.CandidateRequirements)
 	}
@@ -1245,8 +1378,50 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"no-incidental-dry",
 		"no-speculative-abstractions",
 		"no-style-only-findings",
+		"no-line-count-only-decisions",
 	}) {
 		t.Fatalf("maintainability guardrails = %v", maintainability.Guardrails)
+	}
+	comments := maintainability.CommentPolicy
+	if comments.SelectionRule != "preserve-irreducible-rationale" {
+		t.Fatalf("comment selection rule = %q", comments.SelectionRule)
+	}
+	if !slices.Equal(comments.KeepWhen, []string{
+		"non-obvious-local-rationale",
+		"invariants-and-trust-boundaries",
+		"compatibility-or-safety-constraints",
+		"deliberate-limitations-and-upgrade-paths",
+	}) {
+		t.Fatalf("comment keep policy = %v", comments.KeepWhen)
+	}
+	if !slices.Equal(comments.SimplifyBy, []string{
+		"prefer-names-types-tests-assertions-or-structure",
+		"shorten-to-constraint-and-consequence",
+		"move-cross-cutting-decisions-to-durable-documentation",
+		"leave-a-local-pointer-when-discoverability-matters",
+	}) {
+		t.Fatalf("comment simplification policy = %v", comments.SimplifyBy)
+	}
+	if !slices.Equal(comments.RemoveWhen, []string{
+		"code-narration",
+		"stale-or-contradictory-comments",
+		"commented-out-code",
+		"speculative-future-guidance",
+		"duplicated-decision-history",
+	}) {
+		t.Fatalf("comment removal policy = %v", comments.RemoveWhen)
+	}
+	if comments.FindingKinds.Delete != "redundant-stale-or-commented-out-code" ||
+		comments.FindingKinds.Shrink != "useful-but-verbose-local-rationale" ||
+		comments.FindingKinds.Reuse != "centralize-cross-cutting-or-duplicated-rationale" ||
+		comments.FindingKinds.YAGNI != "speculative-future-guidance" {
+		t.Fatalf("comment finding kinds = %#v", comments.FindingKinds)
+	}
+	if !slices.Equal(comments.Guardrails, []string{
+		"no-comment-volume-or-line-count-only-decisions",
+		"no-removal-of-security-validation-accessibility-data-loss-or-compatibility-rationale-without-durable-equivalent",
+	}) {
+		t.Fatalf("comment guardrails = %v", comments.Guardrails)
 	}
 	discovery := maintainability.ContextDiscovery
 	if discovery.Strategy != "evidence-led-heuristic" ||
@@ -1296,6 +1471,11 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"observable behavior", "speculative abstraction", "language-agnostic",
 			"evidence-led and fallible", "detected`, `mixed`, or `unknown",
 			"repository-owned commands", "multi-language",
+			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
+			"already-installed dependency", "direct control flow", "line count",
+			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
+			"trust boundaries", "commented-out code", "durable documentation",
+			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 		"config/workflow/phases/review-simplify.md": {
 			"name: work-review-simplify", "$ARGUMENTS", "work-review",
@@ -1305,7 +1485,19 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"Critical", "High", "refuted", "Apply every confirmed fix",
 			"work-routing", "@agy @codex @claude", "maintainability",
 			"best-practices", "behavior contract", "net simplification",
-			"language-agnostic", "repository-owned", "confidence",
+			"language-agnostic", "repository-owned", "confidence", "correctness",
+			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
+			"already-installed dependency", "direct control flow", "line count",
+			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
+			"trust boundaries", "commented-out code", "durable documentation",
+			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
+		},
+		"docs/REVIEW-WORKFLOW.md": {
+			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
+			"already-installed dependency", "direct control flow", "line count",
+			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
+			"trust boundaries", "commented-out code", "durable documentation",
+			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 		},
 	}
 	for relative, required := range contracts {
@@ -1330,12 +1522,26 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 				Enum []string `json:"enum"`
 			} `json:"profile"`
 		} `json:"properties"`
+		Defs struct {
+			Finding struct {
+				Properties struct {
+					SimplificationKind struct {
+						Enum []string `json:"enum"`
+					} `json:"simplification_kind"`
+				} `json:"properties"`
+			} `json:"finding"`
+		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(reportSchemaContent, &reportSchema); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
+	}
+	if !slices.Equal(reportSchema.Defs.Finding.Properties.SimplificationKind.Enum, []string{
+		"delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink",
+	}) {
+		t.Fatalf("review report simplification kinds = %v", reportSchema.Defs.Finding.Properties.SimplificationKind.Enum)
 	}
 }
 

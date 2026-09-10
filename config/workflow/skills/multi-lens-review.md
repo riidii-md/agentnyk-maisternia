@@ -1,7 +1,7 @@
 ---
 name: lens-review
 description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, evidence-grounded findings, behavior-preserving maintainability review, adversarial verification, and applied fixes.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Lens Review
@@ -23,11 +23,37 @@ route was resolved.
 
 For the `maintainability` profile, run all implementation lenses and add the
 `best-practices` lens. First state the behavior contract that must remain
-unchanged. Deepen `consistency`, `architecture`, `simplicity-dry`, and
-`tests-verification` to find repeated knowledge, avoidable complexity, weak
-ownership boundaries, and repository-practice violations. Distinguish repeated
-knowledge from incidental duplication. Propose an abstraction only when it
-reduces concepts or coupling; reject speculative helpers and indirection.
+unchanged. Deepen `correctness`, `consistency`, `architecture`,
+`simplicity-dry`, and `tests-verification` to find repeated knowledge, avoidable
+complexity, weak ownership boundaries, and repository-practice violations.
+Distinguish repeated knowledge from incidental duplication. Propose an
+abstraction only when it reduces concepts or coupling; reject speculative
+helpers and indirection. Prove preserved behavior including failure paths.
+
+Evaluate simplifications in order. Stop at the first behavior-preserving option
+that fully satisfies the contract: apply YAGNI to skip or delete what is
+unneeded, reuse existing repository code, use the standard library, use a
+native platform capability, use an already-installed dependency, use
+straightforward local code and direct control flow, and introduce an abstraction
+only as the last option when it removes proven knowledge duplication or
+coupling. Do not keep searching for a shorter option after an earlier rung fits,
+and never use line count as the sole decision metric. When applicable, classify
+the candidate as `delete`, `reuse`, `stdlib`, `native`, `dependency`, `yagni`,
+or `shrink`; use `yagni` for speculative behavior or structure and `shrink` for
+equivalent behavior expressed more directly. The tag does not replace severity,
+evidence, or verification.
+
+For comments, preserve irreducible rationale such as non-obvious decisions,
+invariants and trust boundaries, compatibility or safety constraints, and
+deliberate limitations. Prefer names, types, assertions, tests, or clearer
+structure when they can express the same fact. Shorten useful prose to the
+constraint and consequence; move cross-cutting decisions to durable documentation
+and leave a local pointer when needed. Treat narration, stale or
+contradictory prose, commented-out code, duplicated history, and speculative
+guidance as candidates for `delete`, `shrink`, `reuse`, or `yagni` as
+appropriate. Never remove security, validation, accessibility, data-loss, or
+compatibility rationale without a durable equivalent, and never decide from
+comment volume or line count alone.
 
 Discover languages, frameworks, build systems, and generated surfaces before
 choosing practices or checks. Discovery must be language-agnostic,
@@ -42,9 +68,10 @@ inventing a required gate.
 
 Every maintainability candidate must include concrete evidence, the minimal
 fix, the expected net simplification, regression risk, and a verification plan
-for preserved behavior. Ground best-practices claims in repository rules,
-established neighboring code, or authoritative documentation. Style
-preferences alone are not findings, and `NO_FINDINGS` remains valid.
+for preserved behavior. Include its simplification kind when applicable. Ground
+best-practices claims in repository rules, established neighboring code, or
+authoritative documentation. Style preferences alone are not findings, and
+`NO_FINDINGS` remains valid.
 
 Run one read-only reviewer per required lens, in parallel when supported. Add
 domain lenses only when the affected surface warrants them. Every candidate

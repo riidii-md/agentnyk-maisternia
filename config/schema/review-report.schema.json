@@ -119,6 +119,9 @@
           "minItems": 1,
           "items": {"$ref": "#/$defs/evidence"}
         },
+        "simplification_kind": {
+          "enum": ["delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink"]
+        },
         "proposed_fix": {"type": "string", "minLength": 1, "maxLength": 4096},
         "status": {"enum": ["confirmed", "refuted"]},
         "verification": {"$ref": "#/$defs/verification"}

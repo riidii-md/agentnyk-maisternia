@@ -1,7 +1,7 @@
 ---
 name: work-plan-review
 description: Adversarially review a full plan or targeted plan delta against the actual repository, verify every candidate finding, and apply confirmed corrections to the plan artifact.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-plan-review - Review A Plan Before Implementation
@@ -48,6 +48,18 @@ Run one read-only reviewer per base lens:
 - `best-practices`: repository and domain practices are followed without
   cargo-cult additions;
 - `acceptance-testability`: every important claim has observable proof.
+
+The `architecture-simplicity` reviewer must challenge every proposed feature,
+dependency, configuration surface, layer, abstraction, and group of new files.
+It checks whether the plan can apply YAGNI or reuse existing repository code.
+It then considers the standard library, a native platform capability, an
+already-installed dependency, and direct control flow. A new abstraction is
+justified only by proven repeated knowledge, clear ownership, or materially
+lower coupling. A simpler candidate must identify the accepted behavior and
+safeguards it preserves, the plan tasks it replaces or shrinks, and the
+evidence that the simpler direction fits the current repository. If it changes
+an accepted requirement or decision, leave it for the user instead of applying
+it silently.
 
 Add domain lenses when warranted: accessibility, privacy/PII/SOC 2 evidence,
 performance/scalability, migration safety, API compatibility, or data integrity.

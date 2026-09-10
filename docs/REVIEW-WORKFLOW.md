@@ -93,6 +93,14 @@ Every plan review runs independent read-only lenses for:
 | Best practices | Repository and domain practices without cargo-cult additions |
 | Acceptance and testability | Important claims have observable proof |
 
+The architecture-and-simplicity lens challenges proposed features,
+dependencies, configuration, layers, abstractions, and new files before code is
+written. It prefers YAGNI, existing repository behavior, the standard library,
+native platform capabilities, installed dependencies, and direct control flow
+in that order. A simpler plan remains valid only when it preserves the accepted
+behavior and safeguards; a material scope or design change returns to the human
+decision gate.
+
 `plan-delta` reviews remain focused on the changed decision and affected tasks.
 The workflow escalates to full plan review only when the delta invalidates wider
 scope, interfaces, dependencies, acceptance criteria, or proof.
@@ -140,6 +148,71 @@ repeated knowledge or reduce coupling and concepts. Single-use generic helpers,
 speculative reuse, style-only preferences, and abstractions that merely move
 complexity are refuted. `NO_FINDINGS` remains valid when the current solution
 is already the simplest behavior-preserving design supported by the evidence.
+
+### Simplification Decision Ladder
+
+After the reviewer establishes the behavior contract, it evaluates options in
+order and stops at the first behavior-preserving option that fully satisfies
+the contract:
+
+1. apply YAGNI: skip or delete behavior and structure that is not required;
+2. reuse an established repository abstraction, helper, or pattern;
+3. use the active language's standard library;
+4. use a native platform capability from the browser, database, operating
+   system, framework, or protocol;
+5. use an already-installed dependency with a compatible reviewed contract;
+6. use straightforward local code and direct control flow;
+7. introduce or retain an abstraction only when it removes proven repeated
+   knowledge, creates clear ownership, or materially reduces coupling.
+
+An earlier fit wins only when it preserves required security, validation,
+accessibility, data-loss prevention, errors, compatibility, and verification.
+The reviewer does not continue down the ladder merely to find a shorter option.
+A line count can support a net-simplification estimate, but it cannot be the
+sole decision metric.
+
+Applicable simplification findings record one kind:
+
+| Kind | Meaning |
+|---|---|
+| `delete` | Remove behavior or code with no accepted requirement |
+| `reuse` | Replace a duplicate with existing repository-owned behavior |
+| `stdlib` | Replace custom behavior with the active language's standard library |
+| `native` | Use a platform, framework, database, OS, browser, or protocol capability |
+| `dependency` | Reuse an already-installed, reviewed dependency |
+| `yagni` | Remove speculative behavior, configuration, layers, or abstractions |
+| `shrink` | Express the same behavior with more direct local control flow |
+
+The kind is a triage field, not a substitute for severity, evidence,
+behavior-preservation proof, or independent refutation.
+
+### Comment Simplification
+
+Comments are maintainability assets when they preserve irreducible rationale;
+they are not automatically valuable documentation or automatically wasteful
+lines. Reviewers keep comments that explain non-obvious local decisions,
+invariants and trust boundaries, compatibility or safety constraints, and
+deliberate limitations or upgrade paths that the implementation cannot express.
+
+The reviewer first asks whether names, types, assertions, tests, or clearer
+structure can express the same fact. Useful but verbose prose is shortened to
+the constraint and consequence. Cross-cutting tradeoffs and decision history
+move to durable documentation, with a short local pointer when discoverability
+matters.
+
+The existing simplification kinds describe the proposed treatment:
+
+| Comment case | Kind | Treatment |
+|---|---|---|
+| Narration, stale prose, or commented-out code | `delete` | Remove information that is redundant, misleading, or recoverable from version control |
+| Useful but verbose local rationale | `shrink` | Retain the constraint and consequence close to the code |
+| Cross-cutting or duplicated rationale | `reuse` | Centralize it in durable documentation and leave a local pointer if needed |
+| Speculative future guidance | `yagni` | Remove guidance for an unaccepted future requirement |
+
+A reviewer must show a concrete maintainability cost; comment volume and line
+count alone are insufficient. Security, validation, accessibility, data-loss,
+and compatibility rationale stays in place until an equally durable equivalent
+exists.
 
 ### Language And Tool Discovery
 
