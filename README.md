@@ -473,6 +473,7 @@ runner, or execute a workflow. See [Event validation](docs/EVENT-VALIDATION.md).
 - [Preset library](docs/PRESETS.md)
 - [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md)
 - [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
+- [Coding factory feature shape](docs/CODING-FACTORY-FEATURE-SHAPE.md)
 - [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md)
 - [Hook packs and installation scopes](docs/HOOKS.md)
 - [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
