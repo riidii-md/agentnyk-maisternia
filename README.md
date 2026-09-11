@@ -170,6 +170,8 @@ The catalog contains focused presets that can be installed independently:
 
 - `standard-work` — plan, implement, verify, review, and prepare a PR;
 - `idea-shaping` — turn an incomplete idea into an explicit decision and plan;
+  its `work-question` utility finds one high-leverage question and one owned,
+  time-bounded next move;
 - `parallel-work` — create dependency-safe parallel plans and execution waves;
 - `multi-lens-review` — review plans and implementations from independent lenses;
 - `workflow-routing` — route work across supported harnesses and model roles;
