@@ -76,8 +76,8 @@ The repository contains the first safe configurator foundation:
 - repository tests that prevent command inventory and routing behavior from
   silently shrinking;
 - strict normalized event validation as untrusted input fixtures;
-- provider-specific `/work-shape`, `/work-source`, `/work-grill`, and
-  `/work-brainstorm` command templates;
+- provider-specific `/work-shape`, `/work-source`, `/work-grill`,
+  `/work-brainstorm`, and `/work-question` command templates;
 - a configuration TUI backed by real preset-library entries, workflow DAGs,
   provider health, per-preset plans, managed files, and guarded preset apply;
 - cross-platform CI snapshot builds and tag-based releases;
@@ -499,6 +499,7 @@ Neutral commands describe the work:
 /work-source
 /work-grill
 /work-brainstorm
+/work-question
 /work-plan
 /work-research
 /work-run

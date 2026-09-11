@@ -126,6 +126,7 @@ Canonical commands use the `/work-*` namespace:
 /work-source
 /work-grill
 /work-brainstorm
+/work-question
 /work-brief
 /work-scout
 /work-analyze
@@ -148,8 +149,13 @@ Canonical commands use the `/work-*` namespace:
 /work-routing-preferences
 ```
 
-The command identifies the phase. Provider rendering decides how that command is
-installed in each harness. The harness decides how to execute it at runtime.
+The command identifies a phase or a focused workflow utility. Provider
+rendering decides how that command is installed in each harness. The harness
+decides how to execute it at runtime.
+
+`/work-question` is an on-demand companion to idea shaping rather than a
+required phase. It turns an unclear challenge or recurring debate into one
+high-leverage question and one owned, time-bounded next move.
 
 `/work-explain-change` is an on-demand companion to the delivery DAG rather
 than a required phase. It explains a PR, commit, range, or working-tree snapshot

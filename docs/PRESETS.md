@@ -46,8 +46,9 @@ The repository starts with:
   routine approval resources. After a PR is successfully created, it offers an
   optional evidence-backed session analysis. It also installs the on-demand
   `/work-explain-change` command and its local PR Lens visualization contract;
-- `idea-shaping`: source intake, research, grill, brainstorm, challenge,
-  decision, planning, and mdmaid.desk delivery for phase artifacts;
+- `idea-shaping`: source intake, optional question-to-action focusing,
+  research, grill, brainstorm, challenge, decision, planning, and mdmaid.desk
+  delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution
