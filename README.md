@@ -1,538 +1,293 @@
 # AgentnykMaisternia
 
-[![CI](https://github.com/kagi-labs/agentnyk-maisternia/actions/workflows/ci.yml/badge.svg)](https://github.com/kagi-labs/agentnyk-maisternia/actions/workflows/ci.yml)
+[![CI](https://github.com/riidii-md/agentnyk-maisternia/actions/workflows/ci.yml/badge.svg)](https://github.com/riidii-md/agentnyk-maisternia/actions/workflows/ci.yml)
 
-**AgentnykMaisternia** is an opinionated, provider-neutral workshop for
-configuring command-line coding-agent harnesses. Its `maisternia` CLI provides
-one version-controlled source of truth for:
+**One workshop for configuring coding-agent workflows across Codex, Claude
+Code, Antigravity, and Hermes.**
 
-- shared work phases;
-- Codex, Claude, Antigravity, and Hermes provider adapters;
-- reusable preset-library entries;
-- immutable external preset sources from local folders or GitHub repositories;
-- workflow/pipeline DAGs inside presets;
-- MCP references and neutral `/work-*` commands;
-- provider-neutral `@harness` and per-harness model routing for `/work-*` commands;
-- personal skills and policies;
-- reusable hook packs with explicit user or project installation scope;
-- declarative environment requirements referenced by presets;
-- a provider-neutral allow, ask, and deny approval policy;
-- model roles, provider capability metadata, and existing provider-config inspection;
-- safe configuration rendering and installation.
+AgentnykMaisternia turns a version-controlled catalog of workflows, skills,
+hooks, policies, and presets into provider-native configuration. Its
+`maisternia` CLI previews every change, detects conflicts and drift, and keeps
+installation explicit.
 
-## Naming
+[Quick start](#quick-start) · [How it works](#how-it-works) ·
+[Project status](#project-status) · [Documentation](#documentation) ·
+[Contributing](CONTRIBUTING.md)
 
-**AgentnykMaisternia** is the product brand, **Maisternia** is its short name,
-`maisternia` is the executable and local state namespace, and
-`agentnyk-maisternia` is the repository slug. *Maisternia* transliterates the
-Ukrainian `майстерня`: a workshop where things are made, assembled, and tuned.
-That workshop metaphor covers the project's curation, composition,
-configuration, rendering, and guarded installation responsibilities without
-implying that it controls agent runtimes.
+## Why Maisternia?
 
-## Status
+Coding-agent tools solve similar problems but store their configuration in
+different formats and locations. Maintaining the same workflow separately for
+every provider is repetitive and easy to get wrong.
 
-The repository contains the first safe configurator foundation:
+Maisternia provides:
 
-- manifest validation;
-- provider and path allowlists;
-- canonical provider identities with compatibility aliases;
-- checked-in provider capability and safety contracts;
-- executable, version, and configuration-root inspection;
-- read-only provider health reporting;
-- traversal and symlink protection;
-- read-only inventory and planning;
-- staging-tree rendering;
-- conflict detection;
-- guarded apply with explicit `--yes`;
-- backups before managed updates and removals;
-- drift detection using install checksums;
-- atomic file writes;
-- a strict, versioned preset library under `config/presets`;
-- reusable standard-work, idea-shaping, scored-experiment, parallel-work,
-  multi-lens-review, adaptive-readability, harness-profile, session-audit,
-  harness-improvement, terminal-orchestration, workflow-routing,
-  `developer-context`, `goreleaser-validation`, `git-workflow-approvals`,
-  `routine-development-approvals`, and Codex resource-lab presets;
-- preset DAG validation with explicit loop edges and cycle rejection;
-- preset create, copy, metadata edit, delete, list, show, and validation commands;
-- preset-scoped plan, staging render, guarded apply, ownership reconciliation,
-  and uninstall;
-- source-scoped, tag-driven preset collections with guarded batch apply and
-  distinct ownership;
-- local-folder and GitHub preset-source registration, immutable snapshots,
-  explicit refresh/removal, qualified IDs, and Admin source addition;
-- strict environment-pack validation, read-only planning, and guarded typed installation;
-- six validated hook packs, six focused CLI selections, and two catalog bundles
-  spanning safety, continuity, quality, delegation, maintenance, and redacted
-  local observability;
-- a strict human-only approval policy definition with bounded grants, deny
-  precedence, CLI explanation, and a standalone installation preset;
-- user-global and repository-local plan/apply with isolated state and backups;
-- a complete initial work-phase catalog;
-- a shared work-routing skill with explicit authority and disclosure boundaries;
-- multi-harness `@codex`, `@claude`, `@agy`, and `@hermes` invocation routes;
-- explicit and saved per-harness model choices with visible no-fallback behavior;
-- repository tests that prevent command inventory and routing behavior from
-  silently shrinking;
-- strict normalized event validation as untrusted input fixtures;
-- provider-specific `/work-shape`, `/work-source`, `/work-grill`,
-  `/work-brainstorm`, and `/work-question` command templates;
-- a configuration TUI backed by real preset-library entries, workflow DAGs,
-  provider health, per-preset plans, managed files, and guarded preset apply;
-- cross-platform CI snapshot builds and tag-based releases;
-- a self-installing configuration catalog embedded in every binary;
-- automatic current-Git-project suggestions for scoped preset installation.
+- one declarative catalog for shared workflows and policies;
+- provider-native output for four coding-agent harnesses;
+- reusable presets for common engineering workflows;
+- project-local or user-global installation;
+- a readable plan before any configuration is changed;
+- conflict, drift, backup, path, and symlink safeguards.
 
-Structured TOML, JSON, and YAML settings merging, native hook and approval
-activation, structured preset-content and DAG editing, broader provider-native
-rendering, existing provider-file classification, and configuration import are
-planned next.
-Runtime dispatch is intentionally out of scope; existing harnesses run the
-rendered commands.
+The name *Maisternia* transliterates the Ukrainian `майстерня`: a workshop where
+things are made, assembled, and tuned.
 
-The `scored-experiment` preset establishes the provider-native experiment
-workflow and capability contract. Native Stop/tool-guard hook rendering still
-depends on the planned structured settings merge; see
-[Provider-native experiment loops](docs/PROVIDER-NATIVE-EXPERIMENTS.md).
+## Project status
 
-The `parallel-work` preset adds `/work-parallel-plan`, `/work-parallel-run`, and
-`/work-speed-loop` for dependency-safe concurrent execution. See
-[Parallel work and the speed loop](docs/PARALLEL-WORK.md).
+AgentnykMaisternia is **pre-release**. The configurator and embedded preset
+catalog work today; packaged distribution is still being moved to the current
+public repository.
 
-The separate, provider-neutral `terminal-orchestration` preset installs or
-verifies Zellij, Tatami, Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr
-plugins without coupling machine setup to a workflow preset. See
-[Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md).
+| Area | Status | What this means |
+|---|---|---|
+| Source build | Available | Clone this repository and run `make install`. |
+| Admin and CLI | Available | Browse, validate, plan, render, apply, and uninstall presets. |
+| Provider targets | Available | Codex, Claude Code, Antigravity, and Hermes are supported. |
+| Safe installation | Available | Apply is opt-in and guarded by conflict, drift, backup, and path checks. |
+| Release archives | Pending | No tagged release has been published from this repository. |
+| Homebrew | Pending | There is no public `riidii-md` tap yet. |
+| `go install ...@latest` | Pending | The Go module path still needs to move from the former repository namespace. |
+| Open-source license | Decision needed | The repository does not yet contain a `LICENSE` file. |
 
-The `developer-context`, `goreleaser-validation`, and
-`git-workflow-approvals` presets provide narrow Claude Code and Codex resources
-for exact MCP tool approvals, the narrow
-`goreleaser check --config .goreleaser.yml` command, and routine Git approval
-boundaries. `developer-context` safely unions its exact Claude permissions into
-the active `settings.json` while preserving unrelated keys; its MCP definition
-remains a review fragment. GitNexus is read-only and repository-bounded; GoReleaser uses
-pinned prebuilt-release instructions rather than the repository Go toolchain.
-The opt-in `routine-development-approvals` preset installs narrow active Codex
-rules for read-only GitHub and npm metadata. Its Claude permissions remain a
-review fragment until structured settings merge is available. Publication, CI
-reruns, secret changes, and global package installation stay prompted.
-See [Preset library](docs/PRESETS.md).
+Older installation commands that reference `kagi-labs` are obsolete. Do not
+use them for this repository.
 
-The retrospective presets add read-only harness profiling, evidence-backed run
-audits, and proposal-only improvement with held-out replay and human approval.
-`/work-session-analysis` provides the direct end-of-session bottleneck review
-for token cost, repetition, skills, user friction, setup, commands, and
-delegated subagents. Curated report packages are also copied to the private XDG
-state store so `/work-findings` can compare evidence across repositories
-without collecting transcripts.
-See [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md).
+## Quick start
 
-The `multi-lens-review` preset adds separate plan and implementation gates,
-independent review lenses, a behavior-preserving maintainability profile for
-DRY, abstraction, complexity, and best-practice checks, per-finding refutation,
-confidence-aware language and tooling discovery, coordinator-applied fixes,
-and explicit cross-provider delegation. Invoke the profile directly with
-`/work-review-simplify`. See
-[Multi-lens review workflow](docs/REVIEW-WORKFLOW.md).
+### 1. Build from source
 
-The `adaptive-readability` preset adds the `adapt-for-reader` skill,
-`/work-adapt-for-reader`, and `/work-reader-preferences`. It adapts text by
-reader task and time budget, supports scoped situation overrides, and asks for
-clarification only when ambiguity would materially change the output. Adapted
-documents are kept as Markdown under `.agent-runs/readability/` and registered
-with mdmaid.desk for reading and review. Profiles can select plain-language
-views such as `big-picture` independently from conceptual depth, decide when to
-ask for a view. Harness selection now uses the same `@harness` router and
-workflow-routing preferences as every other canonical work command.
-
-`standard-work` also adds the on-demand `/work-explain-change` command. It
-turns a PR, commit, range, or working-tree snapshot into an evidence-grounded
-Markdown explanation with selected code and locally rendered, animated PR Lens
-architecture/data-flow SVGs. It stays separate from defect review and approval,
-and can use `adapt-for-reader` to adjust presentation without changing evidence.
-See [Change explanations](docs/CHANGE-EXPLANATIONS.md).
-
-Showcase and adapted-reader documents must pass `mdmaid validate` before they
-are registered with mdmaid.desk. Invalid documents are repaired and revalidated;
-missing validation runtime blocks registration while preserving the artifact.
-
-## Installation
-
-Source installation is available now. Homebrew, `go install ...@latest`, and
-release archives become available after the first tagged release and the
-one-time private tap setup described in
-[Release process](docs/RELEASING.md).
-
-### Homebrew
-
-AgentnykMaisternia is currently distributed from private GitHub repositories.
-Authenticate Git and provide a GitHub token to Homebrew:
+Requirements: Git and Go 1.25.8 or newer.
 
 ```bash
-gh auth login
-gh auth setup-git
-brew tap kagi-labs/tap
-HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)" \
-  brew install --cask kagi-labs/tap/maisternia
-```
-
-### Go
-
-```bash
-gh auth setup-git
-GOPRIVATE=github.com/kagi-labs/* \
-  go install github.com/kagi-labs/agentnyk-maisternia/cmd/maisternia@latest
-```
-
-### Build From Source
-
-```bash
-git clone git@github.com:kagi-labs/agentnyk-maisternia.git
+git clone https://github.com/riidii-md/agentnyk-maisternia.git
 cd agentnyk-maisternia
 make install
 ```
 
-Verify any installation:
+Make sure the Go binary directory is on `PATH`, then verify the installation:
 
 ```bash
 maisternia --version
+maisternia doctor
 ```
 
-See [Installation](docs/INSTALLATION.md) for upgrades, release downloads, and
-uninstallation.
+The binary contains its versioned configuration catalog. A source checkout is
+not required after installation.
 
-## Admin
+### 2. Explore the catalog
 
-Open the Admin interface with no subcommand:
+Open the terminal interface:
 
 ```bash
 maisternia
 ```
 
-`maisternia admin` is the explicit equivalent. On first use, the binary installs
-its embedded, versioned catalog under `~/.config/maisternia/catalogs/`; no source
-checkout or `config set-repository` step is required.
-
-Use `1` through `4` to open Overview, Presets, Providers, and Config. Press `?`
-for all keys. The current TUI browses preset-library entries, their workflow
-DAGs and contents, provider health, drift, and conflicts. In Presets, use `/` to
-search, `f` to filter/group by resource type, and `s` to add a validated local
-folder or GitHub preset source. On a selected preset or inside its resource
-inspection view, press `i` to install it. Select one, several, or all supported
-providers, then choose user-global or a specific project folder scope once. When
-Maisternia is launched inside a Git repository, that project
-is prefilled and recommended. Only that scoped plan is inspected; any conflicts
-require an explicit keep-existing or replace-from-preset decision followed by
-confirmation. Overview and Config can open the same scoped installer for a
-conflicting preset. The TUI must not run, observe, dispatch, commit, or push.
-
-See [Admin terminal interface](docs/ADMIN.md) for repository resolution,
-controls, and configuration boundaries.
-
-## Pipeline Configuration
-
-`maisternia` owns the preset and pipeline configuration layer:
-
-- reusable preset-library entries;
-- provider-neutral workflow/pipeline DAGs and phase definitions inside presets;
-- MCP references, provider adapters, and capability metadata;
-- command, prompt, skill, hook, MCP, and settings rendering;
-- existing provider-configuration inspection;
-- safe preview, conflict detection, and guarded installation;
-- configuration inspection through the CLI and TUI.
-
-It does **not** own runtime execution, task observation, agent dispatch, phase
-control, or harness approvals. After `maisternia` renders and installs a pipeline,
-run it inside the harness you choose:
-
-```text
-Claude Code: /work-shape
-Codex CLI:   $work-shape (native skill) or /prompts:work-shape (prompt shim)
-Hermes:      work-shape skill
-Antigravity: provider-native prompt/command mapping
-```
-
-Codex does not discover custom workflows from `.codex/commands`. Maisternia
-installs each workflow both as a native `.codex/skills/<name>/SKILL.md` entry and
-as a `.codex/prompts/<name>.md` compatibility prompt. Restart Codex after
-applying or updating a workflow preset so the new skill appears in suggestions.
-
-Those harnesses own their own sessions, histories, live approval prompts, and
-execution loops. `maisternia` may define approval policy and render configuration
-for them, but it must not become a controller or observer of live runs.
-
-Legacy task-state commands have been removed. Maisternia stores only its
-catalog, installation ownership, backups, and reviewed configuration; it does
-not create workflow tasks or phase history. See
-[Runtime-boundary migration](docs/RUNTIME-BOUNDARY-MIGRATION.md).
-
-## Test
+Or stay in the CLI:
 
 ```bash
-make verify
+maisternia preset list
+maisternia preset show standard-work
+maisternia provider doctor all
 ```
 
-## CI/CD
+These commands inspect configuration; they do not run an agent or apply a
+preset.
 
-The `CI` workflow runs on pull requests, pushes to `main`, and manual dispatch:
+### 3. Preview a project installation
 
-1. module verification, formatting, vet, race tests, coverage, and a local
-   build;
-2. GoReleaser configuration validation;
-3. release-equivalent snapshot archives for macOS, Linux, and Windows on
-   `amd64` and `arm64`;
-4. upload of archives, checksums, and coverage for 14 days.
-
-Pushing a `v*` tag reruns `make verify`, publishes a GitHub release through
-GoReleaser, and updates the Homebrew tap when its token is configured.
-
-## Safe First Run
-
-Validate the repository:
+Choose a repository and a provider, then inspect the plan:
 
 ```bash
-go run ./cmd/maisternia doctor
-```
-
-Inspect what would happen without writing:
-
-```bash
-go run ./cmd/maisternia plan --target codex
-go run ./cmd/maisternia plan --target claude
-go run ./cmd/maisternia plan --target antigravity
-```
-
-`agy` remains accepted as a permanent compatibility alias for `antigravity`.
-
-Inspect the installed provider CLIs without executing an agent:
-
-```bash
-go run ./cmd/maisternia provider list
-go run ./cmd/maisternia provider inspect agy
-go run ./cmd/maisternia provider doctor all
-go run ./cmd/maisternia provider capabilities hermes
-```
-
-Provider doctor never invokes a provider's native doctor command.
-
-Inspect and validate the preset library:
-
-```bash
-go run ./cmd/maisternia preset list
-go run ./cmd/maisternia collection list
-go run ./cmd/maisternia preset show idea-shaping
-go run ./cmd/maisternia preset show scored-experiment
-go run ./cmd/maisternia preset show parallel-work
-go run ./cmd/maisternia preset show terminal-orchestration
-go run ./cmd/maisternia preset show harness-improvement
-go run ./cmd/maisternia preset show codex-resource-lab
-go run ./cmd/maisternia preset show developer-context
-go run ./cmd/maisternia preset show goreleaser-validation
-go run ./cmd/maisternia preset show git-workflow-approvals
-go run ./cmd/maisternia preset show routine-development-approvals
-go run ./cmd/maisternia preset validate all
-```
-
-Inspect the external tools referenced by presets without running installers:
-
-```bash
-go run ./cmd/maisternia environment list
-go run ./cmd/maisternia environment show terminal-orchestration
-go run ./cmd/maisternia environment plan terminal-orchestration
-go run ./cmd/maisternia preset plan terminal-orchestration
-```
-
-Environment detection only checks command presence on `PATH`; it does not run
-the tools or any suggested installer.
-
-After reviewing that plan, install missing requirements explicitly:
-
-```bash
-go run ./cmd/maisternia preset apply --yes terminal-orchestration
-# Equivalent direct pack command:
-go run ./cmd/maisternia environment install --yes terminal-orchestration
-```
-
-Environment install uses typed commands only, verifies each requirement, and
-runs only after explicit confirmation in the CLI or Admin install review.
-
-Inspect hook packs and preview a user-global or repository-local installation:
-
-```bash
-go run ./cmd/maisternia hook list
-go run ./cmd/maisternia hook show safety
-go run ./cmd/maisternia hook validate all
-go run ./cmd/maisternia hook plan --scope user --target codex hook-standard
-go run ./cmd/maisternia hook plan \
+maisternia preset plan \
   --scope project \
   --project /path/to/repository \
-  --target claude \
-  hook-quality
-```
-
-Hook apply uses the normal explicit confirmation and conflict controls. The
-current implementation installs managed, provider-neutral definitions. It does
-not yet modify provider settings to activate native hooks; that requires the
-planned structured settings merger.
-
-Inspect and install the standard approval definition:
-
-```bash
-go run ./cmd/maisternia approval list
-go run ./cmd/maisternia approval explain git.push
-go run ./cmd/maisternia approval validate
-go run ./cmd/maisternia approval plan --scope user --target codex
-```
-
-The current implementation installs a managed policy input; it does not yet
-activate native enforcement. See [Approval policy](docs/APPROVAL-POLICY.md) and
-the [hook and approval roadmap](docs/HOOK-APPROVAL-ROADMAP.md).
-
-Plan or stage only the files selected by one preset:
-
-```bash
-go run ./cmd/maisternia preset plan --scope user --target hermes idea-shaping
-go run ./cmd/maisternia preset render \
   --target codex \
-  --output ./build/standard-work \
   standard-work
 ```
 
-Preset apply uses the same conflict, drift, backup, and managed-state checks as
-the full manifest apply, records per-preset target ownership, and still requires
-explicit confirmation. Applying a changed preset removes targets it previously
-owned only after drift and shared-ownership checks:
+Only after reviewing the plan, apply it explicitly:
 
 ```bash
-go run ./cmd/maisternia preset apply --scope user --target codex --yes standard-work
-go run ./cmd/maisternia preset apply \
-  --scope user \
-  --target all \
-  --yes \
-  workflow-routing
-
-go run ./cmd/maisternia preset uninstall \
-  --scope user \
+maisternia preset apply \
+  --scope project \
+  --project /path/to/repository \
   --target codex \
   --yes \
   standard-work
-
-go run ./cmd/maisternia collection apply \
-  --scope user \
-  --target codex \
-  --yes \
-  software-engineer
 ```
 
-Collections resolve tagged presets within one catalog source, enforce the
-providers common to every member, and retain ownership separately from direct
-preset installs. See [Preset Collections](docs/PRESET-COLLECTIONS.md).
+`apply` stops on conflicts by default. Use `--conflicts keep` or
+`--conflicts replace` only after reviewing the affected paths. Replacements are
+backed up.
 
-Uninstall also works by remembered preset ID after its catalog definition has
-been deleted. It covers all managed preset resource categories. Environment
-packs remain presence-based host requirements and are not automatically removed
-through package managers or plugin hosts.
-
-Render a staging tree:
-
-```bash
-go run ./cmd/maisternia render \
-  --target all \
-  --output ./build/rendered
-```
-
-`apply` aborts on conflicts by default and requires explicit confirmation.
-Choose `keep` to preserve customized files and remember that decision, or
-`replace` to back them up and install the repository version:
-
-```bash
-go run ./cmd/maisternia apply --target codex --yes
-go run ./cmd/maisternia apply --target codex --conflicts keep --yes
-go run ./cmd/maisternia apply --target codex --conflicts replace --yes
-```
-
-Do not run `apply` against a real home directory until the displayed plan has
-been reviewed.
-
-## Event Envelope Validation
-
-Maisternia can validate an untrusted event envelope against the declarative
-trigger and capability policy:
-
-```bash
-go run ./cmd/maisternia event validate ./examples/events/issue-opened.json
-```
-
-Validation is read-only. It does not ingest an event, create a task, choose a
-runner, or execute a workflow. See [Event validation](docs/EVENT-VALIDATION.md).
-
-## Documentation
-
-- [Improved workflow](docs/WORKFLOW.md)
-- [Preset library](docs/PRESETS.md)
-- [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md)
-- [Parallel work and the speed loop](docs/PARALLEL-WORK.md)
-- [Multi-lens review workflow](docs/REVIEW-WORKFLOW.md)
-- [Hook packs and installation scopes](docs/HOOKS.md)
-- [Session retrospectives and harness improvement](docs/RETROSPECTIVES.md)
-- [Idea-shaping pipeline](docs/IDEA-SHAPING-PIPELINE.md)
-- [Admin terminal interface](docs/ADMIN.md)
-- [Event validation](docs/EVENT-VALIDATION.md)
-- [Runtime-boundary migration](docs/RUNTIME-BOUNDARY-MIGRATION.md)
-- [Configurator architecture](docs/CONFIGURATOR.md)
-- [Configuration boundary](docs/CONFIGURATION-BOUNDARY.md)
-- [Provider adapters](docs/PROVIDERS.md)
-- [Installation](docs/INSTALLATION.md)
-- [Release process](docs/RELEASING.md)
-- [Mdmaid project boundaries and naming](docs/MDMAID-PROJECT-BOUNDARIES.md)
-- [Security](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
-
-## Command Model
-
-Neutral commands describe the work:
+## How it works
 
 ```text
-/work
-/work-shape
-/work-source
-/work-grill
-/work-brainstorm
-/work-question
-/work-plan
-/work-research
-/work-run
-/work-plan-review
-/work-review
-/work-review-simplify
-/work-routing-preferences
+Versioned catalog
+      │
+      ▼
+Select a preset ──► Preview the plan ──► Confirm apply ──► Use it in your harness
+      │                    │                    │
+      └─ workflows         ├─ conflicts        ├─ backups
+         skills            ├─ drift            └─ managed ownership
+         hooks             └─ exact paths
+         policies
 ```
 
-The names above are canonical workflow names. Invoke them as `/work-*` in
-Claude Code, `$work-*` in Codex, or `/prompts:work-*` through Codex's legacy
-prompt shim. Routing arguments remain the same after the provider-native
-invocation prefix.
+Maisternia renders shared definitions into each provider's native layout:
 
-An optional leading route block selects one or several harnesses:
+| Provider | Typical invocation after installation |
+|---|---|
+| Codex | `$work-shape` or `/prompts:work-shape` through the compatibility prompt |
+| Claude Code | `/work-shape` |
+| Hermes | `work-shape` skill |
+| Antigravity | Provider-native prompt mapping |
+
+Restart Codex after installing or updating workflow presets so newly installed
+skills appear in suggestions.
+
+### Route work to a harness or model
+
+Canonical work commands accept an optional route before the task:
 
 ```text
 /work-plan @codex -- plan the migration
 /work-plan @claude @opus -- plan with Claude Opus
-/work-research @codex @claude -- compare the options
-/work-review @agy @codex @claude -- review this branch
-/work-run @here -- execute the approved plan locally
-/work-run @claude @sonnet -- implement with Claude Sonnet
+/work-run @claude @sonnet -- implement the approved plan
+/work-run-simplify @codex -- implement with the opt-in simplicity profile
+/work-review @codex @claude -- review with both harnesses
 ```
 
-`@here`, `@auto`, `@codex`, `@claude`, `@agy`, and `@hermes` are resolved by the
-shared `work-routing` skill. A model selector follows its harness, so
-`@claude @opus` and `@claude @sonnet` choose models without creating separate
-workflow commands. Explicit invocation overrides saved per-workflow or global
-per-harness model preferences. The current harness remains coordinator, verifies
-returned work, and owns any writes not separately delegated and approved. A
-selected model in the current harness runs in a fresh model-selectable subagent;
-it does not replace the already-running coordinator session or widen authority.
-Configuring a model for each command makes the workflow subagent-backed. A local command with no
-route signal or saved profile skips the full router; external runner instructions
-load only after an external target or fresh model lane is selected.
+A per-harness model selector follows its harness. Explicit routes override
+saved preferences, never widen authority, and never silently substitute another
+model. The current harness remains the coordinator for routed work. See
+[workflow routing](docs/WORKFLOW.md#route-canonical-commands-with-harness) for configuration
+and invocation details.
+
+## Included workflows
+
+The catalog contains focused presets that can be installed independently:
+
+- `standard-work` — plan, implement, verify, review, and prepare a PR;
+- `idea-shaping` — turn an incomplete idea into an explicit decision and plan;
+  its `work-question` utility finds one high-leverage question and one owned,
+  time-bounded next move;
+- `parallel-work` — create dependency-safe parallel plans and execution waves;
+- `multi-lens-review` — review plans and implementations from independent lenses;
+- `workflow-routing` — route work across supported harnesses and model roles;
+- `adaptive-readability` — adapt technical material to its reader and purpose;
+- `session-audit` and `harness-improvement` — review completed work and propose
+  controlled improvements;
+- `hook-standard`, `hook-complete`, and `approval-standard` — install reusable
+  safety and policy definitions;
+- `terminal-orchestration` — declare and verify the external terminal tools used
+  by orchestration workflows.
+
+Run `maisternia preset list` for the complete catalog. See the
+[preset guide](docs/PRESETS.md) for contents, scopes, and limitations.
+
+## Product decisions and boundaries
+
+The project deliberately keeps configuration management separate from agent
+runtime control.
+
+| Decision | Consequence |
+|---|---|
+| Maisternia is a configurator, not an orchestrator | It installs workflows but does not run, dispatch, supervise, or observe agent sessions. |
+| Apply remains opt-in | Planning and rendering are safe to explore; changes require explicit confirmation. |
+| Managed files are tracked individually | Provider home directories are never synchronized as a whole because they contain mixed runtime and user state. |
+| Conflicts and drift stop installation | Existing or locally changed files require a visible keep-or-replace decision. |
+| Harnesses retain approval authority | Maisternia may install approval definitions, but live prompts remain owned by the selected harness. |
+| External preset sources are immutable snapshots | Refreshing or removing a source is a separate, explicit operation. |
+
+This boundary means Maisternia stores its catalog, installation ownership,
+backups, and reviewed configuration. It does not store workflow task history,
+agent transcripts, credentials, or runtime databases.
+
+## Safety model
+
+Provider configuration lives near valuable user state, so safe path handling is
+a core feature rather than a convenience. Maisternia includes:
+
+- provider-root and relative-path allowlists;
+- traversal and destination-symlink rejection;
+- unmanaged-file conflict detection;
+- installed-checksum drift detection;
+- source and target revalidation before apply;
+- backups before managed updates and removals;
+- atomic file writes;
+- explicit `--yes` confirmation for apply and uninstall.
+
+Read [Security](SECURITY.md) for the complete model. Please never include
+credentials, real user configuration, transcripts, or runtime databases in an
+issue or fixture.
+
+## Common commands
+
+```bash
+# Validate the embedded catalog and manifest
+maisternia doctor
+
+# Inspect providers without running them
+maisternia provider list
+maisternia provider inspect codex
+maisternia provider capabilities hermes
+
+# Validate and render without touching provider configuration
+maisternia preset validate all
+maisternia preset render --target all --output ./build/rendered standard-work
+
+# Remove a previously managed preset
+maisternia preset uninstall --scope user --target codex --yes standard-work
+```
+
+Provider doctor is read-only and never invokes a provider's own doctor command.
+
+## Development
+
+Clone the repository, make the behavior observable in tests first, then run the
+full verification suite:
+
+```bash
+make verify
+go run ./cmd/maisternia doctor
+go run ./cmd/maisternia render --target all --output ./build/rendered
+```
+
+See [Contributing](CONTRIBUTING.md) for the expected workflow. Pull requests
+should explain behavior changes, tests, security implications, migration impact,
+and remaining limitations.
+
+## Documentation
+
+### Get started
+
+- [Installation and upgrades](docs/INSTALLATION.md)
+- [Admin terminal interface](docs/ADMIN.md)
+- [Preset library](docs/PRESETS.md)
+- [Preset collections](docs/PRESET-COLLECTIONS.md)
+- [Provider adapters](docs/PROVIDERS.md)
+
+### Understand the design
+
+- [Configuration boundary](docs/CONFIGURATION-BOUNDARY.md)
+- [Configurator architecture](docs/CONFIGURATOR.md)
+- [Runtime-boundary migration](docs/RUNTIME-BOUNDARY-MIGRATION.md)
+- [Approval policy](docs/APPROVAL-POLICY.md)
+- [Hook packs and installation scopes](docs/HOOKS.md)
+
+### Explore workflows
+
+- [Standard workflow](docs/WORKFLOW.md)
+- [Idea shaping](docs/IDEA-SHAPING-PIPELINE.md)
+- [Parallel work](docs/PARALLEL-WORK.md)
+- [Multi-lens review](docs/REVIEW-WORKFLOW.md)
+- [Session retrospectives](docs/RETROSPECTIVES.md)
+- [Change explanations](docs/CHANGE-EXPLANATIONS.md)
+- [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md)
+
+## License
+
+A license has not been selected yet. Until a `LICENSE` file is added, the code
+is publicly readable but is not licensed for reuse or redistribution. Selecting
+an open-source license is a release-readiness decision.
