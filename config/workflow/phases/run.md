@@ -1,7 +1,7 @@
 ---
 name: work-run
 description: Execute an approved implementation contract in small verified steps and report only genuinely completed outcomes.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-run - Execute the Approved Plan
@@ -28,6 +28,22 @@ For each pass:
 
 Prefer non-login shell execution for routine commands so startup scripts do not
 add unrelated output or latency.
+
+## Preserve The Approved Design Boundary
+
+The approved plan owns material design. During execution, choose only permitted
+executor discretion and equivalent local implementation details that do not alter
+approved behavior or safeguards. Examples include private helper names, direct
+local control flow, and test-fixture organization when no approved contract changes.
+
+If current code or task results require a new or changed architecture boundary,
+interface, dependency, schema, protocol, persistence model, state transition,
+cross-component behavior, compatibility promise, or migration strategy, stop the
+affected task and record the evidence. Do not silently redesign during execution.
+Stop and return to `/work-plan` or `/work-plan-review plan-delta` as appropriate,
+then obtain the required human decision before resuming. Reconfirmation against
+current code does not authorize the executor to fill a material gap in the
+approved plan.
 
 ## Place Rationale Deliberately
 

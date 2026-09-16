@@ -1,7 +1,7 @@
 ---
 name: work-handoff
 description: Compile an approved plan for a fresh executor only when execution context will change.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-handoff - Compile a Self-Contained Execution Contract
@@ -24,10 +24,14 @@ Compile:
 
 - goal and scope;
 - repository rules;
+- affected-system design, ownership boundaries, and responsibilities;
+- material interfaces and cross-component contracts, including important data
+  and control flow;
 - ordered tasks;
 - acceptance contract;
 - verification commands;
 - guardrails and approval boundaries;
+- fixed decisions, open decisions, and permitted executor discretion;
 - retry, parking, and stop behavior;
 - worktree and branch;
 - progress and event locations.

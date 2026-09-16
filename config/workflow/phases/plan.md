@@ -1,7 +1,7 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-plan - Create the Implementation Plan
@@ -38,9 +38,38 @@ long-term ownership, present the concrete alternatives and ask the user before
 finalizing the plan. Choose between equivalent implementation details without
 asking.
 
+## Define The Implementation Design
+
+For non-trivial work, make the affected-system design explicit before listing
+tasks. The plan is sufficiently detailed when a fresh executor can implement it
+without inventing material architecture, interfaces, dependencies, storage or
+state behavior, or cross-component behavior. Cover only the architecture affected
+by the task; do not manufacture a whole-application design or speculative
+class-by-class detail.
+
+Describe, at risk-appropriate depth:
+
+- the relevant current architecture, established patterns, and ownership boundaries;
+- proposed components, their responsibilities, and where changed behavior belongs;
+- material interfaces, schemas, protocols, and state transitions, including error
+  semantics and compatibility expectations;
+- the important data and control flow across boundaries;
+- dependency, configuration, persistence, migration, rollout, and rollback effects;
+- decisions fixed by the plan, open decisions requiring human judgment, and
+  permitted executor discretion.
+
+For a small local change, explicitly state which of these concerns are unaffected
+instead of adding ceremonial design sections. Private helper names, equivalent
+local control flow, and test-fixture organization may remain executor choices when
+they do not alter an approved contract.
+
 Plan in dependency order. Each task should describe observable behavior, fit one
 focused implementation loop, and keep the repository runnable. Identify a thin
-end-to-end slice first when appropriate.
+end-to-end slice first when appropriate. For each task, identify dependencies and
+prerequisite tasks, affected files or components, contract changes or an
+explicit statement that there are none, expected behavior, failure and edge cases,
+focused tests, and observable completion evidence. Avoid broad tasks such as
+"implement the backend" that require the executor to perform hidden decomposition.
 
 Return:
 
@@ -48,8 +77,12 @@ Return:
 - Scope and exclusions
 - Simplest viable direction, evidence, and complexity avoided
 - Proposed direction and rationale
+- Affected-system design, ownership boundaries, and responsibilities
+- Material interfaces and cross-component contracts
+- Planned data and control flow
+- Fixed decisions and permitted executor discretion
 - Material alternatives and tradeoffs
-- Files and patterns to inspect
+- Files and patterns to change or reuse, with inspect-only unknowns explicit
 - Ordered implementation tasks
 - Risk and blast-radius checks
 - Migration or rollout concerns
