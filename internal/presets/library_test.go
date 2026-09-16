@@ -790,6 +790,64 @@ func TestRepositoryWorkRunRationalePlacementContract(t *testing.T) {
 	}
 }
 
+func TestRepositoryPlanExecutionDesignBoundaryContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/plan.md": {
+			"fresh executor",
+			"affected-system design",
+			"ownership boundaries",
+			"interfaces, schemas, protocols, and state transitions",
+			"data and control flow",
+			"permitted executor discretion",
+			"prerequisite tasks",
+			"failure and edge cases",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"fresh-executor criterion",
+			"missing material design",
+			"High and blocking",
+			"Do not invent the missing design",
+		},
+		"config/workflow/phases/ready.md": {
+			"fresh executor",
+			"material architecture",
+			"cross-component behavior",
+			"permitted executor discretion",
+		},
+		"config/workflow/phases/handoff.md": {
+			"affected-system design",
+			"interfaces and cross-component contracts",
+			"permitted executor discretion",
+		},
+		"config/workflow/phases/run.md": {
+			"approved plan owns material design",
+			"equivalent local implementation details",
+			"Do not silently redesign",
+			"`/work-plan-review plan-delta`",
+		},
+		"docs/WORKFLOW.md": {
+			"Plan–execution design boundary",
+			"material architecture",
+			"equivalent local implementation details",
+		},
+	}
+
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+}
+
 func TestRepositoryWorkCleanupContract(t *testing.T) {
 	t.Parallel()
 

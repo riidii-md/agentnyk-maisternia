@@ -1,7 +1,7 @@
 ---
 name: work-plan-review
 description: Adversarially review a full plan or targeted plan delta against the actual repository, verify every candidate finding, and apply confirmed corrections to the plan artifact.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-plan-review - Review A Plan Before Implementation
@@ -32,6 +32,15 @@ code, tests, schemas, dependencies, migrations, CI, and accepted decisions. For
 `plan-delta`, identify exactly which tasks, interfaces, assumptions, acceptance
 criteria, and verification steps the delta can affect. Escalate to a full plan
 review only when the delta invalidates broader dependencies or scope.
+
+Apply the fresh-executor criterion at risk-appropriate depth: a fresh executor
+must be able to implement the plan without inventing material architecture,
+interfaces, dependencies, storage or state behavior, or cross-component behavior.
+A small local change may explicitly state that these concerns are unaffected.
+For non-trivial work, missing material design, ownership boundaries, contracts,
+data or control flow, task dependencies, or design-changing open decisions is
+High and blocking. Do not invent the missing design during review; return it to
+planning and human decision.
 
 ## Run Independent Lenses
 

@@ -250,6 +250,21 @@ and verification gates while applying the simplicity ladder before each task.
 This allows the two execution behaviors to be selected and compared without
 changing the normal delivery DAG.
 
+### Plan–execution design boundary
+
+For non-trivial work, `/work-plan` records the affected architecture, ownership
+boundaries, material interfaces and contracts, important data and control flow,
+task dependencies, and the decisions left to the executor. Its completeness test
+is whether a fresh executor can implement the approved direction without inventing
+material architecture, interfaces, dependencies, storage or state behavior, or
+cross-component behavior. Small local changes may explicitly mark those concerns
+unaffected instead of producing ceremonial design documentation.
+
+`/work-run` may choose equivalent local implementation details within the stated
+discretion. When execution discovers that a material design decision must change
+or is missing, it stops the affected task and returns to planning or plan-delta
+review and human decision rather than silently redesigning the solution.
+
 Both execution commands prefer clear code over explanatory narration. Local
 comments remain for non-obvious constraints and consequences. Cross-cutting
 design belongs in durable Markdown or an ADR, product scope belongs in the
