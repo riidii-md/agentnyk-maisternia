@@ -2,6 +2,7 @@
   "schema_version": 1,
   "max_parallel_reviewers": 8,
   "modes": ["plan", "plan-delta", "implementation"],
+  "scopes": ["full", "tests"],
   "implementation_lenses": [
     "correctness",
     "consistency",
@@ -11,7 +12,7 @@
     "simplicity-dry",
     "diff-analysis",
     "dependency-currency",
-    "tests-verification"
+    "test-review-bundle"
   ],
   "plan_lenses": [
     "correctness-vs-code",
@@ -31,7 +32,7 @@
         "consistency",
         "architecture",
         "simplicity-dry",
-        "tests-verification"
+        "test-review-bundle"
       ],
       "goals": [
         "preserve-observable-behavior",
@@ -129,6 +130,42 @@
         ]
       }
     }
+  },
+  "test_review": {
+    "scope": "tests",
+    "applies_to": ["implementation"],
+    "embedded_in_full_implementation_review": true,
+    "standalone_command": "work-test-review",
+    "lenses": [
+      "intent-oracle",
+      "risk-edge-coverage",
+      "level-fidelity",
+      "economy-maintainability"
+    ],
+    "matrix_fields": [
+      "contract_or_risk",
+      "source",
+      "test_level",
+      "scenario",
+      "oracle",
+      "evidence",
+      "distinct_value",
+      "residual_risk",
+      "status"
+    ],
+    "statuses": ["covered", "partial", "missing", "accepted-risk"],
+    "metrics_role": "supporting-evidence",
+    "rules": [
+      "ground-in-accepted-behavior-not-implementation-alone",
+      "choose-cheapest-faithful-test-level",
+      "prefer-observable-state-over-private-interactions",
+      "cover-material-boundaries-failures-and-recovery",
+      "require-distinct-confidence-or-diagnostic-value",
+      "preserve-damp-readability-over-incidental-dry",
+      "treat-coverage-fuzzing-and-mutation-as-contextual-evidence",
+      "use-synthetic-credential-free-fixtures",
+      "no-test-count-line-count-or-percentage-only-findings"
+    ]
   },
   "domain_lenses": {
     "accessibility": "user interface or user interaction changes",

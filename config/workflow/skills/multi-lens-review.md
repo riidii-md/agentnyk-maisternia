@@ -15,6 +15,12 @@ Resolve the profile as `standard` unless the user explicitly requests
 review. If the target is a plan, do not silently reinterpret either the target
 or profile.
 
+Resolve the scope as `full` unless the user explicitly requests `tests` or
+invokes `/work-test-review`. The `tests` scope applies only to implementation
+review. Every full implementation review embeds the specialized test-review
+bundle; the tests scope runs that bundle without unrelated implementation
+lenses. Scope never widens authority.
+
 Use the installed `work-routing` skill for every cross-provider selection. A
 route such as `/work-review @agy @codex @claude -- <target>` selects independent
 read-only reviewer pools and defaults to `parallel-verify`; it does not grant
@@ -24,7 +30,7 @@ route was resolved.
 For the `maintainability` profile, run all implementation lenses and add the
 `best-practices` lens. First state the behavior contract that must remain
 unchanged. Deepen `correctness`, `consistency`, `architecture`,
-`simplicity-dry`, and `tests-verification` to find repeated knowledge, avoidable
+`simplicity-dry`, and `test-review-bundle` to find repeated knowledge, avoidable
 complexity, weak ownership boundaries, and repository-practice violations.
 Distinguish repeated knowledge from incidental duplication. Propose an
 abstraction only when it reduces concepts or coupling; reject speculative
@@ -73,6 +79,30 @@ best-practices claims in repository rules, established neighboring code, or
 authoritative documentation. Style preferences alone are not findings, and
 `NO_FINDINGS` remains valid.
 
+For implementation targets, establish expected behavior from accepted plans,
+requirements, bugs, public contracts, repository rules, and user-visible
+invariants rather than from the current implementation alone. Run the
+specialized test lenses `intent-oracle`, `risk-edge-coverage`,
+`level-fidelity`, and `economy-maintainability`. In a full review, dispatch them
+in bounded waves when needed to preserve the configured reviewer limit.
+
+Build a `test_evidence` matrix for every material changed behavior or failure
+risk. Record its source, cheapest faithful test level, scenario, observable
+oracle, evidence, distinct confidence or diagnostic value, residual risk, and
+`covered`, `partial`, `missing`, or `accepted-risk` status. Missing or partial
+evidence becomes a finding only when the risk is material, grounded, and in
+scope; only an explicit decision may accept material residual risk.
+
+Prefer public outcomes and state over private implementation interactions.
+Require missing-test candidates to name a concrete behavior and distinguishing
+scenario. Treat tests as redundant only when contract, scenario partition,
+action, oracle, fidelity, and failure class coincide; preserve overlap that adds
+a boundary, real-dependency check, ownership, or diagnosis. Share test mechanics
+without hiding inputs or expected meaning. Coverage, mutation, test count, and
+line count are contextual signals, never sufficient findings or universal
+gates. Require synthetic fixtures with no credentials, tokens, transcripts,
+runtime databases, or real user configuration.
+
 Run one read-only reviewer per required lens, in parallel when supported. Add
 domain lenses only when the affected surface warrants them. Every candidate
 finding needs concrete grounding such as `file:line`, a short verbatim quote,
@@ -96,4 +126,5 @@ tests, run focused checks, then run the repository-required final verification.
 Write `review.md` and schema-valid `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
-Record the selected `standard` or `maintainability` profile in the report.
+Record the selected `standard` or `maintainability` profile and `full` or
+`tests` scope in the report. Implementation reports include `test_evidence`.

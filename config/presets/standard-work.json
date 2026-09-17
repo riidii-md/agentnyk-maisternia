@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral adaptive delivery workflow with a reviewed-plan human decision gate, standard or simplicity-focused implementation, verification, review, optional PR preparation, and an optional post-publication session analysis.",
+  "description": "Provider-neutral adaptive delivery workflow with a reviewed-plan human decision gate, standard or simplicity-focused implementation, verification, specialized test review, optional PR preparation, and an optional post-publication session analysis.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
@@ -48,7 +48,7 @@
       "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-run-simplify", "work-verify",
-      "work-review", "work-review-simplify", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
+      "work-review", "work-review-simplify", "work-test-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
       "work-routing-preferences"
     ],
     "prompts": [],

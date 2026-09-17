@@ -1,0 +1,149 @@
+# Specialized Test Review
+
+## Status
+
+Accepted and implemented, 2026-09-10.
+
+## Context
+
+Standard work already verified and reviewed implementation changes, but the
+former general `tests-verification` lens was too compact to judge AI-generated
+tests consistently. Passing tests and increased coverage can still hide weak
+assertions, implementation-coupled expectations, missing failure paths, and
+several tests that provide the same assurance.
+
+The desired outcome is a minimal sufficient test portfolio. Each important
+changed behavior and material failure risk should have credible evidence, and
+each test should have a defensible reason to exist. Test count, test lines, code
+coverage, and mutation score are supporting signals rather than goals.
+
+## Decision
+
+Embed a specialized test-review bundle in the existing implementation-review
+gate. Expose the same capability through a standalone `/work-test-review`
+entrypoint for test-heavy and test-only changes.
+
+Do not add another human approval gate. The specialized result feeds the
+existing implementation review and `review.json`. Reuse the existing candidate
+verification, deduplication, repair, and reporting machinery instead of
+creating a parallel review system.
+
+Confirmed Critical and High assurance gaps block completion. Lower-severity
+maintainability findings are advisory unless they demonstrate false assurance,
+flakiness, security exposure, or significant ongoing maintenance cost.
+
+## Test Standard
+
+A test is justified when it provides a credible observable signal for a
+material behavior or risk at the cheapest faithful test level.
+
+Review each test against these questions:
+
+1. Which accepted requirement, public contract, invariant, bug, or product risk
+   does it protect?
+2. Why is unit, contract, integration, end-to-end, fuzz, or another test level
+   the smallest level that can exercise that risk faithfully?
+3. Which returned value, resulting state, error, durable side effect, or other
+   user-visible outcome is the oracle?
+4. Which normal case, equivalence class, boundary, condition combination, state
+   transition, invalid input, dependency failure, timeout, cancellation,
+   concurrency path, cleanup, or recovery behavior does it cover?
+5. Is its purpose and failure reason clear from its name, setup, action,
+   assertion, and diagnostic output?
+6. What confidence would disappear if the test were removed?
+
+Prefer assertions against public behavior and resulting state. Interaction
+assertions are appropriate only when the interaction itself is an accepted
+contract. Do not make private structure observable merely to test it.
+
+Keep tests complete, concise, deterministic, and locally readable. Test helpers
+may share mechanics, but should not hide scenario inputs, expected behavior, or
+important assertions. Some repeated setup is acceptable when it preserves test
+clarity.
+
+Two tests are candidates for consolidation only when they protect the same
+contract with the same scenario partition, action, observable, fidelity, and
+failure class. Similar-looking tests remain justified when they provide a
+different boundary, real-dependency evidence, contract owner, or diagnostic
+signal.
+
+## Review Contract
+
+The specialized review contains four evidence-grounded lenses:
+
+- `intent-oracle`: requirement grounding, behavioral assertions, and accidental
+  implementation coupling;
+- `risk-edge-coverage`: behavior and risk coverage, boundaries, invalid paths,
+  state combinations, failures, cleanup, and recovery;
+- `level-fidelity`: the selected test level, dependency fidelity, doubles, and
+  whether a smaller or more realistic test would give better evidence;
+- `economy-maintainability`: redundant assurance, test logic and abstraction,
+  determinism, runtime cost, isolation, diagnostics, and fixture safety.
+
+Each candidate finding must include concrete repository evidence, the affected
+contract or risk, impact, the smallest proposed correction, and an executable
+verification method. An independent verifier attempts to refute it before it
+is confirmed. `NO_FINDINGS` is valid.
+
+The review produces a behavior/risk-to-evidence matrix with:
+
+| Field | Meaning |
+|---|---|
+| Contract or risk | The behavior or failure that matters |
+| Source | Plan, requirement, bug, API, invariant, or repository rule |
+| Test level | The selected scope and why it is credible |
+| Scenario | Normal, boundary, invalid, transition, failure, or recovery case |
+| Oracle | The observable result that proves the behavior |
+| Evidence | Existing or proposed tests and verification commands |
+| Distinct value | Confidence lost if this evidence is removed |
+| Residual risk | Material behavior intentionally left untested and why |
+
+Coverage should locate relevant unexercised changed code, not justify tests by
+percentage alone. Fuzzing and mutation testing may probe input spaces and
+assertion strength when repository tooling and risk warrant them; neither is a
+universal numeric gate.
+
+## Options Considered
+
+### Extend the existing lens only
+
+Rejected because a short checklist remains too shallow for consistent analysis
+of test purpose, scenario selection, fidelity, and redundant assurance.
+
+### Add a separate mandatory phase and human gate
+
+Rejected for the initial design because it would duplicate repair loops and
+artifacts, increase latency, and add approval burden without adding authority.
+
+### Use numeric quality thresholds
+
+Rejected as the primary acceptance model because coverage, mutation score,
+test count, and line count are context-sensitive and can be optimized without
+improving product assurance.
+
+## Accepted Risks And Safeguards
+
+- The reviewer may invent requirements. Findings must cite an accepted source;
+  ambiguity and residual risk remain explicit.
+- The reviewer may encourage test bloat. Every proposed test states what
+  confidence would otherwise be absent.
+- The reviewer may remove useful overlap. Different fidelity, ownership,
+  boundaries, and diagnostics justify intentional overlap.
+- Generated fixtures may expose sensitive state. Fixtures remain synthetic and
+  contain no credentials, tokens, transcripts, runtime databases, or real user
+  configuration.
+- Review cost may grow. Start with changed behavior and affected tests, and
+  expand only across demonstrated contract boundaries.
+
+## Implementation
+
+The provider-neutral sources are:
+
+- `config/workflow/phases/review.md` for the canonical embedded bundle;
+- `config/workflow/phases/test-review.md` for the thin standalone command;
+- `config/workflow/skills/multi-lens-review.md` for shared execution rules;
+- `config/workflow/review-policy.json` for lenses and evidence fields;
+- `config/schema/review-report.schema.json` for report validation;
+- `config/manifest.json`, `config/presets/standard-work.json`, and
+  `config/presets/multi-lens-review.json` for provider rendering and
+  installation.

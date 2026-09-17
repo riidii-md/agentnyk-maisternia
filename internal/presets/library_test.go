@@ -89,6 +89,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"work-run-simplify",
 		"work-review",
 		"work-review-simplify",
+		"work-test-review",
 		"work-explain-change",
 		"work-session-analysis",
 		"work-routing-preferences",
@@ -220,11 +221,12 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		multiReview.Pipelines[0].ID != "review-loop" {
 		t.Fatalf("multi-lens-review pipelines = %#v", multiReview.Pipelines)
 	}
-	if got := multiReview.Contents.Commands; len(got) != 4 ||
+	if got := multiReview.Contents.Commands; len(got) != 5 ||
 		got[0] != "work-plan-review" ||
 		got[1] != "work-review" ||
 		got[2] != "work-review-simplify" ||
-		got[3] != "work-routing-preferences" {
+		got[3] != "work-test-review" ||
+		got[4] != "work-routing-preferences" {
 		t.Fatalf("multi-lens-review commands = %v", got)
 	}
 	if got := multiReview.Contents.Skills; !slices.Equal(got, []string{
@@ -459,9 +461,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(multi-lens-review) error = %v", err)
 	}
-	if len(multiReviewManifest.Resources) != 10 {
+	if len(multiReviewManifest.Resources) != 11 {
 		t.Fatalf(
-			"multi-lens-review resource count = %d, want 10",
+			"multi-lens-review resource count = %d, want 11",
 			len(multiReviewManifest.Resources),
 		)
 	}
@@ -1388,7 +1390,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		maintainability.UsesLenses != "implementation_lenses" ||
 		!slices.Equal(maintainability.AdditionalLenses, []string{"best-practices"}) ||
 		!slices.Equal(maintainability.FocusLenses, []string{
-			"correctness", "consistency", "architecture", "simplicity-dry", "tests-verification",
+			"correctness", "consistency", "architecture", "simplicity-dry", "test-review-bundle",
 		}) {
 		t.Fatalf("maintainability review profile = %#v", maintainability)
 	}
@@ -1538,6 +1540,10 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"config/workflow/phases/review-simplify.md": {
 			"name: work-review-simplify", "$ARGUMENTS", "work-review",
 			"implementation", "maintainability", "thin alias", "read-only",
+		},
+		"config/workflow/phases/test-review.md": {
+			"name: work-test-review", "$ARGUMENTS", "work-review",
+			"implementation", "scope: tests", "thin specialization", "read-only",
 		},
 		"config/workflow/skills/multi-lens-review.md": {
 			"Critical", "High", "refuted", "Apply every confirmed fix",

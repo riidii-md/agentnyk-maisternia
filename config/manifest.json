@@ -441,6 +441,17 @@
       ]
     },
     {
+      "id": "work-test-review",
+      "source": "config/workflow/phases/test-review.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-test-review.md"},
+        {"agent": "codex", "path": ".codex/skills/work-test-review/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-test-review.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-test-review.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-test-review/SKILL.md"}
+      ]
+    },
+    {
       "id": "work-explain-change",
       "source": "config/workflow/phases/explain-change.md",
       "targets": [

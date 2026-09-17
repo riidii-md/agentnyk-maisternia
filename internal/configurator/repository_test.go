@@ -26,6 +26,7 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	requiredIDs := map[string]bool{
 		"work-conductor":              false,
 		"work-plan":                   false,
+		"work-test-review":            false,
 		"work-routing-preferences":    false,
 		"work-routing-skill":          false,
 		"work-routing-profile-schema": false,
@@ -49,6 +50,11 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	assertRenderedFile(t, output, ".codex/skills/work-plan/SKILL.md")
 	assertRenderedFile(t, output, ".claude/commands/work-plan.md")
 	assertRenderedFile(t, output, ".config/agy/prompts/work-plan.md")
+	assertRenderedFile(t, output, ".codex/prompts/work-test-review.md")
+	assertRenderedFile(t, output, ".codex/skills/work-test-review/SKILL.md")
+	assertRenderedFile(t, output, ".claude/commands/work-test-review.md")
+	assertRenderedFile(t, output, ".config/agy/prompts/work-test-review.md")
+	assertRenderedFile(t, output, ".hermes/skills/work-test-review/SKILL.md")
 	assertRenderedFile(t, output, ".codex/prompts/work-routing-preferences.md")
 	assertRenderedFile(t, output, ".codex/skills/work-routing-preferences/SKILL.md")
 	assertRenderedFile(t, output, ".claude/skills/work-routing/SKILL.md")

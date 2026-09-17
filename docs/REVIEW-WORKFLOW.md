@@ -12,6 +12,10 @@ looks harder for duplicated knowledge, avoidable complexity, weak abstractions,
 and grounded best-practice violations while requiring proof that observable
 behavior remains unchanged.
 
+The specialized AI-generated test review is defined in
+[Specialized Test Review](TEST-REVIEW.md). It extends the existing
+implementation-review gate rather than add another human approval gate.
+
 `maisternia` installs this workflow. The selected CLI agent harness owns runtime
 subagents, provider calls, permissions, edits, and verification.
 
@@ -21,6 +25,8 @@ subagents, provider calls, permissions, edits, and verification.
 /work-plan-review
 /work-review
 /work-review-simplify <target or focus>
+/work-test-review <target or focus>
+/work-review implementation --scope tests <target or focus>
 /work-review implementation --profile maintainability <target or focus>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
@@ -33,6 +39,11 @@ applies only to implementation targets.
 `/work-review-simplify` is a thin alias for `/work-review implementation
 --profile maintainability`. It reads the canonical review workflow rather than
 duplicating its lenses, verification, repair, or authority rules.
+
+`/work-test-review` is a thin alias for `/work-review implementation --scope
+tests`. Full implementation review embeds the same specialized bundle; the
+standalone command limits candidate generation to test evidence without
+creating a separate review engine or human gate.
 
 ## Delivery Gates
 
@@ -119,11 +130,17 @@ Every implementation review runs independent read-only lenses for:
 | Simplicity and DRY | Duplication and needless complexity without premature abstraction |
 | Diff analysis | Unintended changes, generated output, migrations, and scope drift |
 | Dependency currency | New direct dependencies, non-latest choices, touched sibling dependencies, advisories, and compatibility |
-| Tests and verification | Missing assertions, wrong test level, weak evidence, flakes, and failure paths |
+| Specialized test review | Intent and oracles, risk and edge coverage, level and fidelity, redundant assurance, maintainability, and diagnostics |
 
 Dependency-currency findings require lockfile evidence and an official registry
 or primary project source. The reviewer cannot declare a dependency stale from
 model memory or recommend an upgrade without compatibility evidence.
+
+The specialized test bundle maps material changed behaviors and failure risks
+to accepted sources, the cheapest faithful test level, scenarios, observable
+oracles, distinct assurance, and residual risk. Coverage, mutation score, test
+count, and line count remain contextual evidence rather than universal gates.
+See [Specialized Test Review](TEST-REVIEW.md) for the full contract.
 
 ## Maintainability Profile
 
@@ -300,7 +317,8 @@ fixes are applied and verification succeeds. Every run writes:
 
 The JSON report conforms to `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
-counts, and final gate status.
+counts, and final gate status. Implementation reports include the specialized
+`test_evidence` matrix; standalone test reviews record `scope: tests`.
 
 An external `pull_request.opened` event enters the separate read-only
 `review-intake` phase. It may produce and verify findings, but it cannot apply

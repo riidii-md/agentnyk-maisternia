@@ -45,7 +45,8 @@ The repository starts with:
   and opt-in simplicity-focused execution commands; and the standard bounded
   routine approval resources. After a PR is successfully created, it offers an
   optional evidence-backed session analysis. It also installs the on-demand
-  `/work-explain-change` command and its local PR Lens visualization contract;
+  `/work-explain-change` command and its local PR Lens visualization contract,
+  plus `/work-test-review` for focused review of test evidence;
 - `idea-shaping`: source intake, optional question-to-action focusing,
   research, grill, brainstorm, challenge, decision, planning, and mdmaid.desk
   delivery for phase artifacts;
@@ -58,6 +59,7 @@ The repository starts with:
 - `change-explanation-tools`: provider-neutral machine setup for the pinned PR
   Lens, Mdmaid, and mdmaid.desk versions used by `/work-explain-change`;
 - `multi-lens-review`: plan and implementation review with independent lenses,
+  an embedded specialized test-review bundle,
   a behavior-preserving maintainability profile for DRY, abstraction,
   complexity, and grounded best-practice checks, confidence-aware language and
   tooling discovery, per-finding refutation, applied fixes, and optional
@@ -156,6 +158,12 @@ failed publication, and later PR updates do not trigger the offer, and analysis
 never runs automatically or changes the PR result. The focused `session-audit`
 and `harness-improvement` presets remain available for broader retrospective
 and configuration-improvement workflows.
+
+`standard-work` installs `/work-test-review` as a focused entrypoint to the
+specialized test bundle embedded in every implementation review. It evaluates
+test intent, material risk and edge coverage, test level and fidelity, and
+redundant or costly assurance without using coverage or test count as a quality
+quota. See [Specialized test review](TEST-REVIEW.md).
 
 `standard-work` installs `/work-explain-change` as an on-demand understanding
 tool, not a mandatory delivery phase and not an approval gate. It explains a
