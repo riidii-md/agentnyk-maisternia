@@ -107,6 +107,7 @@ preset:
     - /work-verify
     - /work-review
     - /work-review-simplify
+    - /work-test-review
     - /work-explain-change
   targets:
     codex:
@@ -142,6 +143,7 @@ Canonical commands use the `/work-*` namespace:
 /work-verify
 /work-review
 /work-review-simplify
+/work-test-review
 /work-explain-change
 /work-pr
 /work-showcase
@@ -156,6 +158,12 @@ decides how to execute it at runtime.
 `/work-question` is an on-demand companion to idea shaping rather than a
 required phase. It turns an unclear challenge or recurring debate into one
 high-leverage question and one owned, time-bounded next move.
+
+`/work-test-review` specializes the canonical implementation review around test
+intent and oracles, risk and edge coverage, level and fidelity, and economical
+maintenance. Full `/work-review implementation` runs the same bundle; the
+standalone command records `scope: tests` without adding another approval gate.
+See [Specialized test review](TEST-REVIEW.md).
 
 `/work-explain-change` is an on-demand companion to the delivery DAG rather
 than a required phase. It explains a PR, commit, range, or working-tree snapshot

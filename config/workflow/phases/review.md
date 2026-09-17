@@ -22,6 +22,7 @@ Accepted modes:
 /work-review plan <plan or design>
 /work-review plan-delta <changed decision or section>
 /work-review implementation <diff, branch, PR, contract, or focus>
+/work-review implementation --scope tests <diff, branch, PR, contract, or focus>
 /work-review implementation --profile maintainability <diff, branch, PR, or focus>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
@@ -34,9 +35,17 @@ because no implementation exists. Plan modes follow `/work-plan-review`.
 The default profile is `standard`. `--profile maintainability` is available
 only for implementation review. It keeps all implementation lenses, adds a
 grounded `best-practices` lens, and deepens the correctness, consistency,
-architecture, `simplicity-dry`, and `tests-verification` lenses. In `auto`, use
+architecture, `simplicity-dry`, and `test-review-bundle` lenses. In `auto`, use
 this profile only when the resolved target is an implementation; otherwise ask
 for an implementation target instead of silently changing the profile.
+
+The default scope is `full`. `--scope tests` is available only for
+implementation review and is the canonical expansion of `/work-test-review`.
+It runs the specialized test-review bundle and the inspection needed to ground
+or refute its findings, but omits unrelated implementation lenses. Every full
+implementation review embeds the same bundle in place of a shallow generic
+test lens. The scope changes review focus, not reviewer authority, repair rules,
+or final verification.
 
 When `work-routing` resolves several harnesses, use `parallel-verify`: distribute
 independent read-only lenses across them, prefer a verifier from a different
@@ -71,8 +80,8 @@ Launch one read-only reviewer per applicable base lens:
   migrations, and behavior outside the stated scope;
 - `dependency-currency`: newly added direct dependencies, non-latest selections,
   stale sibling dependencies in the touched area, advisories, and compatibility;
-- `tests-verification`: missing assertions, wrong test level, weak evidence,
-  flaky behavior, and untested failure paths.
+- `test-review-bundle`: the specialized intent, risk, fidelity, economy, and
+  maintainability review defined below.
 
 For dependency currency, use lockfiles plus official registries or primary
 project sources when network access is available. Do not label a package stale
@@ -81,6 +90,73 @@ from memory, and do not recommend an upgrade without compatibility evidence.
 Add domain lenses when warranted: accessibility, privacy/PII/SOC 2 evidence,
 performance/scalability, migration safety, API compatibility, data integrity,
 or operational observability. Do not claim compliance from generic practices.
+
+## Run The Specialized Test Review
+
+Every full implementation review runs this bundle. `--scope tests` runs only
+this bundle plus any code, contract, or runtime inspection required to ground
+and refute its findings. In a full review, schedule its lenses in bounded waves
+so the configured reviewer limit remains effective.
+
+Establish the accepted behavior from plans, requirements, bug reports, public
+contracts, repository rules, and user-visible invariants before judging the
+tests. Treat the current implementation as evidence, not as the sole source of
+expected behavior. Read the implementation diff, test diff, affected existing
+tests, repository-owned test commands, and available verification results.
+
+Run one read-only reviewer per specialized lens:
+
+- `intent-oracle`: requirement and risk grounding, meaningful observable
+  assertions, tautologies, and accidental coupling to private implementation;
+- `risk-edge-coverage`: relevant normal cases, equivalence classes,
+  boundaries, condition combinations, state transitions, invalid inputs,
+  permissions, dependency failures, partial effects, cancellation, timeouts,
+  retries, concurrency, cleanup, rollback, and recovery;
+- `level-fidelity`: whether unit, contract, integration, end-to-end, fuzz,
+  property, static, or manual evidence is the cheapest faithful level, and
+  whether mocks or fakes remove the behavior that creates the risk;
+- `economy-maintainability`: redundant assurance, hidden test logic, brittle
+  setup, unsafe fixtures, nondeterminism, isolation failures, weak diagnostics,
+  and disproportionate runtime or continuing maintenance cost.
+
+For each material changed behavior or failure risk, add a `test_evidence` entry
+to `review.json` with its accepted source, selected test level, scenario,
+observable oracle, current or proposed evidence, distinct confidence or
+diagnostic value, residual risk, and `covered`, `partial`, `missing`, or
+`accepted-risk` status. Only an explicit user or repository-owned decision can
+accept material residual risk.
+
+A test is justified when it provides a credible observable signal for a
+material behavior or risk at the cheapest faithful level. Prefer public
+behavior, returned values, resulting state, errors, durable side effects, and
+user-visible outcomes. Interaction assertions are appropriate only when the
+interaction itself is an accepted contract. Do not expose private structure
+solely to test it.
+
+Keep tests complete, concise, deterministic, and locally readable. Helpers may
+share mechanics, but must not hide scenario inputs, expected behavior, or
+important assertions. Repeated setup is acceptable when it preserves clarity.
+Treat tests as consolidation candidates only when they protect the same
+contract with the same scenario partition, action, oracle, fidelity, and
+failure class. Similar-looking tests can remain valuable when they add a
+different boundary, real-dependency check, contract owner, or diagnostic
+signal.
+
+A missing-test candidate names the unprotected behavior or risk and gives a
+concrete scenario that distinguishes correct from incorrect behavior. Do not
+request tests for trivial lines, getters, generated output, or unreachable
+states without a product-risk explanation. An evidence entry marked `missing`
+or `partial` becomes a finding only when the uncovered risk is material,
+grounded, and within scope.
+
+Use line, branch, and diff coverage to locate unexamined changed code. Use
+fuzzing or mutation testing only when discovered repository tooling and risk
+warrant them. Coverage, mutants, test count, and line count are contextual
+signals and never sufficient findings or universal numeric gates. Do not
+install tools or enable services without approval.
+
+Fixtures must be synthetic and contain no credentials, tokens, transcripts,
+runtime databases, or real user configuration values.
 
 ## Run The Maintainability Profile
 
@@ -164,7 +240,7 @@ Deepen the focused lenses as follows:
   ownership, reduces coupling, or removes repeated knowledge. Reject a
   speculative abstraction, single-use generic helper, or extra layer that
   increases the number of concepts.
-- `correctness` and `tests-verification`: prove that a proposed simplification
+- `correctness` and `test-review-bundle`: prove that a proposed simplification
   preserves the established behavior contract, including failure paths.
 
 Every candidate from this profile must identify the preserved behavior and
@@ -204,4 +280,5 @@ Write `review.md` and schema-valid `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings and applied fixes
 first, followed by refuted findings and rationale, checks, residual risk,
 provider/model attribution, selected profile (`standard` or
-`maintainability`), and gate status.
+`maintainability`), selected scope (`full` or `tests`), the test-evidence matrix
+for implementation reviews, and gate status.

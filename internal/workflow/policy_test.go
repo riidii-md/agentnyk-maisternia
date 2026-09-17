@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -69,6 +70,107 @@ func TestRepositorySchemasAreValidJSON(t *testing.T) {
 		path := filepath.Join(repositoryRoot(t), "config", "schema", removed)
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Errorf("runtime-only schema %s still exists", removed)
+		}
+	}
+}
+
+func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "config", "workflow", "review-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		ImplementationLenses []string `json:"implementation_lenses"`
+		TestReview           struct {
+			Scope        string   `json:"scope"`
+			Lenses       []string `json:"lenses"`
+			MatrixFields []string `json:"matrix_fields"`
+			MetricsRole  string   `json:"metrics_role"`
+		} `json:"test_review"`
+	}
+	if err := json.Unmarshal(data, &policy); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(policy.ImplementationLenses, "test-review-bundle") {
+		t.Fatalf("implementation lenses = %v, want test-review-bundle", policy.ImplementationLenses)
+	}
+	wantLenses := []string{
+		"intent-oracle",
+		"risk-edge-coverage",
+		"level-fidelity",
+		"economy-maintainability",
+	}
+	if !slices.Equal(policy.TestReview.Lenses, wantLenses) {
+		t.Fatalf("test review lenses = %v, want %v", policy.TestReview.Lenses, wantLenses)
+	}
+	wantFields := []string{
+		"contract_or_risk",
+		"source",
+		"test_level",
+		"scenario",
+		"oracle",
+		"evidence",
+		"distinct_value",
+		"residual_risk",
+		"status",
+	}
+	if !slices.Equal(policy.TestReview.MatrixFields, wantFields) {
+		t.Fatalf("test review matrix fields = %v, want %v", policy.TestReview.MatrixFields, wantFields)
+	}
+	if policy.TestReview.Scope != "tests" || policy.TestReview.MetricsRole != "supporting-evidence" {
+		t.Fatalf("test review policy = %#v", policy.TestReview)
+	}
+
+	data, err = os.ReadFile(filepath.Join(root, "config", "schema", "review-report.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Properties  map[string]json.RawMessage `json:"properties"`
+		Definitions map[string]json.RawMessage `json:"$defs"`
+	}
+	if err := json.Unmarshal(data, &schema); err != nil {
+		t.Fatal(err)
+	}
+	if _, found := schema.Properties["scope"]; !found {
+		t.Error("review report schema is missing scope")
+	}
+	testEvidenceProperty, found := schema.Properties["test_evidence"]
+	if !found {
+		t.Fatal("review report schema is missing test_evidence")
+	}
+	var testEvidenceArray struct {
+		Type  string `json:"type"`
+		Items struct {
+			Ref string `json:"$ref"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(testEvidenceProperty, &testEvidenceArray); err != nil {
+		t.Fatal(err)
+	}
+	if testEvidenceArray.Type != "array" || testEvidenceArray.Items.Ref != "#/$defs/testEvidence" {
+		t.Fatalf("test_evidence schema = %#v", testEvidenceArray)
+	}
+	definition, found := schema.Definitions["testEvidence"]
+	if !found {
+		t.Fatal("review report schema is missing testEvidence definition")
+	}
+	var testEvidenceDefinition struct {
+		Required   []string                   `json:"required"`
+		Properties map[string]json.RawMessage `json:"properties"`
+	}
+	if err := json.Unmarshal(definition, &testEvidenceDefinition); err != nil {
+		t.Fatal(err)
+	}
+	if len(testEvidenceDefinition.Required) != len(wantFields) {
+		t.Fatalf("testEvidence required fields = %v, want %v", testEvidenceDefinition.Required, wantFields)
+	}
+	for _, field := range wantFields {
+		if _, found := testEvidenceDefinition.Properties[field]; !found {
+			t.Errorf("testEvidence definition is missing %q", field)
 		}
 	}
 }

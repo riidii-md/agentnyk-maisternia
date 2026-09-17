@@ -22,6 +22,7 @@
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
     "mode": {"enum": ["plan", "plan-delta", "implementation"]},
     "profile": {"enum": ["standard", "maintainability"]},
+    "scope": {"enum": ["full", "tests"]},
     "target": {"type": "string", "minLength": 1, "maxLength": 4096},
     "base_ref": {"type": ["string", "null"], "maxLength": 256},
     "lenses": {
@@ -40,6 +41,10 @@
     "checks": {
       "type": "array",
       "items": {"$ref": "#/$defs/check"}
+    },
+    "test_evidence": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/testEvidence"}
     },
     "summary": {"$ref": "#/$defs/summary"},
     "gate_status": {"enum": ["pass", "fail", "blocked"]}
@@ -152,6 +157,41 @@
         "evidence": {"type": ["string", "null"], "maxLength": 4096}
       }
     },
+    "testEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_or_risk",
+        "source",
+        "test_level",
+        "scenario",
+        "oracle",
+        "evidence",
+        "distinct_value",
+        "residual_risk",
+        "status"
+      ],
+      "properties": {
+        "contract_or_risk": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "source": {"$ref": "#/$defs/evidence"},
+        "test_level": {
+          "enum": [
+            "unit", "contract", "integration", "end-to-end", "fuzz",
+            "property", "static", "manual", "other"
+          ]
+        },
+        "scenario": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "oracle": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "distinct_value": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "residual_risk": {"type": ["string", "null"], "maxLength": 4096},
+        "status": {"enum": ["covered", "partial", "missing", "accepted-risk"]}
+      }
+    },
     "summary": {
       "type": "object",
       "additionalProperties": false,
@@ -164,5 +204,17 @@
         "blocked": {"type": "integer", "minimum": 0}
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"scope": {"const": "tests"}},
+        "required": ["scope"]
+      },
+      "then": {
+        "properties": {"mode": {"const": "implementation"}},
+        "required": ["mode", "test_evidence"]
+      }
+    }
+  ]
 }

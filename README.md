@@ -156,6 +156,7 @@ Canonical work commands accept an optional route before the task:
 /work-run @claude @sonnet -- implement the approved plan
 /work-run-simplify @codex -- implement with the opt-in simplicity profile
 /work-review @codex @claude -- review with both harnesses
+/work-test-review @codex -- review test evidence for this change
 ```
 
 A per-harness model selector follows its harness. Explicit routes override
