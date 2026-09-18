@@ -25,9 +25,10 @@ scope (`explicit-command` or `all-invocations`). Ask in short rounds and reuse
 supplied answers.
 
 When the user wants a durable diagram choice for `/work-explain-change`, also
-offer the workflow-specific `presentation` preference: `animated-web` opens
-PR Lens motion in mdmaid.desk, while `static-tui` embeds Mermaid that mdmaid
-renders in a terminal. Store it only at
+offer the workflow-specific `presentation` preference: `mermaid` is the
+default and embeds source that mdmaid and mdmaid.desk render in web and terminal
+views, while `animated-web` explicitly selects PR Lens motion. Accept existing
+`static-tui` values as a legacy alias for `mermaid`. Store new choices only at
 `workflows.work-explain-change.presentation`; do not turn it into a general
 visuals or medium preference.
 

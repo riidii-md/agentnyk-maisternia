@@ -10,8 +10,8 @@ It is deliberately separate from `/work-review`:
   shaped, and how data moves;
 - review searches for defects, risks, and missing evidence and may make a merge
   recommendation;
-- human review gates request an explicit approval and remain a different
-  mdmaid.desk operation.
+- `/work-change-review` reuses the complete explanation contract, adds the
+  frozen native diff and automated findings, and requests explicit approval.
 
 The command is installed by `standard-work` as an on-demand capability. It is
 not another mandatory phase in the delivery DAG.
@@ -29,7 +29,7 @@ Each run writes a self-contained bundle under:
     drawn.graph.json
     manifest.json
     <content-addressed>.svg
-  # static-tui output
+  # default Mermaid output
   <selected-view>.mmd
 ```
 
@@ -39,18 +39,22 @@ requires a PR Lens graph.
 
 The Markdown gives the quick summary, stated intent versus verified behavior,
 before/after model, important abstractions and functions, selected short code
-examples, compatibility and test notes, and an evidence index. A representation
-gate chooses the smallest useful visual: pseudocode, call/component/file trees,
-a diff-shaped sketch, selected code, or PR Lens. PR Lens adds an architecture
-diagram and, only when order is meaningful, an animated data-flow diagram. A
-small local change is not forced into an architecture graph. The prose remains
-complete for readers who cannot see motion.
+examples, compatibility and test notes, and an evidence index. A lens selection
+gate chooses the smallest evidence-complete visual portfolio: architecture,
+dependency, or data-flow `flowchart`; UML-style interface and class diagrams;
+entity-relationship diagrams; state diagrams; sequence diagrams; and
+requirement traceability diagrams. In Mermaid these use `classDiagram`,
+`erDiagram`, `stateDiagram-v2`, `sequenceDiagram`, and `requirementDiagram`.
+Every omitted lens is recorded as not applicable or unknown instead of being
+invented. When the terminal backend cannot render `requirementDiagram`, the
+artifact includes an equivalent traceability flowchart and records the
+fallback. A small local change is not forced into ceremonial diagrams.
 
 The workflow uses visualization layers, not finding engines. For
 `animated-web`, it authors a PR Lens graph from evidence already inspected by
 the active harness and runs local deterministic `pr-lens validate` and
-`pr-lens render`. For `static-tui`, it will author Mermaid directly from that
-same inspected evidence and verify it with mdmaid; it does not need a PR Lens
+`pr-lens render`. For `mermaid`, it will author Mermaid directly from that
+same inspected evidence and verifies it with mdmaid; it does not need a PR Lens
 converter. It does not call `pr-lens analyze`, publish an asset, or post a PR
 comment by default. Those actions require a separate explicit request because
 `analyze` contacts another configured model provider and publishing changes
@@ -67,11 +71,13 @@ five minutes and a high-level-first explanation.
 The workflow-specific presentation preference is stored in a reader profile
 at `workflows.work-explain-change.presentation`:
 
-- `animated-web` shows PR Lens motion through mdmaid.desk in a browser;
-- `static-tui` embeds Mermaid in the explanation for mdmaid's terminal view.
+- `mermaid` embeds source rendered by mdmaid and mdmaid.desk in web and terminal
+  readers;
+- `animated-web` explicitly selects PR Lens motion in a browser;
+- `static-tui` remains a backward-compatible alias for `mermaid`.
 
 An explicit request wins, followed by the project preference, then the user preference.
-When none exists, the default is `animated-web`; the workflow does
+When none exists, Mermaid is the default; the workflow does
 not interrupt the run to ask. Use `/work-reader-preferences` to save a choice.
 The chosen mode applies to the complete run, so the Markdown never repeats the
 same diagram as both Mermaid and SVG.
@@ -82,7 +88,7 @@ The `change-explanation` environment pack pins:
 
 - `@coldtea/pr-lens-cli` 0.2.0;
 - `mdmaid` 0.1.17;
-- `mdmaid-desk` 0.1.12.
+- `mdmaid-desk` 0.1.16.
 
 The environment-only `change-explanation-tools` preset owns this pack. Review
 and install it separately from provider configuration:
@@ -99,15 +105,15 @@ Upgrade explicitly when needed:
 ```bash
 npm install --global @coldtea/pr-lens-cli@0.2.0
 npm install --global mdmaid@0.1.17
-npm install --global mdmaid-desk@0.1.12
+npm install --global mdmaid-desk@0.1.16
 ```
 
 After graph and Markdown validation, the command registers `explanation.md`
-with mdmaid.desk. In `animated-web`, version 0.1.12 resolves registered,
+with mdmaid.desk. In `animated-web`, version 0.1.16 resolves registered,
 workspace-local SVG image references through authenticated same-origin media
 routes. The asset response has a restrictive sandbox content security policy;
-remote images and arbitrary filesystem paths are not enabled. In `static-tui`,
-the Markdown contains Mermaid and the handoff includes an exact `mdmaid tui`
+remote images and arbitrary filesystem paths are not enabled. In `mermaid`, the
+Markdown contains the diagrams and the handoff includes an exact `mdmaid tui`
 command.
 
 Registration is presentation, not approval. If validation, rendering, version
@@ -130,6 +136,6 @@ document-media contract for them.
 /work-explain-change 8c0ffee -- focus on the new service boundary
 /work-explain-change origin/main...HEAD -- reader: support lead
 /work-explain-change working tree -- deep explanation
-/work-explain-change PR 42 presentation=static-tui
+/work-explain-change PR 42 presentation=mermaid
 /work-explain-change HEAD presentation=animated-web
 ```

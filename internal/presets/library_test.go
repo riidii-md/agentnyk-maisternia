@@ -47,7 +47,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	wantPhases := []string{
 		"brief", "scout", "analyze", "research", "plan", "prove",
 		"plan-review", "decide", "ready", "handoff", "run", "verify",
-		"review", "pr", "session-analysis",
+		"review", "change-review", "pr", "session-analysis",
 	}
 	if !slices.Equal(delivery.Phases, wantPhases) {
 		t.Fatalf("standard-work phases = %v, want %v", delivery.Phases, wantPhases)
@@ -74,8 +74,12 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		{From: "run", To: "verify"},
 		{From: "verify", To: "review", Condition: "pass"},
 		{From: "verify", To: "analyze", Condition: "failed", Loop: true},
-		{From: "review", To: "pr", Condition: "pass and publication requested"},
 		{From: "review", To: "run", Condition: "changes", Loop: true},
+		{From: "review", To: "change-review", Condition: "pass"},
+		{From: "change-review", To: "pr", Condition: "approved and publication requested"},
+		{From: "change-review", To: "run", Condition: "changes requested", Loop: true},
+		{From: "change-review", To: "analyze", Condition: "rejected and reshape requested", Loop: true},
+		{From: "change-review", To: "change-review", Condition: "stale", Loop: true},
 		{
 			From: "pr", To: "session-analysis",
 			Condition: "PR created and user accepts analysis",
@@ -90,6 +94,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"work-review",
 		"work-review-simplify",
 		"work-test-review",
+		"work-change-review",
 		"work-explain-change",
 		"work-session-analysis",
 		"work-routing-preferences",
@@ -111,6 +116,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if len(standard.EnvironmentPacks) != 0 {
 		t.Errorf("standard-work must remain a configuration-only preset, got environment packs %v", standard.EnvironmentPacks)
+	}
+	if !slices.Equal(standard.Targets, []string{"codex", "claude", "antigravity", "hermes"}) {
+		t.Errorf("standard-work targets = %v, want all harnesses", standard.Targets)
 	}
 	changeTools, found := library.Get("change-explanation-tools")
 	if !found {
@@ -528,8 +536,9 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			"$ARGUMENTS", "pull request", "commit", "working tree",
 			"change-explanation", "adapt-for-reader", "pr-lens validate",
 			"pr-lens render", "author Mermaid directly", "mdmaid validate", "mdmaid-desk register",
-			"mdmaid-desk 0.1.12", ".agent-runs/change-explanations",
-			"does not approve", "pr-lens analyze", "animated-web", "static-tui",
+			"mdmaid-desk 0.1.16", ".agent-runs/change-explanations",
+			"does not approve", "pr-lens analyze", "animated-web", "mermaid",
+			"default `mermaid`", "static-tui", "backward-compatible alias",
 			"Explicit current request", "project", "user", "exactly one",
 		},
 		"config/workflow/skills/change-explanation/SKILL.md": {
@@ -537,7 +546,11 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			"pr-lens validate", "pr-lens render", "author Mermaid directly", "manifest.json",
 			"animated", "evidence", "report findings", "the graph",
 			"smallest visual", "pseudocode", "call tree", "component tree",
-			"file tree", "diff-shaped", "animated-web", "static-tui",
+			"file tree", "diff-shaped", "animated-web", "mermaid",
+			"classDiagram", "erDiagram", "stateDiagram-v2", "sequenceDiagram",
+			"requirementDiagram", "data-flow", "dependency",
+			"traceability flowchart", "renderer fallback",
+			"lens selection", "not applicable", "proposed", "verified",
 			"Explicit current request", "project preference", "user preference",
 			"exactly one presentation",
 		},
@@ -547,7 +560,10 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			`"edges"`, `"flows"`, `"views"`, `"animated": true`,
 		},
 		"docs/CHANGE-EXPLANATIONS.md": {
-			"animated-web", "static-tui", "author Mermaid directly",
+			"animated-web", "mermaid", "static-tui", "author Mermaid directly",
+			"Mermaid is the default", "class", "entity-relationship", "state",
+			"sequence", "requirement", "data-flow",
+			"traceability flowchart",
 			"exactly one", "@coldtea/pr-lens-cli` 0.2.0",
 		},
 	}
@@ -588,7 +604,7 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			t.Errorf("manifest resource %q missing", resourceID)
 			continue
 		}
-		for _, agent := range []string{"codex", "claude", "antigravity"} {
+		for _, agent := range []string{"codex", "claude", "antigravity", "hermes"} {
 			supported := false
 			for _, target := range resource.Targets {
 				supported = supported || target.Agent == agent
@@ -597,6 +613,68 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 				t.Errorf("resource %q does not support %s", resourceID, agent)
 			}
 		}
+	}
+}
+
+func TestRepositoryChangeReviewContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/change-review.md": {
+			"strict superset", "/work-explain-change", "60-second summary",
+			"requested intent", "verified implementation", "before and after",
+			"abstraction inventory", "lens selection", "complete reviewable textual patch",
+			"change fingerprint", "change-review", "change-decision",
+			"classDiagram", "erDiagram", "stateDiagram-v2", "sequenceDiagram",
+			"requirementDiagram", "mdmaid validate", "mdmaid-desk register",
+			"mdmaid-desk review wait", "Request changes", "structured response items",
+		},
+		"config/workflow/phases/work.md": {
+			"change-review", "approved", "exact implementation snapshot", "before `/work-pr`",
+		},
+		"config/workflow/phases/pr.md": {
+			"change-decision", "exact implementation snapshot", "stale", "fail readiness",
+		},
+		"docs/CHANGE-REVIEW-GATE.md": {
+			"strict superset", "native diff", "Mermaid", "change-decision",
+			"class", "entity-relationship", "state", "sequence", "requirement",
+		},
+	}
+	for relative, fragments := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest(repository) error = %v", err)
+	}
+	found := false
+	for _, resource := range manifest.Resources {
+		if resource.ID != "work-change-review" {
+			continue
+		}
+		found = true
+		for _, agent := range []string{"codex", "claude", "antigravity", "hermes"} {
+			supported := false
+			for _, target := range resource.Targets {
+				supported = supported || target.Agent == agent
+			}
+			if !supported {
+				t.Errorf("work-change-review does not support %s", agent)
+			}
+		}
+	}
+	if !found {
+		t.Error("manifest resource work-change-review missing")
 	}
 }
 
@@ -615,7 +693,10 @@ func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
 			"final reviewed plan", "readable-output", "plan-decision",
 			"human response text",
 			"waiting_for_approval", "keep the current agent turn open",
-			"Registration is not approval",
+			"Registration is not approval", ".agent-runs/plan-reviews",
+			"plan-review.md", "visual lens", "proposed rather than verified",
+			"classDiagram", "erDiagram", "stateDiagram-v2", "sequenceDiagram",
+			"requirementDiagram", "complete reviewed plan",
 		},
 		"config/workflow/phases/decide.md": {
 			"direction", "reviewed plan revision", "approve, request changes, or reject",
@@ -1295,7 +1376,7 @@ func TestRepositoryAdaptiveReadabilityContract(t *testing.T) {
 	if !slices.Equal(schema.Defs.Workflows.Properties.ExplainChange.Required, []string{"presentation"}) {
 		t.Errorf("work-explain-change required fields = %v, want presentation", schema.Defs.Workflows.Properties.ExplainChange.Required)
 	}
-	if !slices.Equal(schema.Defs.Workflows.Properties.ExplainChange.Properties.Presentation.Enum, []string{"animated-web", "static-tui"}) {
+	if !slices.Equal(schema.Defs.Workflows.Properties.ExplainChange.Properties.Presentation.Enum, []string{"animated-web", "mermaid", "static-tui"}) {
 		t.Errorf("work-explain-change presentations = %v", schema.Defs.Workflows.Properties.ExplainChange.Properties.Presentation.Enum)
 	}
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "change-explanation",
   "name": "Change Explanation",
-  "description": "Pinned local rendering and presentation tools for evidence-grounded, animated change explanations.",
+  "description": "Pinned local rendering and presentation tools for Mermaid-first change explanations and revision-bound implementation reviews.",
   "requirements": [
     {
       "id": "pr-lens",
@@ -45,10 +45,10 @@
     {
       "id": "mdmaid-desk",
       "name": "mdmaid.desk",
-      "description": "Presents the Markdown explanation and its authenticated workspace-local SVG diagrams.",
+      "description": "Presents explanations, visual plan reviews, and revision-bound implementation reviews in web and TUI spaces.",
       "kind": "binary",
       "required": true,
-      "provides": ["artifact-inbox", "authenticated-local-svg-media"],
+      "provides": ["artifact-inbox", "authenticated-local-svg-media", "change-review-gate"],
       "depends_on": ["mdmaid"],
       "detect": {"command": "mdmaid-desk"},
       "installers": [
@@ -57,7 +57,7 @@
           "kind": "npm-global",
           "platforms": ["darwin", "linux", "windows"],
           "package": "mdmaid-desk",
-          "version": "0.1.12"
+          "version": "0.1.16"
         }
       ]
     }

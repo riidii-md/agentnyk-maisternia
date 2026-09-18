@@ -459,7 +459,7 @@ func TestLoaderRejectsPresetTargetOutsideDeclarationAndMissingProject(t *testing
 		Cwd:  t.TempDir(),
 	}
 	_, err := loader.PlanPreset(PresetInstallRequest{
-		PresetID: "standard-work",
+		PresetID: "developer-context",
 		Targets:  []string{"hermes"},
 		Scope:    configurator.ScopeUser,
 	})

@@ -26,6 +26,18 @@ Verify:
 - documentation and migration notes;
 - review findings and accepted risk.
 
+## Require The Implementation Decision
+
+Before reporting readiness, require the durable `approved` `change-decision`
+created by `/work-change-review` for the exact implementation snapshot. Verify
+the decision's document ID and revision, artifact content hash, and source
+change fingerprint against the current branch or working tree. Any changed
+path, patch, untracked implementation file, revision, or fingerprint makes the
+decision stale. Missing, rejected, changes-requested, ambiguous, or stale
+evidence must fail readiness and return to `/work-change-review`, `/work-run`,
+or `/work-review` as appropriate. A chat approval or publication checkpoint is
+not a substitute for this implementation decision.
+
 Before the first external PR mutation, present one publication checkpoint with
 the exact repository, branch, commit, remote, and PR target. A human approval at
 that checkpoint may be reused only as a task-bound grant for the stated push and

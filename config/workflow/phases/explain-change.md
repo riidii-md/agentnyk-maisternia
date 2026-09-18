@@ -1,6 +1,6 @@
 ---
 name: work-explain-change
-description: Explain a pull request, commit, revision range, or working-tree change through evidence, selected code, and local animated architecture or data-flow diagrams.
+description: Explain a pull request, commit, revision range, or working-tree change through evidence, selected code, and Mermaid-first visual lenses.
 version: 0.1.0
 ---
 
@@ -31,12 +31,12 @@ means.
 Resolve a diagram presentation once for the run. Precedence is:
 **Explicit current request**, project
 `workflows.work-explain-change.presentation` preference, user preference, then
-the default `animated-web`. The other supported value is `static-tui`. Validate
-stored profiles with `reader-profile.schema.json`; report and ignore invalid
-values. Do not ask when no preference exists because the web default is
-defined. Use exactly one presentation: PR Lens animated SVGs for
-`animated-web`, or fenced Mermaid rendered in the terminal for `static-tui`,
-never both.
+the default `mermaid`. `animated-web` is the explicit PR Lens alternative;
+`static-tui` is a backward-compatible alias for `mermaid`. Validate stored
+profiles with `reader-profile.schema.json`; report and ignore invalid values.
+Do not ask when no preference exists because the Mermaid default is defined.
+Use exactly one presentation: fenced Mermaid for `mermaid`, or PR Lens animated
+SVGs for `animated-web`, never both.
 
 Keep all generated files under
 `.agent-runs/change-explanations/<timestamp>-<change-id>/`. Do not alter source
@@ -46,18 +46,20 @@ configured model provider. Do not upload assets, post a PR comment, or call
 `pr-lens comment` unless the user explicitly requests that additional external
 action.
 
-The durable output is `explanation.md`. When a system relationship or ordered
-interaction merits a diagram, use the selected presentation. In
+The durable output is `explanation.md`. Evaluate architecture/data flow,
+interfaces/classes, entity relationships, state, ordered interaction,
+requirements traceability, and dependencies through the installed skill's
+lens selection gate. Generate only evidence-supported diagrams. In
 `animated-web`, accompany it with `graph.json`, validate the graph with
 `pr-lens validate`, render it with `pr-lens render`, retain
 `rendered/manifest.json`, `rendered/drawn.graph.json`, and the selected local
 SVG assets, and inspect the manifest rather than predicting asset names. In
-`static-tui`, author Mermaid directly from the same inspected evidence, retain
+`mermaid`, author Mermaid directly from the same inspected evidence, retain
 each `.mmd` source, and embed it once in a fenced Mermaid block. Do not create a
-PR Lens graph solely for the static path. For a small local change, prefer a
-compact code-shape visual and state why a graph was not useful.
+PR Lens graph solely for the Mermaid path. For a small local change, prefer a
+compact code-shape visual and state why richer lenses were not applicable.
 
-Before presentation, require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.12 or
+Before presentation, require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.16 or
 newer. Check both installed versions. Then run:
 
 ```text
@@ -78,12 +80,12 @@ mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention 
 ```
 
 Registration is presentation, not approval. If mdmaid-desk is missing, older
-than 0.1.12, or rejects the document or local media, preserve the bundle and
+than 0.1.16, or rejects the document or local media, preserve the bundle and
 report an exact retry or upgrade command. Never claim that the animated view is
 available until compatible registration succeeds.
 
 Return a concise summary, the artifact and generated diagram paths, the
 explained base and head/snapshot, chosen presentation, validation status, and
-mdmaid.desk registration status. For `static-tui`, also return the exact
+mdmaid.desk registration status. For `mermaid`, also return the exact
 `mdmaid tui` command. Do not duplicate the full explanation in the terminal
 unless the user asks for it.

@@ -44,9 +44,9 @@ The repository starts with:
   plan delivered through mdmaid.desk before explicit human approval; standard
   and opt-in simplicity-focused execution commands; and the standard bounded
   routine approval resources. After a PR is successfully created, it offers an
-  optional evidence-backed session analysis. It also installs the on-demand
-  `/work-explain-change` command and its local PR Lens visualization contract,
-  plus `/work-test-review` for focused review of test evidence;
+  optional evidence-backed session analysis. It installs Mermaid-first
+  `/work-explain-change`, the mandatory explanatory `/work-change-review` gate,
+  and `/work-test-review` for focused review of test evidence;
 - `idea-shaping`: source intake, optional question-to-action focusing,
   research, grill, brainstorm, challenge, decision, planning, and mdmaid.desk
   delivery for phase artifacts;
@@ -166,12 +166,15 @@ redundant or costly assurance without using coverage or test count as a quality
 quota. See [Specialized test review](TEST-REVIEW.md).
 
 `standard-work` installs `/work-explain-change` as an on-demand understanding
-tool, not a mandatory delivery phase and not an approval gate. It explains a
-PR, commit, range, or working tree with evidence, selected short code, and
-architecture/data-flow diagrams. A stored reader preference chooses local PR
-Lens animated SVG for the web or directly authored static Mermaid for a
-terminal without duplicating both. The optional `adapt-for-reader` profile
-changes presentation only. See [Change explanations](CHANGE-EXPLANATIONS.md).
+tool, not an approval gate by itself. Mermaid is the default; PR Lens animation
+is explicit opt-in. The mandatory `/work-change-review` phase is a strict
+superset: it combines the same narrative and evidence-selected architecture,
+class, entity-relationship, state, sequence, requirement, dependency, and
+data-flow lenses with the complete native diff and a revision-bound
+`change-decision`. `/work-plan-review` applies the same Mermaid vocabulary to
+planned interfaces and abstractions while labelling them proposed. See
+[Change explanations](CHANGE-EXPLANATIONS.md) and
+[Mandatory human change review](CHANGE-REVIEW-GATE.md).
 The separate environment-only `change-explanation-tools` preset owns the
 external tools, so applying `standard-work` never installs packages implicitly.
 

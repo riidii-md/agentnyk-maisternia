@@ -102,10 +102,10 @@
     {
       "id": "mdmaid-desk",
       "name": "mdmaid.desk",
-      "description": "Persistent local inbox and reading workspace for generated Markdown artifacts.",
+      "description": "Persistent local inbox with web and TUI spaces for Markdown, plan decisions, and native change reviews.",
       "kind": "binary",
       "required": true,
-      "provides": ["artifact-inbox"],
+      "provides": ["artifact-inbox", "change-review-gate"],
       "depends_on": ["mdmaid"],
       "detect": {"command": "mdmaid-desk"},
       "installers": [
@@ -114,7 +114,7 @@
           "kind": "npm-global",
           "platforms": ["darwin", "linux", "windows"],
           "package": "mdmaid-desk",
-          "version": "0.1.12"
+          "version": "0.1.16"
         }
       ]
     },

@@ -28,10 +28,12 @@ Input:
 6. Before implementation, require the exact reviewed plan revision to be
    presented for human attention, record the explicit decision against its
    content hash, and pass the implementation-readiness gate.
-7. Ask before implementation, permission escalation, commit, push, PR, or a
+7. After verification and independent implementation review pass, require
+   `/work-change-review` and a durable `approved` decision for the exact implementation snapshot before `/work-pr`, publication, or completion.
+8. Ask before implementation, permission escalation, commit, push, PR, or a
    destructive operation when approval is not already recorded.
-8. Dispatch through the configured runner policy or honor an explicit runner.
-9. Report the phase result and next action to the coordinating session.
+9. Dispatch through the configured runner policy or honor an explicit runner.
+10. Report the phase result and next action to the coordinating session.
 
 Do not silently skip required readiness, acceptance evidence, approval,
 verification, or independent review gates. Do not manufacture separate

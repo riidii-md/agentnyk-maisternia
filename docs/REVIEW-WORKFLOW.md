@@ -116,6 +116,13 @@ decision gate.
 The workflow escalates to full plan review only when the delta invalidates wider
 scope, interfaces, dependencies, acceptance criteria, or proof.
 
+After the plan passes, `/work-plan-review` builds a standalone visual
+`plan-review.md` containing the complete reviewed plan. It selects only
+applicable Mermaid architecture/data-flow, class, entity-relationship, state,
+sequence, dependency, and requirement lenses. Planned interfaces and relations
+are labelled proposed rather than verified, then the exact artifact is bound to
+the existing `plan-decision` gate.
+
 ## Implementation Lenses
 
 Every implementation review runs independent read-only lenses for:
