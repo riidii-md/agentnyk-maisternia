@@ -270,6 +270,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"adapt-for-reader-preferences",
 		"adapt-for-reader-principles",
 		"readable-output-skill",
+		"readable-output-project-naming",
 		"work-routing-skill",
 		"work-routing-runners",
 	}) {
@@ -486,9 +487,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(adaptive-readability) error = %v", err)
 	}
-	if len(adaptiveReadabilityManifest.Resources) != 12 {
+	if len(adaptiveReadabilityManifest.Resources) != 13 {
 		t.Fatalf(
-			"adaptive-readability resource count = %d, want 12",
+			"adaptive-readability resource count = %d, want 13",
 			len(adaptiveReadabilityManifest.Resources),
 		)
 	}
@@ -537,7 +538,7 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			"$ARGUMENTS", "pull request", "commit", "working tree",
 			"change-explanation", "adapt-for-reader", "pr-lens validate",
 			"pr-lens render", "author Mermaid directly", "mdmaid validate", "mdmaid-desk register",
-			"mdmaid-desk 0.1.16", ".agent-runs/change-explanations",
+			"mdmaid-desk 0.1.19", ".agent-runs/change-explanations",
 			"does not approve", "pr-lens analyze", "animated-web", "mermaid",
 			"default `mermaid`", "static-tui", "backward-compatible alias",
 			"Explicit current request", "project", "user", "exactly one",

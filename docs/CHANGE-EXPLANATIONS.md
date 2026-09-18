@@ -88,7 +88,7 @@ The `change-explanation` environment pack pins:
 
 - `@coldtea/pr-lens-cli` 0.2.0;
 - `mdmaid` 0.1.17;
-- `mdmaid-desk` 0.1.16.
+- `mdmaid-desk` 0.1.19.
 
 The environment-only `change-explanation-tools` preset owns this pack. Review
 and install it separately from provider configuration:
@@ -105,11 +105,11 @@ Upgrade explicitly when needed:
 ```bash
 npm install --global @coldtea/pr-lens-cli@0.2.0
 npm install --global mdmaid@0.1.17
-npm install --global mdmaid-desk@0.1.16
+npm install --global mdmaid-desk@0.1.19
 ```
 
 After graph and Markdown validation, the command registers `explanation.md`
-with mdmaid.desk. In `animated-web`, version 0.1.16 resolves registered,
+with mdmaid.desk. In `animated-web`, version 0.1.19 resolves registered,
 workspace-local SVG image references through authenticated same-origin media
 routes. The asset response has a restrictive sandbox content security policy;
 remote images and arbitrary filesystem paths are not enabled. In `mermaid`, the

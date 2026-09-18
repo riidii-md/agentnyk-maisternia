@@ -520,6 +520,76 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 	}
 }
 
+func TestRepositoryMdmaidProjectNamingContract(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	const source = "config/workflow/skills/readable-output/references/project-naming.md"
+	data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(source)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	for _, snippet := range []string{
+		"Repository / JIRA-ID (minimal AI feature text)",
+		"mdmaid-desk 0.1.19 or newer",
+		"--repository <credential-free-identity>",
+		"--repository-name <repository-name>",
+		"--task <jira-id>",
+		"--feature-name \"<minimal feature text>\"",
+		"Branch names are not project names",
+		"first accepted feature text wins",
+	} {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("project-naming reference is missing %q", snippet)
+		}
+	}
+
+	wantTargets := map[string]string{
+		"codex":       ".codex/skills/readable-output/references/project-naming.md",
+		"claude":      ".claude/skills/readable-output/references/project-naming.md",
+		"antigravity": ".config/agy/skills/readable-output/references/project-naming.md",
+	}
+	for provider, target := range wantTargets {
+		if got := manifestTargets(manifest, provider)[target]; got != source {
+			t.Errorf("%s project-naming source = %q, want %q", provider, got, source)
+		}
+	}
+
+	for _, relative := range []string{
+		"config/presets/adaptive-readability.json",
+		"config/presets/idea-shaping.json",
+		"config/presets/standard-work.json",
+	} {
+		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(data), `"readable-output-project-naming"`) {
+			t.Errorf("%s does not install the project-naming reference", relative)
+		}
+	}
+
+	for _, relative := range []string{
+		"config/workflow/skills/readable-output/SKILL.md",
+		"config/workflow/skills/adapt-for-reader/SKILL.md",
+		"config/workflow/phases/adapt-for-reader.md",
+		"config/workflow/phases/change-review.md",
+		"config/workflow/phases/explain-change.md",
+		"config/workflow/phases/showcase.md",
+	} {
+		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		publisher := string(data)
+		if !strings.Contains(publisher, "project-naming") ||
+			!strings.Contains(publisher, "--feature-name") {
+			t.Errorf("%s bypasses the project-naming contract", relative)
+		}
+	}
+}
+
 func TestRepositoryActiveShapingWorkflowsUseMdmaidDesk(t *testing.T) {
 	t.Parallel()
 

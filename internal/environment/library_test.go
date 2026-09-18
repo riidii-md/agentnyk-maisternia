@@ -61,7 +61,7 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 		len(mdmaidDesk.Installers) != 1 ||
 		mdmaidDesk.Installers[0].Kind != InstallerNPMGlobal ||
 		mdmaidDesk.Installers[0].Package != "mdmaid-desk" ||
-		mdmaidDesk.Installers[0].Version != "0.1.16" {
+		mdmaidDesk.Installers[0].Version != "0.1.19" {
 		t.Fatalf("mdmaid-desk requirement = %#v", mdmaidDesk)
 	}
 	plugins := map[string]struct {
@@ -110,7 +110,7 @@ func TestRepositoryChangeExplanationEnvironmentPack(t *testing.T) {
 	}{
 		"pr-lens":     {command: "pr-lens", pkg: "@coldtea/pr-lens-cli", version: "0.2.0"},
 		"mdmaid":      {command: "mdmaid", pkg: "mdmaid", version: "0.1.17"},
-		"mdmaid-desk": {command: "mdmaid-desk", pkg: "mdmaid-desk", version: "0.1.16"},
+		"mdmaid-desk": {command: "mdmaid-desk", pkg: "mdmaid-desk", version: "0.1.19"},
 	}
 	for requirementID, expected := range want {
 		requirement, found := pack.Requirement(requirementID)

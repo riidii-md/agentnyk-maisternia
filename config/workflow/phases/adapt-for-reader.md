@@ -70,7 +70,8 @@ command.
 Only after validation succeeds, resolve the current mdmaid.desk workspace from
 `MDMAID_DESK_WORKSPACE` or by matching the canonical project root in
 `mdmaid-desk workspace list`. When missing, add the current root once with a
-stable collision-safe workspace ID.
+stable collision-safe workspace ID. Follow the installed readable-output
+`references/project-naming.md` contract and require mdmaid-desk 0.1.19 or newer.
 
 Use the final document's first level-one heading, without the Markdown marker,
 as the semantic `--title`; if no level-one heading exists, derive a concise
@@ -78,7 +79,9 @@ title from the reader contract. Never use the timestamped filename as the
 catalog title. Send the artifact to the desk with
 `mdmaid-desk register <artifact.md>`, selecting the closest document kind for
 the mode and using `--attention review`. Add `--task <id>` when the source has
-an explicit stable task ID. Add up to three short lowercase `--tag <tag>` values
+an explicit stable task ID and pair it with
+`--feature-name "<minimal feature text>"`; omit both project options when no
+grounded Jira ID exists. Add up to three short lowercase `--tag <tag>` values
 only for grounded subject matter not already represented by workspace, task,
 or kind; never tag timestamps, filenames, workspace IDs, document kinds, or
 storage modes. Registration is a presentation action, not approval. If

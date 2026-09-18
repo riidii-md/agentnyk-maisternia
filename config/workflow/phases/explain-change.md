@@ -59,7 +59,7 @@ each `.mmd` source, and embed it once in a fenced Mermaid block. Do not create a
 PR Lens graph solely for the Mermaid path. For a small local change, prefer a
 compact code-shape visual and state why richer lenses were not applicable.
 
-Before presentation, require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.16 or
+Before presentation, require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.19 or
 newer. Check both installed versions. Then run:
 
 ```text
@@ -73,14 +73,17 @@ preserve the complete local bundle and do not register it.
 Only after validation succeeds, resolve the current mdmaid.desk workspace from
 `MDMAID_DESK_WORKSPACE` or by matching the canonical current project root in
 `mdmaid-desk workspace list`. Add the workspace once when it is missing, using
-a stable collision-safe id, then run:
+a stable collision-safe id. Follow the installed readable-output
+`references/project-naming.md` contract, then run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention review
+mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention review --task <jira-id> --feature-name "<minimal feature text>"
 ```
 
+Omit both project options when no grounded Jira ID exists.
+
 Registration is presentation, not approval. If mdmaid-desk is missing, older
-than 0.1.16, or rejects the document or local media, preserve the bundle and
+than 0.1.19, or rejects the document or local media, preserve the bundle and
 report an exact retry or upgrade command. Never claim that the animated view is
 available until compatible registration succeeds.
 

@@ -32,7 +32,7 @@ environment pack. It installs or verifies:
 - Tatami;
 - Herdr;
 - [Mdmaid](https://github.com/OleksandrBesan/mdmaid) `0.1.17` through npm;
-- [mdmaid.desk](https://github.com/riidii-md/mdmaid.desk) `0.1.16` through npm;
+- [mdmaid.desk](https://github.com/riidii-md/mdmaid.desk) `0.1.19` through npm;
 - [Herdr Automatic Rename](https://github.com/qu8n/herdr-automatic-rename);
 - [Herdr Bar](https://github.com/jeffarese/herdr-bar).
 
@@ -47,7 +47,7 @@ npm install --global mdmaid@0.1.17
 
 The environment-only `change-explanation-tools` preset references the smaller
 `change-explanation` pack used by the optional `/work-explain-change` command.
-That pack pins PR Lens CLI `0.2.0`, Mdmaid `0.1.17`, and mdmaid.desk `0.1.16`.
+That pack pins PR Lens CLI `0.2.0`, Mdmaid `0.1.17`, and mdmaid.desk `0.1.19`.
 The desk version provides authenticated workspace-local SVG media and the
 `change-review`/`change-decision` contract. Presence-based detection does not
 upgrade older commands; the workflow checks versions and reports these explicit
@@ -56,7 +56,7 @@ upgrades when needed:
 ```bash
 npm install --global @coldtea/pr-lens-cli@0.2.0
 npm install --global mdmaid@0.1.17
-npm install --global mdmaid-desk@0.1.16
+npm install --global mdmaid-desk@0.1.19
 ```
 
 The two plugin sources are pinned to immutable Git commit SHAs. Installation
