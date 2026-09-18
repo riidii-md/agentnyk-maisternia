@@ -175,6 +175,8 @@ data-flow lenses with the complete native diff and a revision-bound
 planned interfaces and abstractions while labelling them proposed. See
 [Change explanations](CHANGE-EXPLANATIONS.md) and
 [Mandatory human change review](CHANGE-REVIEW-GATE.md).
+Decision capture writes durable Markdown without generating or opening a local
+HTML page. Browser previews remain available only when explicitly requested.
 The separate environment-only `change-explanation-tools` preset owns the
 external tools, so applying `standard-work` never installs packages implicitly.
 

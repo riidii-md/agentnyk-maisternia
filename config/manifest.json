@@ -576,6 +576,16 @@
       ]
     },
     {
+      "id": "decision-capture-skill",
+      "source": "config/workflow/skills/decision-capture/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/decision-capture/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/decision-capture/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/decision-capture/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/decision-capture/SKILL.md"}
+      ]
+    },
+    {
       "id": "reader-profile-schema",
       "source": "config/schema/reader-profile.schema.json",
       "targets": [

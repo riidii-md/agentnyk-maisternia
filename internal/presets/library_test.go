@@ -106,6 +106,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	for _, resourceID := range []string{
 		"change-explanation-skill",
 		"change-explanation-graph-contract",
+		"decision-capture-skill",
 		"multi-lens-review-skill",
 		"readable-output-skill",
 		"session-retrospective-skill",
@@ -614,6 +615,50 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestRepositoryDecisionCaptureDoesNotOpenBrowser(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	path := filepath.Join(root, "config/workflow/skills/decision-capture/SKILL.md")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(content)
+	for _, fragment := range []string{
+		"readable-output", ".agent-runs/decisions", "durable Markdown",
+		"Do not generate HTML", "Do not open a browser", "explicitly asks",
+	} {
+		if !strings.Contains(text, fragment) {
+			t.Errorf("%s is missing %q", path, fragment)
+		}
+	}
+	if strings.Contains(text, "codex-readable-doc --open") {
+		t.Errorf("%s must not invoke the legacy auto-open helper", path)
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest(repository) error = %v", err)
+	}
+	for _, resource := range manifest.Resources {
+		if resource.ID != "decision-capture-skill" {
+			continue
+		}
+		for _, agent := range []string{"codex", "claude", "antigravity", "hermes"} {
+			supported := false
+			for _, target := range resource.Targets {
+				supported = supported || target.Agent == agent
+			}
+			if !supported {
+				t.Errorf("decision-capture-skill does not support %s", agent)
+			}
+		}
+		return
+	}
+	t.Error("manifest resource decision-capture-skill missing")
 }
 
 func TestRepositoryChangeReviewContract(t *testing.T) {
