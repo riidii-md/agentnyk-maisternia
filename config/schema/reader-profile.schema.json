@@ -119,7 +119,7 @@
           "required": ["presentation"],
           "properties": {
             "presentation": {
-              "enum": ["animated-web", "static-tui"]
+              "enum": ["animated-web", "mermaid", "static-tui"]
             }
           }
         }

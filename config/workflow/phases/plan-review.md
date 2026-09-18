@@ -106,15 +106,44 @@ set the gate to `pass`, `fail`, or `blocked`. Write `review.md` and schema-valid
 `review.json` under `.agent-runs/reviews/<run-id>/`, including confirmed,
 refuted, applied, and blocked findings.
 
-On `pass`, preserve the final reviewed plan as durable Markdown and invoke
-`readable-output` to validate and deliver that exact revision through
-mdmaid.desk in explicit `plan-decision` mode. Record its path, content hash,
-document revision, and review request ID, then keep the current agent turn open
-on the foreground waiter. Report `waiting_for_approval` only as an intermediate
-update, never as a final response. Resume a yielded process/session ID until it
-exits, then surface the outcome and human response text immediately. Approval
-continues to `/work-decide`; `changes_requested` returns to the plan and review
-loop; rejection stops or reshapes the work; and a stale request requires a
-fresh review of the current revision. Registration is not approval: do not
-infer a decision from the document being registered, opened, marked done, or
-closed, and do not begin implementation until the human decision is recorded.
+## Build The Visual Plan Review
+
+On `pass`, build a standalone approval artifact at:
+
+```text
+.agent-runs/plan-reviews/<run-id>/plan-review.md
+```
+
+It must contain the complete reviewed plan—the final reviewed plan revision—not
+a summary that requires the reader to open another file, plus:
+
+- a 60-second summary, scope, decisions, tradeoffs, and open questions;
+- current repository evidence separated from proposed rather than verified
+  architecture and behavior;
+- planned interface, type, schema, ownership, dependency, state, and interaction
+  inventories at the abstraction level needed by a fresh executor;
+- confirmed, refuted, applied, blocked, and residual review findings;
+- a visual lens selection table recording evidence and why omitted lenses are
+  not applicable;
+- the smallest evidence-complete Mermaid portfolio.
+
+Use the installed `change-explanation` skill in plan evidence mode. Evaluate
+`flowchart`, `classDiagram`, `erDiagram`, `stateDiagram-v2`,
+`sequenceDiagram`, and `requirementDiagram`. Do not force every visual lens,
+invent interfaces, or present planned relationships as implemented. Retain each
+`.mmd` source under the same run directory, verify it with
+`mdmaid render-mermaid`, and embed it once beside the plan section it explains.
+When `requirementDiagram` is not supported by the terminal backend, preserve it
+for compatible web readers and add an equivalent traceability `flowchart`.
+
+Preserve the source plan path and content hash in `plan-review.md`. Then invoke
+`readable-output` to validate and deliver that exact standalone artifact through
+mdmaid.desk as `kind=plan` in explicit `plan-decision` mode. Record its path,
+content hash, document revision, and review request ID. Then keep the current agent turn open on the foreground waiter. Report `waiting_for_approval` only as
+an intermediate update, never as a final response. Resume a yielded process or
+session ID until it exits. Surface the outcome and human response text immediately. Approval continues to `/work-decide`; `changes_requested`
+returns to the plan and review loop; rejection stops or reshapes the work; and
+a stale request requires a fresh review and visual artifact for the current
+revision. Registration is not approval: do not infer a decision from the
+document being registered, opened, marked done, or closed, and do not begin
+implementation until the human decision is recorded.

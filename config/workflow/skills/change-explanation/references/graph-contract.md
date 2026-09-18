@@ -160,5 +160,6 @@ unchanged neighbours when they explain blast radius, but do not turn the graph
 into a symbol inventory.
 
 This graph contract applies to the `animated-web` presentation. The
-`static-tui` presentation authors Mermaid directly from the same inspected
-evidence and does not require a PR Lens graph or converter.
+default `mermaid` presentation authors Mermaid directly from the same inspected
+evidence and does not require a PR Lens graph or converter. `static-tui` is a
+backward-compatible alias for that Mermaid path.

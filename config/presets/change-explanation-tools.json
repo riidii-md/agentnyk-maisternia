@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "change-explanation-tools",
   "name": "Change Explanation Tools",
-  "description": "Install and verify the pinned PR Lens, Mdmaid, and mdmaid.desk versions used by /work-explain-change.",
+  "description": "Install and verify Mdmaid and mdmaid.desk for Mermaid-first explanations and change reviews, plus PR Lens for explicit animated-web output.",
   "pipelines": [],
   "contents": {
     "mcp_refs": [],

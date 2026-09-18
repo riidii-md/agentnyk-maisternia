@@ -63,6 +63,16 @@ instead of adding ceremonial design sections. Private helper names, equivalent
 local control flow, and test-fixture organization may remain executor choices when
 they do not alter an approved contract.
 
+For non-trivial plans, add a compact visual lens selection table and embed the
+smallest useful Mermaid portfolio. Select only evidence-supported lenses:
+`flowchart` for architecture, dependencies, or data flow; `classDiagram` for
+interfaces and type relationships; `erDiagram` for planned persisted entities;
+`stateDiagram-v2` for lifecycle transitions; `sequenceDiagram` for ordered
+cross-boundary behavior; and `requirementDiagram` for requirement-to-component
+and requirement-to-verification traceability. Label every planned element and
+relationship as proposed rather than verified implementation. Record why an
+inapplicable lens was omitted; do not generate all diagram forms ceremonially.
+
 Plan in dependency order. Each task should describe observable behavior, fit one
 focused implementation loop, and keep the repository runnable. Identify a thin
 end-to-end slice first when appropriate. For each task, identify dependencies and
@@ -80,6 +90,7 @@ Return:
 - Affected-system design, ownership boundaries, and responsibilities
 - Material interfaces and cross-component contracts
 - Planned data and control flow
+- Visual lens selection and evidence-grounded Mermaid diagrams when applicable
 - Fixed decisions and permitted executor discretion
 - Material alternatives and tradeoffs
 - Files and patterns to change or reuse, with inspect-only unknowns explicit

@@ -452,6 +452,17 @@
       ]
     },
     {
+      "id": "work-change-review",
+      "source": "config/workflow/phases/change-review.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-change-review.md"},
+        {"agent": "codex", "path": ".codex/skills/work-change-review/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-change-review.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-change-review.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-change-review/SKILL.md"}
+      ]
+    },
+    {
       "id": "work-explain-change",
       "source": "config/workflow/phases/explain-change.md",
       "targets": [
@@ -562,6 +573,16 @@
         {"agent": "claude", "path": ".claude/skills/readable-output/SKILL.md"},
         {"agent": "antigravity", "path": ".config/agy/skills/readable-output/SKILL.md"},
         {"agent": "hermes", "path": ".hermes/skills/readable-output/SKILL.md"}
+      ]
+    },
+    {
+      "id": "decision-capture-skill",
+      "source": "config/workflow/skills/decision-capture/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/decision-capture/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/decision-capture/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/decision-capture/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/decision-capture/SKILL.md"}
       ]
     },
     {

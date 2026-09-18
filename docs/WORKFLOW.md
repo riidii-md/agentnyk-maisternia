@@ -94,7 +94,8 @@ preset:
         handoff: [run]
         run: [verify]
         verify: [review, run]
-        review: []
+        review: [change-review, run]
+        change-review: [pr, run, analyze, change-review]
   mcps:
     - github
     - filesystem
@@ -108,6 +109,7 @@ preset:
     - /work-review
     - /work-review-simplify
     - /work-test-review
+    - /work-change-review
     - /work-explain-change
   targets:
     codex:
@@ -144,6 +146,7 @@ Canonical commands use the `/work-*` namespace:
 /work-review
 /work-review-simplify
 /work-test-review
+/work-change-review
 /work-explain-change
 /work-pr
 /work-showcase
@@ -167,9 +170,13 @@ See [Specialized test review](TEST-REVIEW.md).
 
 `/work-explain-change` is an on-demand companion to the delivery DAG rather
 than a required phase. It explains a PR, commit, range, or working-tree snapshot
-with verified narrative, selected code, and local animated architecture or
-data-flow diagrams. It does not approve the change or replace `/work-review`.
-See [Change explanations](CHANGE-EXPLANATIONS.md).
+with verified narrative, selected code, and Mermaid-first visual lenses. It
+does not approve the change or replace `/work-review`. The required
+`/work-change-review` phase reuses that complete explanation contract, adds the
+frozen native diff and findings, and waits for an exact-revision human decision
+before `/work-pr`. `/work-plan-review` produces the analogous visual review for
+planned interfaces and abstractions. See [Change explanations](CHANGE-EXPLANATIONS.md)
+and [Mandatory human change review](CHANGE-REVIEW-GATE.md).
 
 Provider-native invocation differs by harness:
 

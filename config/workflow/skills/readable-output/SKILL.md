@@ -86,8 +86,13 @@ without the Markdown marker. Add `--task <id>` only for an explicit stable task
 ID and add up to three grounded subject tags when useful.
 
 Registration is a presentation action, not approval. Do not start a persistent
-server, daemon, TUI, or browser unless the user asks or an existing workflow
-already requires it.
+server, daemon, TUI, or browser unless the user explicitly asks in the current
+request.
+
+Do not generate a standalone HTML copy or invoke `codex-readable-doc` as an
+implicit preview. Do not open a browser merely because Markdown was created,
+validated, registered, or marked for review. Browser presentation is a separate
+opt-in action that requires an explicit current request.
 
 ## Request a human decision only when explicitly required
 

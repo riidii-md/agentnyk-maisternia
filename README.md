@@ -169,7 +169,8 @@ and invocation details.
 
 The catalog contains focused presets that can be installed independently:
 
-- `standard-work` — plan, implement, verify, review, and prepare a PR;
+- `standard-work` — visually review plans, implement, verify, explain and
+  approve the exact change, then prepare a PR;
 - `idea-shaping` — turn an incomplete idea into an explicit decision and plan;
   its `work-question` utility finds one high-leverage question and one owned,
   time-bounded next move;
@@ -285,6 +286,7 @@ and remaining limitations.
 - [Multi-lens review](docs/REVIEW-WORKFLOW.md)
 - [Session retrospectives](docs/RETROSPECTIVES.md)
 - [Change explanations](docs/CHANGE-EXPLANATIONS.md)
+- [Mandatory human change review](docs/CHANGE-REVIEW-GATE.md)
 - [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md)
 
 ## License

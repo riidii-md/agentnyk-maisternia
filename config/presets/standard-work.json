@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral adaptive delivery workflow with a reviewed-plan human decision gate, standard or simplicity-focused implementation, verification, specialized test review, optional PR preparation, and an optional post-publication session analysis.",
+  "description": "Provider-neutral adaptive delivery workflow with visual reviewed-plan and mandatory implementation decision gates, standard or simplicity-focused implementation, verification, specialized test review, optional PR preparation, and optional post-publication session analysis.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
@@ -12,7 +12,7 @@
       "phases": [
         "brief", "scout", "analyze", "research", "plan", "prove",
         "plan-review", "decide", "ready", "handoff", "run", "verify",
-        "review", "pr", "session-analysis"
+        "review", "change-review", "pr", "session-analysis"
       ],
       "edges": [
         {"from": "brief", "to": "scout"},
@@ -36,8 +36,12 @@
         {"from": "run", "to": "verify"},
         {"from": "verify", "to": "review", "condition": "pass"},
         {"from": "verify", "to": "analyze", "condition": "failed", "loop": true},
-        {"from": "review", "to": "pr", "condition": "pass and publication requested"},
         {"from": "review", "to": "run", "condition": "changes", "loop": true},
+        {"from": "review", "to": "change-review", "condition": "pass"},
+        {"from": "change-review", "to": "pr", "condition": "approved and publication requested"},
+        {"from": "change-review", "to": "run", "condition": "changes requested", "loop": true},
+        {"from": "change-review", "to": "analyze", "condition": "rejected and reshape requested", "loop": true},
+        {"from": "change-review", "to": "change-review", "condition": "stale", "loop": true},
         {"from": "pr", "to": "session-analysis", "condition": "PR created and user accepts analysis"}
       ]
     }
@@ -48,13 +52,13 @@
       "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-run-simplify", "work-verify",
-      "work-review", "work-review-simplify", "work-test-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
+      "work-review", "work-review-simplify", "work-test-review", "work-change-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
       "work-routing-preferences"
     ],
     "prompts": [],
     "skills": [
       "change-explanation-skill", "change-explanation-graph-contract",
-      "multi-lens-review-skill", "readable-output-skill",
+      "multi-lens-review-skill", "readable-output-skill", "decision-capture-skill",
       "session-retrospective-skill", "work-routing-skill", "work-routing-runners"
     ],
     "hooks": [],
@@ -68,5 +72,5 @@
       "routine-development-approvals-claude-permissions"
     ]
   },
-  "targets": ["codex", "claude", "antigravity"]
+  "targets": ["codex", "claude", "antigravity", "hermes"]
 }
