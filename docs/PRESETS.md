@@ -40,7 +40,8 @@ harness home.
 The repository starts with:
 
 - `standard-work`: the provider-neutral adaptive delivery workflow with
-  optional research, expanded proof, handoff, and PR preparation; a reviewed
+  optional research, a conditional reviewed architectural direction, expanded
+  proof, handoff, and PR preparation; a reviewed
   plan delivered through mdmaid.desk before explicit human approval; standard
   and opt-in simplicity-focused execution commands; and the standard bounded
   routine approval resources. After a PR is successfully created, it offers an
@@ -48,7 +49,8 @@ The repository starts with:
   `/work-explain-change`, the mandatory explanatory `/work-change-review` gate,
   and `/work-test-review` for focused review of test evidence;
 - `idea-shaping`: source intake, optional question-to-action focusing,
-  research, grill, brainstorm, challenge, decision, planning, and mdmaid.desk
+  bounded cross-system scouting, research, grill, brainstorm, challenge,
+  conditional direction review and human decision, detailed planning, and mdmaid.desk
   delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;

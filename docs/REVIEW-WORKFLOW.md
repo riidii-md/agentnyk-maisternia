@@ -70,6 +70,13 @@ flowchart LR
     IMPLREVIEW -->|changes| RUN
 ```
 
+When required, `/work-direction` first records the architectural decisions
+that constrain the implementation plan. `/work-plan-review direction` checks
+the exact high-level revision against evidence, then mdmaid.desk collects a
+revision-bound human direction decision. Small local work can bypass this
+separate gate with an evidence-backed reason. See
+[Architectural direction](ARCHITECTURAL-DIRECTION.md).
+
 The plan contains the normal acceptance contract. `/work-prove` expands it only
 when risk requires more detailed evidence. When independent review is required,
 `/work-plan-review` adversarially checks whether the plan is correct, complete,

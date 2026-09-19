@@ -45,7 +45,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	delivery := standard.Pipelines[0]
 	wantPhases := []string{
-		"brief", "scout", "analyze", "research", "plan", "prove",
+		"brief", "scout", "analyze", "research", "grill", "direction",
+		"direction-review", "direction-decision", "plan", "prove",
 		"plan-review", "decide", "ready", "handoff", "run", "verify",
 		"review", "change-review", "pr", "session-analysis",
 	}
@@ -55,9 +56,28 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	wantEdges := []Edge{
 		{From: "brief", To: "scout"},
 		{From: "scout", To: "analyze"},
+		{From: "analyze", To: "scout", Condition: "boundary evidence gap", Loop: true},
 		{From: "analyze", To: "research", Condition: "research needed"},
-		{From: "analyze", To: "plan", Condition: "defined"},
-		{From: "research", To: "plan"},
+		{From: "analyze", To: "grill", Condition: "human context needed and evidence sufficient"},
+		{From: "analyze", To: "direction", Condition: "direction required and evidence sufficient"},
+		{From: "analyze", To: "plan", Condition: "direction not required and evidence sufficient"},
+		{From: "research", To: "grill", Condition: "human context needed"},
+		{From: "research", To: "direction", Condition: "direction required and evidence sufficient"},
+		{From: "research", To: "plan", Condition: "direction not required and evidence sufficient"},
+		{From: "grill", To: "research", Condition: "evidence gap", Loop: true},
+		{From: "grill", To: "direction", Condition: "direction required and evidence sufficient"},
+		{From: "grill", To: "plan", Condition: "direction not required and evidence sufficient"},
+		{From: "direction", To: "direction-review"},
+		{From: "direction", To: "scout", Condition: "boundary evidence gap", Loop: true},
+		{From: "direction", To: "research", Condition: "evidence gap", Loop: true},
+		{From: "direction", To: "grill", Condition: "human constraint needed", Loop: true},
+		{From: "direction-review", To: "direction-decision", Condition: "pass"},
+		{From: "direction-review", To: "direction", Condition: "changes", Loop: true},
+		{From: "direction-review", To: "research", Condition: "evidence gap", Loop: true},
+		{From: "direction-decision", To: "plan", Condition: "approved"},
+		{From: "direction-decision", To: "direction", Condition: "changes requested", Loop: true},
+		{From: "direction-decision", To: "analyze", Condition: "rejected and reshape requested", Loop: true},
+		{From: "direction-decision", To: "direction-review", Condition: "stale", Loop: true},
 		{From: "plan", To: "prove", Condition: "expanded proof needed"},
 		{From: "plan", To: "plan-review", Condition: "proof included"},
 		{From: "plan", To: "decide", Condition: "review not required"},
@@ -89,6 +109,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("standard-work edges = %#v, want %#v", delivery.Edges, wantEdges)
 	}
 	for _, resourceID := range []string{
+		"work-grill",
+		"work-direction",
 		"work-plan-review",
 		"work-run-simplify",
 		"work-review",
@@ -101,6 +123,40 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	} {
 		if !slices.Contains(standard.Contents.Commands, resourceID) {
 			t.Errorf("standard-work commands are missing %q", resourceID)
+		}
+	}
+	directionManifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatalf("LoadManifest(repository) error = %v", err)
+	}
+	wantDirectionTargets := map[string]string{
+		"codex:.codex/prompts/work-direction.md":            "config/workflow/phases/direction.md",
+		"codex:.codex/skills/work-direction/SKILL.md":       "config/workflow/phases/direction.md",
+		"claude:.claude/commands/work-direction.md":         "config/workflow/phases/direction.md",
+		"antigravity:.config/agy/prompts/work-direction.md": "config/workflow/phases/direction.md",
+		"hermes:.hermes/skills/work-direction/SKILL.md":     "config/workflow/phases/direction.md",
+	}
+	var directionResource *configurator.Resource
+	for i := range directionManifest.Resources {
+		if directionManifest.Resources[i].ID == "work-direction" {
+			directionResource = &directionManifest.Resources[i]
+			break
+		}
+	}
+	if directionResource == nil {
+		t.Fatal("manifest resource work-direction missing")
+	}
+	for key, source := range wantDirectionTargets {
+		agent, target, _ := strings.Cut(key, ":")
+		found := false
+		for _, entry := range directionResource.Targets {
+			if entry.Agent == agent && entry.Path == target {
+				found = directionResource.Source == source
+				break
+			}
+		}
+		if !found {
+			t.Errorf("work-direction missing %s from %s", key, source)
 		}
 	}
 	for _, resourceID := range []string{
@@ -156,8 +212,34 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !slices.Contains(shape.Contents.Commands, "work-question") {
 		t.Error("idea-shaping is missing the work-question command")
 	}
+	for _, resourceID := range []string{"work-scout", "work-analyze", "work-direction", "work-plan-review"} {
+		if !slices.Contains(shape.Contents.Commands, resourceID) {
+			t.Errorf("idea-shaping commands are missing %q", resourceID)
+		}
+	}
 	if slices.Contains(shape.Pipelines[0].Phases, "question") {
 		t.Error("work-question must remain an optional utility outside the shape DAG")
+	}
+	if !slices.Contains(shape.Pipelines[0].Phases, "decide") {
+		t.Error("idea-shaping must preserve option-choice decision when direction is not required")
+	}
+	for _, edge := range []Edge{
+		{From: "intake", To: "scout", Condition: "system context linked"},
+		{From: "intake", To: "analyze", Condition: "no linked system to scout"},
+		{From: "analyze", To: "scout", Condition: "boundary evidence gap", Loop: true},
+		{From: "analyze", To: "grill", Condition: "human context needed and evidence sufficient"},
+		{From: "challenge", To: "direction", Condition: "direction required and viable candidates"},
+		{From: "challenge", To: "decide", Condition: "direction not required and viable candidate"},
+		{From: "decide", To: "plan", Condition: "human option choice recorded"},
+		{From: "direction", To: "scout", Condition: "boundary evidence gap", Loop: true},
+		{From: "direction", To: "research", Condition: "evidence gap", Loop: true},
+		{From: "direction", To: "grill", Condition: "human constraint needed", Loop: true},
+		{From: "direction-review", To: "direction-decision", Condition: "pass"},
+		{From: "direction-decision", To: "plan", Condition: "approved"},
+	} {
+		if !slices.Contains(shape.Pipelines[0].Edges, edge) {
+			t.Errorf("idea-shaping is missing edge %#v", edge)
+		}
 	}
 	experiment, found := library.Get("scored-experiment")
 	if !found {
@@ -534,6 +616,11 @@ func TestRepositoryChangeExplanationContract(t *testing.T) {
 
 	root := repositoryRoot(t)
 	contracts := map[string][]string{
+		"config/workflow/phases/analyze.md": {
+			"cross-system", "public contracts", "persistent data",
+			"small, local, reversible", "Unknown impact",
+			"Direction-gate result: required, not required, or unknown, with evidence",
+		},
 		"config/workflow/phases/explain-change.md": {
 			"$ARGUMENTS", "pull request", "commit", "working tree",
 			"change-explanation", "adapt-for-reader", "pr-lens validate",
@@ -729,14 +816,29 @@ func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
 
 	root := repositoryRoot(t)
 	contracts := map[string][]string{
+		"config/workflow/phases/direction.md": {
+			"architectural direction", "system boundaries", "rejected alternatives",
+			"implementation constraints", "durable Markdown", "content hash",
+			"Do not produce implementation tasks",
+		},
+		"config/workflow/phases/scout.md": {
+			"cross-system", "ownership", "interfaces", "trust boundaries",
+			"Do not search unrelated repositories",
+		},
+		"config/workflow/phases/grill.md": {
+			"sketch", "preferred architecture", "not approval",
+		},
 		"config/workflow/phases/plan.md": {
 			"implementation proposal", "Acceptance contract", "durable Markdown",
 			"readable-output", "plan-decision", "human response text",
 			"waiting_for_approval", "keep the current agent turn open",
+			"accepted direction", "direction was not required",
+			"Implementation approach within the accepted direction",
 			"Do not implement code",
 		},
 		"config/workflow/phases/plan-review.md": {
 			"final reviewed plan", "readable-output", "plan-decision",
+			"work-plan-review direction", "kind=decision", "content hash",
 			"human response text",
 			"waiting_for_approval", "keep the current agent turn open",
 			"Registration is not approval", ".agent-runs/plan-reviews",
@@ -751,7 +853,15 @@ func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
 		},
 		"config/workflow/phases/ready.md": {
 			"implementation readiness", "approved plan content hash",
+			"approved direction",
 			"not a phase that creates or approves", "Do not use readiness to approve",
+		},
+		"config/workflow/phases/work.md": {
+			"conditional direction", "direction decision", "detailed implementation plan",
+		},
+		"config/workflow/phases/shape.md": {
+			"task-owned direction", "mdmaid.desk decision registration",
+			"workflow.artifact_write", "exact-target approval",
 		},
 		"config/workflow/phases/prove.md": {
 			"optional expansion", "plan's acceptance contract",

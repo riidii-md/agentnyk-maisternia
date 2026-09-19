@@ -169,7 +169,8 @@ and invocation details.
 
 The catalog contains focused presets that can be installed independently:
 
-- `standard-work` — visually review plans, implement, verify, explain and
+- `standard-work` — review architectural direction when needed, visually review
+  detailed plans, implement, verify, explain and
   approve the exact change, then prepare a PR;
 - `idea-shaping` — turn an incomplete idea into an explicit decision and plan;
   its `work-question` utility finds one high-leverage question and one owned,
@@ -281,6 +282,7 @@ and remaining limitations.
 ### Explore workflows
 
 - [Standard workflow](docs/WORKFLOW.md)
+- [Architectural direction gate](docs/ARCHITECTURAL-DIRECTION.md)
 - [Idea shaping](docs/IDEA-SHAPING-PIPELINE.md)
 - [Parallel work](docs/PARALLEL-WORK.md)
 - [Multi-lens review](docs/REVIEW-WORKFLOW.md)

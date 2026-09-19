@@ -1,7 +1,7 @@
 ---
 name: work-decide
 description: Record an explicit human decision on a proposed direction or exact reviewed plan revision without inferring approval.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-decide - Record an Explicit Human Decision
@@ -22,11 +22,15 @@ Accepted forms:
 
 ```text
 /work-decide direction <options, recommendation, and human response>
+/work-decide direction <reviewed direction path and mdmaid.desk plan-decision result JSON>
 /work-decide plan <reviewed plan path and human response>
 /work-decide plan <reviewed plan path and mdmaid.desk review result JSON>
 ```
 
 Infer the mode only when the artifact and response make it unambiguous.
+When the architectural direction gate applied, an option choice in conversation
+is not gate approval: require a passing direction review and an explicit human
+decision for the exact reviewed artifact revision and content hash.
 
 Return:
 
@@ -40,15 +44,20 @@ Return:
 - Decision author and time when available
 - Next phase appropriate to the mode
 
-Plan approval is valid only for the recorded content hash. Material plan
-changes invalidate it and return the work to planning and review. Do not let an
-agent approve its own plan, infer approval from silence, or treat document
-registration, opening, or closing as a human decision.
+Direction and plan approval are valid only for the recorded content hash.
+Material direction changes invalidate the direction decision and return to
+direction review; material plan changes invalidate the plan decision and return
+to planning and review. Do not let an agent approve its own direction or plan,
+infer approval from silence, or treat document registration, opening, or
+closing as a human decision.
+
+In particular, never let an agent approve its own plan.
 
 For an authenticated mdmaid.desk `plan-decision` result, verify that its
-document ID and revision identify the delivered plan and that the local plan
-still matches the recorded content hash. Map `approved` to approval,
-`changes_requested` to the plan/review loop, `rejected` to stop or reshape, and
+document ID, revision, and semantic decision mode identify the delivered
+direction or plan and that the local artifact still matches the recorded
+content hash. Map `approved` to approval, `changes_requested` to the matching
+direction/review or plan/review loop, `rejected` to stop or reshape, and
 `stale` to no decision and fresh publication. Preserve the human response text
 verbatim in the decision record for every outcome; never replace it with a
 button label or agent summary.

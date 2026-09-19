@@ -328,6 +328,17 @@
       ]
     },
     {
+      "id": "work-direction",
+      "source": "config/workflow/phases/direction.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-direction.md"},
+        {"agent": "codex", "path": ".codex/skills/work-direction/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-direction.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-direction.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-direction/SKILL.md"}
+      ]
+    },
+    {
       "id": "work-decide",
       "source": "config/workflow/phases/decide.md",
       "targets": [
