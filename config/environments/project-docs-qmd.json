@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "project-docs-qmd",
+  "name": "Project Docs QMD",
+  "description": "Pinned local QMD tooling for a project-owned Markdown index. This pack only prepares the binary; project isolation requires developer-context apply.",
+  "requirements": [
+    {
+      "id": "qmd",
+      "name": "QMD",
+      "description": "Local Markdown full-text and semantic search. Review its model downloads and project-local index before activation.",
+      "kind": "binary",
+      "required": true,
+      "provides": ["project-docs-search"],
+      "depends_on": [],
+      "detect": {"command": "qmd"},
+      "installers": [
+        {
+          "id": "npm",
+          "kind": "npm-global",
+          "platforms": ["darwin", "linux", "windows"],
+          "package": "@tobilu/qmd",
+          "version": "2.8.3"
+        }
+      ]
+    }
+  ]
+}

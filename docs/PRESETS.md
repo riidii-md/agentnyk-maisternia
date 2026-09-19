@@ -78,6 +78,9 @@ The repository starts with:
 - `developer-context`: Context7 and read-only, repository-bounded GitNexus
   configuration with exact Claude Code permissions merged into active settings
   and reviewable MCP fragments for Claude Code and Codex;
+- `project-docs-qmd`: pinned local QMD for Markdown documentation with inert
+  Codex and Claude Code review fragments; project index setup and activation
+  require `maisternia developer-context apply`;
 - `goreleaser-validation`: a pinned prebuilt GoReleaser requirement and the
   narrow release-configuration validation approval for Claude Code and Codex;
 - `git-workflow-approvals`: automatic add, commit, and fetch approval with
@@ -113,6 +116,7 @@ maisternia preset show adaptive-readability
 maisternia preset show harness-improvement
 maisternia preset show codex-resource-lab
 maisternia preset show developer-context
+maisternia preset show project-docs-qmd
 maisternia preset show goreleaser-validation
 maisternia preset show git-workflow-approvals
 maisternia preset show routine-development-approvals
@@ -132,6 +136,18 @@ profile and does not replace the user's main `config.toml`.
 `settings.json` `/permissions/allow`. The merge preserves unrelated settings,
 backs up an existing file, aborts on malformed or wrongly typed JSON, and never
 removes the mixed settings file during preset uninstall.
+
+`project-docs-qmd` installs only review fragments under provider-managed
+directories. They do not register a QMD MCP server or establish repository
+isolation. QMD normally uses a global index; a safe active setup must bind the
+server to the chosen project, verify that project's `.qmd/index.yml`, and fail
+closed if the index is absent or points outside the project. The opt-in
+`maisternia developer-context apply` command creates that configuration. Run
+`qmd update` from the selected project root to index Markdown files.
+Keep `.qmd/index.sqlite` out of version control because it contains indexed
+document text. Review QMD's local model downloads before using semantic search.
+See [project activation](DEVELOPER-CONTEXT-ACTIVATION.md) for provider steps and
+the manual Hermes profile recipe.
 
 `goreleaser-validation` renders review fragments.
 `git-workflow-approvals` installs its independent Codex rule file directly
@@ -190,7 +206,7 @@ AI feature phrase, producing `Repository / JIRA-ID (feature)` labels without
 using branch names.
 
 The developer-context resources use Context7's hosted MCP endpoint and approve
-only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs
+only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.12`, runs
 with `GITNEXUS_MCP_READ_ONLY=1`, omits raw Cypher and mutation tools, and
 approves each remaining tool by exact name. Before activation, set
 `GITNEXUS_MCP_ALLOWED_REPOS` to a comma-separated allowlist of canonical indexed

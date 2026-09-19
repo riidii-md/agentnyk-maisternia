@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "project-docs-qmd",
+  "name": "Project Docs QMD",
+  "description": "Review-only Codex and Claude Code fragments for a project-local Markdown index. Active setup requires maisternia developer-context apply.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [
+      "project-docs-qmd-codex-mcp",
+      "project-docs-qmd-claude-mcp"
+    ],
+    "commands": [],
+    "prompts": [],
+    "skills": [],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex", "claude"],
+  "environment_packs": ["project-docs-qmd"]
+}

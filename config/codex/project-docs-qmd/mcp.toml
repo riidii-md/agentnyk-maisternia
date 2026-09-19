@@ -1,0 +1,8 @@
+# Review only. This fragment does not start QMD or prove repository isolation.
+# Active configuration requires `maisternia developer-context apply` once
+# that command is available. It must check the selected project root and its
+# .qmd/index.yml, pin the MCP process cwd to that root, and reject a missing or
+# out-of-project index rather than falling back to QMD's global index.
+#
+# Expected stdio server: qmd mcp. Restrict exposed tools to query, get,
+# multi_get, and status after verifying the installed QMD version and names.

@@ -26,6 +26,7 @@ Usage:
   maisternia admin [options]
   maisternia approval <command> [options]
   maisternia config <command> [options]
+  maisternia developer-context <plan|apply|serve> [options]
   maisternia collection <command> [options]
   maisternia environment <command> [options]
   maisternia hook <command> [options]
@@ -83,6 +84,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runApprovalCommand(args[1:], stdout, stderr)
 	case "config":
 		return runConfigCommand(args[1:], stdout, stderr)
+	case "developer-context":
+		return runDeveloperContextCommand(args[1:], stdout, stderr)
 	case "collection":
 		return runCollectionCommand(args[1:], stdout, stderr)
 	case "environment":
