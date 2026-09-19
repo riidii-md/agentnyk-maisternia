@@ -775,6 +775,46 @@ func TestRunCollectionCommandsAndOwnershipLifecycle(t *testing.T) {
 	}
 }
 
+func TestRunSoftwareEngineerCollectionInstallsProjectNamingContractForDeveloperProviders(t *testing.T) {
+	t.Parallel()
+
+	repo := appRepositoryRoot(t)
+	tests := []struct {
+		target string
+		path   string
+	}{
+		{target: "codex", path: ".codex/skills/readable-output/references/project-naming.md"},
+		{target: "claude", path: ".claude/skills/readable-output/references/project-naming.md"},
+		{target: "agy", path: ".config/agy/skills/readable-output/references/project-naming.md"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.target, func(t *testing.T) {
+			t.Parallel()
+			home := t.TempDir()
+			var stdout, stderr bytes.Buffer
+			code := Run([]string{
+				"collection", "apply", "--repo", repo, "--home", home,
+				"--scope", "user", "--target", tt.target, "--yes", "software-engineer",
+			}, &stdout, &stderr)
+			if code != 0 {
+				t.Fatalf("collection apply code = %d, stderr = %s", code, stderr.String())
+			}
+			data, err := os.ReadFile(filepath.Join(home, filepath.FromSlash(tt.path)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, snippet := range []string{
+				"Repository / JIRA-ID (minimal AI feature text)",
+				"--feature-name \"<minimal feature text>\"",
+			} {
+				if !strings.Contains(string(data), snippet) {
+					t.Errorf("installed project-naming contract is missing %q", snippet)
+				}
+			}
+		})
+	}
+}
+
 func TestValidateCollectionTargetUsesCommonProviderAllowlist(t *testing.T) {
 	t.Parallel()
 

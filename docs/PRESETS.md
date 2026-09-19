@@ -184,6 +184,10 @@ external tools, so applying `standard-work` never installs packages implicitly.
 `readable-output` skill. It replaces older temp-file-only Codex behavior:
 `mdmaid` remains the validator/renderer, while successful `mdmaid-desk register`
 or `mdmaid-desk import` is required before an agent reports hub delivery.
+These presets also install the shared project-naming reference. Codex, Claude,
+and Antigravity ground repository and Jira identity and provide only a concise
+AI feature phrase, producing `Repository / JIRA-ID (feature)` labels without
+using branch names.
 
 The developer-context resources use Context7's hosted MCP endpoint and approve
 only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.9`, runs

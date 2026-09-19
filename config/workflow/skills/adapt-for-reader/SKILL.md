@@ -188,6 +188,10 @@ Treat validation as a hard delivery gate:
 If validation does not reach exit 0, do not call `mdmaid-desk register`. Only
 after validation succeeds, when `mdmaid-desk` is available:
 
+Follow the installed readable-output `references/project-naming.md` contract.
+Require mdmaid-desk 0.1.19 or newer and preserve its grounded repository,
+Jira-ID, and minimal AI feature-text rules.
+
 1. Use `MDMAID_DESK_WORKSPACE` when explicitly configured.
 2. Otherwise match the canonical current root in `mdmaid-desk workspace list`.
 3. If it is absent, add the current root once with `mdmaid-desk workspace add`,
@@ -197,11 +201,12 @@ after validation succeeds, when `mdmaid-desk` is available:
    heading, write a concise semantic title from the reader contract. Never use
    the timestamped filename as the catalog title.
 5. Run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
-   --title "<catalog title>" --attention review`. Prefer `decision`,
+   --title "<catalog title>" --attention review --task <jira-id>
+   --feature-name "<minimal feature text>"`. Omit both project options when no
+   grounded Jira ID exists. Prefer `decision`,
    `definition`, `progress`, or `brief` when the selected mode makes the kind
-   clear. Add `--task <id>` when the source has an explicit stable task ID. Add
-   up to three short lowercase `--tag <tag>` values only when they describe
-   grounded subject matter that is not already represented by the workspace,
+   clear. Add up to three short lowercase `--tag <tag>` values only when they
+   describe grounded subject matter that is not already represented by the workspace,
    task, or kind. Never use timestamps, filenames, workspace IDs, document
    kinds, or storage modes as tags.
 

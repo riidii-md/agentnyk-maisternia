@@ -120,14 +120,15 @@ implementation instead of redacting approval evidence.
 
 ## Validate And Publish The Gate
 
-Require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.16 or newer. Confirm that
+Require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.19 or newer. Confirm that
 mdmaid.desk help lists both `change-review` and `change-decision`, then validate:
 
 ```text
 mdmaid validate <change-review.md> --json
 ```
 
-Resolve the workspace by canonical repository root. Register the validated
+Resolve the workspace by canonical repository root. Follow the installed
+readable-output `references/project-naming.md` contract. Register the validated
 artifact with an explicit revision-bound decision request:
 
 ```text
@@ -135,11 +136,15 @@ mdmaid-desk register <change-review.md> \
   --workspace <id> \
   --producer <current-provider> \
   --kind change-review \
+  --task <jira-id> \
+  --feature-name "<minimal feature text>" \
   --attention approval \
   --expect change-decision \
   --request-message "Review this exact implementation before publication." \
   --json
 ```
+
+Omit both project options when no grounded Jira ID exists.
 
 Retain the document ID, document revision, review request ID, artifact content
 hash, and change fingerprint. Keep the current turn open and wait:

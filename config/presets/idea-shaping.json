@@ -36,7 +36,8 @@
     ],
     "prompts": [],
     "skills": [
-      "readable-output-skill", "work-routing-skill", "work-routing-runners"
+      "readable-output-skill", "readable-output-project-naming",
+      "work-routing-skill", "work-routing-runners"
     ],
     "hooks": [],
     "settings": ["work-routing-profile-schema"]

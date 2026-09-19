@@ -576,6 +576,16 @@
       ]
     },
     {
+      "id": "readable-output-project-naming",
+      "source": "config/workflow/skills/readable-output/references/project-naming.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/readable-output/references/project-naming.md"},
+        {"agent": "claude", "path": ".claude/skills/readable-output/references/project-naming.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/readable-output/references/project-naming.md"},
+        {"agent": "hermes", "path": ".hermes/skills/readable-output/references/project-naming.md"}
+      ]
+    },
+    {
       "id": "decision-capture-skill",
       "source": "config/workflow/skills/decision-capture/SKILL.md",
       "targets": [

@@ -60,11 +60,14 @@ blocker plus the exact validation retry command.
 Only after validation succeeds, resolve the mdmaid.desk workspace from
 `MDMAID_DESK_WORKSPACE` or by matching the canonical current project root in
 `mdmaid-desk workspace list`. If the root is not registered, add it once with a
-stable collision-safe workspace ID. Then run:
+stable collision-safe workspace ID. Follow the installed readable-output
+`references/project-naming.md` contract. Then run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention review
+mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention review --task <jira-id> --feature-name "<minimal feature text>"
 ```
+
+Omit both project options when no grounded Jira ID exists.
 
 Registration sends the document to mdmaid.desk but does not imply approval. Do
 not replace the durable Markdown with temporary output or HTML. If the desk CLI

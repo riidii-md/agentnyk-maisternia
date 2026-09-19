@@ -53,26 +53,34 @@ Only `mdmaid-desk register` or `mdmaid-desk import` with exit 0 proves delivery.
 Do not treat `mdmaid`, `codex-readable-doc`, a local browser open, temporary HTML,
 or a likely URL as equivalent.
 
+Read and follow `references/project-naming.md` before resolving the workspace or
+building the registration command. Require mdmaid-desk 0.1.19 or newer. Ground
+the repository and Jira ID, let the producing AI supply only the minimal feature
+text, and never substitute a branch name. If no grounded Jira ID exists, omit
+both project fields.
+
 Resolve the intended workspace with `mdmaid-desk workspace list`:
 
 1. Use `MDMAID_DESK_WORKSPACE` when explicitly configured.
 2. Honor a workspace explicitly named by the user.
 3. Otherwise match the canonical current repository root or current directory.
 4. If the current root is absent and is the intended workspace, add it once
-   with `mdmaid-desk workspace add`, using a stable collision-safe ID.
+   with `mdmaid-desk workspace add`, using a stable collision-safe ID plus the
+   credential-free `--repository` and grounded `--repository-name` from the
+   project-naming contract.
 
 If the artifact is already inside the intended workspace or one of its allowed
 artifact roots, run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review
+mdmaid-desk register <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
 ```
 
 If the artifact is outside the intended workspace and the user wants it stored
 there, run:
 
 ```text
-mdmaid-desk import <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review
+mdmaid-desk import <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
 ```
 
 `review` is the default attention state. Honor an explicit workflow request for
@@ -82,8 +90,9 @@ implies a human decision.
 
 Prefer `decision`, `definition`, `progress`, `brief`, or `showcase` when the
 document clearly matches one. Use the first level-one heading as the title,
-without the Markdown marker. Add `--task <id>` only for an explicit stable task
-ID and add up to three grounded subject tags when useful.
+without the Markdown marker. Add the paired `--task` and `--feature-name`
+options only for an explicit stable task ID, following the project-naming
+reference, and add up to three grounded subject tags when useful.
 
 Registration is a presentation action, not approval. Do not start a persistent
 server, daemon, TUI, or browser unless the user explicitly asks in the current
