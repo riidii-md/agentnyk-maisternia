@@ -25,6 +25,7 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 
 	requiredIDs := map[string]bool{
 		"work-conductor":              false,
+		"work-start":                  false,
 		"work-plan":                   false,
 		"work-test-review":            false,
 		"work-routing-preferences":    false,
@@ -47,6 +48,10 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 		t.Fatalf("Render(repository) error = %v", err)
 	}
 	assertRenderedFile(t, output, ".codex/prompts/work-plan.md")
+	assertRenderedFile(t, output, ".codex/prompts/work-start.md")
+	assertRenderedFile(t, output, ".codex/skills/work-start/SKILL.md")
+	assertRenderedFile(t, output, ".claude/commands/work-start.md")
+	assertRenderedFile(t, output, ".config/agy/prompts/work-start.md")
 	assertRenderedFile(t, output, ".codex/skills/work-plan/SKILL.md")
 	assertRenderedFile(t, output, ".claude/commands/work-plan.md")
 	assertRenderedFile(t, output, ".config/agy/prompts/work-plan.md")

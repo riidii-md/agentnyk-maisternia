@@ -40,6 +40,9 @@ harness home.
 The repository starts with:
 
 - `standard-work`: the provider-neutral adaptive delivery workflow with
+  `/work-start` as its guided entry point on Codex, Claude Code, and Antigravity,
+  advancing automatically until a reviewable document and human response are
+  needed. Hermes support awaits its missing phase contracts. It includes
   optional research, expanded proof, handoff, and PR preparation; a reviewed
   plan delivered through mdmaid.desk before explicit human approval; standard
   and opt-in simplicity-focused execution commands; and the standard bounded

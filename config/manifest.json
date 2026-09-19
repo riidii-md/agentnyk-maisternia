@@ -43,6 +43,16 @@
       ]
     },
     {
+      "id": "work-start",
+      "source": "config/workflow/phases/start.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-start.md"},
+        {"agent": "codex", "path": ".codex/skills/work-start/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-start.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-start.md"}
+      ]
+    },
+    {
       "id": "work-conductor",
       "source": "config/workflow/phases/work.md",
       "targets": [
