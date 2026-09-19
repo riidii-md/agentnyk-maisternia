@@ -19,7 +19,7 @@
           "kind": "npm-global",
           "platforms": ["darwin", "linux", "windows"],
           "package": "gitnexus",
-          "version": "1.6.9"
+          "version": "1.6.12"
         }
       ]
     }

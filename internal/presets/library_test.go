@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 20 {
-		t.Fatalf("preset count = %d, want 20", len(library.Presets))
+	if len(library.Presets) != 21 {
+		t.Fatalf("preset count = %d, want 21", len(library.Presets))
 	}
 	for _, removedID := range []string{
 		"hook-safety",
@@ -1268,6 +1268,29 @@ func TestRepositoryDeveloperContextAndGoReleaserValidationPresets(t *testing.T) 
 	}
 	if len(developerManifest.Resources) != 3 {
 		t.Fatalf("developer-context resource count = %d, want 3", len(developerManifest.Resources))
+	}
+	projectDocsQMD, found := library.Get("project-docs-qmd")
+	if !found {
+		t.Fatal("project-docs-qmd preset missing")
+	}
+	if got := projectDocsQMD.Targets; !slices.Equal(got, []string{"codex", "claude"}) {
+		t.Fatalf("project-docs-qmd targets = %v", got)
+	}
+	if got := projectDocsQMD.Contents.MCPRefs; !slices.Equal(got, []string{
+		"project-docs-qmd-codex-mcp",
+		"project-docs-qmd-claude-mcp",
+	}) {
+		t.Fatalf("project-docs-qmd MCP references = %v", got)
+	}
+	if got := projectDocsQMD.EnvironmentPacks; !slices.Equal(got, []string{"project-docs-qmd"}) {
+		t.Fatalf("project-docs-qmd environment packs = %v", got)
+	}
+	qmdManifest, err := SelectManifest(projectDocsQMD, manifest)
+	if err != nil {
+		t.Fatalf("SelectManifest(project-docs-qmd) error = %v", err)
+	}
+	if len(qmdManifest.Resources) != 2 {
+		t.Fatalf("project-docs-qmd resource count = %d, want 2", len(qmdManifest.Resources))
 	}
 	goReleaserManifest, err := SelectManifest(goReleaserValidation, manifest)
 	if err != nil {

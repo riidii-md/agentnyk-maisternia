@@ -112,6 +112,8 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 		"developer-context-codex-mcp":              false,
 		"developer-context-claude-mcp":             false,
 		"developer-context-claude-permissions":     false,
+		"project-docs-qmd-codex-mcp":               false,
+		"project-docs-qmd-claude-mcp":              false,
 		"goreleaser-validation-codex-rules":        false,
 		"goreleaser-validation-claude-permissions": false,
 	}
@@ -178,6 +180,32 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 		if strings.Contains(claudePermissions, forbidden) {
 			t.Errorf("Claude developer-context permissions contain forbidden value %q", forbidden)
 		}
+	}
+
+	qmdCodex := readRenderedFile(t, output, ".codex/maisternia/fragments/project-docs-qmd.toml")
+	for _, required := range []string{
+		"maisternia developer-context apply",
+		".qmd/index.yml",
+		"qmd",
+	} {
+		if !strings.Contains(qmdCodex, required) {
+			t.Errorf("Codex QMD review fragment missing %q", required)
+		}
+	}
+	qmdClaude := readRenderedFile(t, output, ".claude/maisternia/fragments/project-docs-qmd.mcp.json")
+	var qmdFragment struct {
+		Notice string                     `json:"_review_notice"`
+		MCP    map[string]json.RawMessage `json:"mcpServers"`
+	}
+	if err := json.Unmarshal([]byte(qmdClaude), &qmdFragment); err != nil {
+		t.Fatalf("Claude QMD review fragment is invalid JSON: %v", err)
+	}
+	if !strings.Contains(qmdFragment.Notice, "maisternia developer-context apply") ||
+		!strings.Contains(qmdFragment.Notice, ".qmd/index.yml") {
+		t.Errorf("Claude QMD review notice is incomplete: %q", qmdFragment.Notice)
+	}
+	if len(qmdFragment.MCP) != 0 {
+		t.Errorf("Claude QMD review fragment unexpectedly activates a server: %s", qmdClaude)
 	}
 
 	codexRules := readRenderedFile(t, output, ".codex/maisternia/fragments/goreleaser-validation.rules")

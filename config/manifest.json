@@ -695,6 +695,20 @@
       ]
     },
     {
+      "id": "project-docs-qmd-codex-mcp",
+      "source": "config/codex/project-docs-qmd/mcp.toml",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/fragments/project-docs-qmd.toml"}
+      ]
+    },
+    {
+      "id": "project-docs-qmd-claude-mcp",
+      "source": "config/claude/project-docs-qmd/mcp.json",
+      "targets": [
+        {"agent": "claude", "path": ".claude/maisternia/fragments/project-docs-qmd.mcp.json"}
+      ]
+    },
+    {
       "id": "goreleaser-validation-codex-rules",
       "source": "config/codex/goreleaser-validation/validation.rules",
       "targets": [
