@@ -142,6 +142,25 @@ The selected harness or collaboration runtime remains the authority for live
 execution and approvals. `mdmaid.desk` is the human review surface and may grow
 collaboration-room capabilities under its own contract.
 
+Workflow-facing ergonomics should remain presentation-oriented. A future desk
+release may add:
+
+- an idempotent publish command that validates, resolves a workspace, and
+  registers or imports in one operation;
+- stable task-and-role document keys with revision updates instead of duplicate
+  catalog entries;
+- a typed direction-decision request in addition to plan and change decisions;
+- a free-form input request for focused questions or an optional human
+  architecture sketch;
+- structured receipts and actionable version, workspace, permission, and
+  registration diagnostics.
+
+Those requests store documents and human responses. They do not choose the next
+phase, relaunch an agent, or make mdmaid.desk the workflow runtime. Until a
+dedicated direction request exists, Maisternia uses authenticated
+`plan-decision` transport and records the semantic mode as `direction` in the
+artifact and request.
+
 ### AgentnykMaisternia
 
 Responsibility:

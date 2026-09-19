@@ -1,7 +1,7 @@
 ---
 name: work-research
 description: Research and compare solution directions using current primary evidence, explicit criteria, and tradeoffs.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-research - Compare Solution Directions
@@ -34,5 +34,7 @@ Evaluate:
 
 Do not edit files.
 
-Return options, recommendation, rejected directions, risks, user decisions, and
-whether the task is ready for a decision.
+Return options, recommendation, rejected directions, risks, user decisions,
+architectural constraints and cross-system implications for `/work-direction`
+when the gate applies, and whether the task is ready or needs a focused grill
+question. If direction is not required, pass findings directly to `/work-plan`.

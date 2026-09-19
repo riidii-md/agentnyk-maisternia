@@ -20,7 +20,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
-    "mode": {"enum": ["plan", "plan-delta", "implementation"]},
+    "mode": {"enum": ["direction", "plan", "plan-delta", "implementation"]},
     "profile": {"enum": ["standard", "maintainability"]},
     "scope": {"enum": ["full", "tests"]},
     "target": {"type": "string", "minLength": 1, "maxLength": 4096},

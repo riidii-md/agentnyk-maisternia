@@ -1,7 +1,7 @@
 ---
 name: work
 description: Conduct provider-neutral work through the smallest useful discovery, decision, execution, verification, and review phases.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work - Provider-Neutral Work Conductor
@@ -22,23 +22,33 @@ Input:
    session; do not create bookkeeping merely to run the workflow.
 3. Report the current phase, status, blockers, approvals, and next action.
 4. Validate that required artifacts for the next phase exist.
-5. Recommend exactly one next phase. Treat research, expanded proof,
+5. Recommend exactly one next phase. Treat research, the conditional direction
+   gate, expanded proof,
    plan review, handoff, and PR preparation as conditional work selected by
    evidence, risk, executor continuity, and publication intent.
-6. Before implementation, require the exact reviewed plan revision to be
+6. Require a reviewed architectural direction and explicit direction decision
+   before the detailed implementation plan for cross-system, cross-owner,
+   trust-boundary, public-contract, persistent-data, migration, rollout,
+   costly-to-reverse, or materially ambiguous work, or when the human requests
+   it. Record an evidence-backed skip for a small, local, reversible task.
+7. Before implementation, require the exact reviewed plan revision to be
    presented for human attention, record the explicit decision against its
    content hash, and pass the implementation-readiness gate.
-7. After verification and independent implementation review pass, require
+8. After verification and independent implementation review pass, require
    `/work-change-review` and a durable `approved` decision for the exact implementation snapshot before `/work-pr`, publication, or completion.
-8. Ask before implementation, permission escalation, commit, push, PR, or a
+9. Ask before implementation, permission escalation, commit, push, PR, or a
    destructive operation when approval is not already recorded.
-9. Dispatch through the configured runner policy or honor an explicit runner.
-10. Report the phase result and next action to the coordinating session.
+10. Dispatch through the configured runner policy or honor an explicit runner.
+11. Report the phase result and next action to the coordinating session.
 
 Do not silently skip required readiness, acceptance evidence, approval,
 verification, or independent review gates. Do not manufacture separate
 artifacts when the approved plan already contains sufficient evidence, and do
 not require a handoff when the same agent continues in the same session.
+
+The decision sequence is evidence and focused human context, optional user
+sketch, conditional direction, direction review and decision, detailed
+implementation plan, plan review and decision, then execution.
 
 ## Output
 

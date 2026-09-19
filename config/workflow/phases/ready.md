@@ -1,7 +1,7 @@
 ---
 name: work-ready
 description: Derive whether the reviewed and explicitly approved plan is safe to execute without inventing missing decisions.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-ready - Implementation Readiness Gate
@@ -17,6 +17,8 @@ Input:
 
 Check:
 
+- an approved direction artifact and matching content hash exist when the
+  conditional direction gate applied, or analysis records why it did not;
 - the final reviewed plan exists;
 - its scope, exclusions, tasks, and acceptance criteria are complete;
 - its affected-system design and task decomposition are sufficient for a fresh
@@ -34,4 +36,4 @@ Check:
 Return pass, conditional pass, or fail with exact missing inputs and the next
 phase. A passing result routes directly to `run` in a continuous session or to
 `handoff` for a fresh executor. Do not use readiness to approve a plan, fill in
-a missing human decision, or proceed past unresolved critical ambiguity.
+a missing direction or plan decision, or proceed past unresolved critical ambiguity.

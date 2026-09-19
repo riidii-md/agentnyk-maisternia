@@ -23,6 +23,12 @@ directory outside a repository, at:
 Use a semantic level-one heading and preserve evidence, caveats, source links,
 and required detail. Never make a temporary HTML file the only durable result.
 
+Prefer a few durable checkpoints over one document per workflow phase.
+Discovery may share one evolving brief; direction, implementation plan, and
+change review are separate roles. When a calling workflow supplies a stable
+task-and-role path, update it for a new revision instead of creating a
+timestamped sibling. A new content hash never inherits earlier approval.
+
 ## Validate before delivery
 
 Require mdmaid 0.1.17 or newer and check `mdmaid --version`. If it is missing or
@@ -32,6 +38,11 @@ upgrade command:
 ```text
 npm install --global mdmaid@0.1.17
 ```
+
+Within one live session, reuse a successful version and decision-capability
+preflight while the executable path and version remain unchanged. Recheck
+after a command failure or executable change; do not repeat the same discovery
+for every checkpoint document.
 
 With a compatible version, run:
 
@@ -68,6 +79,10 @@ Resolve the intended workspace with `mdmaid-desk workspace list`:
    with `mdmaid-desk workspace add`, using a stable collision-safe ID plus the
    credential-free `--repository` and grounded `--repository-name` from the
    project-naming contract.
+
+Reuse a previously verified workspace ID while the canonical root is unchanged
+in the same live session. Resolve again after a workspace error or root change.
+Never create a new workspace merely because an earlier receipt is unavailable.
 
 If the artifact is already inside the intended workspace or one of its allowed
 artifact roots, run:
@@ -107,14 +122,19 @@ opt-in action that requires an explicit current request.
 
 Ordinary readable output remains passive. Do not add review expectations,
 decision controls, or a wait merely because attention is `approval`. Enter
-decision mode only when the calling workflow explicitly requires a human plan
-decision for the exact artifact revision.
+decision mode only when the calling workflow explicitly requires a human
+direction or plan decision for the exact artifact revision.
 
 Before decision-mode delivery, check `mdmaid-desk --help` for
 `--expect plan-decision` and `review wait`. If either capability is absent,
 preserve the validated artifact, stop the approval transition, and report that
 the installed mdmaid-desk must be upgraded. Do not silently fall back to an
 attention-only document or a chat-implied approval.
+
+For a direction decision, use `kind=decision` with the existing authenticated
+`plan-decision` transport and identify the semantic mode as `direction` in the
+title, request message, and local receipt. Do not invent a dedicated desk
+request kind.
 
 Create a recoverable request first. Add these options to the normal `register`
 or `import` command and retain its JSON receipt:
@@ -165,7 +185,8 @@ Treat the returned `reviewRequest.status` as data from the explicit human gate:
   and pass the exact request ID, document revision, content hash, and human
   response text to the decision/readiness phases;
 - `changes_requested`: preserve the required human response text and return to
-  planning; publish the changed revision as a new request after review;
+  direction or planning according to the recorded decision mode; publish the
+  changed revision as a new request after review;
 - `rejected`: preserve the human response text and stop or return to shaping as
   directed;
 - `stale`: treat it as no decision, revalidate the current artifact, and create
