@@ -69,7 +69,7 @@
   "contents": {
     "mcp_refs": [],
     "commands": [
-      "work-conductor", "work-brief", "work-scout", "work-analyze",
+      "work-start", "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-grill", "work-direction", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-run-simplify", "work-verify",
       "work-review", "work-review-simplify", "work-test-review", "work-change-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",

@@ -133,6 +133,7 @@ preset:
 Canonical commands use the `/work-*` namespace:
 
 ```text
+/work-start
 /work-shape
 /work-source
 /work-grill
@@ -163,9 +164,16 @@ Canonical commands use the `/work-*` namespace:
 /work-routing-preferences
 ```
 
-The command identifies a phase or a focused workflow utility. Provider
-rendering decides how that command is installed in each harness. The harness
-decides how to execute it at runtime.
+`/work-start <task>` is the guided entry point for `standard-work` on Codex,
+Claude Code, and Antigravity. It gathers evidence, selects the next applicable
+phase, and keeps advancing in the same
+conversation. When human input is needed, it creates or updates a durable
+discovery brief, plan, or change review, presents the exact question or
+revision-bound decision, and waits. The next user response resumes the
+workflow from that checkpoint. Other `/work-*` commands remain available for
+direct phase work; `/work` reports status and the next phase without running it.
+Provider rendering decides how commands are installed, and the harness executes
+them at runtime. Maisternia remains configuration-only.
 
 `/work-question` is an on-demand companion to idea shaping rather than a
 required phase. It turns an unclear challenge or recurring debate into one
