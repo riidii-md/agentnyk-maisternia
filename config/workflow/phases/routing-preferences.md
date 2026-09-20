@@ -25,20 +25,24 @@ ask me where to run adapt-for-reader every time
 keep implementation in the current harness
 use Codex and Claude for independent review
 use Opus for plans in Claude and Sonnet for runs in Claude
+use high reasoning for plans in Claude and low reasoning for runs in Codex
 ```
 
 Configure only the material fields: policy (`local`, `ask`, or `delegate`),
 ordered harnesses, an optional multi-harness strategy, and optional per-harness
-model choices. `models` keys are canonical harness IDs; a model choice does not
-grant that harness or change authority. It opts that command into a fresh
-model-selectable subagent while the current session remains coordinator.
+model choices, and optional per-harness reasoning levels (`low`, `medium`,
+`high`). `models` and `reasoning` keys are canonical harness IDs; a choice does
+not grant that harness or change authority. It opts that command into a fresh
+subagent that accepts the selected model or level while the current session
+remains coordinator.
 
 When no narrow change was requested, offer guided setup. Inventory each installed canonical `/work-*` command except this preference command. For each
-command, ask where it should run, then ask for the model in each specific
-harness: a known eligible model, provider default, or no override. Ask in short
-rounds, allow the user to reuse one answer across remaining commands, and show
+command, ask where it should run, then ask for the model and reasoning level in
+each specific harness: a known eligible model and `low`, `medium`, or `high`,
+provider defaults, or no overrides. Ask in short rounds, allow the user to reuse
+one answer across remaining commands, and show
 the final command-by-command matrix before proposing persistence. Do not require
-a model override for every command. If the user chooses a model for every
+a model or reasoning override for every command. If the user chooses either for every
 command, state clearly that every command will be subagent-backed.
 
 Choose persistence after the matrix is known: session-only, user-global, or
@@ -63,7 +67,7 @@ reader-profile removal separately.
 Return:
 
 1. a plain-language routing summary;
-2. global defaults and workflow overrides, including per-harness model choices;
+2. global defaults and workflow overrides, including per-harness model and reasoning choices;
 3. a schema-valid candidate profile when persistence is wanted;
 4. the exact destination and diff;
 5. any legacy migration proposed.

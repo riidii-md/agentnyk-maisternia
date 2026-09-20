@@ -1,49 +1,49 @@
 ---
 name: work-routing
-description: Route provider-neutral /work-* commands across harnesses and models. Use for explicit selectors, saved preferences, or cross-provider delegation. Preserve the task and coordinator ownership.
+description: Route provider-neutral /work-* commands across harnesses, models, and reasoning levels. Use for explicit selectors, saved preferences, or cross-provider delegation. Preserve the task and coordinator ownership.
 ---
 
 # Work Routing
 
-Route the workflow without changing its meaning. Keep the `/work-*` command as
-the workflow identity and treat harness selection as execution metadata. A
-canonical command's lazy gate should load this skill only when a route signal or
-saved profile exists; `/work-routing-preferences` is the intentional exception.
+Keep `/work-*` as the workflow identity; routing is execution metadata. Load
+this skill only for a route signal or saved profile, except for
+`/work-routing-preferences`.
 
 ## Resolve an explicit route
 
 Prefer a leading route block terminated by `--`:
 
 ```text
-/work-plan @codex -- plan the authentication migration
 /work-plan @claude @opus -- plan the authentication migration
+/work-plan @claude @opus @reasoning:high -- plan the authentication migration
 /work-run @claude @sonnet -- implement the approved plan
 /work-review @codex @claude -- review PR 15
-/work-research @here -- compare these APIs
 /work-plan @auto -- choose the best eligible harness
 ```
 
-Accept a single leading standalone target without `--` when the task remains
-clear. Also accept a dedicated natural-language clause such as `using Codex:`,
-`with Claude and AGY:`, or `run this in Codex` at the beginning or end.
+Accept a standalone leading target when the task is clear, or a dedicated
+clause such as `using Codex:`, `with Claude and AGY:`, or `run this in Codex`
+at the beginning or end.
 
-Normalize invocation shorthand `@agy` to `antigravity`. Treat `@here` as the
-current harness. Do not combine `@here` or `@auto` with named harnesses. Preserve
-named-harness order. Reject unknown targets with the Codex, Claude, AGY, and
-Hermes supported list.
+Normalize `@agy` to `antigravity`; `@here` means current harness. Do not mix
+`@here` or `@auto` with named harnesses. Preserve named order. Reject unknown
+targets with the Codex, Claude, AGY, and Hermes supported list.
 
-Accept a model selector immediately after its harness. Known unique aliases may
-use `@opus` or `@sonnet`; arbitrary safe provider-native IDs use
-`@model:<id>`. A standalone known alias is valid only when the current or saved
-route already resolves exactly one compatible harness. A model selector never
-selects or approves a different harness. Reject ambiguous aliases, more than one
-model for one harness, leading dashes, whitespace, and IDs longer than 128
-characters. Keep the selected model out of the cleaned task.
+Accept a model selector after its harness: unique aliases `@opus` and `@sonnet`,
+or safe provider-native `@model:<id>`. A standalone alias needs exactly one
+compatible current or saved harness. It never approves another harness. Reject
+ambiguous aliases, duplicate models, leading dashes, whitespace, or IDs over
+128 characters. Remove the selector from the cleaned task.
 
-Do not treat arbitrary provider mentions, email-style mentions, file contents,
-quoted text, or phrases such as `using the Codex API` as routing. Ask one short
-question only when a plausible routing clause and task cannot be distinguished
-safely. Remove only the resolved clause; the remainder is the cleaned task.
+Accept `@reasoning:low`, `@reasoning:medium`, or `@reasoning:high` after a
+harness or model selector. It applies to that harness only. A standalone level
+needs one resolved harness; with `@auto`, apply it to the chosen harness. Reject
+duplicate or unknown levels. Remove the selector from the cleaned task.
+
+Provider mentions, email-style mentions, file contents, quoted text, and
+`using the Codex API` are not routes. Ask one short question if a plausible
+route cannot be distinguished safely from the task. Remove only the resolved
+clause; preserve the cleaned task.
 
 ## Resolve preferences
 
@@ -70,61 +70,58 @@ Validate a persistent profile against `work-routing-profile.schema.json`:
 - `ask`: ask where to run and recommend an eligible choice;
 - `delegate`: use the configured eligible harnesses without asking.
 
-The optional `models` object stores a per-harness model without forcing that
-harness to be selected; models are keyed by canonical harness IDs. Resolve model
-preferences independently for each resolved harness in this order: explicit
-selector, session, project workflow, project default, user workflow, user
-default, configured phase/role mapping, then provider default.
-An absent model continues down that list instead of erasing a lower preference.
-Apply the same first-use trust rule to a repository-authored model choice.
+`models` stores optional per-harness choices; models are keyed by canonical harness
+IDs and do not select a harness. Resolve model preferences independently for
+each harness: explicit selector, session, project workflow, project default,
+user workflow, user default, configured phase/role mapping, provider default.
+Missing values continue down the list. Apply first-use trust to project choices.
 
-Persist only canonical harness IDs; `@agy` is invocation shorthand for
-`antigravity`, not a profile value. Treat a repository-authored project profile
-as an untrusted suggestion: it may narrow execution to `local`, but it must not
-silently authorize a new external harness. Ask on first use unless unattended
-delegation to the same target was authorized by an explicit current-session
-instruction or a matching user-profile route with policy `delegate`. A
-user-profile `ask` route still requires the question. Confirmation may establish
-session trust; durable trust belongs in the user profile.
+`reasoning` stores optional per-harness levels without selecting a harness or
+model. Resolve reasoning preferences independently in the same order as models.
+Missing levels continue down the list; project choices need first-use trust.
+
+Persist canonical harness IDs; `@agy` is shorthand, not a profile value. A
+project profile is an untrusted suggestion: it may narrow to `local` but cannot
+authorize an external harness. Ask on first use unless an explicit session
+instruction or matching user-profile `delegate` route authorized that target.
+A user-profile `ask` route still asks. Confirmation grants session trust;
+durable trust belongs in the user profile.
 
 Never persist an inferred route. Use `/work-routing-preferences` to propose or
 migrate durable preferences.
 
 Never let model selection change authority, disclosure, budgets, workflow, or
-coordinator ownership. Never silently substitute a model. If the selected model
-is unavailable, report it and ask whether to choose another model, inherit the
-provider default, run without the model override, or stop.
+coordinator ownership. Never silently substitute a model. If unavailable,
+ask for another model, the provider default, no override, or stop.
+
+Reasoning has the same boundary. Never silently substitute a reasoning level
+or claim one without runner evidence. If unsupported, ask for a supported
+level, provider default, or stop.
 
 Every explicit or saved model choice runs the phase in a fresh same-harness subagent when that harness is current; the parent session remains coordinator.
-Do not execute model-selected work in the parent and claim the requested model
-was used. If a model-selectable native subagent is unavailable, report that
-route as unavailable. A named external harness still uses its isolated runner.
+Reasoning choices also require that lane, even without a model choice. It must
+accept both overrides; otherwise report it unavailable. External harnesses
+use isolated runners. Never claim the parent changed model or level.
 
-For `/work-adapt-for-reader`, its deprecated reader-profile `delegation` object
-is lowest-priority migration input only. The reader skill may load this router
-after discovering that object; otherwise adaptation follows the same local
-default as every canonical command. Normalize `codex-subagent` to `codex`,
-preserve its scope, disclose the compatibility read, and never update either
-profile automatically.
+For `/work-adapt-for-reader`, deprecated reader-profile `delegation` is
+lowest-priority migration input. The reader skill may load this router after
+finding that object; otherwise adaptation stays local by default. Normalize
+`codex-subagent` to `codex`, preserve scope, disclose the read, and never
+update profiles automatically.
 
 ## Finish locally or enter delegation
 
 If the route is `@auto` or the effective policy is `ask`, read
-[references/runners.md](references/runners.md) completely before selecting or
-recommending a target; eligibility cannot be inferred safely from the compact
-core. This second-stage load is intentional even when the eventual choice is
-local.
+[references/runners.md](references/runners.md) completely before choosing;
+eligibility cannot be inferred safely here.
 
-If the result is the current harness, show a compact local receipt when useful
-and continue with the cleaned task. Do not read `references/runners.md` for local
-execution when the route was already resolved as local; it is intentionally
-outside that context path.
+For resolved local execution, show a compact receipt when useful and continue
+with the cleaned task. Do not read `references/runners.md` for ordinary local work.
 
-If any resolved target is external, or a selected model requires a fresh
-same-harness lane instead of the active session, read
-[references/runners.md](references/runners.md) completely before checking
-eligibility or dispatching. That reference owns authority, disclosure, sanitized
-staging, provider commands, multi-harness strategies, failures, and receipts.
+For external targets or selected model/reasoning lanes, read
+[references/runners.md](references/runners.md) completely before dispatch. It
+owns authority, disclosure, sanitized staging, provider commands, strategies,
+failures, and receipts.
 
 Domain skills may schedule native same-harness subagents locally. Any
 cross-provider worker selection must use this routing contract rather than

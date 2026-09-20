@@ -191,7 +191,7 @@ Hermes skills.
 `@harness` route blocks for canonical commands. It owns:
 
 - explicit, session, project, and user routing precedence;
-- independent per-harness model precedence at those same scopes;
+- independent per-harness model and per-harness reasoning precedence at those same scopes;
 - provider availability and authority checks;
 - minimal redacted handoff packets;
 - safe single- and multi-harness strategies;
@@ -203,7 +203,7 @@ The `maisternia` binary still does not dispatch runtime work.
 
 `/work-routing-preferences` proposes schema-valid global and per-workflow
 profiles. Its guided setup walks each installed canonical command, asks for the
-harness and optional per-harness model, then offers session-only, user-global,
+harness and optional per-harness model and reasoning level, then offers session-only, user-global,
 or repository-local persistence with an exact diff. User-global is normally
 recommended for user-installed command sets; repository-local is recommended
 for project-installed commands or repository constraints. A model choice also
