@@ -166,10 +166,12 @@ Canonical commands use the `/work-*` namespace:
 
 `/work-start <task>` is the guided entry point for `standard-work` on Codex,
 Claude Code, and Antigravity. It gathers evidence, selects the next applicable
-phase, and keeps advancing in the same
-conversation. When human input is needed, it creates or updates a durable
-discovery brief, plan, or change review, presents the exact question or
-revision-bound decision, and waits. The next user response resumes the
+phase, and keeps advancing in the same conversation. Before task edits, it
+checks the task's base branch against its remote and verifies a dedicated task
+worktree. It preserves edits in other checkouts and reports when base freshness
+cannot be verified. When human input is needed, it creates or updates a durable
+discovery brief, direction, plan, or change review, presents the exact question
+or revision-bound decision, and waits. The next user response resumes the
 workflow from that checkpoint. Other `/work-*` commands remain available for
 direct phase work; `/work` reports status and the next phase without running it.
 Provider rendering decides how commands are installed, and the harness executes

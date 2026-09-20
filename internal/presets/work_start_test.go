@@ -76,3 +76,23 @@ func TestRepositoryWorkStartIsInstalledByStandardWork(t *testing.T) {
 		}
 	}
 }
+
+func TestRepositoryWorkStartChecksGitBaseAndTaskWorktree(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	content, err := os.ReadFile(filepath.Join(root, "config/workflow/phases/start.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{
+		"## Git workspace preflight",
+		"main", "develop", "remote", "fetch", "behind", "diverged",
+		"git worktree list --porcelain", "dedicated worktree", "uncommitted changes",
+		"before implementation", "Do not reset", "not a Git repository",
+	} {
+		if !strings.Contains(string(content), required) {
+			t.Errorf("work-start Git preflight is missing %q", required)
+		}
+	}
+}

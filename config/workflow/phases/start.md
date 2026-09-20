@@ -31,16 +31,46 @@ progress. The user does not need to invoke each `/work-*` command or repeat
 `/work-start` after replying. A later explicit `/work-start` may resume the
 same task from its evidence.
 
+## Git workspace preflight
+
+Before task-specific workspace writes, identify the repository and run this
+preflight; recheck the base and worktree before implementation. If this is
+not a Git repository, record that these checks do not apply and continue under
+the available workspace rules.
+
+1. Determine the task's base branch from the user's instructions, repository
+   rules, or an existing PR target. Otherwise inspect the remote default branch
+   and use that branch (often `main` or `develop`). Do not assume that the
+   current checkout is the right base. Fetch the chosen remote branch when
+   network access permits. Compare its tip with the current task branch and
+   report whether the task branch is current, ahead, behind, or diverged. If
+   fetch fails or no remote exists, report that freshness is unverified; do not
+   describe a cached ref as latest.
+2. Use `git rev-parse --show-toplevel` and `git worktree list --porcelain` to
+   verify that this task has a dedicated worktree and branch. Reuse an existing
+   task worktree when its identity is clear. Otherwise create a uniquely named
+   linked worktree and task branch from the selected base, within permitted
+   paths, before editing task files. If only a local base ref is available,
+   record its freshness limit. Do not treat the primary checkout or a
+   worktree used by another task as dedicated to this task.
+3. Preserve uncommitted changes in any checkout. Do not reset, discard, or
+   silently move them. If relevant edits are in a different checkout or the
+   task branch is behind or diverged, use the repository's safe update path;
+   resolve any ambiguity with the human before changing shared history or
+   moving work. Record the selected base, its verified tip or freshness limit,
+   task branch, worktree path, and any unresolved blocker in task evidence.
+
 ## Advance the workflow
 
 1. Read repository instructions, the task, current conversation, existing
-   artifacts, and installed phase contracts. Identify work already completed
-   and the next unmet gate. Do not repeat a completed phase or infer a decision
-   from a document's existence.
+   artifacts, and installed phase contracts. Run the Git workspace preflight,
+   identify work already completed and the next unmet gate. Do not repeat a
+   completed phase or infer a decision from a document's existence.
 2. Gather facts through `/work-brief`, `/work-scout`, and `/work-analyze`.
-   Research when evidence is missing. Record why expanded proof, plan review,
-   or handoff applies or can be skipped. Apply each phase contract in this
-   session; do not merely print the next command or follow a fixed checklist.
+   Research when evidence is missing. Record why a conditional direction gate,
+   expanded proof, plan review, or handoff applies or can be skipped. Apply
+   each phase contract in this session; do not merely print the next command or
+   follow a fixed checklist.
 3. When a material human fact is needed, resolve what available evidence can
    answer first. Then write or update one durable discovery brief at a
    task-specific artifact path, otherwise under `.agent-runs/readable-output/`.
@@ -50,25 +80,29 @@ same task from its evidence.
    private configuration, and sensitive source bodies. Summarize necessary
    evidence and cite safe source locations instead of copying raw content.
    Present the document and wait for the human response.
-4. Create the `/work-plan` document, expand proof when needed, and run the
+4. When direction is required, create the `/work-direction` document, run
+   `/work-plan-review direction`, present the reviewed revision, and wait for a
+   direction decision. Record it with `/work-decide direction` before planning.
+5. Create the `/work-plan` document, expand proof when needed, and run the
    applicable `/work-plan-review` path. Present the exact reviewed revision
    for a plan decision. Wait for the human response, record it with
-   `/work-decide`, and check `/work-ready` before implementation.
-5. After approval, execute `/work-run` in the same session unless a fresh
+   `/work-decide plan`, and check `/work-ready` before implementation.
+6. After approval, execute `/work-run` in the same session unless a fresh
    executor makes `/work-handoff` necessary. Continue through `/work-verify`
    and `/work-review`. Apply requested fixes and repeat affected verification
    and review phases until they pass or a real blocker remains.
-6. Generate the mandatory `/work-change-review` document for the exact
+7. Generate the mandatory `/work-change-review` document for the exact
    implementation snapshot. Present it, wait for the human response, and
    preserve its revision-bound `change-decision`. If changes are requested,
    return to run, verify, review, and change review. Prepare `/work-pr` only
    when publication was requested and the change decision is approved.
 
-The delivery route is brief → scout → analyze → optional research or human
-question → plan → optional proof and plan review → plan decision → readiness →
-optional handoff → run → verify → implementation review → change review →
-optional PR preparation. Failed verification or review returns to the relevant
-earlier phase; requested changes return to the affected document or code phase.
+The delivery route is Git workspace preflight → brief → scout → analyze →
+optional research or human question → conditional direction and decision →
+plan → optional proof and plan review → plan decision → readiness → optional
+handoff → run → verify → implementation review → change review → optional PR
+preparation. Failed verification or review returns to the relevant earlier
+phase; requested changes return to the affected document or code phase.
 Update this command whenever the `standard-work` delivery graph gains a gate.
 
 ## Human checkpoints
@@ -78,8 +112,8 @@ validated mdmaid.desk review link, a short summary, the exact decision or
 question, and the consequence of each response. Use the installed
 `readable-output` and phase-specific review contract where applicable. Keep
 one stable task-and-role artifact path across revisions. The discovery brief,
-plan, and change review are separate roles; do not create a file for every
-internal phase.
+direction, plan, and change review are separate roles; do not create a file for
+every internal phase.
 
 For a live mdmaid.desk decision request, keep the current agent turn open and
 wait in the foreground as the phase contract requires. If the harness instead
