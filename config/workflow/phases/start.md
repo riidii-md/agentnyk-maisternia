@@ -38,9 +38,12 @@ same task from its evidence.
    and the next unmet gate. Do not repeat a completed phase or infer a decision
    from a document's existence.
 2. Gather facts through `/work-brief`, `/work-scout`, and `/work-analyze`.
-   Research when evidence is missing. Record why expanded proof, plan review,
-   or handoff applies or can be skipped. Apply each phase contract in this
-   session; do not merely print the next command or follow a fixed checklist.
+   Research when evidence is missing and use `/work-grill` when focused human
+   context is needed. Classify the conditional architectural direction gate;
+   record evidence for a skip or return to scout or research when impact is
+   unknown. Record why expanded proof, plan review, or handoff applies or can
+   be skipped. Apply each phase contract in this session; do not merely print
+   the next command or follow a fixed checklist.
 3. When a material human fact is needed, resolve what available evidence can
    answer first. Then write or update one durable discovery brief at a
    task-specific artifact path, otherwise under `.agent-runs/readable-output/`.
@@ -50,22 +53,28 @@ same task from its evidence.
    private configuration, and sensitive source bodies. Summarize necessary
    evidence and cite safe source locations instead of copying raw content.
    Present the document and wait for the human response.
-4. Create the `/work-plan` document, expand proof when needed, and run the
-   applicable `/work-plan-review` path. Present the exact reviewed revision
+4. When architectural direction is required, create the `/work-direction`
+   document, run `/work-plan-review direction`, and present the exact reviewed
+   revision. Wait for an explicit direction decision and record it with
+   `/work-decide direction` before detailed planning. Requested changes return
+   to direction and review; a stale revision requires a fresh review.
+5. Create the `/work-plan` document, expand proof when needed, and run the
+   applicable `/work-plan-review plan` path. Present the exact reviewed revision
    for a plan decision. Wait for the human response, record it with
-   `/work-decide`, and check `/work-ready` before implementation.
-5. After approval, execute `/work-run` in the same session unless a fresh
+   `/work-decide plan`, and check `/work-ready` before implementation.
+6. After approval, execute `/work-run` in the same session unless a fresh
    executor makes `/work-handoff` necessary. Continue through `/work-verify`
    and `/work-review`. Apply requested fixes and repeat affected verification
    and review phases until they pass or a real blocker remains.
-6. Generate the mandatory `/work-change-review` document for the exact
+7. Generate the mandatory `/work-change-review` document for the exact
    implementation snapshot. Present it, wait for the human response, and
    preserve its revision-bound `change-decision`. If changes are requested,
    return to run, verify, review, and change review. Prepare `/work-pr` only
    when publication was requested and the change decision is approved.
 
 The delivery route is brief → scout → analyze → optional research or human
-question → plan → optional proof and plan review → plan decision → readiness →
+question → conditional architectural direction, direction review, and direction
+decision → plan → optional proof and plan review → plan decision → readiness →
 optional handoff → run → verify → implementation review → change review →
 optional PR preparation. Failed verification or review returns to the relevant
 earlier phase; requested changes return to the affected document or code phase.
@@ -78,8 +87,8 @@ validated mdmaid.desk review link, a short summary, the exact decision or
 question, and the consequence of each response. Use the installed
 `readable-output` and phase-specific review contract where applicable. Keep
 one stable task-and-role artifact path across revisions. The discovery brief,
-plan, and change review are separate roles; do not create a file for every
-internal phase.
+direction, plan, and change review are separate roles; do not create a file
+for every internal phase.
 
 For a live mdmaid.desk decision request, keep the current agent turn open and
 wait in the foreground as the phase contract requires. If the harness instead
@@ -101,8 +110,9 @@ authorized, reviewable work before requesting a decision.
 
 ## Boundaries and output
 
-Respect phase authority and repository rules. Do not implement before the
-approved plan and readiness gate. Do not publish, claim delivery, or complete
+Respect phase authority and repository rules. Do not plan in detail before an
+approved direction when its gate applies. Do not implement before the approved
+plan and readiness gate. Do not publish, claim delivery, or complete
 before the approved exact-snapshot change decision. Commit, push, PR, deploy,
 and other external writes require their own authority when applicable.
 Maisternia configures this command; the active harness owns session state and

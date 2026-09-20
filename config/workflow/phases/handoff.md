@@ -1,7 +1,7 @@
 ---
 name: work-handoff
 description: Compile an approved plan for a fresh executor only when execution context will change.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-handoff - Compile a Self-Contained Execution Contract
@@ -17,8 +17,8 @@ Input:
 
 `$ARGUMENTS`
 
-Require an accepted definition, human decision, approved plan, and sufficient
-acceptance contract.
+Require an accepted definition, approved direction when its conditional gate
+applied, human plan decision, approved plan, and sufficient acceptance contract.
 
 Compile:
 

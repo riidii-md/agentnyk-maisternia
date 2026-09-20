@@ -25,6 +25,30 @@
       "optional": ["documentation.search", "issue.read", "web.search"],
       "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
     },
+    "grill": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["issue.read"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "direction": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": ["documentation.search", "issue.read"],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "direction-review": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": ["documentation.search", "repository.test", "subagent.spawn"],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "direction-decision": {
+      "authority": "read_only",
+      "required": ["filesystem.read", "repository.read"],
+      "optional": ["issue.read"],
+      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+    },
     "decide": {
       "authority": "read_only",
       "required": ["filesystem.read", "repository.read"],
@@ -38,10 +62,10 @@
       "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
     },
     "plan": {
-      "authority": "read_only",
-      "required": ["filesystem.read", "repository.read"],
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
       "optional": ["documentation.search", "repository.test"],
-      "forbidden": ["filesystem.write", "git.commit", "git.push", "external.write", "production.access"]
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
     },
     "prove": {
       "authority": "read_only",

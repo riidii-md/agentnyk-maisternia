@@ -19,8 +19,8 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Packs) != 4 {
-		t.Fatalf("pack count = %d, want 4", len(library.Packs))
+	if len(library.Packs) != 5 {
+		t.Fatalf("pack count = %d, want 5", len(library.Packs))
 	}
 	if library.Root() != repositoryRoot(t) {
 		t.Fatalf("library root = %q, want %q", library.Root(), repositoryRoot(t))
@@ -154,8 +154,23 @@ func TestRepositoryDeveloperContextAndGoReleaserEnvironmentPacks(t *testing.T) {
 	installer := gitNexus.Installers[0]
 	if installer.Kind != InstallerNPMGlobal ||
 		installer.Package != "gitnexus" ||
-		installer.Version != "1.6.9" {
+		installer.Version != "1.6.12" {
 		t.Fatalf("GitNexus installer = %#v", installer)
+	}
+
+	projectDocsQMD, found := library.Get("project-docs-qmd")
+	if !found {
+		t.Fatal("project-docs-qmd environment pack missing")
+	}
+	qmd, found := projectDocsQMD.Requirement("qmd")
+	if !found || qmd.Detect.Command != "qmd" || len(qmd.Installers) != 1 {
+		t.Fatalf("QMD requirement = %#v", qmd)
+	}
+	qmdInstaller := qmd.Installers[0]
+	if qmdInstaller.Kind != InstallerNPMGlobal ||
+		qmdInstaller.Package != "@tobilu/qmd" ||
+		qmdInstaller.Version != "2.8.3" {
+		t.Fatalf("QMD installer = %#v", qmdInstaller)
 	}
 
 	goReleaserValidation, found := library.Get("goreleaser-validation")

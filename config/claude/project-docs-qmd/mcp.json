@@ -1,0 +1,6 @@
+{
+  "_review_notice": "Review only. Active configuration requires maisternia developer-context apply to verify the selected project root and .qmd/index.yml, pin the QMD MCP process to that root, and reject a missing or out-of-project index before enabling any tool.",
+  "_expected_stdio_server": "qmd mcp",
+  "_expected_read_tools": ["query", "get", "multi_get", "status"],
+  "mcpServers": {}
+}

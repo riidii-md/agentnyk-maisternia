@@ -85,7 +85,13 @@ preset:
   pipelines:
     default:
       dag:
-        scout: [plan]
+        scout: [analyze]
+        analyze: [scout, research, grill, direction, plan]
+        research: [grill, direction, plan]
+        grill: [research, direction, plan]
+        direction: [direction-review, scout, research, grill]
+        direction-review: [direction-decision, direction, research]
+        direction-decision: [plan, direction, analyze, direction-review]
         plan: [prove, plan-review, decide]
         prove: [plan-review]
         plan-review: [decide, plan]
@@ -101,6 +107,8 @@ preset:
     - filesystem
   commands:
     - /work-scout
+    - /work-grill
+    - /work-direction
     - /work-plan
     - /work-plan-review
     - /work-run
@@ -135,6 +143,7 @@ Canonical commands use the `/work-*` namespace:
 /work-scout
 /work-analyze
 /work-research
+/work-direction
 /work-decide
 /work-ready
 /work-plan
@@ -157,10 +166,10 @@ Canonical commands use the `/work-*` namespace:
 
 `/work-start <task>` is the guided entry point for `standard-work` on Codex,
 Claude Code, and Antigravity. It gathers evidence, selects the next applicable
-phase, and keeps advancing in the same
-conversation. When human input is needed, it creates or updates a durable
-discovery brief, plan, or change review, presents the exact question or
-revision-bound decision, and waits. The next user response resumes the
+phase, and keeps advancing in the same conversation. When human input is needed,
+it creates or updates a durable discovery brief, architectural direction, plan,
+or change review, presents the exact question or revision-bound decision, and
+waits. The next user response resumes the
 workflow from that checkpoint. Other `/work-*` commands remain available for
 direct phase work; `/work` reports status and the next phase without running it.
 Provider rendering decides how commands are installed, and the harness executes
@@ -169,6 +178,14 @@ them at runtime. Maisternia remains configuration-only.
 `/work-question` is an on-demand companion to idea shaping rather than a
 required phase. It turns an unclear challenge or recurring debate into one
 high-leverage question and one owned, time-bounded next move.
+
+`/work-direction` is a conditional high-level architectural checkpoint between
+analysis/research and the detailed `/work-plan`. Cross-system, cross-owner,
+public-contract, persistent-data, security, migration, rollout, costly-to-reverse,
+or materially ambiguous work requires an exact reviewed direction revision and
+explicit human decision. A small, local, reversible task can go directly to
+planning after an evidence-backed skip; this route remains available after
+research or grill. See [Architectural direction](ARCHITECTURAL-DIRECTION.md).
 
 `/work-test-review` specializes the canonical implementation review around test
 intent and oracles, risk and edge coverage, level and fidelity, and economical

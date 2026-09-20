@@ -74,6 +74,31 @@ func TestRepositorySchemasAreValidJSON(t *testing.T) {
 	}
 }
 
+func TestReviewReportSchemaSupportsDirectionMode(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(repositoryRoot(t), "config", "schema", "review-report.schema.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Properties struct {
+			Mode struct {
+				Enum []string `json:"enum"`
+			} `json:"mode"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal(data, &schema); err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range []string{"direction", "plan", "plan-delta", "implementation"} {
+		if !slices.Contains(schema.Properties.Mode.Enum, mode) {
+			t.Errorf("review-report mode enum is missing %q", mode)
+		}
+	}
+}
+
 func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	t.Parallel()
 
@@ -183,8 +208,13 @@ func TestRepositoryReviewPhaseAuthorities(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]string{
-		"plan-review": "artifact_write",
-		"review":      "workspace_write",
+		"grill":              "read_only",
+		"direction":          "artifact_write",
+		"direction-review":   "artifact_write",
+		"direction-decision": "read_only",
+		"plan":               "artifact_write",
+		"plan-review":        "artifact_write",
+		"review":             "workspace_write",
 	}
 	for phase, authority := range want {
 		profile, routing, err := policy.Phase(phase)
@@ -200,6 +230,33 @@ func TestRepositoryReviewPhaseAuthorities(t *testing.T) {
 				routing.Authority,
 				authority,
 			)
+		}
+	}
+}
+
+func TestDirectionAndPlanArtifactsCannotWriteTargetWorkspace(t *testing.T) {
+	t.Parallel()
+
+	policy, err := LoadPolicy(repositoryRoot(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, phase := range []string{"direction", "direction-review", "plan"} {
+		profile, _, err := policy.Phase(phase)
+		if err != nil {
+			t.Errorf("phase %q: %v", phase, err)
+			continue
+		}
+		if !slices.Contains(profile.Required, "workflow.artifact_write") {
+			t.Errorf("phase %q must require workflow.artifact_write", phase)
+		}
+		for _, forbidden := range []string{
+			"filesystem.workspace_write", "git.commit", "git.push",
+			"external.write", "production.access",
+		} {
+			if !slices.Contains(profile.Forbidden, forbidden) {
+				t.Errorf("phase %q must forbid %q", phase, forbidden)
+			}
 		}
 	}
 }

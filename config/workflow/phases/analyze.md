@@ -1,7 +1,7 @@
 ---
 name: work-analyze
 description: Define the accepted task, constraints, risks, unknowns, and acceptance criteria before solution work begins.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-analyze - Define the Task
@@ -21,6 +21,14 @@ scope exclusions, and draft acceptance criteria for features.
 
 Do not edit files or choose a solution prematurely.
 
+Classify whether a separate architectural direction is required. Require it
+for cross-system or cross-owner changes, public contracts, persistent data,
+security or trust boundaries, migrations, compatibility or rollout changes,
+costly-to-reverse choices, materially different designs, or an explicit human
+request. For a small, local, reversible task with one evident approach, record
+why the direction gate is not required. Unknown impact calls for more scout or
+research, never an assumed skip.
+
 Return:
 
 - Concise task statement
@@ -29,4 +37,5 @@ Return:
 - Acceptance criteria draft
 - Constraints and risks
 - Questions needing user decisions
+- Direction-gate result: required, not required, or unknown, with evidence
 - Recommended next phase

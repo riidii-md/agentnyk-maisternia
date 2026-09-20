@@ -1,15 +1,15 @@
 ---
 name: work-plan-review
 description: Adversarially review a full plan or targeted plan delta against the actual repository, verify every candidate finding, and apply confirmed corrections to the plan artifact.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work-plan-review - Review A Plan Before Implementation
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
-Review a plan or a targeted decision change before handoff. Do not implement
-product code.
+Review an architectural direction, an implementation plan, or a targeted plan
+change before handoff. Do not implement product code.
 
 Input:
 
@@ -18,6 +18,7 @@ Input:
 Accepted forms:
 
 ```text
+/work-plan-review direction <direction artifact and optional focus>
 /work-plan-review plan <plan or design path and optional focus>
 /work-plan-review plan-delta <changed decision, section, or task>
 ```
@@ -27,11 +28,18 @@ only because the repository has no implementation diff.
 
 ## Resolve And Ground The Target
 
-Read repository instructions, the complete plan or design, relevant source
+Read repository instructions, the complete direction, plan, or design, relevant source
 code, tests, schemas, dependencies, migrations, CI, and accepted decisions. For
 `plan-delta`, identify exactly which tasks, interfaces, assumptions, acceptance
 criteria, and verification steps the delta can affect. Escalate to a full plan
 review only when the delta invalidates broader dependencies or scope.
+
+For `direction`, review at architectural altitude: system boundaries,
+ownership, interfaces, data or control flows, trust boundaries, rejected
+alternatives, migration and operational implications, and constraints handed
+to implementation planning. Do not demand file-by-file tasks or detailed test
+commands from a direction. The fresh-executor criterion below applies to
+implementation plans, not architectural directions.
 
 Apply the fresh-executor criterion at risk-appropriate depth: a fresh executor
 must be able to implement the plan without inventing material architecture,
@@ -108,7 +116,7 @@ refuted, applied, and blocked findings.
 
 ## Build The Visual Plan Review
 
-On `pass`, build a standalone approval artifact at:
+For a plan review that passes, build a standalone approval artifact at:
 
 ```text
 .agent-runs/plan-reviews/<run-id>/plan-review.md
@@ -147,3 +155,18 @@ a stale request requires a fresh review and visual artifact for the current
 revision. Registration is not approval: do not infer a decision from the
 document being registered, opened, marked done, or closed, and do not begin
 implementation until the human decision is recorded.
+
+For a passing `direction` review, preserve the complete reviewed direction
+revision in a standalone direction review artifact, with a concise evidence
+summary, confirmed/refuted/applied/blocked findings, and the exact source path
+and content hash. Use only architecture-level visuals that materially clarify
+the choice; do not run the implementation-plan visual inventory or call the
+direction implementation-ready. Invoke `readable-output` to validate and
+deliver the exact reviewed direction through mdmaid.desk with an unambiguous
+direction title and request message. Use the currently supported authenticated
+`plan-decision` transport with `kind=decision`, record semantic decision mode `direction` with
+document ID, revision, review request ID, path, and content hash, and keep the
+current agent turn open on the foreground waiter. Approval continues to
+`/work-decide direction`; requested changes return to direction and review;
+rejection stops or reshapes; and stale returns to current-revision review.
+Registration, opening, or closing is never direction approval.

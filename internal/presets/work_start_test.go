@@ -47,7 +47,8 @@ func TestRepositoryWorkStartIsInstalledByStandardWork(t *testing.T) {
 	for _, target := range startTargets {
 		for _, phaseID := range []string{
 			"work-brief", "work-scout", "work-analyze", "work-research",
-			"work-plan", "work-decide", "work-ready", "work-run",
+			"work-grill", "work-direction", "work-plan", "work-plan-review",
+			"work-decide", "work-ready", "work-run",
 			"work-verify", "work-review", "work-change-review", "work-pr",
 		} {
 			if !slices.ContainsFunc(targetsByID[phaseID], func(phaseTarget configurator.Target) bool {
@@ -66,7 +67,7 @@ func TestRepositoryWorkStartIsInstalledByStandardWork(t *testing.T) {
 	}
 	for _, required := range []string{
 		"same conversation", "automatically", "discovery brief",
-		"plan decision", "change-decision", "wait for the human response",
+		"direction decision", "plan decision", "change-decision", "wait for the human response",
 		"resume", "stale", "Do not infer approval", "publication",
 		"redact", "reshaping", "The delivery route is",
 		"Do not delegate `/work-start`",

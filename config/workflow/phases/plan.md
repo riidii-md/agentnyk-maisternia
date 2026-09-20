@@ -1,16 +1,17 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work-plan - Create the Implementation Plan
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
-Produce an actionable implementation proposal. An earlier direction decision
-may constrain it, but the implementation proposal itself is not approved until
-the human reviews the final revision and makes an explicit decision.
+Produce an actionable implementation proposal. When the direction gate applied,
+the exact reviewed and approved direction constrains it. The implementation
+proposal itself is not approved until the human reviews the final revision and
+makes an explicit decision.
 
 When `work-routing` resolves several harnesses, request independent plans and
 let the current coordinating harness synthesize one plan while preserving
@@ -23,12 +24,18 @@ Input:
 Discover repository rules before assuming paths, base branches, ticket formats,
 tools, tests, or PR conventions.
 
-Before choosing the direction, inspect the affected code and propose the
-simplest viable direction that satisfies the accepted scope and safeguards.
-Prefer omitting speculative work and reusing existing repository code. Use the
-standard library, a native platform capability, an already-installed dependency,
-or direct local code before introducing a new abstraction. Explain the evidence
-for the selected direction and the complexity it avoids.
+Inspect the affected code and, when direction was required, locate the accepted direction
+artifact, decision, revision, and content hash. Treat its architecture,
+boundaries, constraints, and accepted risks as inputs rather than silently
+redesigning them. If a required direction is missing, stale, or materially
+contradicted by code, return to direction and review.
+
+When analysis records that direction was not required, include the evidence for
+that skip and propose the simplest viable direction satisfying accepted scope
+and safeguards. Prefer omitting speculative work and reusing existing
+repository code. Use the standard library, a native platform capability, an
+already-installed dependency, or direct local code before introducing a new
+abstraction. Explain the evidence and complexity avoided.
 
 Simplicity does not authorize narrowing requested behavior or weakening
 correctness, validation, security, accessibility, compatibility, data-loss
@@ -85,8 +92,13 @@ Return:
 
 - Discovered repository rules
 - Scope and exclusions
-- Simplest viable direction, evidence, and complexity avoided
-- Proposed direction and rationale
+- Accepted direction artifact, decision, revision, and content hash, or the
+  evidence-backed reason direction was not required
+- Approved direction summary when its gate applied, or the evidence-backed skip
+- Implementation approach within the accepted direction; do not choose a second
+  architecture
+- Simplest viable direction, evidence, and complexity avoided only when the
+  direction gate was skipped
 - Affected-system design, ownership boundaries, and responsibilities
 - Material interfaces and cross-component contracts
 - Planned data and control flow
@@ -116,5 +128,5 @@ when it returns: approval continues to `/work-decide`, requested changes return
 to planning, rejection stops or reshapes the work, and a stale request requires
 publication of the current revision.
 
-Registration or presentation is not approval. Do not implement code, mark the
-direction accepted, or claim implementation readiness.
+Registration or presentation is not approval. Do not implement code, mark a
+direction or plan accepted, or claim implementation readiness.
