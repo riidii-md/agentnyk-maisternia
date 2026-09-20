@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral delivery with a conditional reviewed architectural-direction gate, detailed implementation planning, visual plan review, explicit human decisions, verification, specialized test review, mandatory change review, and optional PR preparation.",
+  "description": "Provider-neutral guided delivery with a conditional reviewed architectural-direction gate, detailed implementation planning, visual plan review, explicit human decisions, verification, specialized test review, mandatory change review, and optional PR preparation.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {

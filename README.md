@@ -154,7 +154,7 @@ through the applicable workflow phases in the current conversation. At a human
 checkpoint it creates a reviewable document, presents the exact question or
 decision, and waits for your response. Your reply resumes the workflow; you do
 not need to invoke the next phase yourself. It pauses for material questions,
-plan decisions, and implementation review.
+architectural direction and plan decisions, and implementation review.
 
 ### Route work to a harness or model
 
