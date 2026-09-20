@@ -37,6 +37,12 @@ Include when relevant:
 
 Use Mermaid only where it materially improves understanding.
 
+Title the report with the grounded ticket ID when available, the task name,
+and the document purpose, such as `TASK-123 — Worker scaling: findings and next
+steps`. Without a ticket, begin with the task name; if none was supplied,
+derive it from the report's grounded subject. Use this title for the level-one
+heading and desk `--title`, not `showcase` or the filename alone.
+
 Always write the complete report to a durable artifact at
 `.agent-runs/showcase/<timestamp>-showcase.md`. Before resolving or writing to
 mdmaid.desk, require mdmaid 0.1.17 or newer and check `mdmaid --version`. An
@@ -64,7 +70,7 @@ stable collision-safe workspace ID. Follow the installed readable-output
 `references/project-naming.md` contract. Then run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention review --task <jira-id> --feature-name "<minimal feature text>"
+mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
 ```
 
 Omit both project options when no grounded Jira ID exists.

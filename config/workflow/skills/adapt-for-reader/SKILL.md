@@ -196,10 +196,12 @@ Jira-ID, and minimal AI feature-text rules.
 2. Otherwise match the canonical current root in `mdmaid-desk workspace list`.
 3. If it is absent, add the current root once with `mdmaid-desk workspace add`,
    using a stable collision-safe ID derived from the root.
-4. Derive the catalog title from the final document's first level-one heading,
-   removing only the Markdown heading marker. If the document has no level-one
-   heading, write a concise semantic title from the reader contract. Never use
-   the timestamped filename as the catalog title.
+4. Derive the catalog title from the final document's first level-one heading
+   when it includes the grounded ticket ID if available and the task name.
+   The title must also state the document purpose. If the heading is generic
+   or absent, derive a concise title with those details from the reader
+   contract and grounded source. Never use only the timestamped filename or
+   document kind as the catalog title.
 5. Run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
    --title "<catalog title>" --attention review --task <jira-id>
    --feature-name "<minimal feature text>"`. Omit both project options when no

@@ -46,9 +46,14 @@ configured model provider. Do not upload assets, post a PR comment, or call
 `pr-lens comment` unless the user explicitly requests that additional external
 action.
 
-The durable output is `explanation.md`. Evaluate architecture/data flow,
-interfaces/classes, entity relationships, state, ordered interaction,
-requirements traceability, and dependencies through the installed skill's
+The durable output is `explanation.md`. Title it with the grounded ticket ID
+when available, the task name, and the document purpose, such as `TASK-123 —
+Worker scaling: change explanation`. Without a ticket, begin with the task
+name; if none was supplied, derive it from the inspected change. Use that title
+for the level-one heading and desk `--title`, not `explanation` or the filename
+alone. Evaluate architecture/data flow, interfaces/classes, entity
+relationships, state, ordered interaction, requirements traceability, and
+dependencies through the installed skill's
 lens selection gate. Generate only evidence-supported diagrams. In
 `animated-web`, accompany it with `graph.json`, validate the graph with
 `pr-lens validate`, render it with `pr-lens render`, retain
@@ -77,7 +82,7 @@ a stable collision-safe id. Follow the installed readable-output
 `references/project-naming.md` contract, then run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --attention review --task <jira-id> --feature-name "<minimal feature text>"
+mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
 ```
 
 Omit both project options when no grounded Jira ID exists.

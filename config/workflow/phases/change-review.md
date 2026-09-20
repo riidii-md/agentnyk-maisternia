@@ -52,6 +52,13 @@ evidence, selected code, and diagrams in this same approval artifact:
 .agent-runs/change-reviews/<timestamp>-<change-id>/change-review.md
 ```
 
+Give the first level-one heading a specific document title: the grounded
+ticket ID when available, the task name, and the document purpose. For example,
+`TASK-123 — Worker scaling: implementation review`. If there is no ticket ID,
+start with the task name. Derive a concise task name from the reviewed change
+when none was supplied. Pass this title explicitly to mdmaid.desk; the file
+name `change-review` is only a document role.
+
 The artifact must include:
 
 - a 60-second summary and user-visible or operator-visible outcome;
@@ -136,6 +143,7 @@ mdmaid-desk register <change-review.md> \
   --workspace <id> \
   --producer <current-provider> \
   --kind change-review \
+  --title "<document title>" \
   --task <jira-id> \
   --feature-name "<minimal feature text>" \
   --attention approval \

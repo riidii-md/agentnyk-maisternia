@@ -548,6 +548,35 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 	}
 }
 
+func TestRepositoryDeskDocumentTitlesIdentifyTaskAndPurpose(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, _ := loadRepositoryManifest(t)
+	contracts := map[string]string{
+		"config/workflow/phases/change-review.md":          "--title \"<document title>\"",
+		"config/workflow/phases/showcase.md":               "--title \"<document title>\"",
+		"config/workflow/phases/explain-change.md":         "--title \"<document title>\"",
+		"config/workflow/phases/adapt-for-reader.md":       "--title \"<catalog title>\"",
+		"config/workflow/skills/readable-output/SKILL.md":  "--title \"<title>\"",
+		"config/workflow/skills/adapt-for-reader/SKILL.md": "--title \"<catalog title>\"",
+	}
+	for relative, titleArg := range contracts {
+		t.Run(relative, func(t *testing.T) {
+			t.Parallel()
+			data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			content := string(data)
+			for _, required := range []string{titleArg, "task name", "document purpose"} {
+				if !strings.Contains(content, required) {
+					t.Errorf("%s is missing desk title guidance %q", relative, required)
+				}
+			}
+		})
+	}
+}
+
 func TestRepositoryMdmaidProjectNamingContract(t *testing.T) {
 	t.Parallel()
 
