@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "standard-work",
   "name": "Standard Work",
-  "description": "Provider-neutral delivery with a conditional reviewed architectural-direction gate, detailed implementation planning, visual plan review, explicit human decisions, verification, specialized test review, mandatory change review, and optional PR preparation.",
+  "description": "Provider-neutral guided delivery with a conditional reviewed architectural-direction gate, detailed implementation planning, visual plan review, explicit human decisions, verification, specialized test review, mandatory change review, and optional PR preparation.",
   "tags": ["role/software-engineer", "workflow/delivery"],
   "pipelines": [
     {
@@ -69,7 +69,7 @@
   "contents": {
     "mcp_refs": [],
     "commands": [
-      "work-conductor", "work-brief", "work-scout", "work-analyze",
+      "work-start", "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-grill", "work-direction", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-run-simplify", "work-verify",
       "work-review", "work-review-simplify", "work-test-review", "work-change-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",

@@ -146,6 +146,16 @@ Maisternia renders shared definitions into each provider's native layout:
 Restart Codex after installing or updating workflow presets so newly installed
 skills appear in suggestions.
 
+### Start guided work
+
+Install `standard-work`, then start a task with `$work-start <task>` in Codex
+or `/work-start <task>` in Claude Code. The command gathers evidence and advances
+through the applicable workflow phases in the current conversation. At a human
+checkpoint it creates a reviewable document, presents the exact question or
+decision, and waits for your response. Your reply resumes the workflow; you do
+not need to invoke the next phase yourself. It pauses for material questions,
+architectural direction and plan decisions, and implementation review.
+
 ### Route work to a harness or model
 
 Canonical work commands accept an optional route before the task:
