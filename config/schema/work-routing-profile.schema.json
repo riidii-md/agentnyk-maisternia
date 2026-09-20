@@ -35,7 +35,8 @@
         "strategy": {
           "enum": ["single", "first-capable", "parallel-independent", "parallel-verify", "pipeline"]
         },
-        "models": {"$ref": "#/$defs/models"}
+        "models": {"$ref": "#/$defs/models"},
+        "reasoning": {"$ref": "#/$defs/reasoning"}
       },
       "allOf": [
         {
@@ -86,6 +87,18 @@
       },
       "minProperties": 1
     },
+    "reasoning": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codex": {"$ref": "#/$defs/reasoning_level"},
+        "claude": {"$ref": "#/$defs/reasoning_level"},
+        "antigravity": {"$ref": "#/$defs/reasoning_level"},
+        "hermes": {"$ref": "#/$defs/reasoning_level"}
+      },
+      "minProperties": 1
+    },
+    "reasoning_level": {"enum": ["low", "medium", "high"]},
     "model": {
       "type": "string",
       "minLength": 1,

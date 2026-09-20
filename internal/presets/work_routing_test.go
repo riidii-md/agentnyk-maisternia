@@ -200,6 +200,9 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 					Models struct {
 						Ref string `json:"$ref"`
 					} `json:"models"`
+					Reasoning struct {
+						Ref string `json:"$ref"`
+					} `json:"reasoning"`
 				} `json:"properties"`
 			} `json:"route"`
 			Models struct {
@@ -211,6 +214,15 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 				MaxLength int    `json:"maxLength"`
 				Pattern   string `json:"pattern"`
 			} `json:"model"`
+			Reasoning struct {
+				AdditionalProperties *bool `json:"additionalProperties"`
+				Properties           map[string]struct {
+					Ref string `json:"$ref"`
+				} `json:"properties"`
+			} `json:"reasoning"`
+			ReasoningLevel struct {
+				Enum []string `json:"enum"`
+			} `json:"reasoning_level"`
 		} `json:"$defs"`
 	}
 	if err := json.Unmarshal(schemaContent, &schema); err != nil {
@@ -233,6 +245,9 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 	if schema.Defs.Route.Properties.Models.Ref != "#/$defs/models" {
 		t.Errorf("route models ref = %q", schema.Defs.Route.Properties.Models.Ref)
 	}
+	if schema.Defs.Route.Properties.Reasoning.Ref != "#/$defs/reasoning" {
+		t.Errorf("route reasoning ref = %q", schema.Defs.Route.Properties.Reasoning.Ref)
+	}
 	if schema.Defs.Models.AdditionalProperties == nil || *schema.Defs.Models.AdditionalProperties {
 		t.Error("model preferences must reject unknown harness keys")
 	}
@@ -243,6 +258,23 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 	slices.Sort(modelHarnesses)
 	if !slices.Equal(modelHarnesses, []string{"antigravity", "claude", "codex", "hermes"}) {
 		t.Errorf("model preference harnesses = %v", modelHarnesses)
+	}
+	if schema.Defs.Reasoning.AdditionalProperties == nil || *schema.Defs.Reasoning.AdditionalProperties {
+		t.Error("reasoning preferences must reject unknown harness keys")
+	}
+	reasoningHarnesses := make([]string, 0, len(schema.Defs.Reasoning.Properties))
+	for harness, level := range schema.Defs.Reasoning.Properties {
+		reasoningHarnesses = append(reasoningHarnesses, harness)
+		if level.Ref != "#/$defs/reasoning_level" {
+			t.Errorf("%s reasoning level ref = %q", harness, level.Ref)
+		}
+	}
+	slices.Sort(reasoningHarnesses)
+	if !slices.Equal(reasoningHarnesses, []string{"antigravity", "claude", "codex", "hermes"}) {
+		t.Errorf("reasoning preference harnesses = %v", reasoningHarnesses)
+	}
+	if !slices.Equal(schema.Defs.ReasoningLevel.Enum, []string{"low", "medium", "high"}) {
+		t.Errorf("reasoning levels = %v", schema.Defs.ReasoningLevel.Enum)
 	}
 	if schema.Defs.Model.Type != "string" || schema.Defs.Model.MaxLength != 128 ||
 		!strings.HasPrefix(schema.Defs.Model.Pattern, "^[A-Za-z0-9]") {
@@ -285,9 +317,44 @@ func TestRepositoryWorkRoutingSkillAndSchema(t *testing.T) {
 		"guided setup", "each installed canonical", "provider default",
 		"user-global", "repository-local", "usually recommend user-global",
 		"per-harness model",
+		"per-harness reasoning",
 	} {
 		if !strings.Contains(string(preferencesContent), fragment) {
 			t.Errorf("routing preferences are missing %q", fragment)
+		}
+	}
+}
+
+func TestRepositoryWorkRoutingReasoningSelectionContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/skills/work-routing/SKILL.md": {
+			"@reasoning:high", "low", "medium", "high",
+			"reasoning preferences independently", "fresh same-harness subagent",
+			"Never silently substitute a reasoning level",
+		},
+		"config/workflow/skills/work-routing/references/runners.md": {
+			"model_reasoning_effort", `--effort "$REASONING"`,
+			"reasoning level", "routing receipt", "provider default",
+			"Never silently substitute a reasoning level",
+		},
+		"README.md": {"@reasoning:high", "per-harness reasoning"},
+		"docs/WORKFLOW.md": {
+			"@reasoning:high", "per-harness reasoning", `"reasoning": {"claude": "high"}`,
+		},
+		"docs/CONFIGURATOR.md": {"per-harness reasoning", "/work-routing-preferences"},
+	}
+	for relative, fragments := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range fragments {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing reasoning routing contract %q", relative, fragment)
+			}
 		}
 	}
 }

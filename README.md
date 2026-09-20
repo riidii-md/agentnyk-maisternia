@@ -163,15 +163,18 @@ Canonical work commands accept an optional route before the task:
 ```text
 /work-plan @codex -- plan the migration
 /work-plan @claude @opus -- plan with Claude Opus
+/work-plan @claude @opus @reasoning:high -- plan with high reasoning
 /work-run @claude @sonnet -- implement the approved plan
 /work-run-simplify @codex -- implement with the opt-in simplicity profile
 /work-review @codex @claude -- review with both harnesses
 /work-test-review @codex -- review test evidence for this change
 ```
 
-A per-harness model selector follows its harness. Explicit routes override
+A per-harness model selector and optional per-harness reasoning level follow
+each harness. Reasoning accepts `low`, `medium`, or `high`; for example,
+`@reasoning:high`. Explicit routes override
 saved preferences, never widen authority, and never silently substitute another
-model. The current harness remains the coordinator for routed work. See
+model or reasoning level. The current harness remains the coordinator for routed work. See
 [workflow routing](docs/WORKFLOW.md#route-canonical-commands-with-harness) for configuration
 and invocation details.
 

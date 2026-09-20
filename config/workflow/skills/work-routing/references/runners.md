@@ -19,6 +19,14 @@ selection is unavailable, fail visibly; do not run the phase in the parent or
 substitute a CLI while calling it a subagent. Named external harness routes
 continue to use the isolated provider runner below.
 
+Resolve the reasoning level separately from the model: explicit selector,
+saved reasoning preference, configured phase/role mapping, or provider default.
+Pass only `low`, `medium`, or `high` as an override. A selected reasoning level
+requires runner evidence that the chosen model and harness support it.
+Never silently substitute a reasoning level. Current-harness reasoning-selected work
+also needs a native subagent with an explicit effort control, even when the
+model stays at provider default; otherwise report the lane unavailable.
+
 ## Check eligibility and authority
 
 Determine the current harness and start with native capability evidence already
@@ -64,7 +72,8 @@ Send only task-local context:
   repository instructions;
 - accepted decisions, constraints, and exact referenced artifacts;
 - required output and evidence;
-- authority, disclosure, time/token budget, and stop conditions.
+- authority, disclosure, time/token budget, and stop conditions;
+- selected model and reasoning level with their sources, when set.
 
 Remove credentials, personal/customer data, unrelated proprietary context, and
 unnecessary conversation history. Naming a harness explicitly approves that
@@ -89,7 +98,7 @@ a disclosure boundary even for the same model family.
   deliberately instead of copying the directory wholesale.
 - Put the complete, already-redacted delegation packet in the task file. Do not
   construct it through unquoted shell interpolation.
-- Use one output path per lane and preserve provider/model attribution.
+- Use one output path per lane and preserve provider/model/reasoning attribution.
 - Treat nonzero exit, missing output, timeout, parse failure, or an authority
   request as a failed lane. Do not replace its provider silently.
 - Do not pass credentials through prompts, command arguments, or environment
@@ -108,6 +117,7 @@ codex exec \
   -C "$STAGING_ROOT" \
   --sandbox read-only \
   --model "$MODEL" \
+  -c "model_reasoning_effort=$REASONING" \
   -o "$OUTPUT" \
   - < "$PACKET"
 ```
@@ -115,6 +125,9 @@ codex exec \
 Include `--model "$MODEL"` only when model resolution did not end at provider
 default. Pass it as a separate process argument; never interpolate it into a
 shell command.
+Include `-c "model_reasoning_effort=$REASONING"` only for a selected reasoning
+override. The value must be one of the three validated levels and passed as a
+separate process argument; do not assemble executable shell text from it.
 
 An approved write lane may change only `--sandbox read-only` to
 `--sandbox workspace-write`; it still needs the routing contract's explicit
@@ -138,6 +151,7 @@ claude --print \
   --permission-mode plan \
   --tools "Read,Grep,Glob" \
   --model "$MODEL" \
+  --effort "$REASONING" \
   --no-session-persistence \
   < "$PACKET" > "$OUTPUT"
 ```
@@ -145,6 +159,8 @@ claude --print \
 Include `--model "$MODEL"` only for a resolved override. Claude aliases such as
 `opus` and `sonnet` remain provider-owned aliases; do not rewrite them to a
 guessed snapshot.
+Include `--effort "$REASONING"` only for a selected reasoning override, after
+verifying the installed CLI and chosen model accept that level.
 
 Launch the process with `$STAGING_ROOT` as its current directory. The lane is
 unavailable when the installed Claude version cannot disable customizations and
@@ -163,6 +179,7 @@ equivalent of:
 ```bash
 agy --print "<contents of the redacted packet>" \
   --mode plan \
+  --effort "$REASONING" \
   --sandbox \
   --disable-slash-commands \
   --add-dir "$STAGING_ROOT" \
@@ -176,6 +193,8 @@ Launch from `$STAGING_ROOT`. Because the current AGY CLI has no general sterile
 startup flag, automated use also requires capability evidence that no enabled
 startup integration widens the plan/sandbox contract; otherwise report the lane
 unavailable or use supervised execution.
+Include `--effort "$REASONING"` only for a selected reasoning override and
+only when current CLI capability evidence confirms support for that model.
 
 ## Hermes
 
@@ -185,6 +204,9 @@ delegation. Open a supervised interactive Hermes session, present the routing
 packet and boundaries, and keep the user present for approvals. If interactive
 supervision is unavailable, report the lane unavailable instead of using
 one-shot mode.
+The current supervised Hermes contract has no verified per-invocation reasoning
+control. Report a route with an explicit reasoning level unavailable until the
+interactive runner can prove and enforce the requested level.
 
 ## Several harnesses
 
@@ -225,10 +247,11 @@ Before dispatch, emit a compact routing receipt:
 Route: Codex · delegated · read-only · explicit invocation
 ```
 
-When a model is selected, include it and its source, for example:
+When a model or reasoning level is selected, include each and its source:
 
 ```text
 Route: Claude · sonnet · subagent · workspace-write · saved model preference
+Route: Claude · opus · reasoning high · delegated · read-only · explicit invocation
 ```
 
 For several harnesses, include the strategy. Expand the receipt only when the
