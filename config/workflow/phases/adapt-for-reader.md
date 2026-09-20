@@ -73,12 +73,16 @@ Only after validation succeeds, resolve the current mdmaid.desk workspace from
 stable collision-safe workspace ID. Follow the installed readable-output
 `references/project-naming.md` contract and require mdmaid-desk 0.1.19 or newer.
 
-Use the final document's first level-one heading, without the Markdown marker,
-as the semantic `--title`; if no level-one heading exists, derive a concise
-title from the reader contract. Never use the timestamped filename as the
-catalog title. Send the artifact to the desk with
+Set the semantic `--title` to the final document's first level-one heading when
+it includes the grounded ticket ID if available and the task name. The title
+must also state the document purpose. If the heading is generic or absent,
+derive a concise title with those details from the reader contract and grounded
+source, without changing source content.
+Never use the timestamped filename or document kind as the catalog title. Send
+the artifact to the desk with
 `mdmaid-desk register <artifact.md>`, selecting the closest document kind for
-the mode and using `--attention review`. Add `--task <id>` when the source has
+the mode and using `--title "<catalog title>" --attention review`. Add
+`--task <id>` when the source has
 an explicit stable task ID and pair it with
 `--feature-name "<minimal feature text>"`; omit both project options when no
 grounded Jira ID exists. Add up to three short lowercase `--tag <tag>` values

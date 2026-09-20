@@ -20,8 +20,12 @@ directory outside a repository, at:
 .agent-runs/readable-output/<timestamp>-<semantic-slug>.md
 ```
 
-Use a semantic level-one heading and preserve evidence, caveats, source links,
-and required detail. Never make a temporary HTML file the only durable result.
+Use a semantic level-one heading that includes the grounded ticket ID when
+available, the task name, and the document purpose, such as `TASK-123 — Worker
+scaling: implementation plan`. Without a ticket, start with the task name; if
+none was supplied, derive it from the grounded subject. Preserve evidence,
+caveats, source links, and required detail. Never make a temporary HTML file
+the only durable result.
 
 Prefer a few durable checkpoints over one document per workflow phase.
 Discovery may share one evolving brief; direction, implementation plan, and
@@ -104,8 +108,12 @@ Attention controls presentation priority only; even `approval` never records or
 implies a human decision.
 
 Prefer `decision`, `definition`, `progress`, `brief`, or `showcase` when the
-document clearly matches one. Use the first level-one heading as the title,
-without the Markdown marker. Add the paired `--task` and `--feature-name`
+document clearly matches one. Always pass `--title` for a generated document.
+Use the first level-one heading without the Markdown marker when it names the
+task and document purpose. If the supplied document has a generic heading,
+derive the catalog title from its grounded task context and purpose without
+rewriting the document. Never use only a filename, timestamp, or kind such as
+`change-review` as the title. Add the paired `--task` and `--feature-name`
 options only for an explicit stable task ID, following the project-naming
 reference, and add up to three grounded subject tags when useful.
 
