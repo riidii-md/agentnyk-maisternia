@@ -5,7 +5,9 @@
 The `multi-lens-review` preset provides one evidence standard for plans,
 decision deltas, diffs, pull requests, and implementations. It separates
 candidate generation from finding verification and separates read-only review
-workers from the coordinator that applies fixes.
+workers from the coordinator. In the default `repair` disposition the
+coordinator applies verified fixes; in `report-only` it must not modify the
+reviewed implementation or contributor branch.
 
 Implementation reviews can select a focused `maintainability` profile. It
 looks harder for duplicated knowledge, avoidable complexity, weak abstractions,
@@ -28,6 +30,7 @@ subagents, provider calls, permissions, edits, and verification.
 /work-test-review <target or focus>
 /work-review implementation --scope tests <target or focus>
 /work-review implementation --profile maintainability <target or focus>
+/work-review implementation --disposition report-only <PR or diff>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
@@ -35,6 +38,12 @@ subagents, provider calls, permissions, edits, and verification.
 explicit plan, design, contract, or decision delta is reviewable even when
 there is no code diff. The default profile is `standard`; `maintainability`
 applies only to implementation targets.
+
+The default disposition is `repair`: the coordinator applies independently
+confirmed fixes within approved scope and verifies them. `report-only` keeps
+the reviewed implementation and contributor branch read-only while producing
+the same grounded, independently verified findings. `/work-start-pr-review`
+uses report-only whenever feedback will be published to an existing PR.
 
 `/work-review-simplify` is a thin alias for `/work-review implementation
 --profile maintainability`. It reads the canonical review workflow rather than

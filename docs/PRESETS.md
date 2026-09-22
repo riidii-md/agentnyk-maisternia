@@ -49,8 +49,13 @@ The repository starts with:
   and opt-in simplicity-focused execution commands; and the standard bounded
   routine approval resources. After a PR is successfully created, it offers an
   optional evidence-backed session analysis. It installs Mermaid-first
-  `/work-explain-change`, the mandatory explanatory `/work-change-review` gate,
-  and `/work-test-review` for focused review of test evidence;
+  `/work-explain-change`, the mandatory explanatory
+  `/work-change-review implementation-approval` gate,
+  and `/work-test-review` for focused review of test evidence. Its separate
+  `/work-start-pr-review` pipeline synchronizes an existing PR's ticket, diff,
+  comments, and CI, asks whether feedback is for internal repair or PR
+  publication, routes the chosen reviews, and publishes only in the latter
+  mode;
 - `idea-shaping`: source intake, optional question-to-action focusing,
   bounded cross-system scouting, research, grill, brainstorm, challenge,
   conditional direction review and human decision, detailed planning, and mdmaid.desk
@@ -67,7 +72,8 @@ The repository starts with:
   an embedded specialized test-review bundle,
   a behavior-preserving maintainability profile for DRY, abstraction,
   complexity, and grounded best-practice checks, confidence-aware language and
-  tooling discovery, per-finding refutation, applied fixes, and optional
+  tooling discovery, per-finding refutation, implementation repair or
+  report-only disposition, applied fixes only in repair mode, and optional
   provider delegation;
 - `adaptive-readability`: reader- and task-aware text transformation with
   reusable defaults, situation overrides, explicit calibration, a clarification
@@ -188,7 +194,8 @@ quota. See [Specialized test review](TEST-REVIEW.md).
 
 `standard-work` installs `/work-explain-change` as an on-demand understanding
 tool, not an approval gate by itself. Mermaid is the default; PR Lens animation
-is explicit opt-in. The mandatory `/work-change-review` phase is a strict
+is explicit opt-in. The mandatory
+`/work-change-review implementation-approval` phase is a strict
 superset: it combines the same narrative and evidence-selected architecture,
 class, entity-relationship, state, sequence, requirement, dependency, and
 data-flow lenses with the complete native diff and a revision-bound

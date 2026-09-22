@@ -2,6 +2,7 @@
   "schema_version": 1,
   "max_parallel_reviewers": 8,
   "modes": ["plan", "plan-delta", "implementation"],
+  "dispositions": ["repair", "report-only"],
   "scopes": ["full", "tests"],
   "implementation_lenses": [
     "correctness",
@@ -190,7 +191,12 @@
     "apply_all_confirmed": true,
     "critical_high_blocking": true,
     "rerun_affected_checks": true,
-    "unresolved_requires_gate_failure": true
+    "unresolved_requires_gate_failure": true,
+    "report_only": {
+      "coordinator_edits_reviewed_artifact": false,
+      "confirmed_fix_status": "not-applicable",
+      "pass_means_review_complete_not_implementation_approved": true
+    }
   },
   "delegation": {
     "routing_contract": "work-routing",

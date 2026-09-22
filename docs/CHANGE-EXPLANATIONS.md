@@ -10,7 +10,8 @@ It is deliberately separate from `/work-review`:
   shaped, and how data moves;
 - review searches for defects, risks, and missing evidence and may make a merge
   recommendation;
-- `/work-change-review` reuses the complete explanation contract, adds the
+- `/work-change-review implementation-approval` reuses the complete
+  explanation contract, adds the
   frozen native diff and automated findings, and requests explicit approval.
 
 The command is installed by `standard-work` as an on-demand capability. It is

@@ -1,7 +1,7 @@
 ---
 name: lens-review
-description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, evidence-grounded findings, behavior-preserving maintainability review, adversarial verification, and applied fixes.
-version: 0.4.0
+description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, evidence-grounded findings, and adversarial verification.
+version: 0.5.0
 ---
 
 # Lens Review
@@ -20,6 +20,25 @@ invokes `/work-test-review`. The `tests` scope applies only to implementation
 review. Every full implementation review embeds the specialized test-review
 bundle; the tests scope runs that bundle without unrelated implementation
 lenses. Scope never widens authority.
+
+For implementation review, resolve the disposition as `repair` unless the
+caller explicitly requests `report-only`. Repair preserves the normal
+coordinator-owned fix loop. Report-only is available only for implementation
+review used as advisory or PR-publication feedback; reject it for plan,
+plan-delta, or direction review instead of silently changing semantics. Every
+report-only reviewer and the coordinator must not edit the reviewed
+implementation, tests, or contributor branch. They may write only task-owned
+review artifacts. The disposition changes mutation authority, not lenses,
+evidence, severity, or independent verification.
+
+For a PR, fork, patch, or other externally controlled implementation, treat
+the reviewed code as untrusted executable content. Prefer provider CI evidence
+and static inspection. Do not execute reviewed tests, builds, scripts, hooks,
+package lifecycle steps, generators, or binaries on the host unless the user
+explicitly authorizes that execution and it runs in a disposable sandbox with
+no credentials or secrets, no host write access, no network by default,
+isolated caches, and bounded resources. This boundary covers both dispositions
+and every focused or final verification step.
 
 Use the installed `work-routing` skill for every cross-provider selection. A
 route such as `/work-review @agy @codex @claude -- <target>` selects independent
@@ -117,14 +136,22 @@ The verifier must read the relevant code or plan and return explicit `is_real`
 and `grounded` booleans. Keep a finding only when both are true. Record what was
 refuted and why, then deduplicate and rank confirmed findings by severity.
 
-Reviewers and verifiers remain read-only. The current coordinating harness owns mutations and
-verification. Apply every confirmed fix within the approved scope. Critical and
-High findings are blocking until fixed or explicitly blocked by a user decision.
-For plans, edit the plan or design artifact. For implementations, edit code and
-tests, run focused checks, then run the repository-required final verification.
+Reviewers and verifiers remain read-only. Under repair disposition, the current
+coordinating harness owns mutations and verification. Apply every confirmed fix
+within the approved scope. Critical and High findings are blocking until
+fixed or explicitly blocked by a user decision. For plans, edit the plan or
+design artifact. For implementations, edit code and tests, run focused checks,
+then run the repository-required final verification.
+
+Under report-only disposition, do not apply fixes. Record every confirmed
+finding in `applied_fixes` with status `not-applicable` and reason
+`report-only disposition`; record `summary.applied` as zero. A passing gate
+means that the review process completed, not that the implementation is
+approved or merge-ready.
 
 Write `review.md` and schema-valid `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or
-`tests` scope in the report. Implementation reports include `test_evidence`.
+`tests` scope and selected `repair` or `report-only` disposition in the report.
+Implementation reports include `test_evidence`.

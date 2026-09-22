@@ -21,6 +21,7 @@
     "schema_version": {"const": 1},
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
     "mode": {"enum": ["direction", "plan", "plan-delta", "implementation"]},
+    "disposition": {"enum": ["repair", "report-only"]},
     "profile": {"enum": ["standard", "maintainability"]},
     "scope": {"enum": ["full", "tests"]},
     "target": {"type": "string", "minLength": 1, "maxLength": 4096},
@@ -208,12 +209,42 @@
   "allOf": [
     {
       "if": {
+        "properties": {"mode": {"const": "implementation"}},
+        "required": ["mode"]
+      },
+      "then": {
+        "required": ["disposition"]
+      }
+    },
+    {
+      "if": {
         "properties": {"scope": {"const": "tests"}},
         "required": ["scope"]
       },
       "then": {
         "properties": {"mode": {"const": "implementation"}},
         "required": ["mode", "test_evidence"]
+      }
+    },
+    {
+      "if": {
+        "properties": {"disposition": {"const": "report-only"}},
+        "required": ["disposition"]
+      },
+      "then": {
+        "properties": {
+          "mode": {"const": "implementation"},
+          "applied_fixes": {
+            "items": {
+              "properties": {"status": {"const": "not-applicable"}},
+              "required": ["status"]
+            }
+          },
+          "summary": {
+            "properties": {"applied": {"const": 0}},
+            "required": ["applied"]
+          }
+        }
       }
     }
   ]

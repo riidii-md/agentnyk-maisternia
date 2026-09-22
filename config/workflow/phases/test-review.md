@@ -30,6 +30,10 @@ Resolve an invocation without explicit routing as:
 /work-review implementation --scope tests <diff, branch, PR, contract, or focus>
 ```
 
+Preserve an explicit `--disposition repair` or
+`--disposition report-only`. `/work-start-pr-review` supplies report-only for
+PR publication so this specialization cannot edit a contributor branch.
+
 Preserve an optional leading route block and place the fixed mode and scope
 after its delimiter:
 

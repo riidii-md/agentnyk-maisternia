@@ -95,7 +95,8 @@ the available workspace rules.
    executor makes `/work-handoff` necessary. Continue through `/work-verify`
    and `/work-review`. Apply requested fixes and repeat affected verification
    and review phases until they pass or a real blocker remains.
-7. Generate the mandatory `/work-change-review` document for the exact
+7. Generate the mandatory `/work-change-review implementation-approval`
+   document for the exact
    implementation snapshot. Present it, wait for the human response, and
    preserve its revision-bound `change-decision`. If changes are requested,
    return to run, verify, review, and change review. Prepare `/work-pr` only

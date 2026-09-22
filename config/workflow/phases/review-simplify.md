@@ -36,6 +36,10 @@ after its delimiter:
 /work-review @agy @codex -- implementation --profile maintainability <target or focus>
 ```
 
+Preserve an explicit `--disposition repair` or
+`--disposition report-only`. `/work-start-pr-review` supplies report-only for
+PR publication so this specialization cannot edit a contributor branch.
+
 Require an implementation target under the same resolution rules as
 `work-review`. Do not reinterpret a plan as implementation work.
 

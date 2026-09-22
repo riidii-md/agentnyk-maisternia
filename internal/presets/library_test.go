@@ -40,7 +40,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !found {
 		t.Fatal("standard-work preset missing")
 	}
-	if len(standard.Pipelines) != 1 || standard.Pipelines[0].ID != "delivery" {
+	if len(standard.Pipelines) != 2 || standard.Pipelines[0].ID != "delivery" ||
+		standard.Pipelines[1].ID != "pr-review" {
 		t.Fatalf("standard-work pipelines = %#v", standard.Pipelines)
 	}
 	delivery := standard.Pipelines[0]
@@ -109,6 +110,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("standard-work edges = %#v, want %#v", delivery.Edges, wantEdges)
 	}
 	for _, resourceID := range []string{
+		"work-start-pr-review",
 		"work-grill",
 		"work-direction",
 		"work-plan-review",

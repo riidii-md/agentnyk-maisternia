@@ -156,6 +156,15 @@ decision, and waits for your response. Your reply resumes the workflow; you do
 not need to invoke the next phase yourself. It pauses for material questions,
 architectural direction and plan decisions, and implementation review.
 
+For an existing pull request, use `$work-start-pr-review <PR>` in Codex,
+`/work-start-pr-review <PR>` in Claude Code, the `work-start-pr-review` skill in
+Hermes, or the provider-native prompt mapping in Antigravity. It first asks
+whether feedback should stay internal for repair or be published to the PR,
+then reads the ticket, PR, all review threads, current diff, and CI before
+selecting the review suite and routing. PR publication uses report-only review
+and posts the grounded line and summary comments without merging or changing
+PR state.
+
 ### Route work to a harness or model
 
 Canonical work commands accept an optional route before the task:

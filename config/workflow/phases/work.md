@@ -35,7 +35,9 @@ Input:
    presented for human attention, record the explicit decision against its
    content hash, and pass the implementation-readiness gate.
 8. After verification and independent implementation review pass, require
-   `/work-change-review` and a durable `approved` decision for the exact implementation snapshot before `/work-pr`, publication, or completion.
+   `/work-change-review implementation-approval` and a durable `approved`
+   decision for the exact implementation snapshot before `/work-pr`,
+   publication, or completion.
 9. Ask before implementation, permission escalation, commit, push, PR, or a
    destructive operation when approval is not already recorded.
 10. Dispatch through the configured runner policy or honor an explicit runner.
