@@ -1616,6 +1616,17 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 					Outcomes         []string `json:"outcomes"`
 					Rules            []string `json:"rules"`
 				} `json:"context_discovery"`
+				InspectionStatuses   []string `json:"inspection_statuses"`
+				InspectionCompletion struct {
+					RequiredForProfile      bool `json:"required_for_profile"`
+					UnknownPreventsPass     bool `json:"unknown_prevents_pass"`
+					NoFindingsRequiresProof bool `json:"no_findings_requires_proof"`
+				} `json:"inspection_completion"`
+				InspectionObligations []struct {
+					ID      string   `json:"id"`
+					Lenses  []string `json:"lenses"`
+					Inspect []string `json:"inspect"`
+				} `json:"inspection_obligations"`
 			} `json:"maintainability"`
 		} `json:"profiles"`
 		Verification struct {
@@ -1771,6 +1782,38 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}) {
 		t.Fatalf("maintainability context discovery rules = %v", discovery.Rules)
 	}
+	if !slices.Equal(maintainability.InspectionStatuses, []string{
+		"clear", "candidate", "unknown", "not-applicable",
+	}) {
+		t.Fatalf("maintainability inspection statuses = %v", maintainability.InspectionStatuses)
+	}
+	if !maintainability.InspectionCompletion.RequiredForProfile ||
+		!maintainability.InspectionCompletion.UnknownPreventsPass ||
+		!maintainability.InspectionCompletion.NoFindingsRequiresProof {
+		t.Fatalf("maintainability inspection completion = %#v", maintainability.InspectionCompletion)
+	}
+	wantInspectionObligations := map[string][]string{
+		"alternative-comparison":      {"simplicity-dry"},
+		"contract-coherence":          {"consistency", "architecture"},
+		"error-and-validation-flow":   {"correctness", "architecture"},
+		"runtime-invariant-placement": {"correctness"},
+	}
+	if len(maintainability.InspectionObligations) != len(wantInspectionObligations) {
+		t.Fatalf("maintainability inspection obligations = %#v", maintainability.InspectionObligations)
+	}
+	for _, obligation := range maintainability.InspectionObligations {
+		wantLenses, found := wantInspectionObligations[obligation.ID]
+		if !found {
+			t.Errorf("unexpected maintainability inspection obligation %q", obligation.ID)
+			continue
+		}
+		if !slices.Equal(obligation.Lenses, wantLenses) {
+			t.Errorf("maintainability inspection obligation %q lenses = %v", obligation.ID, obligation.Lenses)
+		}
+		if len(obligation.Inspect) == 0 {
+			t.Errorf("maintainability inspection obligation %q has no inspections", obligation.ID)
+		}
+	}
 	if policy.Delegation.RoutingContract != "work-routing" ||
 		policy.Delegation.CrossProviderStrategy != "parallel-verify" ||
 		!policy.Delegation.NativeSubagentsAllowed ||
@@ -1796,10 +1839,13 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
+			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
+			"runtime-invariant-placement", "`clear`, `candidate`, `unknown`, or `not-applicable`",
+			"NO_FINDINGS", "missing evidence",
 		},
 		"config/workflow/phases/review-simplify.md": {
-			"name: work-review-simplify", "$ARGUMENTS", "work-review",
-			"implementation", "maintainability", "thin alias", "read-only",
+			"name: work-review-simplify", "version: 0.2.0", "$ARGUMENTS", "work-review",
+			"implementation", "maintainability", "thin alias", "inspection obligations", "read-only",
 		},
 		"config/workflow/phases/test-review.md": {
 			"name: work-test-review", "$ARGUMENTS", "work-review",
@@ -1815,6 +1861,9 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
+			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
+			"runtime-invariant-placement", "`clear`, `candidate`, `unknown`, or `not-applicable`",
+			"NO_FINDINGS", "missing evidence",
 		},
 		"docs/REVIEW-WORKFLOW.md": {
 			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
@@ -1822,6 +1871,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"irreducible rationale", "names, types, assertions, tests", "constraint and consequence",
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
+			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
+			"runtime-invariant-placement", "maintainability_inspections", "version 2",
 		},
 	}
 	for relative, required := range contracts {
@@ -1842,9 +1893,15 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}
 	var reportSchema struct {
 		Properties struct {
+			SchemaVersion struct {
+				Const int `json:"const"`
+			} `json:"schema_version"`
 			Profile struct {
 				Enum []string `json:"enum"`
 			} `json:"profile"`
+			MaintainabilityInspections struct {
+				Type string `json:"type"`
+			} `json:"maintainability_inspections"`
 		} `json:"properties"`
 		Defs struct {
 			Finding struct {
@@ -1854,13 +1911,107 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 					} `json:"simplification_kind"`
 				} `json:"properties"`
 			} `json:"finding"`
+			MaintainabilityInspection struct {
+				Required   []string `json:"required"`
+				Properties struct {
+					ID struct {
+						Enum []string `json:"enum"`
+					} `json:"id"`
+					Status struct {
+						Enum []string `json:"enum"`
+					} `json:"status"`
+				} `json:"properties"`
+			} `json:"maintainabilityInspection"`
 		} `json:"$defs"`
+		AllOf []struct {
+			If struct {
+				Properties struct {
+					Mode struct {
+						Const string `json:"const"`
+					} `json:"mode"`
+					Profile struct {
+						Const string `json:"const"`
+					} `json:"profile"`
+					GateStatus struct {
+						Const string `json:"const"`
+					} `json:"gate_status"`
+				} `json:"properties"`
+			} `json:"if"`
+			Then struct {
+				Required   []string `json:"required"`
+				Properties struct {
+					MaintainabilityInspections struct {
+						Items struct {
+							Properties struct {
+								Status struct {
+									Enum []string `json:"enum"`
+								} `json:"status"`
+							} `json:"properties"`
+						} `json:"items"`
+					} `json:"maintainability_inspections"`
+				} `json:"properties"`
+			} `json:"then"`
+		} `json:"allOf"`
 	}
 	if err := json.Unmarshal(reportSchemaContent, &reportSchema); err != nil {
 		t.Fatal(err)
 	}
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
+	}
+	if reportSchema.Properties.SchemaVersion.Const != 2 {
+		t.Fatalf("review report schema version = %d, want 2", reportSchema.Properties.SchemaVersion.Const)
+	}
+	if reportSchema.Properties.MaintainabilityInspections.Type != "array" {
+		t.Fatalf("review report maintainability_inspections type = %q", reportSchema.Properties.MaintainabilityInspections.Type)
+	}
+	wantInspectionFields := []string{
+		"id", "lenses", "status", "evidence", "rationale", "finding_ids", "missing_evidence",
+	}
+	if !slices.Equal(reportSchema.Defs.MaintainabilityInspection.Required, wantInspectionFields) {
+		t.Fatalf("maintainability inspection required fields = %v", reportSchema.Defs.MaintainabilityInspection.Required)
+	}
+	if !slices.Equal(reportSchema.Defs.MaintainabilityInspection.Properties.ID.Enum, []string{
+		"alternative-comparison", "contract-coherence", "error-and-validation-flow", "runtime-invariant-placement",
+	}) {
+		t.Fatalf("maintainability inspection IDs = %v", reportSchema.Defs.MaintainabilityInspection.Properties.ID.Enum)
+	}
+	if !slices.Equal(reportSchema.Defs.MaintainabilityInspection.Properties.Status.Enum, []string{
+		"clear", "candidate", "unknown", "not-applicable",
+	}) {
+		t.Fatalf("maintainability inspection statuses = %v", reportSchema.Defs.MaintainabilityInspection.Properties.Status.Enum)
+	}
+	implementationRequiresProfileAndScope := false
+	maintainabilityRequiresInspections := false
+	maintainabilityPassRejectsUnknown := false
+	for _, condition := range reportSchema.AllOf {
+		if condition.If.Properties.Mode.Const == "implementation" &&
+			slices.Contains(condition.Then.Required, "profile") &&
+			slices.Contains(condition.Then.Required, "scope") &&
+			slices.Contains(condition.Then.Required, "test_evidence") {
+			implementationRequiresProfileAndScope = true
+		}
+		if condition.If.Properties.Profile.Const == "maintainability" &&
+			slices.Contains(condition.Then.Required, "maintainability_inspections") {
+			maintainabilityRequiresInspections = true
+		}
+		if condition.If.Properties.Profile.Const == "maintainability" &&
+			condition.If.Properties.GateStatus.Const == "pass" &&
+			slices.Equal(
+				condition.Then.Properties.MaintainabilityInspections.Items.Properties.Status.Enum,
+				[]string{"clear", "candidate", "not-applicable"},
+			) {
+			maintainabilityPassRejectsUnknown = true
+		}
+	}
+	if !implementationRequiresProfileAndScope {
+		t.Error("implementation reports do not require profile, scope, and test_evidence")
+	}
+	if !maintainabilityRequiresInspections {
+		t.Error("maintainability reports do not require maintainability_inspections")
+	}
+	if !maintainabilityPassRejectsUnknown {
+		t.Error("passing maintainability reports do not reject unknown inspections")
 	}
 	if !slices.Equal(reportSchema.Defs.Finding.Properties.SimplificationKind.Enum, []string{
 		"delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink",
