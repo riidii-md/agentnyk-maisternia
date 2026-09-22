@@ -18,7 +18,7 @@
     "gate_status"
   ],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
     "mode": {"enum": ["direction", "plan", "plan-delta", "implementation"]},
     "profile": {"enum": ["standard", "maintainability"]},
@@ -45,6 +45,38 @@
     "test_evidence": {
       "type": "array",
       "items": {"$ref": "#/$defs/testEvidence"}
+    },
+    "maintainability_inspections": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {"$ref": "#/$defs/maintainabilityInspection"},
+      "allOf": [
+        {
+          "contains": {
+            "properties": {"id": {"const": "alternative-comparison"}},
+            "required": ["id"]
+          }
+        },
+        {
+          "contains": {
+            "properties": {"id": {"const": "contract-coherence"}},
+            "required": ["id"]
+          }
+        },
+        {
+          "contains": {
+            "properties": {"id": {"const": "error-and-validation-flow"}},
+            "required": ["id"]
+          }
+        },
+        {
+          "contains": {
+            "properties": {"id": {"const": "runtime-invariant-placement"}},
+            "required": ["id"]
+          }
+        }
+      ]
     },
     "summary": {"$ref": "#/$defs/summary"},
     "gate_status": {"enum": ["pass", "fail", "blocked"]}
@@ -192,6 +224,74 @@
         "status": {"enum": ["covered", "partial", "missing", "accepted-risk"]}
       }
     },
+    "maintainabilityInspection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "lenses",
+        "status",
+        "evidence",
+        "rationale",
+        "finding_ids",
+        "missing_evidence"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "alternative-comparison",
+            "contract-coherence",
+            "error-and-validation-flow",
+            "runtime-invariant-placement"
+          ]
+        },
+        "lenses": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 128}
+        },
+        "status": {
+          "enum": ["clear", "candidate", "unknown", "not-applicable"]
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "rationale": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "finding_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z]+-[0-9]+$"}
+        },
+        "missing_evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"status": {"const": "candidate"}},
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {"finding_ids": {"minItems": 1}}
+          }
+        },
+        {
+          "if": {
+            "properties": {"status": {"const": "unknown"}},
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {"missing_evidence": {"minItems": 1}}
+          }
+        }
+      ]
+    },
     "summary": {
       "type": "object",
       "additionalProperties": false,
@@ -208,12 +308,52 @@
   "allOf": [
     {
       "if": {
+        "properties": {"mode": {"const": "implementation"}},
+        "required": ["mode"]
+      },
+      "then": {
+        "required": ["profile", "scope", "test_evidence"]
+      }
+    },
+    {
+      "if": {
         "properties": {"scope": {"const": "tests"}},
         "required": ["scope"]
       },
       "then": {
         "properties": {"mode": {"const": "implementation"}},
         "required": ["mode", "test_evidence"]
+      }
+    },
+    {
+      "if": {
+        "properties": {"profile": {"const": "maintainability"}},
+        "required": ["profile"]
+      },
+      "then": {
+        "properties": {"mode": {"const": "implementation"}},
+        "required": ["mode", "maintainability_inspections"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "profile": {"const": "maintainability"},
+          "gate_status": {"const": "pass"}
+        },
+        "required": ["profile", "gate_status"]
+      },
+      "then": {
+        "properties": {
+          "maintainability_inspections": {
+            "items": {
+              "properties": {
+                "status": {"enum": ["clear", "candidate", "not-applicable"]}
+              }
+            }
+          }
+        },
+        "required": ["maintainability_inspections"]
       }
     }
   ]

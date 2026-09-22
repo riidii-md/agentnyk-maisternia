@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with an optional behavior-preserving maintainability profile, independent refutation, and applied fixes.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -243,6 +243,47 @@ Deepen the focused lenses as follows:
 - `correctness` and `test-review-bundle`: prove that a proposed simplification
   preserves the established behavior contract, including failure paths.
 
+### Complete The Maintainability Inspection
+
+Every maintainability review must complete four bounded inspection obligations
+before it may return `NO_FINDINGS` or pass the gate. Inspect the relationships
+that are material to the changed surface, including necessary unchanged code;
+do not turn an inapplicable relationship type into ceremonial work. Existing
+internal structure is evidence, not automatically a behavior contract. Preserve
+public and extension contracts, relied-upon errors, trust boundaries, and
+compatibility behavior.
+
+- `alternative-comparison` is owned by `simplicity-dry`. Compare the current
+  design with a concrete earlier rung of the simplification ladder. Inspect
+  introduced concepts, state, branches, layers, forwarding wrappers, and their
+  important consumers. Explain why the smaller shape does or does not preserve
+  required behavior and safeguards; line count alone is insufficient.
+- `contract-coherence` is owned by `consistency` and `architecture`. Compare
+  affected base declarations, implementations, callers, and supported extension
+  points. Inspect nullability and reachable absence, nested or repeated type
+  shapes, and whether a generic boundary or its documentation encodes behavior
+  owned only by a concrete implementation.
+- `error-and-validation-flow` is owned by `correctness` and `architecture`.
+  Trace at least one representative success path and each materially distinct
+  failure path through validation, conversion, adaptation, and error
+  translation. Inspect whether error types correspond to distinct recovery or
+  compatibility behavior and whether their ownership matches repository rules.
+- `runtime-invariant-placement` is owned by `correctness`. Distinguish failures
+  caused by runtime or caller-controlled data from developer-only invariants.
+  Inspect value origin, reachability, repeated checks on operational paths, and
+  the failure semantics that would remain after simplification. Never remove a
+  validation or safety check merely because the type declaration appears to
+  promise the invariant.
+
+For each obligation, add one `maintainability_inspections` entry to `review.json`
+with its owning lenses, concrete evidence, rationale, linked candidate finding
+IDs, and missing evidence. Record the status as `clear`, `candidate`, `unknown`, or `not-applicable`.
+`unknown` names the missing evidence and prevents a pass;
+`not-applicable` explains why the relationship does not exist in the reviewed
+surface. A `candidate` may pass only after every linked finding is refuted or its
+confirmed fix is applied and verified. `NO_FINDINGS` is valid only when every
+owned obligation is `clear` or `not-applicable` with supporting evidence.
+
 Every candidate from this profile must identify the preserved behavior and
 concrete evidence of the duplication or complexity. It must state the minimal
 fix and net simplification, regression risk, and the exact verification plan.
@@ -281,4 +322,5 @@ Write `review.md` and schema-valid `review.json` under
 first, followed by refuted findings and rationale, checks, residual risk,
 provider/model attribution, selected profile (`standard` or
 `maintainability`), selected scope (`full` or `tests`), the test-evidence matrix
-for implementation reviews, and gate status.
+for implementation reviews, the maintainability-inspection matrix when that
+profile is selected, and gate status.

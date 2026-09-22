@@ -180,6 +180,24 @@ speculative reuse, style-only preferences, and abstractions that merely move
 complexity are refuted. `NO_FINDINGS` remains valid when the current solution
 is already the simplest behavior-preserving design supported by the evidence.
 
+The profile must prove that it inspected four structural obligations instead of
+using `NO_FINDINGS` as an unexamined default:
+
+| Obligation | Owning lenses | Required inspection |
+|---|---|---|
+| `alternative-comparison` | Simplicity and DRY | A concrete earlier simplification rung, introduced concepts/state/branches/layers, forwarding wrappers, important consumers, and preserved safeguards |
+| `contract-coherence` | Consistency and architecture | Base, implementation, caller, and extension contracts; nullability; type-shape burden; and concrete behavior leaking into generic boundaries or documentation |
+| `error-and-validation-flow` | Correctness and architecture | Representative success/failure paths, validation and conversion hops, error translation, distinct recovery behavior, and ownership |
+| `runtime-invariant-placement` | Correctness | Caller-controlled failures versus developer-only invariants, value origin, reachability, repeated operational checks, and preserved failure semantics |
+
+Each obligation is recorded as `clear`, `candidate`, `unknown`, or
+`not-applicable`, with evidence, rationale, linked finding IDs, and any missing
+evidence. `unknown` prevents a pass. `NO_FINDINGS` is valid only when all four
+are `clear` or `not-applicable` with supporting evidence. A candidate can pass
+only after its linked findings are refuted or confirmed fixes are applied and
+verified. Existing internal structure is evidence rather than an automatic
+behavior contract; public and extension compatibility still constrain changes.
+
 ### Simplification Decision Ladder
 
 After the reviewer establishes the behavior contract, it evaluates options in
@@ -329,10 +347,14 @@ fixes are applied and verification succeeds. Every run writes:
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to `review-report.schema.json` and preserves provider
+The JSON report conforms to version 2 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
 counts, and final gate status. Implementation reports include the specialized
 `test_evidence` matrix; standalone test reviews record `scope: tests`.
+Maintainability reports additionally include the four required
+`maintainability_inspections` records. Version 2 requires `profile`, `scope`, and
+`test_evidence` for implementation reports; version 1 reports must be regenerated
+before they can satisfy the current gate.
 
 An external `pull_request.opened` event enters the separate read-only
 `review-intake` phase. It may produce and verify findings, but it cannot apply

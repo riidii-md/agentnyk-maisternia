@@ -1,7 +1,7 @@
 ---
 name: work-review-simplify
 description: Run the canonical implementation review with the behavior-preserving maintainability profile.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-review-simplify - Maintainability Review And Repair
@@ -17,6 +17,9 @@ This command is a thin alias for the canonical `work-review` workflow. Read and
 follow the installed `work-review` definition in full, using `implementation`
 mode and the `maintainability` profile. Do not create a second review engine or
 copy its lens definitions here.
+
+The expansion includes the canonical structural inspection obligations and
+current review-report schema. Do not omit or weaken them when invoking the alias.
 
 Input:
 
