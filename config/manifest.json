@@ -53,6 +53,17 @@
       ]
     },
     {
+      "id": "work-start-pr-review",
+      "source": "config/workflow/phases/start-pr-review.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-start-pr-review.md"},
+        {"agent": "codex", "path": ".codex/skills/work-start-pr-review/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-start-pr-review.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-start-pr-review.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-start-pr-review/SKILL.md"}
+      ]
+    },
+    {
       "id": "work-conductor",
       "source": "config/workflow/phases/work.md",
       "targets": [

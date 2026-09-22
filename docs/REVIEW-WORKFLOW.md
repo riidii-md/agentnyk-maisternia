@@ -5,7 +5,9 @@
 The `multi-lens-review` preset provides one evidence standard for plans,
 decision deltas, diffs, pull requests, and implementations. It separates
 candidate generation from finding verification and separates read-only review
-workers from the coordinator that applies fixes.
+workers from the coordinator. In the default `repair` disposition the
+coordinator applies verified fixes; in `report-only` it must not modify the
+reviewed implementation or contributor branch.
 
 Implementation reviews can select a focused `maintainability` profile. It
 looks harder for duplicated knowledge, avoidable complexity, weak abstractions,
@@ -28,6 +30,7 @@ subagents, provider calls, permissions, edits, and verification.
 /work-test-review <target or focus>
 /work-review implementation --scope tests <target or focus>
 /work-review implementation --profile maintainability <target or focus>
+/work-review implementation --disposition report-only <PR or diff>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
@@ -35,6 +38,12 @@ subagents, provider calls, permissions, edits, and verification.
 explicit plan, design, contract, or decision delta is reviewable even when
 there is no code diff. The default profile is `standard`; `maintainability`
 applies only to implementation targets.
+
+The default disposition is `repair`: the coordinator applies independently
+confirmed fixes within approved scope and verifies them. `report-only` keeps
+the reviewed implementation and contributor branch read-only while producing
+the same grounded, independently verified findings. `/work-start-pr-review`
+uses report-only whenever feedback will be published to an existing PR.
 
 `/work-review-simplify` is a thin alias for `/work-review implementation
 --profile maintainability`. It reads the canonical review workflow rather than
@@ -193,10 +202,14 @@ using `NO_FINDINGS` as an unexamined default:
 Each obligation is recorded as `clear`, `candidate`, `unknown`, or
 `not-applicable`, with evidence, rationale, linked finding IDs, and any missing
 evidence. `unknown` prevents a pass. `NO_FINDINGS` is valid only when all four
-are `clear` or `not-applicable` with supporting evidence. A candidate can pass
-only after its linked findings are refuted or confirmed fixes are applied and
-verified. Existing internal structure is evidence rather than an automatic
-behavior contract; public and extension compatibility still constrain changes.
+are `clear` or `not-applicable` with supporting evidence. Under repair
+disposition, a candidate can pass only after its linked findings are refuted or
+confirmed fixes are applied and verified. Under report-only disposition, a
+candidate can pass after every linked finding is independently resolved and
+confirmed fixes are recorded as `not-applicable`; this completes the review,
+not implementation approval. Existing internal structure is evidence rather
+than an automatic behavior contract; public and extension compatibility still
+constrain changes.
 
 ### Simplification Decision Ladder
 
@@ -327,9 +340,9 @@ is_real && grounded
 The coordinator records refuted candidates and why, deduplicates surviving
 findings, and ranks them Critical, High, Medium, then Low.
 
-## Report And Apply
+## Report, Then Repair Or Return Feedback
 
-Review workers and verifiers never edit. The coordinator:
+Review workers and verifiers never edit. Repair disposition lets the coordinator:
 
 1. writes the initial review report;
 2. applies every confirmed fix within approved scope;
@@ -339,22 +352,29 @@ Review workers and verifiers never edit. The coordinator:
 5. runs focused checks and repository-required final verification;
 6. reruns affected lenses when a repair materially changes behavior.
 
-Critical and High findings are blocking. The gate passes only when confirmed
-fixes are applied and verification succeeds. Every run writes:
+In repair disposition, Critical and High findings are blocking. The gate passes
+only when confirmed fixes are applied and verification succeeds.
+
+Report-only disposition never edits the reviewed artifact. It records confirmed
+fixes as `not-applicable` and may pass when the requested review, independent
+verification, deduplication, and safe checks complete. That pass means the
+review process completed; it is not implementation approval or merge readiness.
+
+Every run writes:
 
 ```text
 .agent-runs/reviews/<run-id>/review.md
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to version 2 of `review-report.schema.json` and preserves provider
+The JSON report conforms to version 3 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
 counts, and final gate status. Implementation reports include the specialized
 `test_evidence` matrix; standalone test reviews record `scope: tests`.
 Maintainability reports additionally include the four required
-`maintainability_inspections` records. Version 2 requires `profile`, `scope`, and
-`test_evidence` for implementation reports; version 1 reports must be regenerated
-before they can satisfy the current gate.
+`maintainability_inspections` records. Version 3 requires `profile`, `scope`,
+`test_evidence`, and `disposition` for implementation reports. Version 1 or 2
+reports must be regenerated before they can satisfy the current gate.
 
 An external `pull_request.opened` event enters the separate read-only
 `review-intake` phase. It may produce and verify findings, but it cannot apply

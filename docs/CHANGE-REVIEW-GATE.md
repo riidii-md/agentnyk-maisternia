@@ -1,8 +1,16 @@
 # Mandatory Human Change Review
 
-`/work-change-review` is the required implementation gate between successful
-automated review and PR preparation. It publishes one first-class mdmaid.desk
-Change Review containing both a readable explanation and the exact native diff.
+`/work-change-review implementation-approval` is the required implementation
+gate between successful automated review and PR preparation. It publishes one
+first-class mdmaid.desk Change Review containing both a readable explanation
+and the exact native diff.
+
+The command also has a separate `pr-feedback` mode used by
+`/work-start-pr-review`. That mode validates a unified review of an existing PR
+and either returns it for internal repair or publishes line and summary
+comments. When the mode or destination is ambiguous, the command asks where
+the review should land. Posting feedback never constitutes implementation or
+merge approval.
 
 ## One artifact, two reading depths
 
@@ -39,6 +47,11 @@ registers it as `kind=change-review`, and requests a revision-bound
 `change-decision`. Approval applies only while the document revision, content
 hash, and source fingerprint still match. Any implementation change makes the
 decision stale.
+
+The source snapshot is always the complete change against its actual merge
+target: the PR base or selected destination branch such as `main` or `develop`.
+The workflow resolves the target/head merge-base and never substitutes the last
+commit, latest rework, or delta since a previous review.
 
 The human may approve, Request Changes with file or hunk anchors, or reject.
 Only approval permits `/work-pr`. The gate remains read-only: mdmaid.desk does

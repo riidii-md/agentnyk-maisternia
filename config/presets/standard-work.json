@@ -64,12 +64,37 @@
         {"from": "change-review", "to": "change-review", "condition": "stale", "loop": true},
         {"from": "pr", "to": "session-analysis", "condition": "PR created and user accepts analysis"}
       ]
+    },
+    {
+      "id": "pr-review",
+      "name": "Pull Request Review",
+      "entry_phases": ["resolve-destination"],
+      "phases": [
+        "resolve-destination", "sync-pr-context", "select-review-suite",
+        "run-reviews", "synthesize-feedback", "implementation-approval",
+        "internal-repair", "verify-repair", "pr-feedback"
+      ],
+      "edges": [
+        {"from": "resolve-destination", "to": "sync-pr-context", "condition": "destination selected"},
+        {"from": "sync-pr-context", "to": "select-review-suite"},
+        {"from": "select-review-suite", "to": "run-reviews"},
+        {"from": "run-reviews", "to": "synthesize-feedback"},
+        {"from": "synthesize-feedback", "to": "implementation-approval", "condition": "internal repair review passes"},
+        {"from": "synthesize-feedback", "to": "pr-feedback", "condition": "PR publication review passes"},
+        {"from": "implementation-approval", "to": "internal-repair", "condition": "changes requested"},
+        {"from": "implementation-approval", "to": "implementation-approval", "condition": "decision stale", "loop": true},
+        {"from": "internal-repair", "to": "verify-repair"},
+        {"from": "verify-repair", "to": "internal-repair", "condition": "verification failed", "loop": true},
+        {"from": "verify-repair", "to": "run-reviews", "condition": "verification passes", "loop": true},
+        {"from": "pr-feedback", "to": "sync-pr-context", "condition": "head, checks, or comments stale before publication", "loop": true},
+        {"from": "pr-feedback", "to": "sync-pr-context", "condition": "post-publication reconciliation detects drift", "loop": true}
+      ]
     }
   ],
   "contents": {
     "mcp_refs": [],
     "commands": [
-      "work-start", "work-conductor", "work-brief", "work-scout", "work-analyze",
+      "work-start", "work-start-pr-review", "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-grill", "work-direction", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-run-simplify", "work-verify",
       "work-review", "work-review-simplify", "work-test-review", "work-change-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",

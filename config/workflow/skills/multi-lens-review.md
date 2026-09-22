@@ -1,6 +1,6 @@
 ---
 name: lens-review
-description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, evidence-grounded findings, behavior-preserving maintainability review, adversarial verification, and applied fixes.
+description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, behavior-preserving maintainability review, and adversarial verification.
 version: 0.5.0
 ---
 
@@ -20,6 +20,25 @@ invokes `/work-test-review`. The `tests` scope applies only to implementation
 review. Every full implementation review embeds the specialized test-review
 bundle; the tests scope runs that bundle without unrelated implementation
 lenses. Scope never widens authority.
+
+For implementation review, resolve the disposition as `repair` unless the
+caller explicitly requests `report-only`. Repair preserves the normal
+coordinator-owned fix loop. Report-only is available only for implementation
+review used as advisory or PR-publication feedback; reject it for plan,
+plan-delta, or direction review instead of silently changing semantics. Every
+report-only reviewer and the coordinator must not edit the reviewed
+implementation, tests, or contributor branch. They may write only task-owned
+review artifacts. The disposition changes mutation authority, not lenses,
+evidence, severity, or independent verification.
+
+For a PR, fork, patch, or other externally controlled implementation, treat
+the reviewed code as untrusted executable content. Prefer provider CI evidence
+and static inspection. Do not execute reviewed tests, builds, scripts, hooks,
+package lifecycle steps, generators, or binaries on the host unless the user
+explicitly authorizes that execution and it runs in a disposable sandbox with
+no credentials or secrets, no host write access, no network by default,
+isolated caches, and bounded resources. This boundary covers both dispositions
+and every focused or final verification step.
 
 Use the installed `work-routing` skill for every cross-provider selection. A
 route such as `/work-review @agy @codex @claude -- <target>` selects independent
@@ -82,12 +101,16 @@ returning `NO_FINDINGS` or passing the gate:
 Record one `maintainability_inspections` entry per obligation with lenses,
 evidence, rationale, linked finding IDs, and missing evidence. Its status is
 `clear`, `candidate`, `unknown`, or `not-applicable`. `unknown` prevents a pass;
-`not-applicable` needs a scoped reason. A candidate may pass only after every
-linked finding is refuted or its confirmed fix is applied and verified.
-`NO_FINDINGS` is valid only when each owned obligation is `clear` or
-`not-applicable` with evidence. Existing internal structure is not automatically
-an accepted behavior contract, and declared types never justify removing
-runtime validation or safety checks without reachability and failure evidence.
+`not-applicable` needs a scoped reason. Under repair disposition, a `candidate`
+inspection may pass only after every linked finding is refuted or its confirmed
+fix is applied and verified. Under report-only disposition, it may pass when
+every linked finding is independently resolved as refuted or confirmed and each
+confirmed fix is recorded as `not-applicable`; this passes the review process,
+not the implementation. `NO_FINDINGS` is valid only when each owned obligation
+is `clear` or `not-applicable` with evidence. Existing internal structure is not
+automatically an accepted behavior contract, and declared types never justify
+removing runtime validation or safety checks without reachability and failure
+evidence.
 
 Discover languages, frameworks, build systems, and generated surfaces before
 choosing practices or checks. Discovery must be language-agnostic,
@@ -145,15 +168,23 @@ The verifier must read the relevant code or plan and return explicit `is_real`
 and `grounded` booleans. Keep a finding only when both are true. Record what was
 refuted and why, then deduplicate and rank confirmed findings by severity.
 
-Reviewers and verifiers remain read-only. The current coordinating harness owns mutations and
-verification. Apply every confirmed fix within the approved scope. Critical and
-High findings are blocking until fixed or explicitly blocked by a user decision.
-For plans, edit the plan or design artifact. For implementations, edit code and
-tests, run focused checks, then run the repository-required final verification.
+Reviewers and verifiers remain read-only. Under repair disposition, the current
+coordinating harness owns mutations and verification. Apply every confirmed fix
+within the approved scope. Critical and High findings are blocking until
+fixed or explicitly blocked by a user decision. For plans, edit the plan or
+design artifact. For implementations, edit code and tests, run focused checks,
+then run the repository-required final verification.
+
+Under report-only disposition, do not apply fixes. Record every confirmed
+finding in `applied_fixes` with status `not-applicable` and reason
+`report-only disposition`; record `summary.applied` as zero. A passing gate
+means that the review process completed, not that the implementation is
+approved or merge-ready.
 
 Write `review.md` and schema-valid `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or
-`tests` scope in the report. Implementation reports include `test_evidence`;
-maintainability reports also include `maintainability_inspections`.
+`tests` scope and selected `repair` or `report-only` disposition in the report.
+Implementation reports include `test_evidence`; maintainability reports also
+include `maintainability_inspections`.

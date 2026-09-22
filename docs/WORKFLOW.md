@@ -107,6 +107,7 @@ preset:
     - filesystem
   commands:
     - /work-scout
+    - /work-start-pr-review
     - /work-grill
     - /work-direction
     - /work-plan
@@ -134,6 +135,7 @@ Canonical commands use the `/work-*` namespace:
 
 ```text
 /work-start
+/work-start-pr-review
 /work-shape
 /work-source
 /work-grill
@@ -178,6 +180,19 @@ without running it.
 Provider rendering decides how commands are installed, and the harness executes
 them at runtime. Maisternia remains configuration-only.
 
+`/work-start-pr-review <PR>` is the guided entry point for reviewing an
+existing pull request. It is separate from feature and bug delivery. It asks
+whether the result should remain internal for repair or be published as PR
+feedback, retrieves the linked ticket, PR description, current head and diff,
+all paginated review threads, and CI state, then offers `/work-review`,
+`/work-review-simplify`, `/work-test-review`, and existing-comment audit with
+explicit harness, model, reasoning, and focus choices. Internal mode may repair
+within existing authority in an isolated dedicated worktree that preserves
+unrelated dirty state. Publication mode is report-only and refreshes the head,
+diff, comments, and required checks before posting grounded line comments and a
+unified summary. It reconciles the live PR again after publication and never
+approves, requests changes, or merges.
+
 `/work-question` is an on-demand companion to idea shaping rather than a
 required phase. It turns an unclear challenge or recurring debate into one
 high-leverage question and one owned, time-bounded next move.
@@ -200,9 +215,12 @@ See [Specialized test review](TEST-REVIEW.md).
 than a required phase. It explains a PR, commit, range, or working-tree snapshot
 with verified narrative, selected code, and Mermaid-first visual lenses. It
 does not approve the change or replace `/work-review`. The required
-`/work-change-review` phase reuses that complete explanation contract, adds the
-frozen native diff and findings, and waits for an exact-revision human decision
-before `/work-pr`. `/work-plan-review` produces the analogous visual review for
+`/work-change-review implementation-approval` reuses that complete explanation
+contract, adds the frozen native diff and findings, and waits for an
+exact-revision human decision before `/work-pr`. Its distinct `pr-feedback`
+mode challenges and delivers the unified output of `/work-start-pr-review`; if
+the destination is not explicit, it asks whether findings should go to
+internal repair or the PR. `/work-plan-review` produces the analogous visual review for
 planned interfaces and abstractions. See [Change explanations](CHANGE-EXPLANATIONS.md)
 and [Mandatory human change review](CHANGE-REVIEW-GATE.md).
 

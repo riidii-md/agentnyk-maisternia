@@ -39,9 +39,15 @@ after its delimiter:
 /work-review @agy @codex -- implementation --profile maintainability <target or focus>
 ```
 
+Preserve an explicit `--disposition repair` or
+`--disposition report-only`. `/work-start-pr-review` supplies report-only for
+PR publication so this specialization cannot edit a contributor branch.
+
 Require an implementation target under the same resolution rules as
 `work-review`. Do not reinterpret a plan as implementation work.
 
-This alias does not widen authority. Reviewers and verifiers remain read-only;
-the coordinating harness applies only independently confirmed fixes and runs
-the canonical verification and reporting gates.
+This alias does not widen authority. Reviewers and verifiers remain read-only.
+Under repair disposition, the coordinating harness applies only independently
+confirmed fixes and runs the canonical verification and reporting gates.
+Under report-only disposition, it must not apply fixes and records confirmed fixes as
+`not-applicable` under the canonical review-process gate.

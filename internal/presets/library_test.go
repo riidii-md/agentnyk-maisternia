@@ -40,7 +40,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !found {
 		t.Fatal("standard-work preset missing")
 	}
-	if len(standard.Pipelines) != 1 || standard.Pipelines[0].ID != "delivery" {
+	if len(standard.Pipelines) != 2 || standard.Pipelines[0].ID != "delivery" ||
+		standard.Pipelines[1].ID != "pr-review" {
 		t.Fatalf("standard-work pipelines = %#v", standard.Pipelines)
 	}
 	delivery := standard.Pipelines[0]
@@ -109,6 +110,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Fatalf("standard-work edges = %#v, want %#v", delivery.Edges, wantEdges)
 	}
 	for _, resourceID := range []string{
+		"work-start-pr-review",
 		"work-grill",
 		"work-direction",
 		"work-plan-review",
@@ -1634,8 +1636,12 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			KeepOnlyWhen            []string `json:"keep_only_when"`
 		} `json:"verification"`
 		Application struct {
-			ApplyAllConfirmed    bool `json:"apply_all_confirmed"`
-			CriticalHighBlocking bool `json:"critical_high_blocking"`
+			ReviewersAreReadOnly bool `json:"reviewers_are_read_only"`
+			Repair               struct {
+				ApplyAllConfirmed    bool `json:"apply_all_confirmed"`
+				CriticalHighBlocking bool `json:"critical_high_blocking"`
+				RerunAffectedChecks  bool `json:"rerun_affected_checks"`
+			} `json:"repair"`
 		} `json:"application"`
 		Delegation struct {
 			RoutingContract                        string `json:"routing_contract"`
@@ -1653,7 +1659,10 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		!slices.Equal(policy.Verification.KeepOnlyWhen, []string{"is_real", "grounded"}) {
 		t.Fatalf("review verification policy = %#v", policy.Verification)
 	}
-	if !policy.Application.ApplyAllConfirmed || !policy.Application.CriticalHighBlocking {
+	if !policy.Application.ReviewersAreReadOnly ||
+		!policy.Application.Repair.ApplyAllConfirmed ||
+		!policy.Application.Repair.CriticalHighBlocking ||
+		!policy.Application.Repair.RerunAffectedChecks {
 		t.Fatalf("review application policy = %#v", policy.Application)
 	}
 	maintainability := policy.Profiles.Maintainability
@@ -1872,7 +1881,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
-			"runtime-invariant-placement", "maintainability_inspections", "version 2",
+			"runtime-invariant-placement", "maintainability_inspections", "version 3",
 		},
 	}
 	for relative, required := range contracts {
@@ -1959,8 +1968,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
 	}
-	if reportSchema.Properties.SchemaVersion.Const != 2 {
-		t.Fatalf("review report schema version = %d, want 2", reportSchema.Properties.SchemaVersion.Const)
+	if reportSchema.Properties.SchemaVersion.Const != 3 {
+		t.Fatalf("review report schema version = %d, want 3", reportSchema.Properties.SchemaVersion.Const)
 	}
 	if reportSchema.Properties.MaintainabilityInspections.Type != "array" {
 		t.Fatalf("review report maintainability_inspections type = %q", reportSchema.Properties.MaintainabilityInspections.Type)

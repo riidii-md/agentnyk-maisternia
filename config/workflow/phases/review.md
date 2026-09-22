@@ -1,6 +1,6 @@
 ---
 name: work-review
-description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with an optional behavior-preserving maintainability profile, independent refutation, and applied fixes.
+description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with implementation repair or report-only disposition, an optional behavior-preserving maintainability profile, and independent refutation.
 version: 0.5.0
 ---
 
@@ -8,8 +8,9 @@ version: 0.5.0
 
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
-Review the requested artifact with fresh context. Reviewers are read-only; the
-coordinator applies confirmed fixes and verifies the result.
+Review the requested artifact with fresh context. Reviewers are read-only. The
+selected review disposition determines whether the coordinator repairs the
+artifact or only reports grounded findings.
 
 Input:
 
@@ -24,6 +25,7 @@ Accepted modes:
 /work-review implementation <diff, branch, PR, contract, or focus>
 /work-review implementation --scope tests <diff, branch, PR, contract, or focus>
 /work-review implementation --profile maintainability <diff, branch, PR, or focus>
+/work-review implementation --disposition report-only <PR or diff>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
@@ -46,6 +48,28 @@ or refute its findings, but omits unrelated implementation lenses. Every full
 implementation review embeds the same bundle in place of a shallow generic
 test lens. The scope changes review focus, not reviewer authority, repair rules,
 or final verification.
+
+The default review disposition is `--disposition repair`, preserving the
+normal review-and-repair workflow. `--disposition report-only` is available for
+implementation review when the output will be advisory or published as review
+feedback. Under report-only disposition every reviewer and the coordinator
+must not edit the reviewed implementation, its tests, plan, or contributor
+branch. They may write only task-owned review artifacts. A report-only run
+still verifies and deduplicates every candidate, runs safe read-only checks,
+and records concrete proposed fixes; it never marks a finding applied.
+
+For a PR, fork, patch, or other externally controlled implementation, treat
+the reviewed code as untrusted executable content. Prefer provider CI evidence
+and static inspection. A read-only disposition does not authorize executing
+review-controlled tests, builds, scripts, hooks, package lifecycle steps,
+generators, or binaries on the host. Such execution requires explicit user
+authorization and a disposable credential-free sandbox with no host writes,
+no network by default, isolated caches, and bounded resources.
+
+An existing PR chosen for PR publication by `/work-start-pr-review` must use
+report-only. An internal repair review uses repair unless the user explicitly
+asks for advice without edits. The disposition changes mutation authority, not
+the selected lenses, evidence standard, severity, or routing strategy.
 
 When `work-routing` resolves several harnesses, use `parallel-verify`: distribute
 independent read-only lenses across them, prefer a verifier from a different
@@ -280,9 +304,13 @@ with its owning lenses, concrete evidence, rationale, linked candidate finding
 IDs, and missing evidence. Record the status as `clear`, `candidate`, `unknown`, or `not-applicable`.
 `unknown` names the missing evidence and prevents a pass;
 `not-applicable` explains why the relationship does not exist in the reviewed
-surface. A `candidate` may pass only after every linked finding is refuted or its
-confirmed fix is applied and verified. `NO_FINDINGS` is valid only when every
-owned obligation is `clear` or `not-applicable` with supporting evidence.
+surface. Under repair disposition, a `candidate` inspection may pass only after
+every linked finding is refuted or its confirmed fix is applied and verified.
+Under report-only disposition, it may pass when every linked finding is
+independently resolved as refuted or confirmed and each confirmed fix is
+recorded as `not-applicable`; this passes the review process, not the
+implementation. `NO_FINDINGS` is valid only when every owned obligation is
+`clear` or `not-applicable` with supporting evidence.
 
 Every candidate from this profile must identify the preserved behavior and
 concrete evidence of the duplication or complexity. It must state the minimal
@@ -305,7 +333,8 @@ then Low.
 
 ## Report And Apply
 
-Write the initial report, then apply every confirmed fix within approved scope:
+Write the initial report. Under repair disposition, apply every confirmed fix
+within approved scope:
 
 - for a plan or plan-delta, edit the plan/design artifact;
 - for an implementation, edit code and tests using repository conventions;
@@ -317,10 +346,20 @@ group, then repository-required final verification. Re-run affected lenses when
 a fix materially changes behavior. Gate status is `pass` only when confirmed
 fixes are applied and checks pass; otherwise return `fail` or `blocked`.
 
+Under report-only disposition, do not apply fixes. Mark every confirmed
+finding's `applied_fixes` entry `not-applicable` with `report-only disposition`
+as the reason. Gate status describes completion of the review process: `pass`
+when the requested lenses, independent verification, deduplication, and safe
+checks completed, even when the implementation has confirmed findings;
+`fail` when review evidence or checks are invalid; and `blocked` when required
+evidence could not be obtained. A report-only `pass` is not approval of the
+implementation and must never be presented as merge readiness.
+
 Write `review.md` and schema-valid `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings and applied fixes
 first, followed by refuted findings and rationale, checks, residual risk,
 provider/model attribution, selected profile (`standard` or
-`maintainability`), selected scope (`full` or `tests`), the test-evidence matrix
-for implementation reviews, the maintainability-inspection matrix when that
-profile is selected, and gate status.
+`maintainability`), selected scope (`full` or `tests`), review disposition
+(`repair` or `report-only`), the test-evidence matrix for implementation
+reviews, the maintainability-inspection matrix when that profile is selected,
+and gate status.
