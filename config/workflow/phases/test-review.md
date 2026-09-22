@@ -53,5 +53,7 @@ reporting rules. Do not copy or reinterpret those rules in this alias.
 Record `mode: implementation`, `scope: tests`, and the complete `test_evidence`
 matrix in the normal `.agent-runs/reviews/<run-id>/review.md` and `review.json`.
 This alias does not widen authority or add a human decision. Reviewers and
-verifiers remain read-only, and the coordinating harness owns only independently
-confirmed fixes within the accepted scope.
+verifiers remain read-only. Under repair disposition, the coordinating harness
+owns only independently confirmed fixes within the accepted scope.
+Under report-only disposition, it must not apply fixes and records confirmed fixes as
+`not-applicable` under the canonical review-process gate.

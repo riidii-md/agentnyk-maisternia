@@ -129,7 +129,60 @@
           "no-unapproved-tool-installation",
           "preserve-unknowns"
         ]
-      }
+      },
+      "inspection_statuses": [
+        "clear",
+        "candidate",
+        "unknown",
+        "not-applicable"
+      ],
+      "inspection_completion": {
+        "required_for_profile": true,
+        "unknown_prevents_pass": true,
+        "no_findings_requires_proof": true
+      },
+      "inspection_obligations": [
+        {
+          "id": "alternative-comparison",
+          "lenses": ["simplicity-dry"],
+          "inspect": [
+            "concrete-simpler-alternative",
+            "introduced-concepts-state-branches-and-layers",
+            "forwarding-wrappers-and-consumer-count",
+            "behavior-and-safeguards-preserved"
+          ]
+        },
+        {
+          "id": "contract-coherence",
+          "lenses": ["consistency", "architecture"],
+          "inspect": [
+            "base-implementation-and-caller-contracts",
+            "nullability-and-reachable-absence",
+            "type-shape-and-alias-burden",
+            "generic-boundary-domain-leakage"
+          ]
+        },
+        {
+          "id": "error-and-validation-flow",
+          "lenses": ["correctness", "architecture"],
+          "inspect": [
+            "representative-success-and-failure-flow",
+            "validation-conversion-and-error-translation-hops",
+            "distinct-error-recovery-behavior",
+            "exception-and-error-ownership"
+          ]
+        },
+        {
+          "id": "runtime-invariant-placement",
+          "lenses": ["correctness"],
+          "inspect": [
+            "runtime-input-failure-versus-developer-invariant",
+            "value-origin-and-reachability",
+            "repeated-hot-path-contract-checks",
+            "failure-semantics-after-simplification"
+          ]
+        }
+      ]
     }
   },
   "test_review": {
@@ -187,11 +240,13 @@
   },
   "application": {
     "reviewers_are_read_only": true,
-    "coordinator_applies_fixes": true,
-    "apply_all_confirmed": true,
-    "critical_high_blocking": true,
-    "rerun_affected_checks": true,
-    "unresolved_requires_gate_failure": true,
+    "repair": {
+      "coordinator_applies_fixes": true,
+      "apply_all_confirmed": true,
+      "critical_high_blocking": true,
+      "rerun_affected_checks": true,
+      "unresolved_requires_gate_failure": true
+    },
     "report_only": {
       "coordinator_edits_reviewed_artifact": false,
       "confirmed_fix_status": "not-applicable",

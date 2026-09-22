@@ -1,6 +1,6 @@
 ---
 name: lens-review
-description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, evidence-grounded findings, and adversarial verification.
+description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, behavior-preserving maintainability review, and adversarial verification.
 version: 0.5.0
 ---
 
@@ -80,6 +80,38 @@ appropriate. Never remove security, validation, accessibility, data-loss, or
 compatibility rationale without a durable equivalent, and never decide from
 comment volume or line count alone.
 
+For maintainability reviews, complete four bounded inspection obligations before
+returning `NO_FINDINGS` or passing the gate:
+
+- `alternative-comparison` (`simplicity-dry`): compare a concrete earlier
+  simplification rung, introduced concepts/state/branches/layers, forwarding
+  wrappers, important consumers, and preserved safeguards;
+- `contract-coherence` (`consistency`, `architecture`): inspect affected base,
+  implementation, caller, and extension contracts; nullability and reachable
+  absence; type-shape burden; and concrete behavior leaking into a generic
+  boundary or its documentation;
+- `error-and-validation-flow` (`correctness`, `architecture`): trace
+  representative success and materially distinct failure paths across
+  validation, conversion, adaptation, and error translation, including whether
+  error types have distinct recovery behavior and coherent ownership;
+- `runtime-invariant-placement` (`correctness`): distinguish caller-controlled
+  failures from developer-only invariants using value origin and reachability,
+  then inspect repeated operational-path checks and preserved failure semantics.
+
+Record one `maintainability_inspections` entry per obligation with lenses,
+evidence, rationale, linked finding IDs, and missing evidence. Its status is
+`clear`, `candidate`, `unknown`, or `not-applicable`. `unknown` prevents a pass;
+`not-applicable` needs a scoped reason. Under repair disposition, a `candidate`
+inspection may pass only after every linked finding is refuted or its confirmed
+fix is applied and verified. Under report-only disposition, it may pass when
+every linked finding is independently resolved as refuted or confirmed and each
+confirmed fix is recorded as `not-applicable`; this passes the review process,
+not the implementation. `NO_FINDINGS` is valid only when each owned obligation
+is `clear` or `not-applicable` with evidence. Existing internal structure is not
+automatically an accepted behavior contract, and declared types never justify
+removing runtime validation or safety checks without reachability and failure
+evidence.
+
 Discover languages, frameworks, build systems, and generated surfaces before
 choosing practices or checks. Discovery must be language-agnostic,
 evidence-led, and confidence-aware rather than a fixed language-to-tool table.
@@ -154,4 +186,5 @@ Write `review.md` and schema-valid `review.json` under
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or
 `tests` scope and selected `repair` or `report-only` disposition in the report.
-Implementation reports include `test_evidence`.
+Implementation reports include `test_evidence`; maintainability reports also
+include `maintainability_inspections`.

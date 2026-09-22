@@ -172,6 +172,11 @@ func TestRepositoryReviewDispositionContract(t *testing.T) {
 	var policy struct {
 		Dispositions []string `json:"dispositions"`
 		Application  struct {
+			Repair struct {
+				CoordinatorAppliesFixes       bool `json:"coordinator_applies_fixes"`
+				ApplyAllConfirmed             bool `json:"apply_all_confirmed"`
+				UnresolvedRequiresGateFailure bool `json:"unresolved_requires_gate_failure"`
+			} `json:"repair"`
 			ReportOnly struct {
 				CoordinatorEditsReviewedArtifact              bool   `json:"coordinator_edits_reviewed_artifact"`
 				ConfirmedFixStatus                            string `json:"confirmed_fix_status"`
@@ -183,6 +188,9 @@ func TestRepositoryReviewDispositionContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !slices.Equal(policy.Dispositions, []string{"repair", "report-only"}) ||
+		!policy.Application.Repair.CoordinatorAppliesFixes ||
+		!policy.Application.Repair.ApplyAllConfirmed ||
+		!policy.Application.Repair.UnresolvedRequiresGateFailure ||
 		policy.Application.ReportOnly.CoordinatorEditsReviewedArtifact ||
 		policy.Application.ReportOnly.ConfirmedFixStatus != "not-applicable" ||
 		!policy.Application.ReportOnly.PassMeansReviewCompleteNotImplementationReady {
@@ -218,8 +226,17 @@ func TestRepositoryWorkStartPRReviewContract(t *testing.T) {
 			"--disposition repair", "--disposition report-only",
 			"must not edit the reviewed implementation", "review disposition",
 		},
+		"config/workflow/phases/review-simplify.md": {
+			"Under repair disposition", "Under report-only disposition", "must not apply fixes",
+		},
+		"config/workflow/phases/test-review.md": {
+			"Under repair disposition", "Under report-only disposition", "must not apply fixes",
+		},
 		"config/workflow/skills/multi-lens-review.md": {
 			"repair", "report-only", "must not edit", "not-applicable",
+		},
+		"docs/REVIEW-WORKFLOW.md": {
+			"Repair disposition", "Report-only disposition", "version 3",
 		},
 	}
 	for relative, required := range contracts {
@@ -248,9 +265,11 @@ func TestRepositoryPRReviewSafetyClauses(t *testing.T) {
 		},
 		"config/workflow/phases/review.md": {
 			"A read-only disposition does not authorize executing review-controlled tests, builds, scripts, hooks, package lifecycle steps, generators, or binaries on the host. Such execution requires explicit user authorization and a disposable credential-free sandbox with no host writes, no network by default, isolated caches, and bounded resources.",
+			"Under repair disposition, a `candidate` inspection may pass only after every linked finding is refuted or its confirmed fix is applied and verified. Under report-only disposition, it may pass when every linked finding is independently resolved as refuted or confirmed and each confirmed fix is recorded as `not-applicable`; this passes the review process, not the implementation.",
 		},
 		"config/workflow/skills/multi-lens-review.md": {
 			"Do not execute reviewed tests, builds, scripts, hooks, package lifecycle steps, generators, or binaries on the host unless the user explicitly authorizes that execution and it runs in a disposable sandbox with no credentials or secrets, no host write access, no network by default, isolated caches, and bounded resources.",
+			"Under repair disposition, a `candidate` inspection may pass only after every linked finding is refuted or its confirmed fix is applied and verified. Under report-only disposition, it may pass when every linked finding is independently resolved as refuted or confirmed and each confirmed fix is recorded as `not-applicable`; this passes the review process, not the implementation.",
 		},
 		"config/workflow/phases/change-review.md": {
 			"When the caller or current standard-work phase explicitly supplies the mode and destination, preserve it. Otherwise, if the invocation could mean either internal repair or PR publication, ask where the review should land and wait. Do not infer the destination merely because a PR exists.",

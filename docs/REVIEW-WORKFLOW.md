@@ -189,6 +189,28 @@ speculative reuse, style-only preferences, and abstractions that merely move
 complexity are refuted. `NO_FINDINGS` remains valid when the current solution
 is already the simplest behavior-preserving design supported by the evidence.
 
+The profile must prove that it inspected four structural obligations instead of
+using `NO_FINDINGS` as an unexamined default:
+
+| Obligation | Owning lenses | Required inspection |
+|---|---|---|
+| `alternative-comparison` | Simplicity and DRY | A concrete earlier simplification rung, introduced concepts/state/branches/layers, forwarding wrappers, important consumers, and preserved safeguards |
+| `contract-coherence` | Consistency and architecture | Base, implementation, caller, and extension contracts; nullability; type-shape burden; and concrete behavior leaking into generic boundaries or documentation |
+| `error-and-validation-flow` | Correctness and architecture | Representative success/failure paths, validation and conversion hops, error translation, distinct recovery behavior, and ownership |
+| `runtime-invariant-placement` | Correctness | Caller-controlled failures versus developer-only invariants, value origin, reachability, repeated operational checks, and preserved failure semantics |
+
+Each obligation is recorded as `clear`, `candidate`, `unknown`, or
+`not-applicable`, with evidence, rationale, linked finding IDs, and any missing
+evidence. `unknown` prevents a pass. `NO_FINDINGS` is valid only when all four
+are `clear` or `not-applicable` with supporting evidence. Under repair
+disposition, a candidate can pass only after its linked findings are refuted or
+confirmed fixes are applied and verified. Under report-only disposition, a
+candidate can pass after every linked finding is independently resolved and
+confirmed fixes are recorded as `not-applicable`; this completes the review,
+not implementation approval. Existing internal structure is evidence rather
+than an automatic behavior contract; public and extension compatibility still
+constrain changes.
+
 ### Simplification Decision Ladder
 
 After the reviewer establishes the behavior contract, it evaluates options in
@@ -318,9 +340,9 @@ is_real && grounded
 The coordinator records refuted candidates and why, deduplicates surviving
 findings, and ranks them Critical, High, Medium, then Low.
 
-## Report And Apply
+## Report, Then Repair Or Return Feedback
 
-Review workers and verifiers never edit. The coordinator:
+Review workers and verifiers never edit. Repair disposition lets the coordinator:
 
 1. writes the initial review report;
 2. applies every confirmed fix within approved scope;
@@ -330,18 +352,29 @@ Review workers and verifiers never edit. The coordinator:
 5. runs focused checks and repository-required final verification;
 6. reruns affected lenses when a repair materially changes behavior.
 
-Critical and High findings are blocking. The gate passes only when confirmed
-fixes are applied and verification succeeds. Every run writes:
+In repair disposition, Critical and High findings are blocking. The gate passes
+only when confirmed fixes are applied and verification succeeds.
+
+Report-only disposition never edits the reviewed artifact. It records confirmed
+fixes as `not-applicable` and may pass when the requested review, independent
+verification, deduplication, and safe checks complete. That pass means the
+review process completed; it is not implementation approval or merge readiness.
+
+Every run writes:
 
 ```text
 .agent-runs/reviews/<run-id>/review.md
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to `review-report.schema.json` and preserves provider
+The JSON report conforms to version 3 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
 counts, and final gate status. Implementation reports include the specialized
 `test_evidence` matrix; standalone test reviews record `scope: tests`.
+Maintainability reports additionally include the four required
+`maintainability_inspections` records. Version 3 requires `profile`, `scope`,
+`test_evidence`, and `disposition` for implementation reports. Version 1 or 2
+reports must be regenerated before they can satisfy the current gate.
 
 An external `pull_request.opened` event enters the separate read-only
 `review-intake` phase. It may produce and verify findings, but it cannot apply
