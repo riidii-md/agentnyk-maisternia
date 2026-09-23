@@ -1,7 +1,7 @@
 ---
 name: work-change-review
 description: Resolve whether reviewed changes need an implementation-approval gate or unified pull-request feedback, then deliver the exact review to its selected destination.
-version: 0.3.0
+version: 0.3.1
 ---
 
 # /work-change-review - Decide And Deliver A Change Review
@@ -175,8 +175,8 @@ The artifact must include:
 - selected short code examples and an evidence index;
 - a diagram lens selection table that records each applicable lens, its
   evidence, generated diagram path, and why every omitted lens is not applicable;
-- the complete reviewable textual patch in one or more bounded, standard Git
-  fenced `diff` blocks.
+- the complete reviewable textual patch in exactly one bounded, standard Git
+  fenced `diff` block.
 
 The explanation must remain understandable without opening the native diff.
 The diff remains the exact approval payload rather than an illustrative excerpt.
@@ -226,6 +226,55 @@ limits: at most 256 files, 2,048 hunks, 50,000 diff lines, 16 KiB per line, and
 implementation scope before requesting approval. Never silently truncate code.
 If a patch would expose a secret, stop and remove the secret from the
 implementation instead of redacting approval evidence.
+
+## Prove The Native Diff Before Registration
+
+At scope freeze, persist the exact patch bytes used by the change fingerprint
+as a canonical patch artifact beside `change-review.md`. Build the narrative
+around that artifact, then embed its contents directly in exactly one fenced
+block whose opening fence is labelled `diff`. Use a fence delimiter longer
+than any conflicting backtick run in the patch. Never reconstruct the patch by
+hand, turn selected snippets into the approval payload, or use unlabelled code
+fences for the native patch.
+
+Reserve the `diff` language label exclusively for the canonical approval
+patch. Label selected explanatory examples with their source language or
+`text`, even when an example discusses added or removed lines, so neither the
+preflight nor mdmaid.desk can mistake an example for approval payload.
+The artifact must therefore contain exactly one fenced `diff` block.
+
+The assembled approval document must contain this shape; prose and selected
+examples come before the complete patch:
+
+````text
+# <specific implementation-review title>
+
+<explanation, evidence, diagrams, and selected examples>
+
+## Complete native diff
+
+```diff
+diff --git a/<path> b/<path>
+<complete canonical patch, not illustrative snippets>
+```
+````
+
+Before validation or registration, extract the payload of the single fenced
+`diff` block and compare it byte-for-byte with the canonical patch artifact.
+The extracted payload must be non-empty.
+It must contain at least one `diff --git` entry and have the same byte count and
+cryptographic hash as the canonical artifact. Reconcile its `diff --git` paths
+and entry count with the frozen changed-file inventory, including binary,
+rename, and mode-only entries.
+Selected explanatory snippets do not participate in this comparison.
+
+Generic `mdmaid validate` checks Markdown and Mermaid validity; its success
+does not prove that mdmaid.desk can render a native diff or that the complete
+patch was embedded. Treat a missing, malformed, empty, truncated, reordered,
+or mismatched extracted patch as a blocked gate.
+Do not call `mdmaid-desk register` until both the native-diff preflight and
+`mdmaid validate` pass. After registration, compare the returned artifact
+content hash with the preflighted local artifact and stop on any mismatch.
 
 ## Validate And Publish The Gate
 

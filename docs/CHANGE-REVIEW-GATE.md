@@ -24,6 +24,14 @@ diff viewer, file and hunk navigation, and anchored feedback.
 The reader can understand the design first and then inspect exact lines without
 switching to a disconnected explanation document.
 
+The producer also keeps a canonical patch artifact beside the review and
+compares the payload extracted from the document's single fenced `diff` block
+with that patch byte-for-byte before registration. Generic Markdown/Mermaid
+validation is not evidence that the native diff viewer has a complete patch.
+A missing, hand-written, truncated, or mismatched patch blocks registration;
+selected code snippets never substitute for the approval payload and never use
+the `diff` fence label reserved for that payload.
+
 ## Diff visual lenses
 
 Mermaid is the default. The workflow evaluates, but does not blindly generate:
