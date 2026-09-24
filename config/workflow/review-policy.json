@@ -190,6 +190,7 @@
     "applies_to": ["implementation"],
     "embedded_in_full_implementation_review": true,
     "standalone_command": "work-test-review",
+    "modes": ["review", "authoring", "audit", "campaign"],
     "lenses": [
       "intent-oracle",
       "risk-edge-coverage",
@@ -209,6 +210,64 @@
     ],
     "statuses": ["covered", "partial", "missing", "accepted-risk"],
     "metrics_role": "supporting-evidence",
+    "authoring_gate": {
+      "questions": [
+        "observable-contract",
+        "credible-regression",
+        "existing-coverage-gap",
+        "production-seam"
+      ],
+      "bug_regression_control": "fail-before-pass-after-for-intended-reason"
+    },
+    "audit": {
+      "primary_owner_rule": "one-primary-owner-at-cheapest-faithful-boundary",
+      "candidate_fields": [
+        "test",
+        "disposition",
+        "detected_failure",
+        "primary_owner",
+        "non_test_callers",
+        "surviving_proof",
+        "history",
+        "unlocked_deletions",
+        "risk",
+        "validation"
+      ],
+      "dispositions": ["retain", "fix", "consolidate", "delete"],
+      "junk_patterns": [
+        "assertion-free-probe",
+        "self-comparison-or-derived-expected-value",
+        "copied-inventory-manifest-or-export-list",
+        "source-import-or-string-grep-without-independent-contract",
+        "private-predicate-or-call-shape-replay",
+        "duplicate-contract-invocation",
+        "test-only-production-seam-or-dead-code",
+        "mock-implements-asserted-behavior",
+        "negative-control-passes-for-unrelated-reason",
+        "name-or-fixture-overstates-exercised-behavior"
+      ],
+      "retention_rules": [
+        "retain-independent-public-or-cross-system-contracts",
+        "retain-observable-ordering-and-credible-regressions",
+        "retain-static-inspection-when-cheapest-independent-guard",
+        "investigate-baseline-failures-as-possible-product-defects",
+        "never-delete-for-slowness-or-implementation-resemblance-alone"
+      ]
+    },
+    "campaign": {
+      "scope": "one-subsystem",
+      "steps": [
+        "baseline",
+        "owner-lanes",
+        "declaration-ledger",
+        "layer-plan",
+        "cutover",
+        "preservation-review",
+        "product-defects",
+        "reconcile-handoff"
+      ],
+      "mutation_control": "required-for-restored-contracts"
+    },
     "rules": [
       "ground-in-accepted-behavior-not-implementation-alone",
       "choose-cheapest-faithful-test-level",

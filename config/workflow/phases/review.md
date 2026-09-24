@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with implementation repair or report-only disposition, an optional behavior-preserving maintainability profile, and independent refutation.
-version: 0.5.0
+version: 0.6.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -24,6 +24,9 @@ Accepted modes:
 /work-review plan-delta <changed decision or section>
 /work-review implementation <diff, branch, PR, contract, or focus>
 /work-review implementation --scope tests <diff, branch, PR, contract, or focus>
+/work-review implementation --scope tests --test-mode authoring <change or proposed tests>
+/work-review implementation --scope tests --test-mode audit <test area>
+/work-review implementation --scope tests --test-mode campaign <subsystem>
 /work-review implementation --profile maintainability <diff, branch, PR, or focus>
 /work-review implementation --disposition report-only <PR or diff>
 /work-review @agy @codex @claude -- implementation <target or focus>
@@ -48,6 +51,15 @@ or refute its findings, but omits unrelated implementation lenses. Every full
 implementation review embeds the same bundle in place of a shallow generic
 test lens. The scope changes review focus, not reviewer authority, repair rules,
 or final verification.
+
+The default test mode is `review`. Every full implementation review uses that
+mode. `--test-mode authoring`, `--test-mode audit`, and `--test-mode campaign`
+require `implementation --scope tests`; never infer them during a normal full
+review. Authoring gates proposed or newly changed tests. Audit examines a
+bounded test area for low-value assurance and test-owned production seams.
+Campaign is an explicit exhaustive audit of one subsystem and must name that
+subsystem. Test mode changes the depth and required evidence, not authority,
+disposition, severity, independent verification, or final verification.
 
 The default review disposition is `--disposition repair`, preserving the
 normal review-and-repair workflow. `--disposition report-only` is available for
@@ -181,6 +193,115 @@ install tools or enable services without approval.
 
 Fixtures must be synthetic and contain no credentials, tokens, transcripts,
 runtime databases, or real user configuration values.
+
+### Gate Test Authoring
+
+In `authoring` mode, and whenever the coordinator adds or materially changes a
+test during repair, record one `test_authoring_gates` entry per test before
+accepting it. Establish all of the following:
+
+1. the observable behavior, invariant, or independent contract it protects;
+2. a credible regression that makes the test fail;
+3. why existing evidence does not already detect that regression;
+4. whether the test requires an export, flag, wrapper, global, reset hook,
+   injection point, or other production seam with no non-test caller.
+
+A missing answer fails the authoring gate. Place each contract at one primary
+owner: the cheapest faithful boundary that observes it without reproducing the
+implementation. Another level may repeat a scenario only when it owns a
+distinct transport, integration, lifecycle, compatibility, security, or
+diagnostic risk. If a test needs a test-only production seam, move the proof to
+the owning public boundary instead of weakening production design.
+
+A bug regression test must demonstrably fail on the pre-fix implementation for
+the intended reason and pass after the repair. Use an isolated reversible
+control such as the known pre-fix revision or a deliberate local mutation when
+repository policy and execution safety allow it. If the control cannot be run
+safely, record it as blocked; a green post-fix test alone is not proof that it
+detects the bug.
+
+### Audit Existing Tests
+
+`audit` and `campaign` modes inspect complete tests, their production owners,
+entry points, callers, callees, sibling implementations, overlapping evidence,
+CI routing, and relevant history. When a claim depends on a library or service,
+inspect its repository-pinned source, types, or authoritative contract when
+available. Discovery remains read-only until candidates are independently
+verified.
+
+Look for concrete low-value patterns, including:
+
+- assertion-free probes, self-comparisons, or expected values produced by the
+  same helper under test;
+- copied inventories, manifests, exports, or exact source/import/string checks
+  that do not independently protect a durable contract;
+- private predicate, call-shape, or provider-local replays of behavior already
+  proven at the owning boundary;
+- repeated invocations of one contract without a distinct failure class;
+- mocks or fixtures that manufacture the behavior or ordering being asserted;
+- capability checks that restate declarations without exercising their
+  promised result;
+- negative controls that pass because of an unrelated guard or unreachable
+  production path;
+- names and fixtures that promise behavior the assertions do not exercise;
+- tests whose sole purpose is preserving test-only production seams or dead
+  production code.
+
+These are discovery signals, not automatic deletion rules. Retain independently
+meaningful API, protocol, configuration, migration, storage, security,
+platform, default, generated cross-language, package, release, or architecture
+contracts. Retain observable ordering and credible regressions. Static
+inspection can be the cheapest faithful guard when it protects a durable byte,
+key, path, or generated boundary and survives irrelevant refactoring. A slow
+test or one that resembles implementation is not deletable without proof.
+Treat a retained baseline failure as a possible product defect: reproduce the
+behavior and repair the production owner separately rather than deleting its
+only signal.
+
+Before editing an audit candidate, add a `test_audit_candidates` entry with the
+exact test and location, `retain`, `fix`, `consolidate`, or `delete`
+disposition, the failure it can detect, its primary owner, non-test callers of
+covered support seams, stronger surviving proof or why none is required,
+relevant history, production or test-support deletion unlocked, risk, and a
+focused validation command. Missing evidence means the candidate is not ready
+to change. Prefer a few high-confidence candidates in ordinary audit mode.
+
+Under repair disposition, change one coherent owner-boundary batch at a time.
+Move retained regressions to their canonical owner, consolidate only after the
+keeper absorbs the distinct assertion, and delete obsolete test-only exports,
+globals, wrappers, hooks, and dead production paths rather than preserving
+aliases. Under report-only disposition, record the same proposed edits without
+changing the reviewed tree.
+
+### Run A Test Campaign
+
+`campaign` mode is an explicit exhaustive pruning pass over one subsystem. It
+uses the authoring and audit rules above and completes these ordered steps:
+
+1. pin a baseline revision and record the result of every owned test file,
+   keeping baseline failures separate;
+2. partition every test file and relevant QA or live-proof scenario into
+   exactly one lane based on production ownership;
+3. record every test declaration in the audit ledger, splitting parameterized
+   rows only when they need different dispositions;
+4. perform a second read-only layer pass that names the keeper for each
+   contract, assertions to move, retired files, and seams unlocked;
+5. under repair disposition, cut over lane by lane while one coordinator owns
+   shared harness and support edits;
+6. independently compare removed coverage with keepers and restore any lost
+   contract; for each restored contract, use a deliberate reversible mutation
+   to prove the keeper detects it;
+7. classify persistent baseline failures as product defects, prove repairs with
+   failing controls, and leave unrelated defects as follow-ups;
+8. reconcile upstream changes, rerun the complete subsystem proof, and report
+   production lines separately from test and test-support lines.
+
+Record the subsystem, pinned baseline, baseline checks, ownership lanes,
+preservation evidence, product defects, and before/after line counts in
+`test_campaign`. A campaign cannot pass with unassigned tests, an incomplete
+declaration ledger, unresolved preservation gaps, or unverified restored
+contracts. Optimize for retained confidence and simpler ownership, never for a
+deletion or line-count target.
 
 ## Run The Maintainability Profile
 
@@ -360,6 +481,8 @@ Write `review.md` and schema-valid `review.json` under
 first, followed by refuted findings and rationale, checks, residual risk,
 provider/model attribution, selected profile (`standard` or
 `maintainability`), selected scope (`full` or `tests`), review disposition
-(`repair` or `report-only`), the test-evidence matrix for implementation
-reviews, the maintainability-inspection matrix when that profile is selected,
-and gate status.
+(`repair` or `report-only`), selected `test_review_mode`, and the test-evidence
+matrix for implementation reviews. Include `test_authoring_gates`,
+`test_audit_candidates`, and `test_campaign` when their modes require them, the
+maintainability-inspection matrix when that profile is selected, and gate
+status.

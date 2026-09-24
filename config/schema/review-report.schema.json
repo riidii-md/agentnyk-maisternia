@@ -18,12 +18,13 @@
     "gate_status"
   ],
   "properties": {
-    "schema_version": {"const": 3},
+    "schema_version": {"const": 4},
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
     "mode": {"enum": ["direction", "plan", "plan-delta", "implementation"]},
     "disposition": {"enum": ["repair", "report-only"]},
     "profile": {"enum": ["standard", "maintainability"]},
     "scope": {"enum": ["full", "tests"]},
+    "test_review_mode": {"enum": ["review", "authoring", "audit", "campaign"]},
     "target": {"type": "string", "minLength": 1, "maxLength": 4096},
     "base_ref": {"type": ["string", "null"], "maxLength": 256},
     "lenses": {
@@ -47,6 +48,16 @@
       "type": "array",
       "items": {"$ref": "#/$defs/testEvidence"}
     },
+    "test_authoring_gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/testAuthoringGate"}
+    },
+    "test_audit_candidates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/testAuditCandidate"}
+    },
+    "test_campaign": {"$ref": "#/$defs/testCampaign"},
     "maintainability_inspections": {
       "type": "array",
       "minItems": 4,
@@ -225,6 +236,115 @@
         "status": {"enum": ["covered", "partial", "missing", "accepted-risk"]}
       }
     },
+    "testAuthoringGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "test",
+        "contract",
+        "credible_regression",
+        "existing_coverage_gap",
+        "owner_boundary",
+        "production_seam",
+        "regression_control",
+        "status"
+      ],
+      "properties": {
+        "test": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "contract": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "credible_regression": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "existing_coverage_gap": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "owner_boundary": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "production_seam": {"type": ["string", "null"], "maxLength": 4096},
+        "regression_control": {"type": ["string", "null"], "maxLength": 4096},
+        "status": {"enum": ["pass", "fail", "blocked"]}
+      }
+    },
+    "testAuditCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "test",
+        "disposition",
+        "detected_failure",
+        "primary_owner",
+        "non_test_callers",
+        "surviving_proof",
+        "history",
+        "unlocked_deletions",
+        "risk",
+        "validation"
+      ],
+      "properties": {
+        "test": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "disposition": {"enum": ["retain", "fix", "consolidate", "delete"]},
+        "detected_failure": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "primary_owner": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "non_test_callers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "surviving_proof": {"type": ["string", "null"], "maxLength": 4096},
+        "history": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "unlocked_deletions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "risk": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "validation": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "testCampaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subsystem",
+        "baseline_ref",
+        "baseline_results",
+        "lanes",
+        "preservation_review",
+        "product_defects",
+        "line_counts"
+      ],
+      "properties": {
+        "subsystem": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "baseline_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+        "baseline_results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/check"}
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "preservation_review": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "product_defects": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "line_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["production_before", "production_after", "test_support_before", "test_support_after"],
+          "properties": {
+            "production_before": {"type": "integer", "minimum": 0},
+            "production_after": {"type": "integer", "minimum": 0},
+            "test_support_before": {"type": "integer", "minimum": 0},
+            "test_support_after": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
     "maintainabilityInspection": {
       "type": "object",
       "additionalProperties": false,
@@ -313,7 +433,7 @@
         "required": ["mode"]
       },
       "then": {
-        "required": ["profile", "scope", "test_evidence", "disposition"]
+        "required": ["profile", "scope", "test_review_mode", "test_evidence", "disposition"]
       }
     },
     {
@@ -323,7 +443,37 @@
       },
       "then": {
         "properties": {"mode": {"const": "implementation"}},
-        "required": ["mode", "test_evidence"]
+        "required": ["mode", "test_review_mode", "test_evidence"]
+      }
+    },
+    {
+      "if": {
+        "properties": {"test_review_mode": {"const": "authoring"}},
+        "required": ["test_review_mode"]
+      },
+      "then": {
+        "required": ["test_authoring_gates"]
+      }
+    },
+    {
+      "if": {
+        "properties": {"test_review_mode": {"enum": ["audit", "campaign"]}},
+        "required": ["test_review_mode"]
+      },
+      "then": {
+        "required": ["test_audit_candidates"]
+      }
+    },
+    {
+      "if": {
+        "properties": {"test_review_mode": {"const": "campaign"}},
+        "required": ["test_review_mode"]
+      },
+      "then": {
+        "properties": {
+          "test_audit_candidates": {"minItems": 1}
+        },
+        "required": ["test_campaign"]
       }
     },
     {

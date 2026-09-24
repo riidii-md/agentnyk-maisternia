@@ -209,6 +209,10 @@ research or grill. See [Architectural direction](ARCHITECTURAL-DIRECTION.md).
 intent and oracles, risk and edge coverage, level and fidelity, and economical
 maintenance. Full `/work-review implementation` runs the same bundle; the
 standalone command records `scope: tests` without adding another approval gate.
+Its explicit `authoring`, `audit`, and `campaign` modes respectively gate new
+tests, inspect a bounded test area, or exhaustively reconcile one subsystem.
+They add owner-boundary, regression-control, deletion-evidence, and preservation
+requirements without changing review authority.
 See [Specialized test review](TEST-REVIEW.md).
 
 `/work-explain-change` is an on-demand companion to the delivery DAG rather

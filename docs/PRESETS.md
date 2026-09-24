@@ -190,7 +190,9 @@ and configuration-improvement workflows.
 specialized test bundle embedded in every implementation review. It evaluates
 test intent, material risk and edge coverage, test level and fidelity, and
 redundant or costly assurance without using coverage or test count as a quality
-quota. See [Specialized test review](TEST-REVIEW.md).
+quota. Explicit `authoring`, `audit`, and subsystem `campaign` modes add
+regression controls, contract ownership, test-pruning evidence, and preservation
+review. See [Specialized test review](TEST-REVIEW.md).
 
 `standard-work` installs `/work-explain-change` as an on-demand understanding
 tool, not an approval gate by itself. Mermaid is the default; PR Lens animation

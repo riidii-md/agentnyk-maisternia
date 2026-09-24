@@ -236,7 +236,7 @@ func TestRepositoryWorkStartPRReviewContract(t *testing.T) {
 			"repair", "report-only", "must not edit", "not-applicable",
 		},
 		"docs/REVIEW-WORKFLOW.md": {
-			"Repair disposition", "Report-only disposition", "version 3",
+			"Repair disposition", "Report-only disposition", "version 4",
 		},
 	}
 	for relative, required := range contracts {

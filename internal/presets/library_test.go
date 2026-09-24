@@ -1851,6 +1851,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
 			"runtime-invariant-placement", "`clear`, `candidate`, `unknown`, or `not-applicable`",
 			"NO_FINDINGS", "missing evidence",
+			"--test-mode authoring", "--test-mode audit", "--test-mode campaign",
+			"fail on the pre-fix", "primary owner", "test-only production seams",
 		},
 		"config/workflow/phases/review-simplify.md": {
 			"name: work-review-simplify", "version: 0.2.0", "$ARGUMENTS", "work-review",
@@ -1859,6 +1861,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		"config/workflow/phases/test-review.md": {
 			"name: work-test-review", "$ARGUMENTS", "work-review",
 			"implementation", "scope: tests", "thin specialization", "read-only",
+			"authoring", "audit", "campaign", "test_audit_candidates",
 		},
 		"config/workflow/skills/multi-lens-review.md": {
 			"Critical", "High", "refuted", "Apply every confirmed fix",
@@ -1881,7 +1884,12 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
-			"runtime-invariant-placement", "maintainability_inspections", "version 3",
+			"runtime-invariant-placement", "maintainability_inspections", "version 4",
+			"authoring", "audit", "campaign", "test-only production seams",
+		},
+		"docs/TEST-REVIEW.md": {
+			"Authoring mode", "Audit mode", "Campaign mode", "primary owner",
+			"fail on the pre-fix", "test-only production seams", "retain", "consolidate",
 		},
 	}
 	for relative, required := range contracts {
@@ -1968,8 +1976,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
 	}
-	if reportSchema.Properties.SchemaVersion.Const != 3 {
-		t.Fatalf("review report schema version = %d, want 3", reportSchema.Properties.SchemaVersion.Const)
+	if reportSchema.Properties.SchemaVersion.Const != 4 {
+		t.Fatalf("review report schema version = %d, want 4", reportSchema.Properties.SchemaVersion.Const)
 	}
 	if reportSchema.Properties.MaintainabilityInspections.Type != "array" {
 		t.Fatalf("review report maintainability_inspections type = %q", reportSchema.Properties.MaintainabilityInspections.Type)
