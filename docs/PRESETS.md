@@ -43,9 +43,10 @@ The repository starts with:
   `/work-start` as its guided entry point on Codex, Claude Code, and Antigravity,
   advancing automatically until a reviewable document and human response are
   needed. Hermes support awaits its missing phase contracts. It includes
-  optional research, a conditional reviewed architectural direction, expanded
-  proof, handoff, and PR preparation; a reviewed
-  plan delivered through mdmaid.desk before explicit human approval; standard
+  optional research, a conditional architectural direction, explicit optional
+  AI-review choices for direction and plan, expanded proof, handoff, and PR
+  preparation; the exact plan delivered through mdmaid.desk before explicit
+  human approval; standard
   and opt-in simplicity-focused execution commands; and the standard bounded
   routine approval resources. After a PR is successfully created, it offers an
   optional evidence-backed session analysis. It installs Mermaid-first
@@ -58,9 +59,9 @@ The repository starts with:
   mode;
 - `idea-shaping`: source intake, optional question-to-action focusing,
   bounded cross-system scouting, research, grill, brainstorm, challenge,
-  complexity-gated multi-agent direction and planning synthesis, conditional
-  direction review and human decision, detailed planning, and mdmaid.desk
-  delivery for phase artifacts;
+  complexity-gated multi-agent direction and planning synthesis, explicit
+  optional AI-review choices before direction and plan decisions, and
+  mdmaid.desk delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
 - `parallel-work`: dependency-aware parallel planning and bounded execution

@@ -40,10 +40,11 @@ If current code or task results require a new or changed architecture boundary,
 interface, dependency, schema, protocol, persistence model, state transition,
 cross-component behavior, compatibility promise, or migration strategy, stop the
 affected task and record the evidence. Do not silently redesign during execution.
-Stop and return to `/work-plan` or `/work-plan-review plan-delta` as appropriate,
-then obtain the required human decision before resuming. Reconfirmation against
-current code does not authorize the executor to fill a material gap in the
-approved plan.
+Stop and return to `/work-plan`, produce the revised artifact, and ask the
+explicit AI review choice again. Invoke `/work-plan-review plan-delta` only if
+the human selects AI review, then obtain the required human decision before
+resuming. Reconfirmation against current code does not authorize the executor
+to fill a material gap in the approved plan.
 
 ## Place Rationale Deliberately
 

@@ -9,7 +9,7 @@ version: 0.6.0
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Produce an actionable implementation proposal. When the direction gate applied,
-the exact reviewed and approved direction constrains it. The implementation
+the exact approved direction constrains it. The implementation
 proposal itself is not approved until the human reviews the final revision and
 makes an explicit decision.
 
@@ -30,7 +30,7 @@ Inspect the affected code and, when direction was required, locate the accepted 
 artifact, decision, revision, and content hash. Treat its architecture,
 boundaries, constraints, and accepted risks as inputs rather than silently
 redesigning them. If a required direction is missing, stale, or materially
-contradicted by code, return to direction and review.
+contradicted by code, return to direction and its explicit AI review choice.
 
 When analysis records that direction was not required, include the evidence for
 that skip and propose the simplest viable direction satisfying accepted scope
@@ -182,18 +182,28 @@ Return:
 - Whether `/work-prove` is needed as an optional expansion
 
 Write the complete plan as durable Markdown at the explicit task artifact path
-when one exists, otherwise under `.agent-runs/readable-output/`. For complex or
-high-risk work, recommend `/work-review plan` before presentation. When no
-separate plan review is needed, use `readable-output` to validate and deliver
-the plan through mdmaid.desk in explicit `plan-decision` mode. Include a useful
-request message, record the request ID and exact revision, and wait for the
-durable result; keep the current agent turn open while the foreground waiter is
-pending. `waiting_for_approval` is an intermediate update, never a final
-response. If the execution tool yields a process/session ID, resume that same
-process until it exits. Surface the outcome and human response text immediately
-when it returns: approval continues to `/work-decide`, requested changes return
-to planning, rejection stops or reshapes the work, and a stale request requires
-publication of the current revision.
+when one exists, otherwise under `.agent-runs/readable-output/`. Validate it and
+record its exact content hash. When expanded proof is required, complete
+`/work-prove` before presenting the review choice. Once proof is included or
+not needed, present the candidate plan and ask one explicit workflow question.
+AI review is optional. Offer `run AI review now`,
+`skip AI review` so the human can inspect and decide on this revision directly,
+or `review later` and stop. Do not automatically invoke `/work-plan-review`.
+Invoke `/work-plan-review plan` only after the human selects AI review.
+Do not invoke `/work-verify` from this phase, and do not start review lenses or
+candidate-refutation workers.
+
+If the human skips AI review, record the AI review skip and use
+`readable-output` to deliver this exact plan through mdmaid.desk in explicit
+`plan-decision` mode. Include a useful request message, record the request ID
+and exact revision, and wait for the durable result; keep the current agent turn open
+while the foreground waiter is pending. `waiting_for_approval` is an
+intermediate update, never a final response. If the execution tool yields a
+process/session ID, resume that same process until it exits. Surface the outcome
+and human response text immediately when it returns: approval continues to
+`/work-decide`, requested changes return to planning and the review choice,
+rejection stops or reshapes the work, and a stale request requires publication
+of the current revision.
 
 Registration or presentation is not approval. Do not implement code, mark a
 direction or plan accepted, or claim implementation readiness.

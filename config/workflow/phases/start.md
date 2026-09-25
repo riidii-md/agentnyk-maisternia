@@ -70,9 +70,10 @@ the available workspace rules.
    Research when evidence is missing and use `/work-grill` when focused human
    context is needed. Classify the conditional architectural direction gate;
    record evidence for a skip or return to scout or research when impact is
-   unknown. Record why expanded proof, plan review, or handoff applies or can
-   be skipped. Apply each phase contract in this session; do not merely print
-   the next command or follow a fixed checklist.
+   unknown. Record why expanded proof or handoff applies or can be skipped.
+   Evidence may support an AI-review recommendation, but only the human selects
+   or skips direction or plan AI review. Apply each phase contract in this
+   session; do not merely print the next command or follow a fixed checklist.
 3. When a material human fact is needed, resolve what available evidence can
    answer first. Then write or update one durable discovery brief at a
    task-specific artifact path, otherwise under `.agent-runs/readable-output/`.
@@ -82,15 +83,23 @@ the available workspace rules.
    private configuration, and sensitive source bodies. Summarize necessary
    evidence and cite safe source locations instead of copying raw content.
    Present the document and wait for the human response.
-4. When architectural direction is required, create the `/work-direction`
-   document, run `/work-plan-review direction`, and present the exact reviewed
-   revision. Wait for an explicit direction decision and record it with
-   `/work-decide direction` before detailed planning. Requested changes return
-   to direction and review; a stale revision requires a fresh review.
-5. Create the `/work-plan` document, expand proof when needed, and run the
-   applicable `/work-plan-review plan` path. Present the exact reviewed revision
-   for a plan decision. Wait for the human response, record it with
-   `/work-decide plan`, and check `/work-ready` before implementation.
+4. When architectural direction is required, create and present the exact
+   `/work-direction` revision, then stop for an explicit AI review choice. AI
+   review is optional. Ask whether to `run AI review now`, `skip AI review` so
+   the human can inspect and decide on the current revision, or `review later`
+   and pause. Do not automatically invoke `/work-plan-review`. Run
+   `/work-plan-review direction` only after the first choice. After a passing
+   review, or after recording an explicit AI review skip, wait for the direction
+   decision and record it with `/work-decide direction` before detailed
+   planning. Requested changes return to direction and the review choice; a
+   stale revision also returns to that choice.
+5. Create the `/work-plan` document and expand proof when needed. Present the
+   exact candidate plan, then stop for the same explicit choice: `run AI review
+   now`, `skip AI review`, or `review later`. AI review is optional. Do not
+   automatically invoke `/work-plan-review`; run `/work-plan-review plan` only
+   when selected. A skipped AI review does not approve the plan: wait for the
+   human plan decision, record the skip and decision with `/work-decide plan`,
+   and check `/work-ready` before implementation.
 6. After approval, execute `/work-run` in the same session unless a fresh
    executor makes `/work-handoff` necessary. Continue through `/work-verify`
    and `/work-review`. Apply requested fixes and repeat affected verification
@@ -103,9 +112,10 @@ the available workspace rules.
    when publication was requested and the change decision is approved.
 
 The delivery route is Git workspace preflight → brief → scout → analyze →
-optional research or human question → conditional architectural direction,
-direction review, and direction decision → plan → optional proof and plan
-review → plan decision → readiness → optional handoff → run → verify →
+optional research or human question → conditional architectural direction →
+explicit AI review choice → optional direction review → direction decision →
+plan → optional proof → explicit AI review choice → optional plan review →
+plan decision → readiness → optional handoff → run → verify →
 implementation review → change review →
 optional PR preparation. Failed verification or review returns to the relevant
 earlier phase; requested changes return to the affected document or code phase.
@@ -121,6 +131,13 @@ one stable task-and-role artifact path across revisions. The discovery brief,
 direction, plan, and change review are separate roles; do not create a file
 for every internal phase.
 
+At a direction or plan review-choice checkpoint, do not infer a preference from
+risk, document complexity, or earlier use of `/work-start`. The human may run
+AI review now, skip AI review and inspect the artifact themselves, or review
+later. Only the first choice authorizes reviewer or candidate-refutation
+workers. The skip is not approval and does not replace the later exact-revision
+direction or plan decision.
+
 For a live mdmaid.desk decision request, keep the current agent turn open and
 wait in the foreground as the phase contract requires. If the harness instead
 returns control at a conversational question, treat the next relevant user
@@ -131,9 +148,11 @@ opening a document, or a general request to start work. If an artifact or
 implementation changed while waiting, mark the old decision stale and present
 the current revision again.
 
-On an answer, incorporate the human's words, update affected artifacts, rerun
-their required review when content changed, and automatically resume from the
-next valid phase. A request for changes loops to the appropriate phase;
+On an answer, incorporate the human's words and update affected artifacts.
+Return every changed direction or plan to its explicit AI review choice; do not
+automatically rerun optional AI review. Rerun only mandatory implementation
+verification or review invalidated by an implementation change, then resume
+from the next valid phase. A request for changes loops to the appropriate phase;
 rejection stops the task unless the human explicitly requests reshaping, in
 which case return to analysis. Cancellation stops the task. Ask only for
 information or authority that cannot be derived from existing evidence. Do all

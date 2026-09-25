@@ -39,5 +39,6 @@ behavior. Do not use arbitrary task or assertion counts. Repository conventions
 and risk determine depth.
 
 If the plan already contains sufficient acceptance evidence, report that the
-proof is included and continue to plan review without duplicating it. Do not
+proof is included and return to the plan's explicit AI review choice without
+duplicating it. Do not automatically invoke `/work-plan-review`. Do not
 implement code or approve the candidate plan.

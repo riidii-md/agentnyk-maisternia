@@ -97,3 +97,166 @@ func TestRepositoryWorkStartChecksGitBaseAndTaskWorktree(t *testing.T) {
 		}
 	}
 }
+
+func TestRepositoryDirectionAndPlanRequireExplicitAIReviewChoice(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	for _, relative := range []string{
+		"config/workflow/phases/start.md",
+		"config/workflow/phases/direction.md",
+		"config/workflow/phases/plan.md",
+	} {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		text := string(content)
+		for _, required := range []string{
+			"AI review is optional",
+			"run AI review now",
+			"skip AI review",
+			"review later",
+			"Do not automatically invoke `/work-plan-review`",
+		} {
+			if !strings.Contains(text, required) {
+				t.Errorf("%s is missing %q", relative, required)
+			}
+		}
+	}
+
+	for _, relative := range []string{
+		"config/workflow/phases/direction.md",
+		"config/workflow/phases/plan.md",
+	} {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(content), "Do not invoke `/work-verify`") {
+			t.Errorf("%s does not prohibit phase-local work verification", relative)
+		}
+	}
+
+	semanticContracts := map[string][]string{
+		"config/workflow/phases/decide.md": {
+			"/work-decide direction <direction path, explicit AI review skip, and human response>",
+			"/work-decide plan <plan path, explicit AI review skip, and human response>",
+			"Require either a passing direction review or an explicit",
+			"AI review skip, followed by an explicit human decision",
+			"revision and content hash",
+		},
+		"config/workflow/phases/ready.md": {
+			"the selected AI plan review passed, or an explicit AI review skip is recorded",
+			"the approved plan content hash matches the current plan",
+			"An AI review skip waives only the optional AI review",
+			"never waives plan",
+			"exact-revision human approval",
+		},
+	}
+	for relative, requiredFragments := range semanticContracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, required := range requiredFragments {
+			if !strings.Contains(string(content), required) {
+				t.Errorf("%s is missing skip-gate semantic %q", relative, required)
+			}
+		}
+	}
+
+	shape, err := os.ReadFile(filepath.Join(root, "config/workflow/phases/shape.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{
+		"run AI review now",
+		"skip AI review",
+		"review later",
+		"Run `/work-plan-review direction` only when selected",
+		"Run `/work-plan-review plan` only when selected",
+		"Do not automatically invoke `/work-plan-review`",
+		"An AI review skip is not acceptance",
+	} {
+		if !strings.Contains(string(shape), required) {
+			t.Errorf("work-shape is missing %q", required)
+		}
+	}
+
+	prove, err := os.ReadFile(filepath.Join(root, "config/workflow/phases/prove.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{
+		"return to the plan's explicit AI review choice",
+		"Do not automatically invoke `/work-plan-review`",
+	} {
+		if !strings.Contains(string(prove), required) {
+			t.Errorf("work-prove is missing %q", required)
+		}
+	}
+}
+
+func TestRepositoryOptionalAIReviewHasNoAutomaticFallback(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	for relative, forbidden := range map[string][]string{
+		"config/workflow/phases/start.md": {
+			"expanded proof, plan review, or handoff applies",
+			"rerun their required review when content changed",
+		},
+		"config/workflow/phases/work.md": {
+			"plan review, handoff, and PR preparation as conditional work selected by",
+		},
+		"config/workflow/phases/plan.md": {
+			"return to direction and review",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"plan and review loop",
+			"requires a fresh review",
+			"return to direction and review",
+			"current-revision review",
+		},
+		"config/workflow/phases/run.md": {
+			"return to `/work-plan` or `/work-plan-review plan-delta`",
+		},
+		"config/workflow/phases/decide.md": {
+			"direction/review or plan/review loop",
+		},
+		"config/workflow/phases/run-simplify.md": {
+			"plan-delta` review and readiness",
+		},
+	} {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range forbidden {
+			if strings.Contains(string(content), fragment) {
+				t.Errorf("%s still permits automatic AI review through %q", relative, fragment)
+			}
+		}
+	}
+}
+
+func TestRepositoryReviewWorkflowDiagramPreservesChangeApproval(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	content, err := os.ReadFile(filepath.Join(root, "docs/REVIEW-WORKFLOW.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{
+		"CHANGE REVIEW",
+		"IMPLREVIEW -->|pass| CHANGE",
+		"CHANGE -->|approved and publication requested| PR",
+		"CHANGE -->|changes requested| RUN",
+	} {
+		if !strings.Contains(string(content), required) {
+			t.Errorf("review workflow diagram is missing %q", required)
+		}
+	}
+}

@@ -51,7 +51,9 @@ Equivalent implementation details within the approved contract do not require
 a new decision. When the simpler candidate changes approved behavior, scope, an
 explicit architectural decision, risk, or verification, stop before that change,
 show the concrete tradeoff, and ask the user. A material accepted change returns
-to `plan-delta` review and readiness before execution resumes.
+to `/work-plan`, the explicit AI review choice, the required exact-revision
+decision, and readiness before execution resumes. Invoke
+`/work-plan-review plan-delta` only when the human selects AI review.
 
 For each completed task, report the selected option, complexity avoided, files,
 tests, checks, and any concrete condition that would justify more complexity.

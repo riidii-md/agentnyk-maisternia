@@ -68,7 +68,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		{From: "grill", To: "research", Condition: "evidence gap", Loop: true},
 		{From: "grill", To: "direction", Condition: "direction required and evidence sufficient"},
 		{From: "grill", To: "plan", Condition: "direction not required and evidence sufficient"},
-		{From: "direction", To: "direction-review"},
+		{From: "direction", To: "direction-review", Condition: "AI review selected"},
+		{From: "direction", To: "direction-decision", Condition: "AI review skipped"},
 		{From: "direction", To: "scout", Condition: "boundary evidence gap", Loop: true},
 		{From: "direction", To: "research", Condition: "evidence gap", Loop: true},
 		{From: "direction", To: "grill", Condition: "human constraint needed", Loop: true},
@@ -78,11 +79,12 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		{From: "direction-decision", To: "plan", Condition: "approved"},
 		{From: "direction-decision", To: "direction", Condition: "changes requested", Loop: true},
 		{From: "direction-decision", To: "analyze", Condition: "rejected and reshape requested", Loop: true},
-		{From: "direction-decision", To: "direction-review", Condition: "stale", Loop: true},
+		{From: "direction-decision", To: "direction", Condition: "stale", Loop: true},
 		{From: "plan", To: "prove", Condition: "expanded proof needed"},
-		{From: "plan", To: "plan-review", Condition: "proof included"},
-		{From: "plan", To: "decide", Condition: "review not required"},
-		{From: "prove", To: "plan-review"},
+		{From: "plan", To: "plan-review", Condition: "proof gate satisfied; AI review selected"},
+		{From: "plan", To: "decide", Condition: "proof gate satisfied; AI review skipped"},
+		{From: "prove", To: "plan-review", Condition: "AI review selected"},
+		{From: "prove", To: "decide", Condition: "AI review skipped"},
 		{From: "plan-review", To: "decide", Condition: "pass"},
 		{From: "plan-review", To: "plan", Condition: "changes", Loop: true},
 		{From: "decide", To: "ready", Condition: "approved"},
@@ -240,6 +242,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !slices.Contains(shape.Pipelines[0].Phases, "decide") {
 		t.Error("idea-shaping must preserve option-choice decision when direction is not required")
 	}
+	if !slices.Contains(shape.Pipelines[0].Phases, "plan-review") {
+		t.Error("idea-shaping must expose the optional plan-review phase")
+	}
 	for _, edge := range []Edge{
 		{From: "intake", To: "scout", Condition: "system context linked"},
 		{From: "intake", To: "analyze", Condition: "no linked system to scout"},
@@ -251,11 +256,31 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		{From: "direction", To: "scout", Condition: "boundary evidence gap", Loop: true},
 		{From: "direction", To: "research", Condition: "evidence gap", Loop: true},
 		{From: "direction", To: "grill", Condition: "human constraint needed", Loop: true},
+		{From: "direction", To: "direction-review", Condition: "AI review selected"},
+		{From: "direction", To: "direction-decision", Condition: "AI review skipped"},
 		{From: "direction-review", To: "direction-decision", Condition: "pass"},
 		{From: "direction-decision", To: "plan", Condition: "approved"},
+		{From: "plan", To: "plan-review", Condition: "AI review selected"},
+		{From: "plan", To: "final", Condition: "AI review skipped"},
+		{From: "plan-review", To: "final", Condition: "pass"},
+		{From: "plan-review", To: "plan", Condition: "changes", Loop: true},
 	} {
 		if !slices.Contains(shape.Pipelines[0].Edges, edge) {
 			t.Errorf("idea-shaping is missing edge %#v", edge)
+		}
+	}
+	for _, want := range []Edge{
+		{From: "direction", To: "direction-review", Condition: "AI review selected"},
+		{From: "plan", To: "plan-review", Condition: "AI review selected"},
+	} {
+		var matches []Edge
+		for _, edge := range shape.Pipelines[0].Edges {
+			if edge.From == want.From && edge.To == want.To {
+				matches = append(matches, edge)
+			}
+		}
+		if !slices.Equal(matches, []Edge{want}) {
+			t.Errorf("idea-shaping review transition %s -> %s = %#v, want only %#v", want.From, want.To, matches, want)
 		}
 	}
 	experiment, found := library.Get("scored-experiment")
@@ -880,7 +905,7 @@ func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
 			"requirementDiagram", "complete reviewed plan",
 		},
 		"config/workflow/phases/decide.md": {
-			"direction", "reviewed plan revision", "approve, request changes, or reject",
+			"direction", "exact plan revision", "approve, request changes, or reject",
 			"content hash", "review request ID", "human response text",
 			"changes_requested", "agent approve its own plan",
 		},

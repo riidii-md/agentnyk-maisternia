@@ -19,8 +19,8 @@ create or resume a Maisternia runtime task.
 
 ```text
 INTAKE -> [SCOUT] -> ANALYZE -> RESEARCH <-> GRILL -> BRAINSTORM <-> CHALLENGE
-    -> [DECIDE | DIRECTION -> DIRECTION REVIEW -> DIRECTION DECISION]
-    -> PLAN -> FINAL
+    -> [DECIDE | DIRECTION -> AI REVIEW CHOICE -> DIRECTION DECISION]
+    -> PLAN -> AI REVIEW CHOICE -> FINAL
 ```
 
 Move through the smallest useful sequence. Resume from the conversation when
@@ -50,11 +50,16 @@ of recording a hidden phase transition.
   before detailed planning; final acceptance of the whole shape comes later.
 - Direction, when required: synthesize the high-level architecture, boundaries,
   decisions, rejected alternatives, and implementation constraints.
-- Direction review and decision: review against evidence, then obtain explicit
-  human approval for the exact reviewed revision.
+- AI review choice and direction decision: ask whether to run AI review now,
+  skip AI review, or review later. Run `/work-plan-review direction` only when selected,
+  then obtain explicit human approval for the exact revision.
 - Plan: produce detailed ordered work, risks, acceptance criteria, and stop
   conditions constrained by the approved direction when one was required.
-- Final: require explicit human acceptance before treating the shape as approved.
+- Plan AI review choice: ask whether to run AI review now, skip AI review, or
+  review later. Run `/work-plan-review plan` only when selected.
+- Do not automatically invoke `/work-plan-review` for direction or plan.
+- Final: require explicit human acceptance before treating the shape as
+  approved. An AI review skip is not acceptance.
 
 ## Session and Artifacts
 
@@ -63,11 +68,12 @@ of recording a hidden phase transition.
   work.
 - Use one evolving discovery brief for scout, analysis, research, and grill when
   a durable checkpoint is useful; do not create one document per phase.
-- Treat the reviewed direction and implementation plan as separate durable
+- Treat the direction and implementation plan as separate durable
   checkpoints, reusing stable task-and-role paths for revisions.
-- The shaping request authorizes task-owned direction and review Markdown
-  artifacts, plus local mdmaid.desk decision registration for the exact
-  reviewed direction when this conditional gate is required. Treat this
+- The shaping request authorizes task-owned direction Markdown artifacts,
+  optional review artifacts only after the human selects AI review, plus local
+  mdmaid.desk decision registration for the exact direction when this
+  conditional gate is required. Treat this
   presentation as scoped `workflow.artifact_write`, subject to the existing
   desk publication policy. It does not authorize modifying target-project
   files or publishing other documents.

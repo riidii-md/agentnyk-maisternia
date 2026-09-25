@@ -9,8 +9,8 @@ harness runs them.
 
 ```text
 INTAKE -> [SCOUT] -> ANALYZE -> RESEARCH <-> GRILL -> BRAINSTORM <-> CHALLENGE
-    -> [DECIDE | DIRECTION -> DIRECTION REVIEW -> DIRECTION DECISION]
-    -> PLAN -> FINAL
+    -> [DECIDE | DIRECTION -> AI REVIEW CHOICE -> DIRECTION DECISION]
+    -> PLAN -> AI REVIEW CHOICE -> FINAL
 ```
 
 The preset stores this topology as a declarative DAG. The DAG communicates the
@@ -30,9 +30,10 @@ The phases are:
 | Challenge | Test the options | Failure modes, gaps, and viable candidates |
 | Decide, when direction is not required | Record the human's option choice | Chosen approach before detailed planning |
 | Direction, when required | Synthesize the high-level architecture | Boundaries, decisions, rationale, tradeoffs |
-| Direction review and decision | Check the exact revision and obtain human approval | Reviewed, revision-bound decision |
+| Direction review choice and decision | Optionally run AI review, then obtain human approval | Revision-bound decision with review result or recorded skip |
 | Plan | Convert the accepted direction into executable work | Detailed steps, risks, acceptance criteria |
-| Final | Obtain human acceptance | Approved or explicitly unapproved shape |
+| Plan review choice | Run AI review, skip it, or review later | Review result, recorded skip, or paused work |
+| Final | Obtain human acceptance | Approved or explicitly unapproved shape; review skip alone is not approval |
 
 The harness should use the smallest useful sequence. It may resume from an
 already-complete phase when the current conversation or supplied artifacts

@@ -90,7 +90,19 @@ specific participants, behavior, and consequences.
 
 Write one durable Markdown direction artifact at an explicit task artifact path
 when provided, otherwise under `.agent-runs/readable-output/`. Reuse its stable
-task-and-role path for revisions and record its content hash. Present it through
-`/work-plan-review direction`. An agent-produced direction is not approved:
-do not start detailed planning until the exact reviewed revision has an
-explicit human direction decision.
+task-and-role path for revisions, validate it, and record its content hash.
+
+Present the exact candidate direction and ask one explicit workflow question.
+AI review is optional. Offer `run AI review now`, `skip AI review` so the human
+can inspect and decide on this revision directly, or `review later` and stop.
+Do not automatically invoke `/work-plan-review`.
+Invoke `/work-plan-review direction` only after the human selects AI review.
+Do not invoke `/work-verify` from this phase, and do not start review lenses or
+candidate-refutation workers.
+
+If the human skips AI review, record that choice, use `readable-output` to
+deliver this exact direction in direction-decision mode, and continue to
+`/work-decide direction` only from the explicit response. Skipping review is
+not approval. An agent-produced direction is never self-approved, and detailed
+planning still requires an explicit human direction decision bound to the
+artifact's content hash.
