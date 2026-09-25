@@ -110,10 +110,27 @@ func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	var policy struct {
 		ImplementationLenses []string `json:"implementation_lenses"`
 		TestReview           struct {
-			Scope        string   `json:"scope"`
-			Lenses       []string `json:"lenses"`
-			MatrixFields []string `json:"matrix_fields"`
-			MetricsRole  string   `json:"metrics_role"`
+			Scope         string   `json:"scope"`
+			Modes         []string `json:"modes"`
+			Lenses        []string `json:"lenses"`
+			MatrixFields  []string `json:"matrix_fields"`
+			MetricsRole   string   `json:"metrics_role"`
+			AuthoringGate struct {
+				Questions            []string `json:"questions"`
+				BugRegressionControl string   `json:"bug_regression_control"`
+			} `json:"authoring_gate"`
+			Audit struct {
+				PrimaryOwnerRule string   `json:"primary_owner_rule"`
+				CandidateFields  []string `json:"candidate_fields"`
+				Dispositions     []string `json:"dispositions"`
+				JunkPatterns     []string `json:"junk_patterns"`
+				RetentionRules   []string `json:"retention_rules"`
+			} `json:"audit"`
+			Campaign struct {
+				Scope           string   `json:"scope"`
+				Steps           []string `json:"steps"`
+				MutationControl string   `json:"mutation_control"`
+			} `json:"campaign"`
 		} `json:"test_review"`
 	}
 	if err := json.Unmarshal(data, &policy); err != nil {
@@ -130,6 +147,49 @@ func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	}
 	if !slices.Equal(policy.TestReview.Lenses, wantLenses) {
 		t.Fatalf("test review lenses = %v, want %v", policy.TestReview.Lenses, wantLenses)
+	}
+	if !slices.Equal(policy.TestReview.Modes, []string{"review", "authoring", "audit", "campaign"}) {
+		t.Fatalf("test review modes = %v", policy.TestReview.Modes)
+	}
+	if !slices.Equal(policy.TestReview.AuthoringGate.Questions, []string{
+		"observable-contract",
+		"credible-regression",
+		"existing-coverage-gap",
+		"production-seam",
+	}) || policy.TestReview.AuthoringGate.BugRegressionControl != "fail-before-pass-after-for-intended-reason" {
+		t.Fatalf("test review authoring gate = %#v", policy.TestReview.AuthoringGate)
+	}
+	wantAuditFields := []string{
+		"test",
+		"disposition",
+		"detected_failure",
+		"primary_owner",
+		"non_test_callers",
+		"surviving_proof",
+		"history",
+		"unlocked_deletions",
+		"risk",
+		"validation",
+	}
+	if policy.TestReview.Audit.PrimaryOwnerRule != "one-primary-owner-at-cheapest-faithful-boundary" ||
+		!slices.Equal(policy.TestReview.Audit.CandidateFields, wantAuditFields) ||
+		!slices.Equal(policy.TestReview.Audit.Dispositions, []string{"retain", "fix", "consolidate", "delete"}) ||
+		len(policy.TestReview.Audit.JunkPatterns) == 0 ||
+		len(policy.TestReview.Audit.RetentionRules) == 0 {
+		t.Fatalf("test review audit policy = %#v", policy.TestReview.Audit)
+	}
+	if policy.TestReview.Campaign.Scope != "one-subsystem" ||
+		!slices.Equal(policy.TestReview.Campaign.Steps, []string{
+			"baseline",
+			"owner-lanes",
+			"declaration-ledger",
+			"layer-plan",
+			"cutover",
+			"preservation-review",
+			"product-defects",
+			"reconcile-handoff",
+		}) || policy.TestReview.Campaign.MutationControl != "required-for-restored-contracts" {
+		t.Fatalf("test review campaign policy = %#v", policy.TestReview.Campaign)
 	}
 	wantFields := []string{
 		"contract_or_risk",
@@ -156,12 +216,20 @@ func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	var schema struct {
 		Properties  map[string]json.RawMessage `json:"properties"`
 		Definitions map[string]json.RawMessage `json:"$defs"`
+		AllOf       []json.RawMessage          `json:"allOf"`
 	}
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatal(err)
 	}
 	if _, found := schema.Properties["scope"]; !found {
 		t.Error("review report schema is missing scope")
+	}
+	for _, property := range []string{
+		"test_review_mode", "test_authoring_gates", "test_audit_candidates", "test_campaign",
+	} {
+		if _, found := schema.Properties[property]; !found {
+			t.Errorf("review report schema is missing %s", property)
+		}
 	}
 	testEvidenceProperty, found := schema.Properties["test_evidence"]
 	if !found {
@@ -196,6 +264,76 @@ func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	for _, field := range wantFields {
 		if _, found := testEvidenceDefinition.Properties[field]; !found {
 			t.Errorf("testEvidence definition is missing %q", field)
+		}
+	}
+	for definitionName, required := range map[string][]string{
+		"testAuthoringGate": {
+			"test", "contract", "credible_regression", "existing_coverage_gap",
+			"owner_boundary", "production_seam", "regression_control", "status",
+		},
+		"testAuditCandidate": wantAuditFields,
+		"testCampaign": {
+			"subsystem", "baseline_ref", "baseline_results", "lanes",
+			"preservation_review", "product_defects", "line_counts",
+		},
+	} {
+		definition, found := schema.Definitions[definitionName]
+		if !found {
+			t.Errorf("review report schema is missing %s definition", definitionName)
+			continue
+		}
+		var decoded struct {
+			Required []string `json:"required"`
+		}
+		if err := json.Unmarshal(definition, &decoded); err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Equal(decoded.Required, required) {
+			t.Errorf("%s required fields = %v, want %v", definitionName, decoded.Required, required)
+		}
+	}
+	var testReviewMode struct {
+		Enum []string `json:"enum"`
+	}
+	if err := json.Unmarshal(schema.Properties["test_review_mode"], &testReviewMode); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(testReviewMode.Enum, []string{"review", "authoring", "audit", "campaign"}) {
+		t.Errorf("test_review_mode enum = %v", testReviewMode.Enum)
+	}
+	requiredByMode := make(map[string][]string)
+	for _, rawCondition := range schema.AllOf {
+		var condition struct {
+			If struct {
+				Properties struct {
+					TestReviewMode struct {
+						Const string   `json:"const"`
+						Enum  []string `json:"enum"`
+					} `json:"test_review_mode"`
+				} `json:"properties"`
+			} `json:"if"`
+			Then struct {
+				Required []string `json:"required"`
+			} `json:"then"`
+		}
+		if err := json.Unmarshal(rawCondition, &condition); err != nil {
+			t.Fatal(err)
+		}
+		for _, mode := range append(condition.If.Properties.TestReviewMode.Enum, condition.If.Properties.TestReviewMode.Const) {
+			if mode != "" {
+				requiredByMode[mode] = append(requiredByMode[mode], condition.Then.Required...)
+			}
+		}
+	}
+	for mode, fields := range map[string][]string{
+		"authoring": {"test_authoring_gates"},
+		"audit":     {"test_audit_candidates"},
+		"campaign":  {"test_audit_candidates", "test_campaign"},
+	} {
+		for _, field := range fields {
+			if !slices.Contains(requiredByMode[mode], field) {
+				t.Errorf("test review mode %q does not require %q", mode, field)
+			}
 		}
 	}
 }

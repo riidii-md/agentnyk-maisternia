@@ -21,6 +21,12 @@ review. Every full implementation review embeds the specialized test-review
 bundle; the tests scope runs that bundle without unrelated implementation
 lenses. Scope never widens authority.
 
+Resolve test mode as `review` unless an explicit tests-scope invocation selects
+`authoring`, `audit`, or `campaign`. Full implementation review always embeds
+`review`; it never silently expands into an audit. Authoring evaluates proposed
+or newly changed tests, audit examines a bounded area, and campaign exhaustively
+examines one explicitly named subsystem.
+
 For implementation review, resolve the disposition as `repair` unless the
 caller explicitly requests `report-only`. Repair preserves the normal
 coordinator-owned fix loop. Report-only is available only for implementation
@@ -154,6 +160,34 @@ line count are contextual signals, never sufficient findings or universal
 gates. Require synthetic fixtures with no credentials, tokens, transcripts,
 runtime databases, or real user configuration.
 
+In authoring mode, record the protected observable contract, a credible
+regression, why current evidence misses it, the primary owner boundary, and any
+production seam the test would require. One contract has one primary owner at
+the cheapest faithful boundary; repeated proof at another level needs a
+distinct risk. A bug regression must fail on the pre-fix behavior for the
+intended reason and pass after repair. If a safe control run is unavailable,
+record the proof as blocked instead of inferring it from a green test.
+
+In audit mode, read each candidate test and its production owner, callers,
+sibling implementations, overlapping tests, CI routing, and relevant history.
+Use concrete low-value patterns only for discovery: vacuous assertions,
+self-derived expected values, copied inventories, private-call replays,
+duplicate contract invocations, behavior manufactured by mocks, unrelated
+negative controls, overstated test names, and test-only production seams. Do
+not delete from pattern resemblance alone. Record the exact test, detected
+failure, primary owner, non-test callers, surviving proof, history, unlocked
+deletions, risk, validation, and `retain`, `fix`, `consolidate`, or `delete`
+disposition before editing. Remove obsolete test-only exports, wrappers,
+globals, hooks, and dead production paths with confirmed candidates.
+
+Campaign mode pins a baseline for every owned test, partitions the subsystem by
+production ownership, gives every declaration a disposition, names one keeper
+per contract, cuts over by owner lane, and independently reviews preservation.
+Prove each restored contract with a reversible deliberate mutation. Treat
+persistent baseline failures as possible product defects. A campaign report
+records `test_audit_candidates`, `test_campaign`, and production versus test
+and support line counts; deletion count is never a success metric.
+
 Run one read-only reviewer per required lens, in parallel when supported. Add
 domain lenses only when the affected surface warrants them. Every candidate
 finding needs concrete grounding such as `file:line`, a short verbatim quote,
@@ -186,5 +220,7 @@ Write `review.md` and schema-valid `review.json` under
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or
 `tests` scope and selected `repair` or `report-only` disposition in the report.
-Implementation reports include `test_evidence`; maintainability reports also
-include `maintainability_inspections`.
+Implementation reports include `test_review_mode` and `test_evidence`;
+authoring reports include `test_authoring_gates`, audit reports include
+`test_audit_candidates`, campaign reports include `test_campaign`, and
+maintainability reports also include `maintainability_inspections`.

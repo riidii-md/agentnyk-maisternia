@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted and implemented, 2026-09-10.
+Accepted and implemented, 2026-09-10. Expanded with authoring, audit, and
+campaign modes, 2026-09-24.
 
 ## Context
 
@@ -31,6 +32,51 @@ creating a parallel review system.
 Confirmed Critical and High assurance gaps block completion. Lower-severity
 maintainability findings are advisory unless they demonstrate false assurance,
 flakiness, security exposure, or significant ongoing maintenance cost.
+
+## Test Review Modes
+
+`review` remains the default mode embedded in every implementation review. It
+maps changed behavior and risks to sufficient evidence without inventorying an
+unchanged test surface.
+
+Authoring mode gates every proposed, new, or materially changed test. Before a
+test is accepted, it must name the observable contract it protects, a credible
+regression, the gap in existing coverage, its primary owner boundary, and any
+production seam it requires. A bug regression must fail on the pre-fix behavior
+for the intended reason and pass after the repair. A test that needs a test-only
+production export, wrapper, global, reset hook, or injection point moves to the
+real owning boundary instead.
+
+Confirmed cleanup removes obsolete test-only production seams together with
+the tests that kept them alive; it does not preserve compatibility aliases for
+code with no production caller.
+
+Audit mode inspects a bounded test area for false assurance, implementation
+coupling, duplicated contracts, and obsolete test support. Each candidate is
+marked `retain`, `fix`, `consolidate`, or `delete` only after its actual failure
+signal, production owner, non-test callers, surviving proof, history, unlocked
+deletions, risk, and focused validation are known.
+
+Campaign mode applies the same evidence bar exhaustively to one explicitly
+named subsystem. It pins a baseline, partitions tests by production owner,
+records every declaration, names contract keepers, performs lane-by-lane
+cutover, and runs an independent preservation review. Restored coverage must
+catch a reversible deliberate mutation. Persistent baseline failures are
+investigated as possible product defects instead of being discarded as stale
+tests.
+
+The focused commands are:
+
+```text
+/work-test-review <target or focus>
+/work-test-review authoring <change or proposed tests>
+/work-test-review audit <test area>
+/work-test-review campaign <subsystem>
+```
+
+The non-default modes are never inferred by a normal implementation review.
+They reuse the existing repair/report-only dispositions, independent candidate
+refutation, and final verification.
 
 ## Test Standard
 
@@ -67,6 +113,20 @@ failure class. Similar-looking tests remain justified when they provide a
 different boundary, real-dependency evidence, contract owner, or diagnostic
 signal.
 
+One contract has one primary owner at the cheapest faithful boundary. A second
+layer needs a distinct transport, integration, lifecycle, compatibility,
+security, or diagnostic risk; merely traversing the same call path does not
+justify another copy.
+
+Audit discovery explicitly checks for vacuous assertions, self-derived
+expected values, copied inventories, source greps without an independent
+contract, private-call replays, duplicate contract invocations, mocks that
+manufacture the asserted behavior, unrelated negative controls, overstated
+test names, and production code used only by tests. These are candidate signals
+rather than automatic deletion rules. Static checks, observable ordering,
+cross-system contracts, and credible regressions remain when they independently
+protect behavior.
+
 ## Review Contract
 
 The specialized review contains four evidence-grounded lenses:
@@ -102,6 +162,14 @@ Coverage should locate relevant unexercised changed code, not justify tests by
 percentage alone. Fuzzing and mutation testing may probe input spaces and
 assertion strength when repository tooling and risk warrant them; neither is a
 universal numeric gate.
+
+Authoring reports add `test_authoring_gates`. Audit and campaign reports add
+`test_audit_candidates`, including the exact test, disposition, detected
+failure, primary owner, non-test callers, surviving proof, history, unlocked
+deletions, risk, and validation. Campaign reports also add `test_campaign` with
+its subsystem, baseline, lanes, preservation evidence, product defects, and
+production versus test-support line counts. All implementation reports record
+their `test_review_mode`.
 
 ## Options Considered
 

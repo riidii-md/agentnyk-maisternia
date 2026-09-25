@@ -28,6 +28,9 @@ subagents, provider calls, permissions, edits, and verification.
 /work-review
 /work-review-simplify <target or focus>
 /work-test-review <target or focus>
+/work-test-review authoring <change or proposed tests>
+/work-test-review audit <test area>
+/work-test-review campaign <subsystem>
 /work-review implementation --scope tests <target or focus>
 /work-review implementation --profile maintainability <target or focus>
 /work-review implementation --disposition report-only <PR or diff>
@@ -53,6 +56,15 @@ duplicating its lenses, verification, repair, or authority rules.
 tests`. Full implementation review embeds the same specialized bundle; the
 standalone command limits candidate generation to test evidence without
 creating a separate review engine or human gate.
+
+Its default test mode is `review`. Explicit `authoring` mode gates new or
+changed tests, including a pre-fix failing control for bug regressions. `audit`
+mode examines a bounded area for duplicated or false assurance and obsolete
+test-only production seams. `campaign` mode exhaustively inventories one named
+subsystem, assigns every declaration to a production-owner lane, preserves one
+primary owner per contract, and independently verifies that removals did not
+erase its only proof. These modes reuse the canonical disposition, verifier,
+repair, and reporting machinery.
 
 ## Delivery Gates
 
@@ -367,14 +379,17 @@ Every run writes:
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to version 3 of `review-report.schema.json` and preserves provider
+The JSON report conforms to version 4 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
 counts, and final gate status. Implementation reports include the specialized
-`test_evidence` matrix; standalone test reviews record `scope: tests`.
+`test_evidence` matrix and `test_review_mode`; standalone test reviews record
+`scope: tests`. Authoring reports add `test_authoring_gates`, audit and campaign
+reports add `test_audit_candidates`, and campaigns add `test_campaign`.
 Maintainability reports additionally include the four required
-`maintainability_inspections` records. Version 3 requires `profile`, `scope`,
-`test_evidence`, and `disposition` for implementation reports. Version 1 or 2
-reports must be regenerated before they can satisfy the current gate.
+`maintainability_inspections` records. Version 4 requires `profile`, `scope`,
+`test_review_mode`, `test_evidence`, and `disposition` for implementation
+reports. Older reports must be regenerated before they can satisfy the current
+gate.
 
 An external `pull_request.opened` event enters the separate read-only
 `review-intake` phase. It may produce and verify findings, but it cannot apply

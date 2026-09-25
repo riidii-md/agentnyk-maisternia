@@ -177,6 +177,9 @@ Canonical work commands accept an optional route before the task:
 /work-run-simplify @codex -- implement with the opt-in simplicity profile
 /work-review @codex @claude -- review with both harnesses
 /work-test-review @codex -- review test evidence for this change
+/work-test-review @codex -- authoring review the proposed regression tests
+/work-test-review @codex -- audit the storage test surface
+/work-test-review @codex -- campaign the notifications subsystem
 ```
 
 A per-harness model selector and optional per-harness reasoning level follow
