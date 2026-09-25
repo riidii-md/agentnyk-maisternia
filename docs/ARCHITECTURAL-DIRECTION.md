@@ -35,15 +35,20 @@ gap, return directly to scout, research, or grill before direction review.
 
 The artifact records outcomes and exclusions; system boundaries, ownership,
 and sources of truth; components and data/control flows; interfaces and trust
-boundaries; the selected approach and rationale; rejected alternatives and
-tradeoffs; implementation constraints; rollout, compatibility, observability,
-and recovery implications; risks, assumptions, unresolved questions, and
-acceptance signals. It cites its evidence and attributed human input.
+boundaries; the implementation shape of representative functions, methods,
+types, classes, interfaces, or modules; and the system-design and code-level
+patterns that are established, proposed, adapted, or rejected. Pattern decisions
+identify their participants, the concrete problem they solve, and their
+consequences rather than applying labels ceremonially. The artifact also records
+the selected approach and rationale; rejected alternatives and tradeoffs;
+implementation constraints; rollout, compatibility, observability, and recovery
+implications; risks, assumptions, unresolved questions, and acceptance signals.
+It cites its evidence and attributed human input.
 
-It intentionally excludes file-by-file edits, symbol-level details, ordered
-coding tasks, and exhaustive test commands. Those belong to the detailed
-implementation plan, which must be executable by a fresh agent without
-inventing material design.
+It intentionally excludes file-by-file edits, exhaustive symbol inventories,
+final private-helper details, ordered coding tasks, and exhaustive test commands.
+Those belong to the detailed implementation plan, which must be executable by a
+fresh agent without inventing material design.
 
 ## Review And Decision
 

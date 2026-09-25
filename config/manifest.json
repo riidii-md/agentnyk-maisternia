@@ -386,7 +386,8 @@
         {"agent": "codex", "path": ".codex/prompts/work-plan.md"},
         {"agent": "codex", "path": ".codex/skills/work-plan/SKILL.md"},
         {"agent": "claude", "path": ".claude/commands/work-plan.md"},
-        {"agent": "antigravity", "path": ".config/agy/prompts/work-plan.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-plan.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-plan/SKILL.md"}
       ]
     },
     {

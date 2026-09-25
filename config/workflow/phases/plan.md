@@ -1,7 +1,7 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.5.0
+version: 0.6.0
 ---
 
 # /work-plan - Create the Implementation Plan
@@ -52,7 +52,7 @@ tasks. The plan is sufficiently detailed when a fresh executor can implement it
 without inventing material architecture, interfaces, dependencies, storage or
 state behavior, or cross-component behavior. Cover only the architecture affected
 by the task; do not manufacture a whole-application design or speculative
-class-by-class detail.
+exhaustive class-by-class inventory.
 
 Describe, at risk-appropriate depth:
 
@@ -64,6 +64,39 @@ Describe, at risk-appropriate depth:
 - dependency, configuration, persistence, migration, rollout, and rollback effects;
 - decisions fixed by the plan, open decisions requiring human judgment, and
   permitted executor discretion.
+
+### Explain Code Composition
+
+Show how the affected behavior is composed, at the level needed to implement it:
+
+- describe the current implementation composition from repository evidence,
+  including the relevant entry points, call path, responsibilities, and
+  relationships among functions, methods, types, classes, interfaces, or modules;
+- describe the proposed implementation composition, identifying which code
+  elements are added, changed, reused, or removed; their responsibilities; how
+  they call, own, implement, contain, or depend on one another; and where state,
+  lifecycle, validation, and error handling live;
+- include material signatures or pseudocode when they clarify a contract, while
+  leaving private helper names and equivalent local control flow to the executor;
+- distinguish verified current symbols and relationships from proposed ones and
+  cite the relevant repository locations for the verified composition.
+
+Prefer a compact call tree, responsibility table, `classDiagram`, or
+`sequenceDiagram` when it makes the composition easier to understand. Do not add
+a ceremonial symbol catalog or speculate about unaffected code.
+
+### Pattern Register
+
+Identify relevant system-design, architectural, integration, data, domain, and
+code-level design patterns. For every material pattern, record whether it is
+established and reused, newly proposed, deliberately adapted, or rejected; its
+repository evidence or proposed location; its participants and collaborations;
+the problem it solves here; and the resulting benefits, constraints, and tradeoffs.
+Call out intentional departures from an established local pattern.
+
+Do not force pattern names onto straightforward code or recommend a pattern only
+because it is familiar. If direct composition is the clearest design, say so and
+explain the local convention being followed.
 
 For a small local change, explicitly state which of these concerns are unaffected
 instead of adding ceremonial design sections. Private helper names, equivalent
@@ -100,6 +133,9 @@ Return:
 - Simplest viable direction, evidence, and complexity avoided only when the
   direction gate was skipped
 - Affected-system design, ownership boundaries, and responsibilities
+- Current and proposed implementation composition, with verified evidence and
+  representative code relationships
+- Pattern register covering established, proposed, adapted, and rejected patterns
 - Material interfaces and cross-component contracts
 - Planned data and control flow
 - Visual lens selection and evidence-grounded Mermaid diagrams when applicable

@@ -1105,6 +1105,87 @@ func TestRepositoryPlanExecutionDesignBoundaryContract(t *testing.T) {
 	}
 }
 
+func TestRepositoryDirectionAndPlanExplainCompositionAndPatterns(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/direction.md": {
+			"implementation shape",
+			"current and proposed responsibilities",
+			"representative functions, methods, types, classes, interfaces, or modules",
+			"composition and collaboration",
+			"pattern decisions",
+			"patterns to reuse or introduce",
+			"patterns considered but rejected",
+			"problem each pattern solves",
+			"participants, evidence, and consequences",
+			"Do not force pattern names",
+		},
+		"config/workflow/phases/plan.md": {
+			"current implementation composition",
+			"proposed implementation composition",
+			"entry points, call path, responsibilities",
+			"functions, methods, types, classes, interfaces, or modules",
+			"added, changed, reused, or removed",
+			"lifecycle, validation, and error handling",
+			"distinguish verified current symbols and relationships from proposed ones",
+			"Pattern register",
+			"system-design, architectural, integration, data, domain",
+			"code-level design patterns",
+			"established and reused, newly proposed, deliberately adapted, or rejected",
+			"repository evidence or proposed location",
+			"participants and collaborations",
+			"benefits, constraints, and tradeoffs",
+			"Do not force pattern names",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"implementation shape",
+			"pattern decisions",
+			"current and proposed implementation composition",
+			"distinguishing verified repository evidence from reviewed proposals",
+			"pattern register",
+		},
+		"config/workflow/phases/ready.md": {
+			"implementation composition",
+			"pattern decisions",
+		},
+		"config/workflow/phases/handoff.md": {
+			"current and proposed implementation composition",
+			"pattern decisions",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+
+	manifest, err := configurator.LoadManifest(root, "config/manifest.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, resource := range manifest.Resources {
+		if resource.ID != "work-plan" {
+			continue
+		}
+		if !slices.Contains(resource.Targets, configurator.Target{
+			Agent: "hermes",
+			Path:  ".hermes/skills/work-plan/SKILL.md",
+		}) {
+			t.Error("work-plan is missing the Hermes skill target")
+		}
+		return
+	}
+	t.Error("manifest resource work-plan missing")
+}
+
 func TestRepositoryWorkCleanupContract(t *testing.T) {
 	t.Parallel()
 

@@ -1,7 +1,7 @@
 ---
 name: work-direction
 description: Synthesize reviewed evidence and human input into a high-level architectural direction before detailed implementation planning.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-direction - Define The Architectural Direction
@@ -37,6 +37,14 @@ The durable Markdown architectural direction must contain:
 - system boundaries, ownership, and sources of truth;
 - main components and data or control flows;
 - interfaces, contracts, trust boundaries, and cross-system effects;
+- the affected implementation shape: the current and proposed responsibilities
+  of representative functions, methods, types, classes, interfaces, or modules,
+  and enough of their composition and collaboration to make the direction
+  concrete without prematurely fixing incidental code details;
+- pattern decisions across system design and code design: patterns already
+  established in the affected code, patterns to reuse or introduce, and material
+  patterns considered but rejected; identify the problem each pattern solves, its
+  participants, evidence, and consequences or constraints;
 - selected approach, rationale, key decisions, and implementation constraints;
 - rejected alternatives and material tradeoffs;
 - migration, rollout, compatibility, observability, and recovery implications
@@ -44,9 +52,13 @@ The durable Markdown architectural direction must contain:
 - risks, assumptions, unresolved questions, and acceptance signals;
 - evidence and attributed human input supporting the decisions.
 
-Keep the direction at architectural altitude. Do not produce implementation tasks,
-file-by-file edits, symbol-level changes, or an exhaustive test-command
-list; those belong to `/work-plan`.
+Keep the direction at architectural altitude. Representative code elements may
+explain implementation shape and pattern decisions. Do not produce implementation tasks
+or an exhaustive test-command list. Avoid file-by-file edits, an exhaustive symbol
+inventory, and final private-helper names or signatures; those belong to
+`/work-plan`. Do not force pattern names onto ordinary decomposition:
+name a pattern only when repository evidence or the proposed design gives it
+specific participants, behavior, and consequences.
 
 Write one durable Markdown direction artifact at an explicit task artifact path
 when provided, otherwise under `.agent-runs/readable-output/`. Reuse its stable

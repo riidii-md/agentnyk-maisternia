@@ -1,7 +1,7 @@
 ---
 name: work-plan-review
 description: Adversarially review a full plan or targeted plan delta against the actual repository, verify every candidate finding, and apply confirmed corrections to the plan artifact.
-version: 0.5.0
+version: 0.6.0
 ---
 
 # /work-plan-review - Review A Plan Before Implementation
@@ -37,18 +37,25 @@ review only when the delta invalidates broader dependencies or scope.
 For `direction`, review at architectural altitude: system boundaries,
 ownership, interfaces, data or control flows, trust boundaries, rejected
 alternatives, migration and operational implications, and constraints handed
-to implementation planning. Do not demand file-by-file tasks or detailed test
-commands from a direction. The fresh-executor criterion below applies to
-implementation plans, not architectural directions.
+to implementation planning. Verify that its representative implementation shape
+and pattern decisions are supported by repository evidence, identify concrete
+participants and consequences, and remain detailed enough to constrain planning
+without prematurely fixing incidental symbols. Do not demand file-by-file tasks
+or detailed test commands from a direction. The fresh-executor criterion below
+applies to implementation plans, not architectural directions.
 
 Apply the fresh-executor criterion at risk-appropriate depth: a fresh executor
 must be able to implement the plan without inventing material architecture,
-interfaces, dependencies, storage or state behavior, or cross-component behavior.
-A small local change may explicitly state that these concerns are unaffected.
-For non-trivial work, missing material design, ownership boundaries, contracts,
-data or control flow, task dependencies, or design-changing open decisions is
-High and blocking. Do not invent the missing design during review; return it to
-planning and human decision.
+interfaces, dependencies, storage or state behavior, current and proposed
+implementation composition, material pattern decisions, or cross-component
+behavior. Verify that the pattern register names only evidence-backed or
+intentional patterns and records their participants, purpose, status, and
+tradeoffs. A small local change may explicitly state that these concerns are
+unaffected. For non-trivial work, missing material design, ownership boundaries,
+contracts, composition, pattern decisions, data or control flow, task
+dependencies, or design-changing open decisions is High and blocking.
+Do not invent the missing design during review; return it to planning and human
+decision.
 
 ## Run Independent Lenses
 
@@ -130,6 +137,8 @@ a summary that requires the reader to open another file, plus:
   architecture and behavior;
 - planned interface, type, schema, ownership, dependency, state, and interaction
   inventories at the abstraction level needed by a fresh executor;
+- the current and proposed implementation composition, distinguishing verified repository evidence from reviewed proposals;
+- the pattern register, including material participants, evidence, and tradeoffs;
 - confirmed, refuted, applied, blocked, and residual review findings;
 - a visual lens selection table recording evidence and why omitted lenses are
   not applicable;

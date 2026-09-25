@@ -320,9 +320,14 @@ changing the normal delivery DAG.
 
 For non-trivial work, `/work-plan` records the affected architecture, ownership
 boundaries, material interfaces and contracts, important data and control flow,
-task dependencies, and the decisions left to the executor. Its completeness test
-is whether a fresh executor can implement the approved direction without inventing
-material architecture, interfaces, dependencies, storage or state behavior, or
+the current and proposed composition of representative functions, methods,
+types, classes, interfaces, or modules, relevant system-design and code-level
+patterns, task dependencies, and the decisions left to the executor. Pattern
+entries state their status, participants, concrete purpose, evidence, and
+tradeoffs; straightforward code is not forced into a named pattern. The plan's
+completeness test is whether a fresh executor can implement the approved
+direction without inventing material architecture, interfaces, dependencies,
+storage or state behavior, code responsibilities and collaborations, or
 cross-component behavior. Small local changes may explicitly mark those concerns
 unaffected instead of producing ceremonial design documentation.
 
