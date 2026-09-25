@@ -89,11 +89,11 @@ preset:
         analyze: [scout, research, grill, direction, plan]
         research: [grill, direction, plan]
         grill: [research, direction, plan]
-        direction: [direction-review, scout, research, grill]
+        direction: [direction-review when selected, direction-decision when skipped, scout, research, grill]
         direction-review: [direction-decision, direction, research]
-        direction-decision: [plan, direction, analyze, direction-review]
-        plan: [prove, plan-review, decide]
-        prove: [plan-review]
+        direction-decision: [plan, direction, analyze]
+        plan: [prove, plan-review when proof complete and selected, decide when proof complete and skipped]
+        prove: [plan-review when selected, decide when skipped]
         plan-review: [decide, plan]
         decide: [ready, plan]
         ready: [handoff, run, plan]
@@ -200,8 +200,10 @@ high-leverage question and one owned, time-bounded next move.
 `/work-direction` is a conditional high-level architectural checkpoint between
 analysis/research and the detailed `/work-plan`. Cross-system, cross-owner,
 public-contract, persistent-data, security, migration, rollout, costly-to-reverse,
-or materially ambiguous work requires an exact reviewed direction revision and
-explicit human decision. A small, local, reversible task can go directly to
+or materially ambiguous work requires an exact direction revision and explicit
+human decision. After synthesis, the human chooses whether to run AI review,
+skip it, or review later; review is never started automatically. A small,
+local, reversible task can go directly to
 planning after an evidence-backed skip; this route remains available after
 research or grill. See [Architectural direction](ARCHITECTURAL-DIRECTION.md).
 

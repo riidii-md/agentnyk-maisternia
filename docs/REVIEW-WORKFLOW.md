@@ -74,9 +74,11 @@ The standard delivery DAG now distinguishes the two gates:
 ```mermaid
 flowchart LR
     PLAN[PLAN] -->|expanded proof needed| PROVE[PROVE]
-    PLAN -->|proof included| PLANREVIEW[PLAN REVIEW]
-    PLAN -->|review not required| PRESENT[PUBLISH FINAL PLAN]
-    PROVE --> PLANREVIEW
+    PLAN -->|proof included or not needed| CHOICE{AI REVIEW CHOICE}
+    PROVE --> CHOICE
+    CHOICE -->|run AI review now| PLANREVIEW[PLAN REVIEW]
+    CHOICE -->|skip AI review| PRESENT[PUBLISH FINAL PLAN]
+    CHOICE -->|review later| PAUSE[PAUSE]
     PLANREVIEW -->|pass| PRESENT
     PLANREVIEW -->|changes| PLAN
     PRESENT --> WAIT[FOREGROUND WAIT ON MDMAID.DESK]
@@ -88,24 +90,31 @@ flowchart LR
     HANDOFF --> RUN
     RUN --> VERIFY[VERIFY]
     VERIFY --> IMPLREVIEW[IMPLEMENTATION REVIEW]
-    IMPLREVIEW -->|pass and publication requested| PR[PR]
+    IMPLREVIEW -->|pass| CHANGE[CHANGE REVIEW AND HUMAN APPROVAL]
     IMPLREVIEW -->|changes| RUN
+    CHANGE -->|approved and publication requested| PR[PR]
+    CHANGE -->|changes requested| RUN
 ```
 
 When required, `/work-direction` first records the architectural decisions
-that constrain the implementation plan. `/work-plan-review direction` checks
-the exact high-level revision against evidence, then mdmaid.desk collects a
-revision-bound human direction decision. Small local work can bypass this
-separate gate with an evidence-backed reason. See
+that constrain the implementation plan. It then asks whether to run AI review
+now, skip AI review, or review later. Only the first choice invokes
+`/work-plan-review direction`; a skip proceeds directly to the revision-bound
+human direction decision and is not approval. Small local work can bypass the
+direction gate with an evidence-backed reason. See
 [Architectural direction](ARCHITECTURAL-DIRECTION.md).
 
 The plan contains the normal acceptance contract. `/work-prove` expands it only
-when risk requires more detailed evidence. When independent review is required,
-`/work-plan-review` adversarially checks whether the plan is correct, complete,
-internally consistent, grounded in the current code, and testable.
+when risk requires more detailed evidence. After the plan is ready, the human
+chooses whether to run AI review now, skip it, or review later. The workflow
+does not invoke review or its candidate-verification workers automatically.
+When selected, `/work-plan-review` adversarially checks whether the plan is
+correct, complete, internally consistent, grounded in the current code, and
+testable.
 
-After review passes, the exact final plan revision is validated and delivered
-through mdmaid.desk with an explicit `plan-decision` request. Passive documents
+After selected review passes, or after an explicit AI review skip, the exact
+final plan revision is validated and delivered through mdmaid.desk with an
+explicit `plan-decision` request. Passive documents
 still have no workflow actions. The producer records the request ID and exact
 revision, keeps its current agent turn open on the foreground waiter, and
 receives both the human outcome and response text. A yielded execution-process
@@ -115,8 +124,9 @@ returns, the producer surfaces the decision and text and continues the mapped
 workflow without requiring another chat message. Presentation, opening, and
 reading do not imply approval. The human approves, requests changes, or rejects
 the exact content hash; only an approved revision can pass `READY`. Requested
-changes return to planning, rejection stops or reshapes the work, and a stale
-request requires a new review of the current revision. `HANDOFF` is required
+changes return to planning and the review choice, rejection stops or reshapes
+the work, and a stale request requires publication of the current revision and
+a new review choice. `HANDOFF` is required
 only when execution moves to a fresh agent, provider, worktree, or later
 session.
 
@@ -145,7 +155,7 @@ decision gate.
 The workflow escalates to full plan review only when the delta invalidates wider
 scope, interfaces, dependencies, acceptance criteria, or proof.
 
-After the plan passes, `/work-plan-review` builds a standalone visual
+When selected and passing, `/work-plan-review` builds a standalone visual
 `plan-review.md` containing the complete reviewed plan. It selects only
 applicable Mermaid architecture/data-flow, class, entity-relationship, state,
 sequence, dependency, and requirement lenses. Planned interfaces and relations

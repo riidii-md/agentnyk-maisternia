@@ -193,9 +193,9 @@ mdmaid.desk as `kind=plan` in explicit `plan-decision` mode. Record its path,
 content hash, document revision, and review request ID. Then keep the current agent turn open on the foreground waiter. Report `waiting_for_approval` only as
 an intermediate update, never as a final response. Resume a yielded process or
 session ID until it exits. Surface the outcome and human response text immediately. Approval continues to `/work-decide`; `changes_requested`
-returns to the plan and review loop; rejection stops or reshapes the work; and
-a stale request requires a fresh review and visual artifact for the current
-revision. Registration is not approval: do not infer a decision from the
+returns to the plan and its explicit AI review choice; rejection stops or
+reshapes the work; and a stale request returns to current-revision publication
+and the explicit AI review choice. Registration is not approval: do not infer a decision from the
 document being registered, opened, marked done, or closed, and do not begin
 implementation until the human decision is recorded.
 
@@ -210,6 +210,7 @@ direction title and request message. Use the currently supported authenticated
 `plan-decision` transport with `kind=decision`, record semantic decision mode `direction` with
 document ID, revision, review request ID, path, and content hash, and keep the
 current agent turn open on the foreground waiter. Approval continues to
-`/work-decide direction`; requested changes return to direction and review;
-rejection stops or reshapes; and stale returns to current-revision review.
+`/work-decide direction`; requested changes return to direction and its explicit
+AI review choice; rejection stops or reshapes; and stale returns to
+current-revision publication and the explicit AI review choice.
 Registration, opening, or closing is never direction approval.

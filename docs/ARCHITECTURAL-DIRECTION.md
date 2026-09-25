@@ -17,7 +17,8 @@ Unknown impact calls for more scouting or research, not an assumed bypass.
 
 ```text
 SCOUT -> ANALYZE -> [RESEARCH <-> GRILL] -> DIRECTION
-                                            -> DIRECTION REVIEW
+                                            -> AI REVIEW CHOICE
+                                               -> [DIRECTION REVIEW]
                                             -> HUMAN DIRECTION DECISION
                                             -> DETAILED WORK PLAN
 ```
@@ -29,7 +30,8 @@ tradeoffs, and concerns in their own words. The response is attributed input,
 not approval.
 
 If drafting the direction exposes a boundary, evidence, or human-constraint
-gap, return directly to scout, research, or grill before direction review.
+gap, return directly to scout, research, or grill before presenting the review
+choice.
 
 ## Parallel Analysis, Single Authorship
 
@@ -70,19 +72,23 @@ fresh agent without inventing material design.
 
 ## Review And Decision
 
-`/work-plan-review direction` checks the exact artifact against repository
-and adjacent-system evidence at architectural altitude. Confirmed corrections
-are applied within scope; product decisions return to the human. The reviewed
-revision is validated and delivered through mdmaid.desk. The currently
-supported authenticated transport is `plan-decision` with
+After producing the exact direction revision, the workflow asks whether to run
+AI review now, skip AI review, or review later. It does not automatically invoke
+`/work-plan-review` or `/work-verify`. Only the first choice runs
+`/work-plan-review direction`, which checks the artifact against repository and
+adjacent-system evidence at architectural altitude. Confirmed corrections are
+applied within scope; product decisions return to the human. A selected review
+result, or an explicit AI review skip, is recorded before the exact revision is
+delivered through mdmaid.desk. The currently supported authenticated transport
+is `plan-decision` with
 `kind=decision`; its title, request
 message, and local receipt identify semantic mode `direction`.
 
 `/work-decide direction` records the explicit human response against document
 revision and content hash. Approval lets detailed planning start. Requested
-changes return to direction and review; rejection stops or reshapes; stale
-requires a new request for the current revision. Reading or registering a
-document never implies approval.
+changes return to direction and the review choice; rejection stops or reshapes;
+stale requires a new request for the current revision. Skipping AI review,
+reading, or registering a document never implies approval.
 
 ## Fewer, Stable Documents
 
