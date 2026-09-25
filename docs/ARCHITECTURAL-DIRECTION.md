@@ -68,6 +68,24 @@ final private-helper details, ordered coding tasks, and exhaustive test commands
 Those belong to the detailed implementation plan, which must be executable by a
 fresh agent without inventing material design.
 
+## Representation And Decision Readability
+
+For a non-trivial direction, architecture and sequence views are strongly weighted
+candidates rather than mandatory deliverables. Architecture is evaluated when
+components, boundaries, ownership, interfaces, dependencies, sources of truth,
+or trust matter. A sequence is evaluated when ordered calls, messages,
+asynchronous work, retries, failures, or lifecycle behavior matter.
+A table or structured prose is preferred when it presents the same evidence more simply
+and completely. The artifact records why a weighted view was omitted, and no
+diagram may be the only carrier of essential information.
+
+After review findings are resolved, the coordinator performs a final in-place
+reader pass before the exact revision is hashed. It optimizes decision readiness,
+completeness, and reading effort rather than word count. The pass may restructure
+prose or add a useful table or visual, but it must preserve facts, decisions,
+evidence status, uncertainty, constraints, alternatives, risks, interfaces, and
+open questions. Meaning-changing edits return to review.
+
 ## Review And Decision
 
 `/work-plan-review direction` checks the exact artifact against repository

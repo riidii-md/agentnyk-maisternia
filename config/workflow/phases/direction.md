@@ -80,6 +80,29 @@ The durable Markdown architectural direction must contain:
 - risks, assumptions, unresolved questions, and acceptance signals;
 - evidence and attributed human input supporting the decisions.
 
+## Select The Simplest Complete Representation
+
+After the direction's facts and decisions are stable, choose how the reader can
+inspect each material relationship with the least effort and without losing
+meaning. For a non-trivial direction:
+
+- treat an architecture view as a strongly weighted default when components,
+  boundaries, ownership, interfaces, dependencies, sources of truth, or trust
+  relationships materially affect the choice;
+- treat a high-level `sequenceDiagram` as a strongly weighted default when
+  ordered calls, messages, asynchronous work, retries, failures, or lifecycle
+  transitions materially affect the choice; and
+- use a compact comparison or contract table or structured prose when it makes
+  the same information simpler to inspect and equally complete.
+
+This is not a diagram quota. Include only evidence-supported relationships and
+record why a strongly weighted view was omitted when it would not improve the
+reader's understanding. Do not manufacture architecture for small local work or
+create every visual form ceremonially. Use one nearby representation in which
+material interfaces are directly inspectable when possible, including their
+owner, contract or protocol, authority or identity carrier, source of truth, and
+trust boundary. A diagram must not be the only carrier of essential information.
+
 Keep the direction at architectural altitude. Representative code elements may
 explain implementation shape and pattern decisions. Do not produce implementation tasks
 or an exhaustive test-command list. Avoid file-by-file edits, an exhaustive symbol
@@ -87,6 +110,20 @@ inventory, and final private-helper names or signatures; those belong to
 `/work-plan`. Do not force pattern names onto ordinary decomposition:
 name a pattern only when repository evidence or the proposed design gives it
 specific participants, behavior, and consequences.
+
+## Check Decision Readability
+
+Before recording the final revision, check whether the reader can locate the
+selected direction, principal tradeoffs, material interfaces, constraints,
+risks, and open questions on a first scan. Improve decision readiness,
+completeness, and reading effort through hierarchy, tables, visuals, or clearer
+prose as appropriate. Word-count reduction is secondary and may be inappropriate
+when a small addition removes ambiguity.
+
+Verify that restructuring preserved facts, decisions, evidence and uncertainty,
+constraints, alternatives, risks, interfaces, acceptance signals, and open
+questions. If the pass changes meaning or exposes missing evidence, return to
+the relevant evidence or decision step rather than presenting the artifact.
 
 Write one durable Markdown direction artifact at an explicit task artifact path
 when provided, otherwise under `.agent-runs/readable-output/`. Reuse its stable

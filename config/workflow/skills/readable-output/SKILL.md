@@ -156,7 +156,7 @@ or `import` command and retain its JSON receipt:
 
 Read `reviewRequest.id` from the successful result, record it with the document
 ID, revision, artifact path, and locally computed content hash, then start the
-wait in the foreground of the current agent turn:
+one long-lived foreground waiter in the current agent turn:
 
 ```bash
 mdmaid-desk review wait <review-id> --json
@@ -169,11 +169,15 @@ Do not return a final response while the review is pending; a
 `waiting_for_approval` receipt is an intermediate update only.
 
 If the execution tool yields a process or session ID instead of completed JSON,
-poll or resume that same process until it exits. A yielded ID proves only that
-the waiter is still running; it is not permission to finish the turn. When the
-command exits, surface the received outcome and human response text immediately,
-then apply the outcome routing below. Do not wait for another user chat message
-to inspect a completed waiter.
+resume that same process or session until it exits. Use the longest supported blocking interval.
+A yielded ID proves only that the waiter is still running;
+it is not permission to finish the turn. Do not start a replacement waiter, create
+nested wait commands, or poll only to demonstrate liveness. Report user-visible
+updates when state changes. If the harness genuinely requires visible liveness,
+use at most a coarse 10–15 minute heartbeat. When the command exits,
+surface the received outcome and human response text immediately, then apply
+the outcome routing below. Do not wait for another user chat message to inspect
+a completed waiter.
 
 If the active harness cannot keep a foreground tool process attached across the
 human pause, report that limitation before claiming live continuation. The

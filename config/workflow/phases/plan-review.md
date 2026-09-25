@@ -143,9 +143,11 @@ the plan or design document to apply every confirmed fix within scope. Do not
 silently resolve product decisions or accepted risk; mark those fixes blocked
 and ask the user. Critical and High findings are blocking.
 
-Re-read the edited plan, rerun affected consistency and acceptance checks, and
-set the gate to `pass`, `fail`, or `blocked`. Write `review.md` and schema-valid
-`review.json` under `.agent-runs/reviews/<run-id>/`, including confirmed,
+Re-read the edited plan, rerun affected consistency and acceptance checks, and,
+for a direction review, complete the reader finalization below before assigning
+the final gate. Then set the gate to `pass`, `fail`, or `blocked`. Write
+`review.md` and schema-valid `review.json` under
+`.agent-runs/reviews/<run-id>/`, including confirmed,
 refuted, applied, and blocked findings. A user-authorized sequential fallback
 uses `degraded` only for an otherwise-successful review and preserves `fail` or
 `blocked` when appropriate. Before assigning the gate, enforce the policy's
@@ -154,6 +156,32 @@ complete-role references, and a verifier distinct from the originating
 reviewer. If no distinct verifier is available, record the candidate as
 `unverified`, apply no correction from it, and block. The version 6 report also records coordinator, workers,
 assignments, waves, runtimes, scoped-minimum status, and fallback reason.
+
+## Finalize The Reviewed Direction For Its Reader
+
+For a direction target, after findings and decisions are stable, the coordinator
+must adapt the same canonical direction in place before computing its content hash
+or assigning `pass`. Do not create a separate adaptation artifact; the later
+standalone review package remains the delivery wrapper for this exact revision.
+Give the reader a concise orientation to the selected direction,
+principal tradeoffs, material interfaces, constraints, risks, and open questions,
+then organize the supporting detail for progressive inspection.
+
+Evaluate an architecture view and a high-level `sequenceDiagram` as
+strongly weighted defaults for a non-trivial direction. Select them only when
+supported by evidence and when they clarify materially different structural or
+ordered relationships. A comparison, contract table or structured prose remains
+valid when it is simpler and equally complete. Record why a weighted view was
+omitted. This is not a diagram-count target, and no visual may become the only
+carrier of essential information.
+
+Optimize decision readiness, completeness, and reading effort rather than word
+count. Reconcile the adapted revision against the pre-adaptation semantic
+inventory: facts, decisions, evidence, uncertainty, constraints, alternatives,
+risks, interfaces, and open questions. Re-run affected consistency and
+acceptance checks. A meaning-changing edit returns to review; only a
+fidelity-preserving revision may pass before computing its content hash and
+creating the decision request.
 
 ## Build The Visual Plan Review
 
@@ -202,9 +230,9 @@ implementation until the human decision is recorded.
 For a passing `direction` review, preserve the complete reviewed direction
 revision in a standalone direction review artifact, with a concise evidence
 summary, confirmed/refuted/applied/blocked findings, and the exact source path
-and content hash. Use only architecture-level visuals that materially clarify
-the choice; do not run the implementation-plan visual inventory or call the
-direction implementation-ready. Invoke `readable-output` to validate and
+and content hash. Preserve the representation-selection record from the reader
+finalization above; do not run the implementation-plan visual inventory or call
+the direction implementation-ready. Invoke `readable-output` to validate and
 deliver the exact reviewed direction through mdmaid.desk with an unambiguous
 direction title and request message. Use the currently supported authenticated
 `plan-decision` transport with `kind=decision`, record semantic decision mode `direction` with
