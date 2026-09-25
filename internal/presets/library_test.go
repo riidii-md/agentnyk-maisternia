@@ -760,6 +760,11 @@ func TestRepositoryChangeReviewContract(t *testing.T) {
 			"strict superset", "/work-explain-change", "60-second summary",
 			"requested intent", "verified implementation", "before and after",
 			"abstraction inventory", "lens selection", "complete reviewable textual patch",
+			"canonical patch artifact", "byte-for-byte", "at least one `diff --git` entry",
+			"## Complete native diff", "diff --git a/<path> b/<path>",
+			"exactly one fenced `diff` block", "Reserve the `diff` language label exclusively",
+			"does not prove that mdmaid.desk can render a native diff",
+			"Do not call `mdmaid-desk register`",
 			"change fingerprint", "change-review", "change-decision",
 			"classDiagram", "erDiagram", "stateDiagram-v2", "sequenceDiagram",
 			"requirementDiagram", "mdmaid validate", "mdmaid-desk register",
@@ -810,6 +815,17 @@ func TestRepositoryChangeReviewContract(t *testing.T) {
 	}
 	if !found {
 		t.Error("manifest resource work-change-review missing")
+	}
+
+	changeReview, err := os.ReadFile(filepath.Join(root, "config/workflow/phases/change-review.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(changeReview)
+	preflight := strings.Index(text, "## Prove The Native Diff Before Registration")
+	registration := strings.Index(text, "mdmaid-desk register <change-review.md>")
+	if preflight < 0 || registration < 0 || preflight > registration {
+		t.Error("work-change-review must prove the embedded native diff before registration")
 	}
 }
 
