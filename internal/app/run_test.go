@@ -641,7 +641,7 @@ func TestRunPresetLibraryCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("preset validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "21 presets valid") {
+	if !strings.Contains(stdout.String(), "22 presets valid") {
 		t.Fatalf("preset validate output = %q", stdout.String())
 	}
 
@@ -874,7 +874,7 @@ func TestRunEnvironmentCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("environment validate code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "5 environment packs valid") {
+	if !strings.Contains(stdout.String(), "6 environment packs valid") {
 		t.Fatalf("environment validate output = %q", stdout.String())
 	}
 
@@ -1982,7 +1982,7 @@ func TestRunExternalPresetSourceLifecycle(t *testing.T) {
 	if code := Run([]string{"doctor", "--repo", primary, "--home", home}, &stdout, &stderr); code != 0 {
 		t.Fatalf("doctor code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "preset library valid: 22 presets") {
+	if !strings.Contains(stdout.String(), "preset library valid: 23 presets") {
 		t.Fatalf("doctor did not validate external preset: %s", stdout.String())
 	}
 

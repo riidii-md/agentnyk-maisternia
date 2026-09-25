@@ -104,6 +104,24 @@ the existing target before writing.
 For Codex workflow presets, restart Codex after apply so newly installed skills
 appear in suggestions.
 
+## Optional maintainability analyzers
+
+The standard-work and multi-lens-review presets install review definitions but
+never install external analyzers. To add pinned jscpd evidence for canonical
+maintainability implementation review, inspect and explicitly confirm its
+separate environment-only preset:
+
+```bash
+maisternia environment plan maintainability-review
+maisternia preset apply --yes maintainability-review-tools
+```
+
+The plan shows `npm install --global jscpd@5.3.2`. Without `--yes`, no package
+command runs. Review execution verifies the exact version with
+`jscpd --version`; it does not install or upgrade the command. Existing
+repository-bounded GitNexus evidence continues to come from the separately
+installed `developer-context` pack.
+
 ## User-global installation
 
 To make a preset available across projects for one provider:

@@ -309,6 +309,59 @@ enable services, access the network, or promote a remembered convention into a
 required gate without approval and authoritative support. The exact commands,
 selection rationale, and results are recorded for reproducibility.
 
+### jscpd And GitNexus Evidence
+
+The usual canonical maintainability invocation automatically discovers and
+uses approved local analyzer capabilities:
+
+```text
+/work-review implementation --profile maintainability <target or focus>
+```
+
+`/work-review-simplify` expands to that command. Supplementary analysis is not
+run for plan review, test-only scope, or the default `standard` implementation
+profile. Review execution never installs or upgrades a tool.
+
+The default tool policy is `advisory`. A missing or unusable analyzer is visible
+in the report but does not by itself block review. Repository-owned policy may
+set a tool to `disabled` or `required`; a required unavailable or failed tool
+makes affected inspections `unknown` and blocks a maintainability pass.
+
+For jscpd, the approved executable is version `5.3.2`. The workflow verifies
+`jscpd --version`, prefers repository-owned configuration, and otherwise writes
+temporary invocation configuration only beneath the task-owned review evidence
+directory. It collects bounded JSON evidence for exact and normalized clones,
+explicitly enabled supported near-miss detection, complexity, and supported
+dead-code analysis. It uses a locally available base ref to distinguish new
+from legacy duplication. A valid scan with zero candidates is different from a
+failure or a scan that analyzed zero applicable files. Duplication percentages,
+thresholds, and health scores are supporting context, never findings or gates.
+
+GitNexus enrichment reuses the existing repository-bounded installation,
+configuration, and index. It records repository identity, snapshot
+correspondence, index freshness, supported relationships, and missing surfaces
+before querying bounded symbols, callers, dependencies, implementations,
+processes, tests, related code, and impact. It does not create a second graph or
+silently refresh a stale index. An absent edge is never proof that a runtime
+relationship does not exist.
+
+Analyzer matches are grouped into bounded candidate families. Similarity,
+repeated responsibility, and safety of sharing remain separate judgments.
+Every family goes through the applicable canonical lenses and independent
+refutation before it can become a finding. Report-only review preserves all
+reviewed source; repair review reruns affected analyzer passes after confirmed
+coordinator-owned changes.
+
+Raw and normalized jscpd evidence stays under:
+
+```text
+.agent-runs/reviews/<run-id>/evidence/jscpd/
+```
+
+Source excerpts are bounded, repositories are treated as untrusted input, and
+parsing does not authorize builds, scripts, hooks, generators, package lifecycle
+steps, binaries, network access, or dependency downloads.
+
 The alias also accepts normal routing syntax:
 
 ```text
@@ -379,17 +432,22 @@ Every run writes:
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to version 4 of `review-report.schema.json` and preserves provider
+The JSON report conforms to schema version 5 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
 counts, and final gate status. Implementation reports include the specialized
 `test_evidence` matrix and `test_review_mode`; standalone test reviews record
 `scope: tests`. Authoring reports add `test_authoring_gates`, audit and campaign
 reports add `test_audit_candidates`, and campaigns add `test_campaign`.
 Maintainability reports additionally include the four required
-`maintainability_inspections` records. Version 4 requires `profile`, `scope`,
-`test_review_mode`, `test_evidence`, and `disposition` for implementation
-reports. Older reports must be regenerated before they can satisfy the current
-gate.
+`maintainability_inspections` records, analyzer provenance in
+`analysis_tool_evidence`, and correlated `maintainability_candidates`. Version
+5 requires `profile`, `scope`, `test_review_mode`, `test_evidence`, and
+`disposition` for implementation reports. It keeps the established core fields
+and meanings but is explicit because the
+strict schema rejects unknown fields. Consumers must branch on
+`schema_version`; version 4 is the pre-analyzer contract and existing artifacts
+are not rewritten. Version 1, 2, 3, or 4 reports must be regenerated before
+they can satisfy the current gate.
 
 An external `pull_request.opened` event enters the separate read-only
 `review-intake` phase. It may produce and verify findings, but it cannot apply
@@ -435,3 +493,16 @@ maisternia preset apply --scope user --target codex --yes multi-lens-review
 Applying may surface a conflict for an existing personal `lens-review` skill.
 Use the normal maisternia conflict decision flow to inspect and explicitly keep or
 replace it.
+
+jscpd installation is a separate operator-controlled action:
+
+```bash
+maisternia environment plan maintainability-review
+maisternia preset apply --yes maintainability-review-tools
+# Equivalent direct pack command:
+maisternia environment install --yes maintainability-review
+```
+
+The plan displays the pinned `npm install --global jscpd@5.3.2` argument array.
+Without explicit confirmation no package command runs. GitNexus remains owned by
+the existing `developer-context` environment pack and is not duplicated here.

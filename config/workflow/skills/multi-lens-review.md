@@ -1,7 +1,7 @@
 ---
 name: lens-review
 description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, behavior-preserving maintainability review, and adversarial verification.
-version: 0.5.0
+version: 0.7.0
 ---
 
 # Lens Review
@@ -129,6 +129,40 @@ commands. Use only relevant, already-available supplementary tools, never
 install or enable one without approval, and preserve uncertainty rather than
 inventing a required gate.
 
+For maintainability review, bind base, head, worktree state, changed paths,
+repository rules, and analyzer configuration into one immutable snapshot.
+Discover the approved jscpd version and the existing repository-bounded
+GitNexus index. Run each selected pass at most once per review snapshot, store
+raw and normalized task-owned evidence, and share it with read-only lenses. A
+relevant repair creates a new snapshot and reruns only affected passes.
+
+Verify `jscpd --version` is exactly `5.3.2`; never install, upgrade, fetch, or
+access the network during review. Prefer repository-owned configuration and
+otherwise write fallback config only under the review evidence directory.
+Respect confirmed generated, vendored, cache, build, minified, and snapshot
+exclusions without categorically excluding tests. Collect bounded JSON for
+exact, normalized, explicitly enabled near-miss, complexity, and supported
+dead-code passes. Use `--baseline-from-ref` only for a locally available base.
+Distinguish zero findings from zero applicable files, timeout, malformed output,
+unsupported analysis, and failure. Threshold and health scores are never
+findings or gates.
+
+Reuse GitNexus rather than creating another graph. Record repository identity,
+snapshot correspondence, index freshness, supported relationships, and missing
+surfaces before using it. Query only bounded symbols, callers/callees,
+dependencies, implementations, processes, tests, related code, and impact.
+Preserve stale, partial, and ambiguous evidence; a missing edge is not proof of
+absence.
+
+Group overlaps into bounded candidate families. Keep similarity, repeated
+responsibility, and safe to share as separate judgments. Feed candidates to the
+applicable canonical lenses and independent refutation; analyzer output is a
+signal, never a finding. Record producer state and coverage in
+`analysis_tool_evidence`, candidate signals and counterevidence in
+`maintainability_candidates`, and link confirmed candidates through canonical
+finding IDs. Advisory absence is visible but non-blocking; required unavailable
+or failed evidence makes affected inspections `unknown` and blocks a pass.
+
 Every maintainability candidate must include concrete evidence, the minimal
 fix, the expected net simplification, regression risk, and a verification plan
 for preserved behavior. Include its simplification kind when applicable. Ground
@@ -223,4 +257,5 @@ Record the selected `standard` or `maintainability` profile and `full` or
 Implementation reports include `test_review_mode` and `test_evidence`;
 authoring reports include `test_authoring_gates`, audit reports include
 `test_audit_candidates`, campaign reports include `test_campaign`, and
-maintainability reports also include `maintainability_inspections`.
+maintainability reports also include `maintainability_inspections`,
+`analysis_tool_evidence`, and `maintainability_candidates`.

@@ -68,6 +68,9 @@ The repository starts with:
   Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr plugins;
 - `change-explanation-tools`: provider-neutral machine setup for the pinned PR
   Lens, Mdmaid, and mdmaid.desk versions used by `/work-explain-change`;
+- `maintainability-review-tools`: provider-neutral, opt-in machine setup for
+  pinned jscpd evidence used by canonical maintainability implementation
+  review;
 - `multi-lens-review`: plan and implementation review with independent lenses,
   an embedded specialized test-review bundle,
   a behavior-preserving maintainability profile for DRY, abstraction,
@@ -209,6 +212,8 @@ Decision capture writes durable Markdown without generating or opening a local
 HTML page. Browser previews remain available only when explicitly requested.
 The separate environment-only `change-explanation-tools` preset owns the
 external tools, so applying `standard-work` never installs packages implicitly.
+The same boundary applies to `maintainability-review-tools`: standard work and
+multi-lens review discover jscpd when available but never install or upgrade it.
 
 `standard-work`, `adaptive-readability`, and `idea-shaping` install the managed
 `readable-output` skill. It replaces older temp-file-only Codex behavior:
@@ -226,6 +231,15 @@ approves each remaining tool by exact name. Before activation, set
 `GITNEXUS_MCP_ALLOWED_REPOS` to a comma-separated allowlist of canonical indexed
 repository names or absolute paths. Review GitNexus's PolyForm Noncommercial
 license and supported Node.js versions before installing its environment pack.
+
+The separate `maintainability-review-tools` environment preset pins jscpd to
+`5.3.2` through the typed npm installer. Canonical
+`/work-review implementation --profile maintainability` verifies that exact
+version before using it; `/work-review-simplify` remains a thin alias to the
+same path. jscpd is advisory by default, and review execution never runs an
+installer, accesses the network, or changes global configuration. GitNexus
+continues to use the existing developer-context installation and
+repository-bounded index.
 
 The GoReleaser preset deliberately names the tool in its ID. It approves only:
 
@@ -289,6 +303,9 @@ Inspect and stage the bundles before merging their native fragments:
 ```bash
 maisternia environment plan developer-context
 maisternia environment plan goreleaser-validation
+maisternia environment plan maintainability-review
+
+maisternia preset show maintainability-review-tools
 
 maisternia preset plan --scope project --project "$PWD" --target all developer-context
 maisternia preset render --target all --output ./build/developer-context developer-context
@@ -305,7 +322,9 @@ maisternia preset render --target all --output ./build/routine-development-appro
 
 Environment installation remains separate and confirmation-required. The
 GitNexus pack has a typed pinned npm installer; the GoReleaser pack intentionally
-provides manual prebuilt-binary and checksum instructions.
+provides manual prebuilt-binary and checksum instructions. The maintainability
+review pack has a typed `jscpd@5.3.2` npm installer and remains separate from
+configuration-only workflow presets.
 
 Validation rejects unknown fields, unsupported schema versions, invalid IDs,
 duplicate resources, unknown manifest resources, unknown providers, dangling

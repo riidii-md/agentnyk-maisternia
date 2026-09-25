@@ -130,6 +130,93 @@
           "preserve-unknowns"
         ]
       },
+      "analysis_tools": {
+        "requirements": ["disabled", "advisory", "required"],
+        "default_mode": "advisory",
+        "statuses": ["complete", "partial", "unavailable", "failed", "stale"],
+        "snapshot_reuse": {
+          "immutable": true,
+          "once_per_pass": true,
+          "invalidate_after_repair": true
+        },
+        "budgets": {
+          "max_candidate_families": 30,
+          "max_locations_per_family": 8,
+          "max_excerpt_bytes": 4096,
+          "gitnexus_max_traversal_depth": 2,
+          "timeout_seconds": 120
+        },
+        "jscpd": {
+          "requirement": "advisory",
+          "executable": "jscpd",
+          "approved_version": "5.3.2",
+          "configuration": ["repository-owned", "task-owned-generated"],
+          "language_scope": "discovered-repository-supported",
+          "exclusions": [
+            "repository-rules",
+            "gitignore",
+            "confirmed-generated",
+            "confirmed-vendored",
+            "cache-and-build-output",
+            "minified-files",
+            "snapshots"
+          ],
+          "passes": [
+            "exact",
+            "normalized",
+            "near-miss-gap",
+            "near-miss-ast",
+            "complexity",
+            "dead-code"
+          ],
+          "near_miss_default": "disabled",
+          "complexity_default": "enabled-when-supported",
+          "dead_code_default": "enabled-when-supported",
+          "base_ref": "resolved-review-base",
+          "artifact": "evidence/jscpd",
+          "rules": [
+            "verify-exact-version-before-analysis",
+            "prefer-repository-owned-config",
+            "generate-fallback-config-only-under-review-artifacts",
+            "respect-gitignore-and-confirmed-exclusions",
+            "do-not-exclude-tests-by-category",
+            "json-is-deterministic-ingestion-source",
+            "ai-output-is-bounded-diagnostics-only",
+            "distinguish-zero-files-from-zero-candidates",
+            "no-threshold-or-health-score-gate",
+            "no-install-upgrade-network-or-repository-code-execution"
+          ]
+        },
+        "gitnexus": {
+          "requirement": "advisory",
+          "reuse": "existing-repository-bounded-index",
+          "relationships": [
+            "symbols",
+            "callers-callees",
+            "imports-dependencies",
+            "inheritance-implementations",
+            "processes-routes",
+            "related-tests",
+            "related-implementations",
+            "change-impact"
+          ],
+          "rules": [
+            "record-repository-identity-and-snapshot",
+            "record-index-freshness-and-capabilities",
+            "bound-transitive-traversal",
+            "prefer-stable-symbol-identities",
+            "preserve-ambiguous-unresolved-and-excluded-surfaces",
+            "missing-edge-is-not-proof-of-absence",
+            "no-second-graph-or-index",
+            "no-unapproved-refresh-network-or-repository-code-execution"
+          ]
+        },
+        "failure_behavior": {
+          "advisory": "record-and-continue",
+          "required": "mark-unknown-and-block",
+          "zero_applicable_files": "record-distinct-from-zero-candidates"
+        }
+      },
       "inspection_statuses": [
         "clear",
         "candidate",

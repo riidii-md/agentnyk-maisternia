@@ -18,7 +18,7 @@
     "gate_status"
   ],
   "properties": {
-    "schema_version": {"const": 4},
+    "schema_version": {"const": 5},
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
     "mode": {"enum": ["direction", "plan", "plan-delta", "implementation"]},
     "disposition": {"enum": ["repair", "report-only"]},
@@ -90,6 +90,29 @@
         }
       ]
     },
+    "analysis_tool_evidence": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"$ref": "#/$defs/analysisToolEvidence"},
+      "allOf": [
+        {
+          "contains": {
+            "properties": {"producer": {"const": "jscpd"}},
+            "required": ["producer"]
+          }
+        },
+        {
+          "contains": {
+            "properties": {"producer": {"const": "gitnexus"}},
+            "required": ["producer"]
+          }
+        }
+      ]
+    },
+    "maintainability_candidates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/maintainabilityCandidate"}
+    },
     "summary": {"$ref": "#/$defs/summary"},
     "gate_status": {"enum": ["pass", "fail", "blocked"]}
   },
@@ -110,6 +133,153 @@
         },
         "locator": {"type": "string", "minLength": 1, "maxLength": 4096},
         "excerpt": {"type": ["string", "null"], "maxLength": 4096}
+      }
+    },
+    "analysisCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["analyzed", "excluded", "unresolved", "failed"],
+      "properties": {
+        "analyzed": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "excluded": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "unresolved": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "failed": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        }
+      }
+    },
+    "analysisToolEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer",
+        "requirement",
+        "version",
+        "configuration",
+        "repository_snapshot",
+        "status",
+        "coverage",
+        "artifact"
+      ],
+      "properties": {
+        "producer": {"enum": ["jscpd", "gitnexus"]},
+        "requirement": {"enum": ["disabled", "advisory", "required"]},
+        "version": {"type": ["string", "null"], "maxLength": 256},
+        "configuration": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "repository_snapshot": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "status": {"enum": ["complete", "partial", "unavailable", "failed", "stale"]},
+        "coverage": {"$ref": "#/$defs/analysisCoverage"},
+        "artifact": {"type": ["string", "null"], "maxLength": 2048}
+      }
+    },
+    "maintainabilityLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "end_line"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "maxLength": 2048},
+        "start_line": {"type": "integer", "minimum": 1},
+        "end_line": {"type": "integer", "minimum": 1},
+        "symbol": {"type": ["string", "null"], "maxLength": 512}
+      }
+    },
+    "maintainabilityRelationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source", "target", "depth", "status", "evidence"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "caller", "callee", "import", "dependency", "inheritance",
+            "implementation", "process", "route", "test",
+            "related-implementation", "impact", "other"
+          ]
+        },
+        "source": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "target": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "depth": {"type": "integer", "minimum": 0, "maximum": 16},
+        "status": {"enum": ["direct", "transitive", "partial", "stale", "ambiguous"]},
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        }
+      }
+    },
+    "maintainabilityJudgments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["similarity", "repeated_responsibility", "safe_to_share"],
+      "properties": {
+        "similarity": {"enum": ["exact", "related", "weak", "uncertain", "not-applicable"]},
+        "repeated_responsibility": {"enum": ["yes", "no", "uncertain", "not-applicable"]},
+        "safe_to_share": {"enum": ["yes", "no", "uncertain", "not-applicable"]}
+      }
+    },
+    "maintainabilityCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "class",
+        "locations",
+        "changed_code_intersection",
+        "signals",
+        "relationships",
+        "counterevidence",
+        "missing_evidence",
+        "judgments",
+        "treatment",
+        "finding_ids"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^MC-[0-9]+$"},
+        "class": {"enum": ["duplication", "similarity", "complexity", "dead-code", "structural"]},
+        "locations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/maintainabilityLocation"}
+        },
+        "changed_code_intersection": {"type": "boolean"},
+        "signals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "relationships": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/maintainabilityRelationship"}
+        },
+        "counterevidence": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "missing_evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "judgments": {"$ref": "#/$defs/maintainabilityJudgments"},
+        "treatment": {"enum": ["reuse", "delete", "extract", "shrink", "retain", "investigate"]},
+        "finding_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z]+-[0-9]+$"}
+        }
       }
     },
     "lens": {
@@ -170,6 +340,11 @@
         },
         "simplification_kind": {
           "enum": ["delete", "reuse", "stdlib", "native", "dependency", "yagni", "shrink"]
+        },
+        "candidate_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^MC-[0-9]+$"}
         },
         "proposed_fix": {"type": "string", "minLength": 1, "maxLength": 4096},
         "status": {"enum": ["confirmed", "refuted"]},
@@ -233,7 +408,12 @@
         },
         "distinct_value": {"type": "string", "minLength": 1, "maxLength": 4096},
         "residual_risk": {"type": ["string", "null"], "maxLength": 4096},
-        "status": {"enum": ["covered", "partial", "missing", "accepted-risk"]}
+        "status": {"enum": ["covered", "partial", "missing", "accepted-risk"]},
+        "candidate_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^MC-[0-9]+$"}
+        }
       }
     },
     "testAuthoringGate": {
@@ -390,6 +570,11 @@
           "type": "array",
           "uniqueItems": true,
           "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "candidate_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^MC-[0-9]+$"}
         }
       },
       "allOf": [
@@ -504,7 +689,12 @@
       },
       "then": {
         "properties": {"mode": {"const": "implementation"}},
-        "required": ["mode", "maintainability_inspections"]
+        "required": [
+          "mode",
+          "maintainability_inspections",
+          "analysis_tool_evidence",
+          "maintainability_candidates"
+        ]
       }
     },
     {
