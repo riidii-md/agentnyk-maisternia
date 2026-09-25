@@ -1,7 +1,25 @@
 {
   "schema_version": 1,
   "max_parallel_reviewers": 8,
-  "modes": ["plan", "plan-delta", "implementation"],
+  "execution": {
+    "strategy": "bounded-parallel-waves",
+    "native_subagents": "required-when-supported",
+    "minimum_independent_reviewers": 3,
+    "scoped_minimums": {
+      "full": 3,
+      "tests": 2,
+      "plan": 3,
+      "direction": 3
+    },
+    "lane_isolation_required": true,
+    "coordinator_may_review": false,
+    "sequential_fallback": "explicit-opt-in",
+    "degraded_flag": "--allow-degraded",
+    "spawn_failure": "blocked-without-degraded-opt-in",
+    "full_gate_requires_multi_agent": true,
+    "wave_limit": "minimum-of-policy-and-harness-capacity"
+  },
+  "modes": ["direction", "plan", "plan-delta", "implementation"],
   "dispositions": ["repair", "report-only"],
   "scopes": ["full", "tests"],
   "implementation_lenses": [
@@ -381,6 +399,14 @@
   "verification": {
     "one_verifier_per_candidate": true,
     "verifier_must_attempt_refutation": true,
+    "verifier_must_use_different_worker": true,
+    "semantic_integrity_check_required": true,
+    "unique_worker_ids_required": true,
+    "worker_references_must_resolve": true,
+    "wave_membership_must_match": true,
+    "unverified_candidate_status": "unverified",
+    "unverified_candidate_gate": "blocked",
+    "apply_unverified_candidates": false,
     "keep_only_when": ["is_real", "grounded"],
     "deduplicate_after_verification": true
   },
@@ -401,7 +427,7 @@
   },
   "delegation": {
     "routing_contract": "work-routing",
-    "native_subagents_allowed": true,
+    "native_subagents_required_when_supported": true,
     "cross_provider_strategy": "parallel-verify",
     "prefer_different_provider_for_verification": true,
     "delegates_read_only": true,

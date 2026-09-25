@@ -13,9 +13,11 @@ the exact reviewed and approved direction constrains it. The implementation
 proposal itself is not approved until the human reviews the final revision and
 makes an explicit decision.
 
-When `work-routing` resolves several harnesses, request independent plans and
-let the current coordinating harness synthesize one plan while preserving
-material disagreements and unsupported assumptions.
+When `work-routing` resolves several harnesses, assign them across the planning
+graph and let the current coordinating harness synthesize one plan while
+preserving material disagreements and unsupported assumptions. Request complete
+independent candidate plans only when their additional end-to-end perspective
+is material; do not duplicate every lane locally and externally.
 
 Input:
 
@@ -44,6 +46,35 @@ or an accepted constraint, risk, user experience, compatibility, or
 long-term ownership, present the concrete alternatives and ask the user before
 finalizing the plan. Choose between equivalent implementation details without
 asking.
+
+## Run The Complexity-Gated Agent Graph
+
+Read the installed `design-graph-policy`. For non-trivial work, use its
+complexity-gated agent graph before drafting the canonical plan. If the current
+harness exposes native subagents, they are required for lanes assigned to that
+harness. Routed external workers count toward the same graph. Dispatch one
+independent read-only worker for each bounded lane, in parallel up to available
+capacity:
+
+- `code-impact`: affected ownership boundaries, code paths, contracts,
+  dependencies, and reuse opportunities;
+- `verification-evidence`: acceptance signals, faithful test levels, repository
+  checks, and evidence gaps;
+- `delivery-risk-sequencing`: task dependencies, thin slices, migration,
+  rollout, rollback, compatibility, and stop conditions.
+
+Workers return evidence and proposals without editing the plan artifact. The
+coordinator is the single canonical writer and synthesizes one
+dependency-ordered plan within the approved direction, preserving material
+disagreements and unknowns. Several workers must never concurrently edit
+competing canonical plans.
+
+Do not silently collapse an advertised multi-agent graph into coordinator-only
+work. If spawning is unexpectedly unavailable or fails, ask before sequential
+fallback. A provider that does not expose subagents may run the same
+lanes sequentially after disclosing the limitation. A small local change may
+skip this graph when the plan records why parallel analysis would not add a
+materially independent perspective.
 
 ## Define The Implementation Design
 

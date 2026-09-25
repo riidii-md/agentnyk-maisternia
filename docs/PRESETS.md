@@ -58,7 +58,8 @@ The repository starts with:
   mode;
 - `idea-shaping`: source intake, optional question-to-action focusing,
   bounded cross-system scouting, research, grill, brainstorm, challenge,
-  conditional direction review and human decision, detailed planning, and mdmaid.desk
+  complexity-gated multi-agent direction and planning synthesis, conditional
+  direction review and human decision, detailed planning, and mdmaid.desk
   delivery for phase artifacts;
 - `scored-experiment`: a provider-native baseline, focused change, scoring,
   evidence, and bounded continuation loop;
@@ -76,8 +77,9 @@ The repository starts with:
   a behavior-preserving maintainability profile for DRY, abstraction,
   complexity, and grounded best-practice checks, confidence-aware language and
   tooling discovery, per-finding refutation, implementation repair or
-  report-only disposition, applied fixes only in repair mode, and optional
-  provider delegation;
+  report-only disposition, mandatory native reviewer lanes when available,
+  explicit degraded fallback, applied fixes only in repair mode, and optional
+  cross-provider delegation;
 - `adaptive-readability`: reader- and task-aware text transformation with
   reusable defaults, situation overrides, explicit calibration, a clarification
   gate for materially ambiguous intent, and mdmaid.desk as the reading hub;
@@ -600,6 +602,8 @@ See [Multi-lens review workflow](REVIEW-WORKFLOW.md) for plan and implementation
 gates, the behavior-preserving maintainability profile, evidence rules,
 language-agnostic context discovery, verifier/refutation passes, applied fixes,
 domain lenses, and controlled cross-provider delegation.
+The review report records the concrete worker graph so one coordinator cannot
+silently impersonate several independent reviewers.
 
 See [Hook packs and installation scopes](HOOKS.md) for hook policy,
 provider-layer mappings, and the native activation boundary.

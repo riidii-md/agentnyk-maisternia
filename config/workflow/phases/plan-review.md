@@ -21,6 +21,7 @@ Accepted forms:
 /work-plan-review direction <direction artifact and optional focus>
 /work-plan-review plan <plan or design path and optional focus>
 /work-plan-review plan-delta <changed decision, section, or task>
+/work-plan-review plan --allow-degraded <plan or design path>
 ```
 
 An explicit plan artifact or conversation handoff is sufficient. Never refuse
@@ -57,9 +58,34 @@ dependencies, or design-changing open decisions is High and blocking.
 Do not invent the missing design during review; return it to planning and human
 decision.
 
+## Resolve The Execution Graph
+
+Read the installed `review-policy`. Use at least three independent read-only
+reviewer workers for a full plan or direction review when native subagents are
+available, scheduled in bounded parallel waves. The coordinator owns grounding,
+synthesis, report artifacts, and any confirmed plan correction; it must not own
+a review lane or verify its own candidates.
+
+For implementation plans, keep at least these independent subjects:
+
+- repository correctness and affected-code assumptions;
+- architecture, internal consistency, and simplicity;
+- completeness, edge cases, acceptance evidence, and testability.
+
+For directions, keep independent boundary/trust, operational/migration, and
+alternatives/tradeoff subjects at architectural altitude. Assign every base
+lens exactly once and add domain lanes only when warranted.
+
+Do not silently collapse the graph. If native spawning is advertised or exposed
+but fails, record `multi-agent-incomplete` and block the review. A sequential
+run requires the user's explicit `--allow-degraded` flag, must record
+`degraded-sequential`, and never finishes with `pass`. Use `degraded` only when
+the underlying review otherwise completes; preserve `fail` for invalid checks
+or evidence and `blocked` when required evidence cannot be obtained.
+
 ## Run Independent Lenses
 
-Run one read-only reviewer per base lens:
+Assign each base lens to one of the independent subject workers:
 
 - `correctness-vs-code`: proposed behavior, paths, symbols, APIs, and assumptions
   match the current repository;
@@ -95,7 +121,8 @@ quote, command/test, or authoritative-document grounding.
 
 ## Refute Every Candidate
 
-Spawn a separate verifier per candidate. Its first objective is to disprove the
+Spawn a separate verifier worker per candidate. It must be different from the
+candidate's originating worker, and its first objective is to disprove the
 claim against the plan, code, tests, and repository rules. It must return:
 
 ```text
@@ -119,7 +146,14 @@ and ask the user. Critical and High findings are blocking.
 Re-read the edited plan, rerun affected consistency and acceptance checks, and
 set the gate to `pass`, `fail`, or `blocked`. Write `review.md` and schema-valid
 `review.json` under `.agent-runs/reviews/<run-id>/`, including confirmed,
-refuted, applied, and blocked findings.
+refuted, applied, and blocked findings. A user-authorized sequential fallback
+uses `degraded` only for an otherwise-successful review and preserves `fail` or
+`blocked` when appropriate. Before assigning the gate, enforce the policy's
+semantic integrity rules: unique worker IDs, exact wave membership, resolved
+complete-role references, and a verifier distinct from the originating
+reviewer. If no distinct verifier is available, record the candidate as
+`unverified`, apply no correction from it, and block. The version 6 report also records coordinator, workers,
+assignments, waves, runtimes, scoped-minimum status, and fallback reason.
 
 ## Build The Visual Plan Review
 

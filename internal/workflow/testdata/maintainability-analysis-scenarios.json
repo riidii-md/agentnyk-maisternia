@@ -88,7 +88,7 @@
     },
     {
       "id": "schema-compatibility-for-older-consumers",
-      "evidence_rule": "Preserve established field meanings, emit schema version 5 for analyzer fields, and require consumers to branch on schema_version without rewriting old artifacts.",
+      "evidence_rule": "Preserve established field meanings, emit schema version 6 for combined analyzer and execution fields, recognize version 5 as the analyzer-only contract, and require consumers to branch on schema_version without rewriting old artifacts.",
       "expected_outcome": "verified"
     }
   ]

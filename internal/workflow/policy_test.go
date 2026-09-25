@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +10,63 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestRepositoryUsesCanonicalGitHubIdentity(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	const (
+		canonical = "github.com/riidii-md/agentnyk-maisternia"
+		legacy    = "github.com/" + "kagi-" + "labs/agentnyk-maisternia"
+	)
+
+	paths := []string{
+		filepath.Join(root, "go.mod"),
+		filepath.Join(root, "Makefile"),
+		filepath.Join(root, ".goreleaser.yml"),
+		filepath.Join(root, "docs", "RELEASING.md"),
+	}
+	for _, relative := range []string{"cmd", "internal", filepath.Join("config", "schema")} {
+		err := filepath.WalkDir(filepath.Join(root, relative), func(path string, entry fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !entry.IsDir() && (filepath.Ext(path) == ".go" || filepath.Ext(path) == ".json") {
+				paths = append(paths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, path := range paths {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(content), legacy) {
+			t.Errorf("%s still references legacy repository %q", path, legacy)
+		}
+	}
+
+	module, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(module), "module "+canonical+"\n") {
+		t.Errorf("go.mod does not declare canonical module %q", canonical)
+	}
+
+	releaseConfig, err := os.ReadFile(filepath.Join(root, ".goreleaser.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(releaseConfig), "owner: riidii-md") {
+		t.Error("GoReleaser does not publish the Homebrew cask through riidii-md")
+	}
+}
 
 func TestRepositoryPolicyIsValidAndTriggersAreReadOnly(t *testing.T) {
 	t.Parallel()
@@ -95,6 +153,381 @@ func TestReviewReportSchemaSupportsDirectionMode(t *testing.T) {
 	for _, mode := range []string{"direction", "plan", "plan-delta", "implementation"} {
 		if !slices.Contains(schema.Properties.Mode.Enum, mode) {
 			t.Errorf("review-report mode enum is missing %q", mode)
+		}
+	}
+}
+
+func TestRepositoryReviewPolicyRequiresIndependentAgentGraph(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "config", "workflow", "review-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		MaxParallelReviewers int      `json:"max_parallel_reviewers"`
+		Modes                []string `json:"modes"`
+		Execution            struct {
+			Strategy                    string `json:"strategy"`
+			NativeSubagents             string `json:"native_subagents"`
+			MinimumIndependentReviewers int    `json:"minimum_independent_reviewers"`
+			LaneIsolationRequired       bool   `json:"lane_isolation_required"`
+			CoordinatorMayReview        bool   `json:"coordinator_may_review"`
+			SequentialFallback          string `json:"sequential_fallback"`
+			DegradedFlag                string `json:"degraded_flag"`
+			FullGateRequiresMultiAgent  bool   `json:"full_gate_requires_multi_agent"`
+		} `json:"execution"`
+		Verification struct {
+			OneVerifierPerCandidate        bool   `json:"one_verifier_per_candidate"`
+			VerifierMustUseDifferentWorker bool   `json:"verifier_must_use_different_worker"`
+			SemanticIntegrityCheckRequired bool   `json:"semantic_integrity_check_required"`
+			UniqueWorkerIDsRequired        bool   `json:"unique_worker_ids_required"`
+			WorkerReferencesMustResolve    bool   `json:"worker_references_must_resolve"`
+			WaveMembershipMustMatch        bool   `json:"wave_membership_must_match"`
+			UnverifiedCandidateStatus      string `json:"unverified_candidate_status"`
+			UnverifiedCandidateGate        string `json:"unverified_candidate_gate"`
+			ApplyUnverifiedCandidates      bool   `json:"apply_unverified_candidates"`
+		} `json:"verification"`
+	}
+	if err := json.Unmarshal(data, &policy); err != nil {
+		t.Fatal(err)
+	}
+	if policy.MaxParallelReviewers < 3 ||
+		!slices.Contains(policy.Modes, "direction") ||
+		policy.Execution.Strategy != "bounded-parallel-waves" ||
+		policy.Execution.NativeSubagents != "required-when-supported" ||
+		policy.Execution.MinimumIndependentReviewers < 3 ||
+		!policy.Execution.LaneIsolationRequired ||
+		policy.Execution.CoordinatorMayReview ||
+		policy.Execution.SequentialFallback != "explicit-opt-in" ||
+		policy.Execution.DegradedFlag != "--allow-degraded" ||
+		!policy.Execution.FullGateRequiresMultiAgent ||
+		!policy.Verification.OneVerifierPerCandidate ||
+		!policy.Verification.VerifierMustUseDifferentWorker ||
+		!policy.Verification.SemanticIntegrityCheckRequired ||
+		!policy.Verification.UniqueWorkerIDsRequired ||
+		!policy.Verification.WorkerReferencesMustResolve ||
+		!policy.Verification.WaveMembershipMustMatch ||
+		policy.Verification.UnverifiedCandidateStatus != "unverified" ||
+		policy.Verification.UnverifiedCandidateGate != "blocked" ||
+		policy.Verification.ApplyUnverifiedCandidates {
+		t.Fatalf("review execution policy = %#v, verification = %#v", policy.Execution, policy.Verification)
+	}
+
+	data, err = os.ReadFile(filepath.Join(root, "config", "schema", "review-report.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Required   []string `json:"required"`
+		Properties struct {
+			SchemaVersion struct {
+				Const int `json:"const"`
+			} `json:"schema_version"`
+			Execution struct {
+				Ref string `json:"$ref"`
+			} `json:"execution"`
+			GateStatus struct {
+				Enum []string `json:"enum"`
+			} `json:"gate_status"`
+		} `json:"properties"`
+		Definitions map[string]json.RawMessage `json:"$defs"`
+		AllOf       []json.RawMessage          `json:"allOf"`
+	}
+	if err := json.Unmarshal(data, &schema); err != nil {
+		t.Fatal(err)
+	}
+	if schema.Properties.SchemaVersion.Const != 6 {
+		t.Errorf("review report schema version = %d, want 6", schema.Properties.SchemaVersion.Const)
+	}
+	if !slices.Contains(schema.Required, "execution") ||
+		schema.Properties.Execution.Ref != "#/$defs/execution" {
+		t.Errorf("review report execution contract = required %t, ref %q", slices.Contains(schema.Required, "execution"), schema.Properties.Execution.Ref)
+	}
+	if !slices.Contains(schema.Properties.GateStatus.Enum, "degraded") {
+		t.Errorf("review gate statuses = %v, want degraded", schema.Properties.GateStatus.Enum)
+	}
+	executionDefinition, found := schema.Definitions["execution"]
+	if !found {
+		t.Fatal("review report schema is missing execution definition")
+	}
+	var execution struct {
+		Required   []string                   `json:"required"`
+		Properties map[string]json.RawMessage `json:"properties"`
+	}
+	if err := json.Unmarshal(executionDefinition, &execution); err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{
+		"mode", "coordinator", "workers", "waves", "minimum_independent_reviewers_met", "fallback_reason",
+	} {
+		if !slices.Contains(execution.Required, field) {
+			t.Errorf("execution required fields = %v, missing %q", execution.Required, field)
+		}
+		if _, found := execution.Properties[field]; !found {
+			t.Errorf("execution properties are missing %q", field)
+		}
+	}
+	var executionMode struct {
+		Enum []string `json:"enum"`
+	}
+	if err := json.Unmarshal(execution.Properties["mode"], &executionMode); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(executionMode.Enum, []string{
+		"multi-agent", "multi-agent-incomplete", "degraded-sequential",
+	}) {
+		t.Errorf("execution modes = %v", executionMode.Enum)
+	}
+
+	var findingDefinition struct {
+		Required   []string `json:"required"`
+		Properties struct {
+			Status struct {
+				Enum []string `json:"enum"`
+			} `json:"status"`
+		} `json:"properties"`
+		AllOf []struct {
+			If struct {
+				Properties struct {
+					Status struct {
+						Const string   `json:"const"`
+						Enum  []string `json:"enum"`
+					} `json:"status"`
+				} `json:"properties"`
+			} `json:"if"`
+			Then struct {
+				Required []string `json:"required"`
+				Not      struct {
+					Required []string `json:"required"`
+				} `json:"not"`
+			} `json:"then"`
+		} `json:"allOf"`
+	}
+	if err := json.Unmarshal(schema.Definitions["finding"], &findingDefinition); err != nil {
+		t.Fatal(err)
+	}
+	if slices.Contains(findingDefinition.Required, "verification") ||
+		!slices.Equal(findingDefinition.Properties.Status.Enum, []string{"confirmed", "refuted", "unverified"}) {
+		t.Errorf("finding verification/status contract = required %v, statuses %v", findingDefinition.Required, findingDefinition.Properties.Status.Enum)
+	}
+	confirmedRequiresVerification := false
+	unverifiedForbidsVerification := false
+	for _, condition := range findingDefinition.AllOf {
+		if slices.Equal(condition.If.Properties.Status.Enum, []string{"confirmed", "refuted"}) &&
+			slices.Contains(condition.Then.Required, "verification") {
+			confirmedRequiresVerification = true
+		}
+		if condition.If.Properties.Status.Const == "unverified" &&
+			slices.Contains(condition.Then.Not.Required, "verification") {
+			unverifiedForbidsVerification = true
+		}
+	}
+	if !confirmedRequiresVerification || !unverifiedForbidsVerification {
+		t.Errorf("finding verification conditions: confirmed=%t unverified=%t", confirmedRequiresVerification, unverifiedForbidsVerification)
+	}
+
+	type executionClause struct {
+		Properties struct {
+			Execution struct {
+				Properties struct {
+					Mode struct {
+						Const string `json:"const"`
+					} `json:"mode"`
+				} `json:"properties"`
+			} `json:"execution"`
+			Scope struct {
+				Const string `json:"const"`
+			} `json:"scope"`
+		} `json:"properties"`
+		Not struct {
+			Properties struct {
+				Scope struct {
+					Const string `json:"const"`
+				} `json:"scope"`
+			} `json:"properties"`
+		} `json:"not"`
+	}
+	type reportCondition struct {
+		If struct {
+			AllOf      []executionClause `json:"allOf"`
+			Properties struct {
+				Execution struct {
+					Properties struct {
+						Mode struct {
+							Const string `json:"const"`
+						} `json:"mode"`
+					} `json:"properties"`
+				} `json:"execution"`
+				Findings struct {
+					Contains struct {
+						Properties struct {
+							Status struct {
+								Const string `json:"const"`
+							} `json:"status"`
+						} `json:"properties"`
+					} `json:"contains"`
+				} `json:"findings"`
+			} `json:"properties"`
+		} `json:"if"`
+		Then struct {
+			Properties struct {
+				Execution struct {
+					Properties struct {
+						Workers struct {
+							MinContains int `json:"minContains"`
+							Contains    struct {
+								Properties struct {
+									Role struct {
+										Const string `json:"const"`
+									} `json:"role"`
+									Status struct {
+										Const string `json:"const"`
+									} `json:"status"`
+								} `json:"properties"`
+							} `json:"contains"`
+						} `json:"workers"`
+					} `json:"properties"`
+				} `json:"execution"`
+				GateStatus struct {
+					Const string   `json:"const"`
+					Enum  []string `json:"enum"`
+				} `json:"gate_status"`
+			} `json:"properties"`
+		} `json:"then"`
+	}
+	testMinimum := 0
+	defaultMinimum := 0
+	var degradedStatuses []string
+	unverifiedGate := ""
+	for _, raw := range schema.AllOf {
+		var condition reportCondition
+		if err := json.Unmarshal(raw, &condition); err != nil {
+			t.Fatal(err)
+		}
+		multiAgent := false
+		testsScope := false
+		nonTestsScope := false
+		for _, clause := range condition.If.AllOf {
+			multiAgent = multiAgent || clause.Properties.Execution.Properties.Mode.Const == "multi-agent"
+			testsScope = testsScope || clause.Properties.Scope.Const == "tests"
+			nonTestsScope = nonTestsScope || clause.Not.Properties.Scope.Const == "tests"
+		}
+		workers := condition.Then.Properties.Execution.Properties.Workers
+		if multiAgent && workers.Contains.Properties.Role.Const == "reviewer" && workers.Contains.Properties.Status.Const == "complete" {
+			if testsScope {
+				testMinimum = workers.MinContains
+			}
+			if nonTestsScope {
+				defaultMinimum = workers.MinContains
+			}
+		}
+		if condition.If.Properties.Execution.Properties.Mode.Const == "degraded-sequential" {
+			degradedStatuses = condition.Then.Properties.GateStatus.Enum
+		}
+		if condition.If.Properties.Findings.Contains.Properties.Status.Const == "unverified" {
+			unverifiedGate = condition.Then.Properties.GateStatus.Const
+		}
+	}
+	if testMinimum != 2 || defaultMinimum != 3 {
+		t.Errorf("complete reviewer minimums: tests=%d default=%d", testMinimum, defaultMinimum)
+	}
+	if !slices.Equal(degradedStatuses, []string{"degraded", "fail", "blocked"}) {
+		t.Errorf("degraded gate statuses = %v", degradedStatuses)
+	}
+	if unverifiedGate != "blocked" {
+		t.Errorf("unverified candidate gate = %q", unverifiedGate)
+	}
+}
+
+func TestRepositoryDirectionAndPlanUseComplexityGatedAgentGraphs(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "config", "workflow", "design-graph-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		SchemaVersion int `json:"schema_version"`
+		Routing       struct {
+			ExternalWorkers string `json:"external_workers"`
+			DuplicateLanes  bool   `json:"duplicate_lanes"`
+		} `json:"routing"`
+		Graphs map[string]struct {
+			Activation              string   `json:"activation"`
+			CoordinatorOwnsArtifact bool     `json:"coordinator_owns_artifact"`
+			WorkersAreReadOnly      bool     `json:"workers_are_read_only"`
+			NativeSubagents         string   `json:"native_subagents"`
+			SpawnFailure            string   `json:"spawn_failure"`
+			Lanes                   []string `json:"lanes"`
+		} `json:"graphs"`
+	}
+	if err := json.Unmarshal(data, &policy); err != nil {
+		t.Fatal(err)
+	}
+	if policy.SchemaVersion != 1 {
+		t.Fatalf("design graph schema version = %d, want 1", policy.SchemaVersion)
+	}
+	if policy.Routing.ExternalWorkers != "fill-same-graph" || policy.Routing.DuplicateLanes {
+		t.Fatalf("design graph routing = %#v", policy.Routing)
+	}
+	wantLanes := map[string][]string{
+		"direction": {"boundaries-interfaces-trust", "constraints-migration-operations", "alternatives-tradeoffs"},
+		"plan":      {"code-impact", "verification-evidence", "delivery-risk-sequencing"},
+	}
+	for graphID, lanes := range wantLanes {
+		graph, found := policy.Graphs[graphID]
+		if !found {
+			t.Errorf("design graph policy is missing %q", graphID)
+			continue
+		}
+		if graph.Activation != "complexity-gated" ||
+			!graph.CoordinatorOwnsArtifact ||
+			!graph.WorkersAreReadOnly ||
+			graph.NativeSubagents != "required-when-supported" ||
+			graph.SpawnFailure != "ask-before-sequential" ||
+			!slices.Equal(graph.Lanes, lanes) {
+			t.Errorf("design graph %q = %#v, want lanes %v", graphID, graph, lanes)
+		}
+	}
+
+	workflowPolicy, err := LoadPolicy(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, phase := range []string{"direction", "plan"} {
+		capabilities, routing, err := workflowPolicy.Phase(phase)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Contains(capabilities.Optional, "subagent.spawn") {
+			t.Errorf("phase %q does not advertise subagent.spawn", phase)
+		}
+		if routing.Strategy != "complexity_gated_parallel_synthesis" {
+			t.Errorf("phase %q routing strategy = %q", phase, routing.Strategy)
+		}
+	}
+
+	contracts := map[string][]string{
+		"config/workflow/phases/direction.md": {
+			"complexity-gated agent graph", "boundaries-interfaces-trust", "single canonical writer", "ask before sequential fallback",
+		},
+		"config/workflow/phases/plan.md": {
+			"complexity-gated agent graph", "code-impact", "single canonical writer", "ask before sequential fallback",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		normalized := strings.Join(strings.Fields(string(content)), " ")
+		for _, fragment := range required {
+			if !strings.Contains(normalized, fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
 		}
 	}
 }
@@ -472,8 +905,8 @@ func TestRepositoryMaintainabilityAnalysisContract(t *testing.T) {
 	if err := json.Unmarshal(schema.Properties["schema_version"], &schemaVersion); err != nil {
 		t.Fatal(err)
 	}
-	if schemaVersion.Const != 5 {
-		t.Fatalf("review schema version = %d, want 5", schemaVersion.Const)
+	if schemaVersion.Const != 6 {
+		t.Fatalf("review schema version = %d, want 6", schemaVersion.Const)
 	}
 	for property, definition := range map[string]string{
 		"analysis_tool_evidence":     "analysisToolEvidence",
@@ -553,7 +986,7 @@ func TestRepositoryMaintainabilityAnalysisContract(t *testing.T) {
 			"analysis_tool_evidence", "maintainability_candidates",
 		},
 		"docs/REVIEW-WORKFLOW.md": {
-			"jscpd", "GitNexus", "schema version 5", "advisory", "required",
+			"jscpd", "GitNexus", "schema version 6", "advisory", "required",
 			"zero applicable files", "report-only",
 		},
 	}

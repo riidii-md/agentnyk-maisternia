@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
+	"github.com/riidii-md/agentnyk-maisternia/internal/workflow"
 )
 
 const eventUsage = `Usage:

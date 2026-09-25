@@ -44,6 +44,8 @@ a large target; it requires an explicit invocation and one named subsystem.
 Preserve an explicit `--disposition repair` or
 `--disposition report-only`. `/work-start-pr-review` supplies report-only for
 PR publication so this specialization cannot edit a contributor branch.
+Preserve `--allow-degraded` only when the user explicitly supplied it; the
+alias inherits the canonical blocked fallback and degraded reporting rules.
 
 Preserve an optional leading route block and place the fixed mode and scope
 after its delimiter:

@@ -29,6 +29,7 @@ Accepted modes:
 /work-review implementation --scope tests --test-mode campaign <subsystem>
 /work-review implementation --profile maintainability <diff, branch, PR, or focus>
 /work-review implementation --disposition report-only <PR or diff>
+/work-review implementation --allow-degraded <target or focus>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
@@ -91,6 +92,49 @@ Any subset of `@codex`, `@claude`, `@agy`, and `@hermes` may be requested;
 `work-routing` filters it through the current safe-runner contract and never
 silently substitutes an unavailable harness.
 
+## Resolve The Execution Graph
+
+Read the installed `review-policy` and use its bounded-parallel-waves execution
+graph. Build one immutable evidence packet, select applicable lenses, and assign
+them to independent subject lanes before dispatch. The coordinator owns intake,
+synthesis, repair, and final verification; it must not also act as a reviewer or
+verifier during a full multi-agent review.
+
+Use native subagents for lanes assigned to the current harness whenever it
+exposes them. This is required, not advisory. Routed external workers count
+toward the same graph and must not cause duplicate local lanes. Run lanes in
+bounded waves using the smaller of the policy limit and actual harness capacity.
+A full implementation review uses at least three
+independent reviewer workers, a tests-only review at least two, and a plan or
+direction review at least three. When fewer applicable lanes exist, record why
+rather than creating ceremonial workers.
+
+Use this default subject topology, splitting or adding domain lanes when risk
+warrants it:
+
+- `behavior-correctness`: correctness and completeness/edge cases;
+- `design-coherence`: consistency, architecture, and simplicity/DRY;
+- `trust-runtime`: security and applicable privacy, authorization, or runtime
+  safety concerns;
+- `change-scope`: diff analysis, dependencies, migrations, and compatibility;
+- `test-intent-risk`: test intent/oracles and risk/edge coverage;
+- `test-fidelity-economy`: test level/fidelity and economy/maintainability.
+
+One worker may own related lenses within one subject lane, but unrelated lanes
+must not be collapsed merely to save calls. Give every worker bounded scope and
+direct read-only access to the relevant repository evidence. Do not ask workers
+to review summaries in place of actual code.
+
+Never silently fall back to a single coordinator. If a harness advertises or
+exposes subagents but spawning fails, record `multi-agent-incomplete` and set
+the gate to `blocked`. Sequential execution is allowed only when the user
+explicitly supplies `--allow-degraded`.
+Record it as `degraded-sequential` and explain the fallback. Use gate status
+`degraded`, never `pass`, only when the underlying review otherwise completes;
+preserve `fail` for invalid checks or evidence and `blocked` when required
+evidence cannot be obtained. A provider without subagent support follows the
+same explicit degraded path.
+
 ## Establish Evidence
 
 Discover repository rules, accepted contract, base ref, changed files, actual
@@ -100,7 +144,7 @@ context by itself. Do not trust builder summaries as proof.
 
 ## Run Independent Implementation Lenses
 
-Launch one read-only reviewer per applicable base lens:
+Assign every applicable base lens to the bounded independent subject lanes:
 
 - `correctness`: observable behavior, state transitions, errors, and invariants;
 - `consistency`: repository conventions, sibling behavior, naming, and contracts;
@@ -140,7 +184,10 @@ tests. Treat the current implementation as evidence, not as the sole source of
 expected behavior. Read the implementation diff, test diff, affected existing
 tests, repository-owned test commands, and available verification results.
 
-Run one read-only reviewer per specialized lens:
+Assign the specialized lenses across two independent test lanes. The
+`test-intent-risk` worker owns `intent-oracle` and `risk-edge-coverage`; the
+`test-fidelity-economy` worker owns `level-fidelity` and
+`economy-maintainability`:
 
 - `intent-oracle`: requirement and risk grounding, meaningful observable
   assertions, tautologies, and accidental coupling to private implementation;
@@ -541,11 +588,24 @@ command/test, or authoritative-document evidence. `NO_FINDINGS` is valid.
 
 ## Verify, Rank, And Deduplicate
 
-For each candidate, spawn an independent verifier that tries to refute it
-against code, tests, docs, and runtime evidence. Require explicit `is_real` and
+For each candidate, spawn an independent verifier worker that did not originate
+the candidate. It tries to refute the claim against code, tests, docs, and
+runtime evidence. Require explicit `is_real` and
 `grounded` booleans. Keep only `is_real && grounded`; record everything refuted
 and why. Merge duplicates and rank confirmed findings Critical, High, Medium,
 then Low.
+
+Before assigning the gate, perform the policy's semantic integrity check:
+worker IDs are unique; every worker appears in exactly one declared wave whose
+number matches its `wave`; every lens references a complete reviewer; every
+verification references a complete verifier; all referenced workers exist; and
+the verifier differs from the candidate's originating reviewer. A schema-valid
+shape without these relationships is blocked.
+
+In degraded sequential mode, a candidate still requires a genuinely distinct
+verifier. If none is available, record the candidate as `unverified`, do not
+apply its proposed fix, and set the gate to `blocked`. Never let the coordinator
+self-verify or promote an unverified candidate to confirmed or refuted.
 
 ## Report And Apply
 
@@ -587,3 +647,9 @@ maintainability-inspection matrix when that profile is selected, the
 status. Link confirmed candidates to canonical findings, fixes through finding
 IDs, test evidence, inspections, and independent verification without allowing
 raw analyzer output to bypass the canonical report.
+
+The version 6 report must also record the execution mode, coordinator, worker
+identity and runtime, provider, assignments, waves, whether the scoped minimum
+was met, and any fallback reason. Each lens and candidate verification must
+reference its worker. Provider/model labels without distinct worker executions
+do not satisfy the multi-agent gate.

@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
+	"github.com/riidii-md/agentnyk-maisternia/internal/environment"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presetsources"
 )
 
 const maxEnvironmentInstallOutput = 1 << 20

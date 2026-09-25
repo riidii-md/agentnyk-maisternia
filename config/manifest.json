@@ -639,6 +639,16 @@
       ]
     },
     {
+      "id": "design-graph-policy",
+      "source": "config/workflow/design-graph-policy.json",
+      "targets": [
+        {"agent": "codex", "path": ".codex/maisternia/design-graph-policy.json"},
+        {"agent": "claude", "path": ".claude/maisternia/design-graph-policy.json"},
+        {"agent": "antigravity", "path": ".config/agy/maisternia/design-graph-policy.json"},
+        {"agent": "hermes", "path": ".hermes/maisternia/design-graph-policy.json"}
+      ]
+    },
+    {
       "id": "review-policy",
       "source": "config/workflow/review-policy.json",
       "targets": [

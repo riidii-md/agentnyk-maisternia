@@ -34,6 +34,7 @@ subagents, provider calls, permissions, edits, and verification.
 /work-review implementation --scope tests <target or focus>
 /work-review implementation --profile maintainability <target or focus>
 /work-review implementation --disposition report-only <PR or diff>
+/work-review implementation --allow-degraded <target or focus>
 /work-review @agy @codex @claude -- implementation <target or focus>
 ```
 
@@ -385,7 +386,15 @@ the repository's actual requirements and evidence.
 
 ## Reviewer And Verifier Model
 
-Each lens receives a bounded read-only packet and must inspect the actual code.
+The coordinator creates one evidence packet, then dispatches independent subject
+lanes in bounded parallel waves. Full implementation, plan, and direction review
+uses at least three reviewer workers; tests-only review uses at least two. The
+default implementation subjects are behavior/correctness, design/coherence,
+trust/runtime, change scope, test intent/risk, and test fidelity/economy. Related
+lenses may share one subject worker, but unrelated subjects are not collapsed to
+save calls.
+
+Each lane receives a bounded read-only packet and must inspect the actual code.
 A diff, summary, or builder transcript is not enough. Every candidate includes:
 
 - severity;
@@ -394,13 +403,24 @@ A diff, summary, or builder transcript is not enough. Every candidate includes:
 - concrete `file:line`, short verbatim quote, reproducible command/test, or
   authoritative-document evidence.
 
-Each candidate then goes to a separate verifier whose first objective is to
-refute it. The verifier returns `is_real`, `grounded`, rationale, evidence, and
-corrected severity. A finding survives only when:
+Each candidate then goes to a separate verifier worker that did not originate
+the candidate. Its first objective is to refute it. The verifier returns
+`is_real`, `grounded`, rationale, evidence, and corrected severity. A finding
+survives only when:
 
 ```text
 is_real && grounded
 ```
+
+Before the gate is assigned, the coordinator also checks execution
+relationships that JSON shape validation cannot prove: worker IDs are unique,
+wave membership is exact, every lens and verification references a declared
+complete worker with the required role, and a verifier differs from the
+originating reviewer. A failed relationship check blocks the review.
+
+Degraded sequential review does not waive verifier independence. When no
+distinct verifier is available, the candidate remains `unverified`, no proposed
+fix is applied, and the gate is `blocked` rather than self-verified.
 
 The coordinator records refuted candidates and why, deduplicates surviving
 findings, and ranks them Critical, High, Medium, then Low.
@@ -432,21 +452,25 @@ Every run writes:
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to schema version 5 of `review-report.schema.json` and preserves provider
+The JSON report conforms to schema version 6 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
-counts, and final gate status. Implementation reports include the specialized
+counts, and final gate status. It also records execution mode, coordinator,
+worker identities and runtimes, assignments, waves, whether the scoped minimum
+was met, and any fallback reason. Every lens and verifier references its worker.
+Implementation reports include the specialized
 `test_evidence` matrix and `test_review_mode`; standalone test reviews record
 `scope: tests`. Authoring reports add `test_authoring_gates`, audit and campaign
 reports add `test_audit_candidates`, and campaigns add `test_campaign`.
 Maintainability reports additionally include the four required
 `maintainability_inspections` records, analyzer provenance in
 `analysis_tool_evidence`, and correlated `maintainability_candidates`. Version
-5 requires `profile`, `scope`, `test_review_mode`, `test_evidence`, and
+6 requires `profile`, `scope`, `test_review_mode`, `test_evidence`, and
 `disposition` for implementation reports. It keeps the established core fields
 and meanings but is explicit because the
 strict schema rejects unknown fields. Consumers must branch on
-`schema_version`; version 4 is the pre-analyzer contract and existing artifacts
-are not rewritten. Version 1, 2, 3, or 4 reports must be regenerated before
+`schema_version`; version 4 is the pre-analyzer contract, version 5 is the
+analyzer-evidence contract without execution provenance, and existing artifacts
+are not rewritten. Version 1, 2, 3, 4, or 5 reports must be regenerated before
 they can satisfy the current gate.
 
 An external `pull_request.opened` event enters the separate read-only
@@ -456,9 +480,14 @@ review phase.
 
 ## Native And Cross-Provider Delegation
 
-Normal review uses native subagents when the current harness supports them and
-runs the same lenses sequentially otherwise. The shared `work-routing` skill
-selects cross-provider reviewers:
+Normal review requires native subagents when the current harness exposes them.
+If advertised spawning fails, the review blocks instead of silently becoming a
+single-agent review and records `multi-agent-incomplete`. Sequential execution
+is available only through explicit `--allow-degraded`; the report records
+`degraded-sequential` and the gate is never `pass`. It is `degraded` only when
+the review otherwise completes, `fail` when checks or evidence are invalid, and
+`blocked` when required evidence or independent verification is unavailable. The shared
+`work-routing` skill selects cross-provider reviewers:
 
 ```text
 /work-review @agy @codex @claude -- implementation <target>
@@ -466,6 +495,8 @@ selects cross-provider reviewers:
 
 The route defaults to `parallel-verify`. Each selected harness receives an
 independent read-only lens packet, and the current harness remains coordinator.
+External workers and native same-harness subagents fill one subject graph;
+routing does not duplicate already assigned lanes.
 The router owns provider eligibility, redaction, disclosure, authority, budget,
 and unavailable-target behavior; the review workflow owns lens assignment,
 finding refutation, synthesis, and fixes.

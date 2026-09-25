@@ -430,6 +430,11 @@ Several named harnesses select a multi-harness strategy. Research and planning
 default to independent lanes plus coordinator synthesis. Review defaults to
 `parallel-verify`: selected harnesses produce independent read-only lenses, and
 the current harness verifies findings, preserves disagreement, and owns fixes.
+Within one harness, review also requires native subagent lanes when spawning is
+available. A failed advertised spawn blocks unless the user explicitly chooses
+`--allow-degraded`; degraded sequential review is recorded and cannot claim a
+full passing gate. Direction and plan use complexity-gated parallel analysis
+with one coordinator as the canonical artifact writer.
 
 Before dispatch, the current harness shows a compact routing receipt. A named
 harness approves the target and minimal task packet for that invocation; it

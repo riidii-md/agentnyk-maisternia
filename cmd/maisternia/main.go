@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/app"
+	"github.com/riidii-md/agentnyk-maisternia/internal/app"
 )
 
 func main() {

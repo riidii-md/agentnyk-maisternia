@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/riidii-md/agentnyk-maisternia/internal/providers"
 )
 
 const providerUsage = `Usage:

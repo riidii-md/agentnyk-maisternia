@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/repository"
+	"github.com/riidii-md/agentnyk-maisternia/internal/repository"
 )
 
 func resolveRepositoryOption(value, home string) (string, error) {

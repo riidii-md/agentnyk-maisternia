@@ -46,10 +46,11 @@ public repository.
 | Safe installation | Available | Apply is opt-in and guarded by conflict, drift, backup, and path checks. |
 | Release archives | Pending | No tagged release has been published from this repository. |
 | Homebrew | Pending | There is no public `riidii-md` tap yet. |
-| `go install ...@latest` | Pending | The Go module path still needs to move from the former repository namespace. |
+| `go install ...@latest` | Pending | The module path is current; this installation path is not supported until the first tagged release. |
 | Open-source license | Decision needed | The repository does not yet contain a `LICENSE` file. |
 
-Older installation commands that reference `kagi-labs` are obsolete. Do not
+The module and release metadata now use `riidii-md`. Older installation commands
+that reference the former Maisternia repository namespace are obsolete. Do not
 use them for this repository.
 
 ## Quick start

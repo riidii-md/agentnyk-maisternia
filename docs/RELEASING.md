@@ -44,14 +44,14 @@ commit previously passed the branch CI workflow.
 Homebrew uses a separate repository:
 
 ```text
-kagi-labs/homebrew-tap
+riidii-md/homebrew-tap
 ```
 
 Create it as a private repository with a `main` branch and a `Casks/`
 directory.
 
 Create a fine-grained GitHub token that has repository contents write access to
-`kagi-labs/homebrew-tap`. Add it to the `kagi-labs/agentnyk-maisternia` Actions secrets as:
+`riidii-md/homebrew-tap`. Add it to the `riidii-md/agentnyk-maisternia` Actions secrets as:
 
 ```text
 HOMEBREW_TAP_TOKEN

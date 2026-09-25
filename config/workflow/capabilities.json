@@ -34,7 +34,7 @@
     "direction": {
       "authority": "artifact_write",
       "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
-      "optional": ["documentation.search", "issue.read"],
+      "optional": ["documentation.search", "issue.read", "subagent.spawn"],
       "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
     },
     "direction-review": {
@@ -64,7 +64,7 @@
     "plan": {
       "authority": "artifact_write",
       "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
-      "optional": ["documentation.search", "repository.test"],
+      "optional": ["documentation.search", "repository.test", "subagent.spawn"],
       "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
     },
     "prove": {

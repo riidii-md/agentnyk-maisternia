@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/environment"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presetsources"
+	"github.com/riidii-md/agentnyk-maisternia/internal/providers"
+	"github.com/riidii-md/agentnyk-maisternia/internal/settings"
 )
 
 func TestLoaderUsesSavedRepositoryAndBuildsSnapshot(t *testing.T) {

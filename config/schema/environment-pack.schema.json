@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/environment-pack.schema.json",
+  "$id": "https://github.com/riidii-md/agentnyk-maisternia/config/schema/environment-pack.schema.json",
   "title": "AgentnykMaisternia environment pack",
   "type": "object",
   "additionalProperties": false,

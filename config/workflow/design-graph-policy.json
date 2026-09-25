@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "max_parallel_workers": 3,
+  "routing": {
+    "external_workers": "fill-same-graph",
+    "duplicate_lanes": false
+  },
+  "graphs": {
+    "direction": {
+      "activation": "complexity-gated",
+      "coordinator_owns_artifact": true,
+      "workers_are_read_only": true,
+      "native_subagents": "required-when-supported",
+      "spawn_failure": "ask-before-sequential",
+      "lanes": [
+        "boundaries-interfaces-trust",
+        "constraints-migration-operations",
+        "alternatives-tradeoffs"
+      ]
+    },
+    "plan": {
+      "activation": "complexity-gated",
+      "coordinator_owns_artifact": true,
+      "workers_are_read_only": true,
+      "native_subagents": "required-when-supported",
+      "spawn_failure": "ask-before-sequential",
+      "lanes": [
+        "code-impact",
+        "verification-evidence",
+        "delivery-risk-sequencing"
+      ]
+    }
+  }
+}

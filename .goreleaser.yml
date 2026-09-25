@@ -25,9 +25,9 @@ builds:
     ldflags:
       - >-
         -s -w
-        -X github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo.Version={{ .Version }}
-        -X github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo.Commit={{ .Commit }}
-        -X github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo.Date={{ .CommitDate }}
+        -X github.com/riidii-md/agentnyk-maisternia/internal/buildinfo.Version={{ .Version }}
+        -X github.com/riidii-md/agentnyk-maisternia/internal/buildinfo.Commit={{ .Commit }}
+        -X github.com/riidii-md/agentnyk-maisternia/internal/buildinfo.Date={{ .CommitDate }}
 
 archives:
   - id: release
@@ -72,11 +72,11 @@ homebrew_casks:
     binaries:
       - maisternia
     repository:
-      owner: kagi-labs
+      owner: riidii-md
       name: homebrew-tap
       token: '{{ envOrDefault "HOMEBREW_TAP_TOKEN" "" }}'
     directory: Casks
-    homepage: https://github.com/kagi-labs/agentnyk-maisternia
+    homepage: https://github.com/riidii-md/agentnyk-maisternia
     description: Opinionated, provider-neutral workshop for coding-agent harnesses
     caveats: |
       Run `maisternia` to open the configuration workshop. The versioned catalog
@@ -125,5 +125,5 @@ homebrew_casks:
         end
       end
     url:
-      template: "https://github.com/kagi-labs/agentnyk-maisternia/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      template: "https://github.com/riidii-md/agentnyk-maisternia/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
       using: MaisterniaGitHubPrivateRepositoryReleaseDownloadStrategy

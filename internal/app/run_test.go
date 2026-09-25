@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/hookpacks"
+	"github.com/riidii-md/agentnyk-maisternia/internal/providers"
+	"github.com/riidii-md/agentnyk-maisternia/internal/workflow"
 )
 
 func TestRunDoctorAndPlan(t *testing.T) {

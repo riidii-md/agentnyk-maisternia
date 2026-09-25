@@ -3,8 +3,8 @@ package collections
 import (
 	"fmt"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
 )
 
 func SelectManifest(

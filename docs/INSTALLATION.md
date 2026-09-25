@@ -3,10 +3,12 @@
 AgentnykMaisternia is pre-release. Building from the public source repository is
 the supported installation method today.
 
-Homebrew, GitHub release archives, and `go install ...@latest` are not available
-yet. The project has no tagged release or public Homebrew tap, and its Go module
-and release metadata still need to move from the former repository namespace.
-Older commands that reference `kagi-labs` are obsolete.
+Homebrew and GitHub release archives are not available yet because the project
+has no tagged release or public `riidii-md` Homebrew tap. The project does not
+support `go install ...@latest` until its first tagged release. The Go module,
+internal imports, and release metadata already use the current repository
+namespace. Older commands that reference the former Maisternia repository
+namespace are obsolete.
 
 ## Requirements
 
@@ -203,13 +205,16 @@ maisternia config clear-repository
 
 ## Package availability
 
-Do not substitute `riidii-md` into old Homebrew or `go install` examples. Those
-commands become valid only after all of the following are complete:
+Do not treat Homebrew or `go install` as supported distribution paths yet.
+They become supported only after all of the following are complete:
 
-1. the Go module and internal import paths use the current repository namespace;
-2. release metadata targets the current repository;
-3. a tagged release publishes archives and checksums;
-4. a public Homebrew tap exists and receives a working cask.
+1. a tagged release publishes archives and checksums;
+2. Go proxy publication makes the tagged module available to `go install`;
+3. a public Homebrew tap exists and receives a working cask.
+
+The module path, internal imports, and release metadata already target
+`github.com/riidii-md/agentnyk-maisternia`; those namespace migration steps are
+complete.
 
 The [project status](../README.md#project-status) is the user-facing source of
 truth for availability.

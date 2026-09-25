@@ -108,7 +108,7 @@
     ],
     "hooks": [],
     "settings": [
-      "review-policy", "review-report-schema", "work-routing-profile-schema",
+      "design-graph-policy", "review-policy", "review-report-schema", "work-routing-profile-schema",
       "approval-policy",
       "git-workflow-approvals-codex-rules",
       "git-workflow-approvals-claude-permissions",

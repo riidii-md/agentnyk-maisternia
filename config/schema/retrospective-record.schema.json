@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kagi-labs/agentnyk-maisternia/config/schema/retrospective-record.schema.json",
+  "$id": "https://github.com/riidii-md/agentnyk-maisternia/config/schema/retrospective-record.schema.json",
   "title": "AgentnykMaisternia retrospective record",
   "type": "object",
   "additionalProperties": false,
