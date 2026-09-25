@@ -943,6 +943,71 @@ func TestRepositoryStandardWorkHumanDecisionContract(t *testing.T) {
 	}
 }
 
+func TestRepositoryDirectionDecisionReadabilityContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/direction.md": {
+			"Select The Simplest Complete Representation",
+			"strongly weighted default",
+			"architecture view",
+			"`sequenceDiagram`",
+			"table or structured prose",
+			"not a diagram quota",
+			"record why",
+			"directly inspectable",
+			"decision readiness",
+			"reading effort",
+			"Word-count reduction is secondary",
+		},
+		"config/workflow/phases/plan-review.md": {
+			"Finalize The Reviewed Direction For Its Reader",
+			"strongly weighted defaults",
+			"architecture view",
+			"`sequenceDiagram`",
+			"table or structured prose",
+			"not a diagram-count target",
+			"facts, decisions, evidence, uncertainty",
+			"constraints, alternatives",
+			"risks, interfaces, and open questions",
+			"decision readiness, completeness, and reading effort",
+			"before computing its content hash",
+		},
+		"docs/ARCHITECTURAL-DIRECTION.md": {
+			"strongly weighted",
+			"architecture",
+			"sequence",
+			"table or structured prose",
+			"decision readiness",
+			"completeness",
+			"reading effort",
+		},
+	}
+
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if issue := requiredFragmentsIssue(string(content), required); issue != "" {
+			t.Errorf("%s: %s", relative, issue)
+		}
+	}
+
+	directionReview, err := os.ReadFile(filepath.Join(root, "config/workflow/phases/plan-review.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if issue := orderedFragmentsIssue(string(directionReview), []string{
+		"## Report And Apply",
+		"## Finalize The Reviewed Direction For Its Reader",
+		"## Build The Visual Plan Review",
+	}); issue != "" {
+		t.Error(issue)
+	}
+}
+
 func repositoryTargetCount(resource configurator.Resource) int {
 	if strings.HasPrefix(resource.ID, "work-") &&
 		resource.ID != "work-routing-skill" &&

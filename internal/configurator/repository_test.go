@@ -539,7 +539,12 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 		"--request-message",
 		"mdmaid-desk review wait <review-id> --json",
 		"keep the current agent turn open",
-		"poll or resume that same process until it exits",
+		"one long-lived foreground waiter",
+		"longest supported blocking interval",
+		"resume that same process or session until it exits",
+		"Do not start a replacement waiter",
+		"state changes",
+		"10–15 minute heartbeat",
 		"Do not return a final response while the review is pending",
 		"surface the received outcome and human response text immediately",
 		"changes_requested",
@@ -552,6 +557,9 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 		if !strings.Contains(content, snippet) {
 			t.Errorf("readable-output skill is missing %q", snippet)
 		}
+	}
+	if count := strings.Count(content, "mdmaid-desk review wait <review-id> --json"); count != 1 {
+		t.Errorf("readable-output skill has %d review wait commands, want exactly one", count)
 	}
 
 	validation := strings.Index(content, "mdmaid validate <artifact.md> --json")

@@ -118,7 +118,11 @@ explicit `plan-decision` request. Passive documents
 still have no workflow actions. The producer records the request ID and exact
 revision, keeps its current agent turn open on the foreground waiter, and
 receives both the human outcome and response text. A yielded execution-process
-ID must be resumed until completion; it is not a reason to finish the turn.
+ID must be resumed until completion with the longest harness-supported blocking
+interval; it is not a reason to finish the turn. The producer keeps one
+long-lived foreground waiter, never starts a replacement or nested waiter, and
+reports state changes rather than narrating unchanged polls. When a harness
+requires visible liveness, it may emit at most a coarse 10–15 minute heartbeat.
 `waiting_for_approval` is an intermediate status only. As soon as the waiter
 returns, the producer surfaces the decision and text and continues the mapped
 workflow without requiring another chat message. Presentation, opening, and
