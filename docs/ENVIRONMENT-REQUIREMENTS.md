@@ -59,6 +59,29 @@ npm install --global mdmaid@0.1.17
 npm install --global mdmaid-desk@0.1.19
 ```
 
+The environment-only `maintainability-review-tools` preset references the
+`maintainability-review` pack. It pins jscpd `5.3.2` through npm for canonical
+maintainability implementation reviews:
+
+```bash
+npm install --global jscpd@5.3.2
+```
+
+Registry metadata records the wrapper and its eight platform-specific optional
+packages at the same version under the MIT license, with no ordinary runtime
+dependencies. The wrapper requires Node.js 18 or newer for npm installation and
+ships a self-contained runtime binary. Its recorded npm integrity is
+`sha512-siYdg3TBNwizWFaYPgr1vwuSs+NWeKJjLAbd00Nkmr2y8TSZRSW0cOGKtqSLgOv7QXDbC/XECnCrZEm5v6RMkg==`.
+Review the [official package](https://www.npmjs.com/package/jscpd),
+[source](https://github.com/kucherenko/jscpd), and license before changing the
+pin. A future upgrade must repeat version, license, platform-package, integrity,
+and compatibility review.
+
+Environment detection remains presence-based. The review workflow separately
+checks `jscpd --version` and accepts only `5.3.2` under the default policy; it
+never installs, upgrades, or replaces the command itself. GitNexus stays in the
+existing `developer-context` pack rather than being duplicated.
+
 The two plugin sources are pinned to immutable Git commit SHAs. Installation
 does not invent their configuration: Herdr Bar still needs a chosen key binding,
 and Automatic Rename's optional shell hook remains an explicit shell
@@ -72,6 +95,7 @@ List and inspect the library:
 maisternia environment list
 maisternia environment show terminal-orchestration
 maisternia environment show change-explanation
+maisternia environment show maintainability-review
 maisternia environment validate all
 ```
 
@@ -80,6 +104,7 @@ Build a plan for the current machine:
 ```bash
 maisternia environment plan terminal-orchestration
 maisternia environment plan change-explanation
+maisternia environment plan maintainability-review
 maisternia preset plan terminal-orchestration
 ```
 
@@ -108,6 +133,15 @@ maisternia environment plan terminal-orchestration
 maisternia preset apply --yes terminal-orchestration
 # Equivalent direct pack command:
 maisternia environment install --yes terminal-orchestration
+```
+
+For maintainability review tooling specifically:
+
+```bash
+maisternia environment plan maintainability-review
+maisternia preset apply --yes maintainability-review-tools
+# Equivalent direct pack command:
+maisternia environment install --yes maintainability-review
 ```
 
 Without `--yes`, `install` prints the exact plan and exits without running a

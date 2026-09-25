@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "id": "exact-clone-introduced-by-diff",
+      "evidence_rule": "Preserve exact-clone provenance, both locations, the changed-code intersection, base comparison, and behavior evidence before judgment.",
+      "expected_outcome": "candidate"
+    },
+    {
+      "id": "changed-block-duplicates-unchanged-code",
+      "evidence_rule": "Compare the changed fragment with the unchanged implementation and inspect callers, ownership, behavior, and reuse impact.",
+      "expected_outcome": "candidate"
+    },
+    {
+      "id": "renamed-clone",
+      "evidence_rule": "Record identifier and literal normalization as renamed-clone provenance without claiming semantic equivalence.",
+      "expected_outcome": "candidate"
+    },
+    {
+      "id": "near-miss-remains-uncertain",
+      "evidence_rule": "Keep bounded gap or AST similarity separate from repeated responsibility and safe consolidation when counterevidence is incomplete.",
+      "expected_outcome": "unknown"
+    },
+    {
+      "id": "similar-different-error-or-side-effect",
+      "evidence_rule": "Refute consolidation when actual error behavior, ordering, or side effects differ despite textual or structural similarity.",
+      "expected_outcome": "refuted"
+    },
+    {
+      "id": "intentional-ownership-boundary-duplication",
+      "evidence_rule": "Retain duplication when sharing would violate a real ownership, deployment, package, module, or layer boundary.",
+      "expected_outcome": "retain"
+    },
+    {
+      "id": "validation-separated-by-trust-boundary",
+      "evidence_rule": "Retain repeated validation when distinct trust, mutation, serialization, or caller-controlled boundaries require it.",
+      "expected_outcome": "retain"
+    },
+    {
+      "id": "existing-helper-is-safer",
+      "evidence_rule": "Prefer the established helper only after its contract, callers, errors, ownership, and blast radius prove it is the smaller safe treatment.",
+      "expected_outcome": "candidate"
+    },
+    {
+      "id": "repeated-tests-have-distinct-value",
+      "evidence_rule": "Retain similar tests that preserve a distinct boundary, oracle, fidelity level, contract owner, failure class, or diagnostic signal.",
+      "expected_outcome": "retain"
+    },
+    {
+      "id": "generated-and-vendored-exclusions",
+      "evidence_rule": "Exclude only confirmed generated, vendored, cache, build, minified, or snapshot surfaces and record exclusion coverage.",
+      "expected_outcome": "excluded"
+    },
+    {
+      "id": "mixed-language-repository",
+      "evidence_rule": "Discover and record analyzer support, configuration, coverage, and unsupported surfaces for every materially affected language.",
+      "expected_outcome": "verified"
+    },
+    {
+      "id": "ambiguous-gitnexus-symbol",
+      "evidence_rule": "Preserve all candidate symbol identities and require disambiguation rather than guessing a relationship target.",
+      "expected_outcome": "unknown"
+    },
+    {
+      "id": "stale-or-partial-gitnexus-index",
+      "evidence_rule": "Mark relationship evidence stale or partial and never treat an absent edge as proof of absence.",
+      "expected_outcome": "unknown"
+    },
+    {
+      "id": "jscpd-unavailable-timeout-malformed-or-empty",
+      "evidence_rule": "Distinguish unavailable, timeout, malformed output, zero applicable files, and a valid scan with zero candidates in analyzer status and coverage.",
+      "expected_outcome": "unknown"
+    },
+    {
+      "id": "report-only-preserves-source",
+      "evidence_rule": "Write task-owned evidence and proposed fixes while proving that reviewed source, tests, configuration, and contributor branches were not modified.",
+      "expected_outcome": "verified"
+    },
+    {
+      "id": "repair-reruns-analysis-and-verification",
+      "evidence_rule": "After a confirmed coordinator-owned fix, create a new snapshot, rerun affected analyzer passes, and complete repository verification.",
+      "expected_outcome": "verified"
+    },
+    {
+      "id": "one-snapshot-reused-across-reviewers",
+      "evidence_rule": "Reuse one immutable result per selected pass and snapshot across parallel read-only reviewers and preserve truncation metadata.",
+      "expected_outcome": "verified"
+    },
+    {
+      "id": "schema-compatibility-for-older-consumers",
+      "evidence_rule": "Preserve established field meanings, emit schema version 5 for analyzer fields, and require consumers to branch on schema_version without rewriting old artifacts.",
+      "expected_outcome": "verified"
+    }
+  ]
+}

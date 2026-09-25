@@ -19,8 +19,8 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Packs) != 5 {
-		t.Fatalf("pack count = %d, want 5", len(library.Packs))
+	if len(library.Packs) != 6 {
+		t.Fatalf("pack count = %d, want 6", len(library.Packs))
 	}
 	if library.Root() != repositoryRoot(t) {
 		t.Fatalf("library root = %q, want %q", library.Root(), repositoryRoot(t))
@@ -86,6 +86,39 @@ func TestRepositoryEnvironmentLibraryIsValid(t *testing.T) {
 			requirement.Installers[0].Ref != want.ref {
 			t.Errorf("%s = %#v, want plugin %s from %s@%s", requirementID, requirement, want.pluginID, want.repository, want.ref)
 		}
+	}
+}
+
+func TestRepositoryMaintainabilityReviewEnvironmentPack(t *testing.T) {
+	t.Parallel()
+
+	library, err := LoadLibrary(repositoryRoot(t))
+	if err != nil {
+		t.Fatalf("LoadLibrary() error = %v", err)
+	}
+	pack, found := library.Get("maintainability-review")
+	if !found {
+		t.Fatal("maintainability-review environment pack missing")
+	}
+	if len(pack.Requirements) != 1 {
+		t.Fatalf("requirements = %d, want 1", len(pack.Requirements))
+	}
+	jscpd, found := pack.Requirement("jscpd")
+	if !found {
+		t.Fatal("maintainability-review jscpd requirement missing")
+	}
+	if !jscpd.Required ||
+		jscpd.Detect.Command != "jscpd" ||
+		!slices.Equal(jscpd.Provides, []string{"duplication-analysis"}) ||
+		len(jscpd.Installers) != 1 {
+		t.Fatalf("jscpd requirement = %#v", jscpd)
+	}
+	installer := jscpd.Installers[0]
+	if installer.Kind != InstallerNPMGlobal ||
+		installer.Package != "jscpd" ||
+		installer.Version != "5.3.2" ||
+		!slices.Equal(installer.Platforms, []string{"darwin", "linux", "windows"}) {
+		t.Fatalf("jscpd installer = %#v", installer)
 	}
 }
 

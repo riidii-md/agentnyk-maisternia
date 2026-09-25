@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with implementation repair or report-only disposition, an optional behavior-preserving maintainability profile, and independent refutation.
-version: 0.6.0
+version: 0.7.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -330,6 +330,101 @@ support. Preserve `unknown` instead of inventing certainty. Record every
 selected command, why it applies, and its result so execution remains
 reproducible even when context discovery is uncertain.
 
+### Collect Supplementary Maintainability Evidence
+
+For the maintainability profile, bind the resolved target, base revision, head
+revision, worktree state, changed paths, repository rules, and analyzer
+configuration into one immutable review snapshot. Discover approved jscpd and
+the existing repository-bounded GitNexus capability. Run each selected external
+analysis pass at most once per review snapshot and share its immutable evidence
+with the read-only lenses; do not let parallel reviewers rerun it. A repair that
+changes relevant source creates a new snapshot and invalidates only the affected
+passes.
+
+The default requirement for both analyzers is `advisory`. Repository-owned
+policy may set a tool to `disabled` or `required`. Record a complete
+`analysis_tool_evidence` entry for jscpd and GitNexus even when a tool is
+disabled, unavailable, partial, failed, or stale. When an advisory tool is
+unavailable, continue with repository evidence and preserve the limitation. A
+required unavailable or failed tool makes every affected inspection `unknown`
+and blocks a maintainability pass. Distinguish a valid scan with zero candidates
+from a failed scan or one that analyzed zero applicable files.
+
+#### jscpd adapter
+
+Use only the approved `jscpd` executable at version `5.3.2`. Resolve it from the
+current environment, run `jscpd --version`, and record the executable, exact
+version, and configuration identity before analysis. A missing or different
+version is unavailable evidence under the default policy; never install,
+upgrade, or replace it during review.
+
+Prefer a committed `.jscpd.json` or another repository-owned supported config.
+Otherwise create invocation configuration only beneath
+`.agent-runs/reviews/<run-id>/evidence/jscpd/`. Respect `.gitignore`, repository
+rules, and confirmed generated, vendored, cache, build, minified, and snapshot
+surfaces. Do not exclude tests merely because they repeat code. Do not follow
+symlinks unless repository rules and explicit authorization make that safe.
+
+Collect bounded JSON evidence for the selected passes: exact clones;
+identifier/literal-normalized renamed clones; explicitly enabled gap or AST
+near-miss similarity where the installed version and language support it;
+complexity; and language-supported dead-code candidates. Near-miss passes are
+off by default. Use compact AI output only for bounded diagnostics; JSON is the
+deterministic ingestion source. Use `--baseline-from-ref` only when the resolved
+base exists locally, and never fetch during review. Preserve native clone kind,
+method, score, source locations, exclusions, warnings, and counts. A project
+duplication threshold or health score is never a finding or gate.
+
+Apply a bounded timeout and evidence budget to each pass. Treat timeout,
+malformed or missing JSON, non-zero execution, unsupported capability, and zero
+applicable files as distinct states. Store raw and normalized task-owned
+artifacts under the evidence directory and bound any copied source excerpts.
+Parsing reviewed source does not authorize executing repository tests, builds,
+scripts, hooks, generators, package lifecycle steps, or binaries.
+
+#### GitNexus enrichment
+
+Reuse the existing GitNexus installation, MCP/CLI policy, repository allowlist,
+and index; never create a second graph. Before querying, record repository
+identity, snapshot correspondence, index freshness, supported relationships,
+and excluded, unresolved, or failed surfaces. A stale index is `stale` evidence,
+not a clean result. Do not refresh it by running untrusted code, downloading
+dependencies, accessing the network, or writing outside authorized index
+locations.
+
+For each bounded candidate, request only the enclosing and related symbols,
+material direct or bounded transitive callers and callees, imports,
+dependencies, inheritance, implementations, processes or routes, related tests,
+related implementations, and change impact needed to judge the proposed
+treatment. Prefer stable symbol identities. When resolution is ambiguous,
+record the candidate identities and missing evidence instead of guessing. A
+missing edge never proves that no caller, implementation, side effect, or
+runtime path exists.
+
+#### Correlate candidates
+
+Group overlapping analyzer matches into stable snapshot-local candidate
+families and cap both family count and locations per family. Preserve omitted
+counts and the reason for truncation. Prioritize families that intersect changed
+code, match an unchanged implementation, cross an ownership or layer boundary,
+contain material validation, authorization, persistence, serialization, error,
+or decision logic, reveal an existing reusable helper, or combine several weak
+signals into a concrete risk.
+
+For comparison candidates, record similarity, repeated responsibility, and
+safe to share as independent judgments. Exact or normalized similarity does not
+prove repeated knowledge; repeated responsibility does not prove that sharing
+preserves behavior, errors, ordering, ownership, security, compatibility, or
+coupling. Complexity and dead-code candidates use `not-applicable` for judgments
+that do not apply and never invent a comparison target.
+
+Write every reviewed family to `maintainability_candidates` with its signals,
+relationships, counterevidence, missing evidence, treatment, and links to any
+canonical finding IDs. Supply bounded packets to `simplicity-dry`,
+`architecture`, `consistency`, `correctness`, `diff-analysis`, and
+`test-review-bundle` as applicable. Tool candidates remain signals until the
+normal lens evidence standard and independent refutation confirm a finding.
+
 After establishing the behavior contract, evaluate simplifications in this
 order and stop at the first behavior-preserving option that fully satisfies it:
 
@@ -464,8 +559,11 @@ within approved scope:
 
 Critical and High findings are blocking. Run focused checks after each repair
 group, then repository-required final verification. Re-run affected lenses when
-a fix materially changes behavior. Gate status is `pass` only when confirmed
-fixes are applied and checks pass; otherwise return `fail` or `blocked`.
+a fix materially changes behavior. For the maintainability profile, also rerun
+the affected analyzer passes against the repaired snapshot and preserve both
+the original and replacement evidence identities. Gate status is `pass` only
+when confirmed fixes are applied and checks pass; otherwise return `fail` or
+`blocked`.
 
 Under report-only disposition, do not apply fixes. Mark every confirmed
 finding's `applied_fixes` entry `not-applicable` with `report-only disposition`
@@ -484,5 +582,8 @@ provider/model attribution, selected profile (`standard` or
 (`repair` or `report-only`), selected `test_review_mode`, and the test-evidence
 matrix for implementation reviews. Include `test_authoring_gates`,
 `test_audit_candidates`, and `test_campaign` when their modes require them, the
-maintainability-inspection matrix when that profile is selected, and gate
-status.
+maintainability-inspection matrix when that profile is selected, the
+`analysis_tool_evidence` and `maintainability_candidates` collections, and gate
+status. Link confirmed candidates to canonical findings, fixes through finding
+IDs, test evidence, inspections, and independent verification without allowing
+raw analyzer output to bypass the canonical report.

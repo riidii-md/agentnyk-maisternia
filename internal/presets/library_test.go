@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 21 {
-		t.Fatalf("preset count = %d, want 21", len(library.Presets))
+	if len(library.Presets) != 22 {
+		t.Fatalf("preset count = %d, want 22", len(library.Presets))
 	}
 	for _, removedID := range []string{
 		"hook-safety",
@@ -186,6 +186,15 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !changeTools.IsEnvironmentOnly() ||
 		!slices.Equal(changeTools.EnvironmentPacks, []string{"change-explanation"}) {
 		t.Errorf("change-explanation-tools preset = %#v", changeTools)
+	}
+	maintainabilityTools, found := library.Get("maintainability-review-tools")
+	if !found {
+		t.Fatal("maintainability-review-tools preset missing")
+	}
+	if !maintainabilityTools.IsEnvironmentOnly() ||
+		!slices.Equal(maintainabilityTools.EnvironmentPacks, []string{"maintainability-review"}) ||
+		len(maintainabilityTools.Targets) != 0 {
+		t.Errorf("maintainability-review-tools preset = %#v", maintainabilityTools)
 	}
 	for _, resourceID := range []string{
 		"approval-policy",
@@ -1981,7 +1990,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
-			"runtime-invariant-placement", "maintainability_inspections", "version 4",
+			"runtime-invariant-placement", "maintainability_inspections", "schema version 5",
 			"authoring", "audit", "campaign", "test-only production seams",
 		},
 		"docs/TEST-REVIEW.md": {
@@ -2073,8 +2082,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
 	}
-	if reportSchema.Properties.SchemaVersion.Const != 4 {
-		t.Fatalf("review report schema version = %d, want 4", reportSchema.Properties.SchemaVersion.Const)
+	if reportSchema.Properties.SchemaVersion.Const != 5 {
+		t.Fatalf("review report schema version = %d, want 5", reportSchema.Properties.SchemaVersion.Const)
 	}
 	if reportSchema.Properties.MaintainabilityInspections.Type != "array" {
 		t.Fatalf("review report maintainability_inspections type = %q", reportSchema.Properties.MaintainabilityInspections.Type)

@@ -338,6 +338,306 @@ func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	}
 }
 
+func TestRepositoryMaintainabilityAnalysisContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "config", "workflow", "review-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		Profiles struct {
+			Maintainability struct {
+				AnalysisTools struct {
+					Requirements  []string `json:"requirements"`
+					DefaultMode   string   `json:"default_mode"`
+					Statuses      []string `json:"statuses"`
+					SnapshotReuse struct {
+						Immutable             bool `json:"immutable"`
+						OncePerPass           bool `json:"once_per_pass"`
+						InvalidateAfterRepair bool `json:"invalidate_after_repair"`
+					} `json:"snapshot_reuse"`
+					Budgets struct {
+						MaxCandidateFamilies      int `json:"max_candidate_families"`
+						MaxLocationsPerFamily     int `json:"max_locations_per_family"`
+						MaxExcerptBytes           int `json:"max_excerpt_bytes"`
+						GitNexusMaxTraversalDepth int `json:"gitnexus_max_traversal_depth"`
+						TimeoutSeconds            int `json:"timeout_seconds"`
+					} `json:"budgets"`
+					JSCPD struct {
+						Requirement       string   `json:"requirement"`
+						Executable        string   `json:"executable"`
+						ApprovedVersion   string   `json:"approved_version"`
+						Configuration     []string `json:"configuration"`
+						LanguageScope     string   `json:"language_scope"`
+						Exclusions        []string `json:"exclusions"`
+						Passes            []string `json:"passes"`
+						NearMissDefault   string   `json:"near_miss_default"`
+						ComplexityDefault string   `json:"complexity_default"`
+						DeadCodeDefault   string   `json:"dead_code_default"`
+						BaseRef           string   `json:"base_ref"`
+						Artifact          string   `json:"artifact"`
+						Rules             []string `json:"rules"`
+					} `json:"jscpd"`
+					GitNexus struct {
+						Requirement   string   `json:"requirement"`
+						Reuse         string   `json:"reuse"`
+						Relationships []string `json:"relationships"`
+						Rules         []string `json:"rules"`
+					} `json:"gitnexus"`
+					FailureBehavior struct {
+						Advisory            string `json:"advisory"`
+						Required            string `json:"required"`
+						ZeroApplicableFiles string `json:"zero_applicable_files"`
+					} `json:"failure_behavior"`
+				} `json:"analysis_tools"`
+			} `json:"maintainability"`
+		} `json:"profiles"`
+	}
+	if err := json.Unmarshal(data, &policy); err != nil {
+		t.Fatal(err)
+	}
+	tools := policy.Profiles.Maintainability.AnalysisTools
+	if !slices.Equal(tools.Requirements, []string{"disabled", "advisory", "required"}) ||
+		tools.DefaultMode != "advisory" ||
+		!slices.Equal(tools.Statuses, []string{"complete", "partial", "unavailable", "failed", "stale"}) {
+		t.Fatalf("analysis tool modes = %#v", tools)
+	}
+	if !tools.SnapshotReuse.Immutable || !tools.SnapshotReuse.OncePerPass || !tools.SnapshotReuse.InvalidateAfterRepair {
+		t.Fatalf("snapshot reuse = %#v", tools.SnapshotReuse)
+	}
+	if tools.Budgets.MaxCandidateFamilies <= 0 ||
+		tools.Budgets.MaxLocationsPerFamily <= 0 ||
+		tools.Budgets.MaxExcerptBytes <= 0 ||
+		tools.Budgets.GitNexusMaxTraversalDepth <= 0 ||
+		tools.Budgets.TimeoutSeconds <= 0 {
+		t.Fatalf("analysis budgets = %#v", tools.Budgets)
+	}
+	if tools.JSCPD.Requirement != "advisory" ||
+		tools.JSCPD.Executable != "jscpd" ||
+		tools.JSCPD.ApprovedVersion != "5.3.2" ||
+		!slices.Equal(tools.JSCPD.Configuration, []string{"repository-owned", "task-owned-generated"}) ||
+		tools.JSCPD.LanguageScope != "discovered-repository-supported" ||
+		len(tools.JSCPD.Exclusions) == 0 ||
+		!slices.Equal(tools.JSCPD.Passes, []string{
+			"exact", "normalized", "near-miss-gap", "near-miss-ast", "complexity", "dead-code",
+		}) ||
+		tools.JSCPD.NearMissDefault != "disabled" ||
+		tools.JSCPD.ComplexityDefault != "enabled-when-supported" ||
+		tools.JSCPD.DeadCodeDefault != "enabled-when-supported" ||
+		tools.JSCPD.BaseRef != "resolved-review-base" ||
+		tools.JSCPD.Artifact != "evidence/jscpd" ||
+		len(tools.JSCPD.Rules) == 0 {
+		t.Fatalf("jscpd policy = %#v", tools.JSCPD)
+	}
+	if tools.GitNexus.Requirement != "advisory" ||
+		tools.GitNexus.Reuse != "existing-repository-bounded-index" ||
+		len(tools.GitNexus.Relationships) == 0 ||
+		len(tools.GitNexus.Rules) == 0 {
+		t.Fatalf("GitNexus policy = %#v", tools.GitNexus)
+	}
+	if tools.FailureBehavior.Advisory != "record-and-continue" ||
+		tools.FailureBehavior.Required != "mark-unknown-and-block" ||
+		tools.FailureBehavior.ZeroApplicableFiles != "record-distinct-from-zero-candidates" {
+		t.Fatalf("analysis failure behavior = %#v", tools.FailureBehavior)
+	}
+
+	data, err = os.ReadFile(filepath.Join(root, "config", "schema", "review-report.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Properties  map[string]json.RawMessage `json:"properties"`
+		Definitions map[string]json.RawMessage `json:"$defs"`
+		AllOf       []struct {
+			If struct {
+				Properties struct {
+					Profile struct {
+						Const string `json:"const"`
+					} `json:"profile"`
+				} `json:"properties"`
+			} `json:"if"`
+			Then struct {
+				Required []string `json:"required"`
+			} `json:"then"`
+		} `json:"allOf"`
+	}
+	if err := json.Unmarshal(data, &schema); err != nil {
+		t.Fatal(err)
+	}
+	var schemaVersion struct {
+		Const int `json:"const"`
+	}
+	if err := json.Unmarshal(schema.Properties["schema_version"], &schemaVersion); err != nil {
+		t.Fatal(err)
+	}
+	if schemaVersion.Const != 5 {
+		t.Fatalf("review schema version = %d, want 5", schemaVersion.Const)
+	}
+	for property, definition := range map[string]string{
+		"analysis_tool_evidence":     "analysisToolEvidence",
+		"maintainability_candidates": "maintainabilityCandidate",
+	} {
+		raw, found := schema.Properties[property]
+		if !found {
+			t.Errorf("review schema property %q missing", property)
+			continue
+		}
+		var array struct {
+			Type  string `json:"type"`
+			Items struct {
+				Ref string `json:"$ref"`
+			} `json:"items"`
+		}
+		if err := json.Unmarshal(raw, &array); err != nil {
+			t.Fatal(err)
+		}
+		if array.Type != "array" || array.Items.Ref != "#/$defs/"+definition {
+			t.Errorf("%s = %#v", property, array)
+		}
+	}
+	var evidenceArray struct {
+		AllOf []struct {
+			Contains struct {
+				Properties struct {
+					Producer struct {
+						Const string `json:"const"`
+					} `json:"producer"`
+				} `json:"properties"`
+			} `json:"contains"`
+		} `json:"allOf"`
+	}
+	if err := json.Unmarshal(schema.Properties["analysis_tool_evidence"], &evidenceArray); err != nil {
+		t.Fatal(err)
+	}
+	requiredProducers := map[string]bool{"jscpd": false, "gitnexus": false}
+	for _, condition := range evidenceArray.AllOf {
+		if _, found := requiredProducers[condition.Contains.Properties.Producer.Const]; found {
+			requiredProducers[condition.Contains.Properties.Producer.Const] = true
+		}
+	}
+	for producer, found := range requiredProducers {
+		if !found {
+			t.Errorf("analysis_tool_evidence does not require producer %q", producer)
+		}
+	}
+	for _, definition := range []string{
+		"analysisCoverage", "analysisToolEvidence", "maintainabilityLocation",
+		"maintainabilityRelationship", "maintainabilityJudgments", "maintainabilityCandidate",
+	} {
+		if _, found := schema.Definitions[definition]; !found {
+			t.Errorf("review schema definition %q missing", definition)
+		}
+	}
+	maintainabilityRequiresAnalysis := false
+	for _, condition := range schema.AllOf {
+		if condition.If.Properties.Profile.Const == "maintainability" &&
+			slices.Contains(condition.Then.Required, "analysis_tool_evidence") &&
+			slices.Contains(condition.Then.Required, "maintainability_candidates") {
+			maintainabilityRequiresAnalysis = true
+		}
+	}
+	if !maintainabilityRequiresAnalysis {
+		t.Error("maintainability reports do not require analyzer evidence and candidates")
+	}
+
+	contracts := map[string][]string{
+		"config/workflow/phases/review.md": {
+			"jscpd --version", "once per review snapshot", "baseline-from-ref",
+			"GitNexus", "ambiguous", "zero applicable files", "analysis_tool_evidence",
+			"maintainability_candidates", "similarity", "repeated responsibility", "safe to share",
+		},
+		"config/workflow/skills/multi-lens-review.md": {
+			"jscpd", "GitNexus", "once per review snapshot", "independent refutation",
+			"analysis_tool_evidence", "maintainability_candidates",
+		},
+		"docs/REVIEW-WORKFLOW.md": {
+			"jscpd", "GitNexus", "schema version 5", "advisory", "required",
+			"zero applicable files", "report-only",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, fragment := range required {
+			if !strings.Contains(string(content), fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+}
+
+func TestRepositoryMaintainabilityAnalysisScenarios(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(
+		repositoryRoot(t),
+		"internal", "workflow", "testdata", "maintainability-analysis-scenarios.json",
+	)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct {
+		SchemaVersion int `json:"schema_version"`
+		Scenarios     []struct {
+			ID              string `json:"id"`
+			EvidenceRule    string `json:"evidence_rule"`
+			ExpectedOutcome string `json:"expected_outcome"`
+		} `json:"scenarios"`
+	}
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	if fixture.SchemaVersion != 1 {
+		t.Fatalf("scenario schema version = %d, want 1", fixture.SchemaVersion)
+	}
+	wantIDs := []string{
+		"exact-clone-introduced-by-diff",
+		"changed-block-duplicates-unchanged-code",
+		"renamed-clone",
+		"near-miss-remains-uncertain",
+		"similar-different-error-or-side-effect",
+		"intentional-ownership-boundary-duplication",
+		"validation-separated-by-trust-boundary",
+		"existing-helper-is-safer",
+		"repeated-tests-have-distinct-value",
+		"generated-and-vendored-exclusions",
+		"mixed-language-repository",
+		"ambiguous-gitnexus-symbol",
+		"stale-or-partial-gitnexus-index",
+		"jscpd-unavailable-timeout-malformed-or-empty",
+		"report-only-preserves-source",
+		"repair-reruns-analysis-and-verification",
+		"one-snapshot-reused-across-reviewers",
+		"schema-compatibility-for-older-consumers",
+	}
+	gotIDs := make([]string, 0, len(fixture.Scenarios))
+	validOutcomes := map[string]bool{
+		"candidate": true,
+		"refuted":   true,
+		"retain":    true,
+		"unknown":   true,
+		"excluded":  true,
+		"verified":  true,
+	}
+	for _, scenario := range fixture.Scenarios {
+		gotIDs = append(gotIDs, scenario.ID)
+		if strings.TrimSpace(scenario.EvidenceRule) == "" {
+			t.Errorf("scenario %q has no evidence rule", scenario.ID)
+		}
+		if !validOutcomes[scenario.ExpectedOutcome] {
+			t.Errorf("scenario %q has invalid outcome %q", scenario.ID, scenario.ExpectedOutcome)
+		}
+	}
+	if !slices.Equal(gotIDs, wantIDs) {
+		t.Fatalf("scenario ids = %v, want %v", gotIDs, wantIDs)
+	}
+}
+
 func TestRepositoryReviewPhaseAuthorities(t *testing.T) {
 	t.Parallel()
 
