@@ -1,7 +1,7 @@
 ---
 name: work-ready
 description: Derive whether the reviewed and explicitly approved plan is safe to execute without inventing missing decisions.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work-ready - Implementation Readiness Gate
@@ -21,9 +21,10 @@ Check:
   conditional direction gate applied, or analysis records why it did not;
 - the final reviewed plan exists;
 - its scope, exclusions, tasks, and acceptance criteria are complete;
-- its affected-system design and task decomposition are sufficient for a fresh
-  executor to proceed without inventing material architecture, interfaces,
-  dependencies, or cross-component behavior;
+- its affected-system design, current and proposed implementation composition,
+  pattern decisions, and task decomposition are sufficient for a fresh executor
+  to proceed without inventing material architecture, interfaces, dependencies,
+  code responsibilities or collaborations, or cross-component behavior;
 - fixed decisions, open decisions, and permitted executor discretion are explicit;
 - required plan review passed;
 - the approved plan content hash matches the current plan;
