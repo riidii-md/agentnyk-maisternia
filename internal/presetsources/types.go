@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/collections"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
 )
 
 const SchemaVersion = 1

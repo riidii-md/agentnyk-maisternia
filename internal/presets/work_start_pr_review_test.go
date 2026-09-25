@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
 )
 
 func TestRepositoryWorkStartPRReviewIsInstalledByStandardWork(t *testing.T) {

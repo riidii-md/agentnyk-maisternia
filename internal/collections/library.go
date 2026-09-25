@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
 )
 
 const collectionDirectory = "config/collections"

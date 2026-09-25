@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/catalog"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
+	"github.com/riidii-md/agentnyk-maisternia/internal/catalog"
+	"github.com/riidii-md/agentnyk-maisternia/internal/settings"
 )
 
 type Selection struct {

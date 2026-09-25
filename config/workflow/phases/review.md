@@ -634,7 +634,7 @@ status. Link confirmed candidates to canonical findings, fixes through finding
 IDs, test evidence, inspections, and independent verification without allowing
 raw analyzer output to bypass the canonical report.
 
-The version 4 report must also record the execution mode, coordinator, worker
+The version 5 report must also record the execution mode, coordinator, worker
 identity and runtime, provider, assignments, waves, whether the scoped minimum
 was met, and any fallback reason. Each lens and candidate verification must
 reference its worker. Provider/model labels without distinct worker executions

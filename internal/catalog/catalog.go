@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	maisternia "github.com/kagi-labs/agentnyk-maisternia"
+	maisternia "github.com/riidii-md/agentnyk-maisternia"
 )
 
 const (

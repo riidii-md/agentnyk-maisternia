@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/approvals"
+	"github.com/riidii-md/agentnyk-maisternia/internal/approvals"
 )
 
 const approvalUsage = `Usage:

@@ -2,7 +2,7 @@
 
 GO ?= go
 BINARY := maisternia
-BUILDINFO := github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo
+BUILDINFO := github.com/riidii-md/agentnyk-maisternia/internal/buildinfo
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || echo unknown)

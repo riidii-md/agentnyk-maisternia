@@ -1,6 +1,6 @@
 package collections
 
-import "github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+import "github.com/riidii-md/agentnyk-maisternia/internal/presets"
 
 const (
 	SchemaVersion         = 1

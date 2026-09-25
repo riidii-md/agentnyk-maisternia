@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/providers"
+	"github.com/riidii-md/agentnyk-maisternia/internal/settings"
+	"github.com/riidii-md/agentnyk-maisternia/internal/workflow"
 )
 
 const configUsage = `Usage:

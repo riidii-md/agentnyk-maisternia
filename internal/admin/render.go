@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
 	"github.com/mattn/go-runewidth"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/environment"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/providers"
 )
 
 var (

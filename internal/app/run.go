@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/approvals"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/buildinfo"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/workflow"
+	"github.com/riidii-md/agentnyk-maisternia/internal/approvals"
+	"github.com/riidii-md/agentnyk-maisternia/internal/buildinfo"
+	"github.com/riidii-md/agentnyk-maisternia/internal/collections"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/environment"
+	"github.com/riidii-md/agentnyk-maisternia/internal/hookpacks"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presetsources"
+	"github.com/riidii-md/agentnyk-maisternia/internal/workflow"
 )
 
 const usage = `AgentnykMaisternia manages declarative configuration and workflows for CLI agents.

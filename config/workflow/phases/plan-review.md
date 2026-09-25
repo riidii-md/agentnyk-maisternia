@@ -146,7 +146,7 @@ Re-read the edited plan, rerun affected consistency and acceptance checks, and
 set the gate to `pass`, `fail`, or `blocked`. Write `review.md` and schema-valid
 `review.json` under `.agent-runs/reviews/<run-id>/`, including confirmed,
 refuted, applied, and blocked findings. A user-authorized sequential fallback
-uses `degraded`. The version 4 report also records coordinator, workers,
+uses `degraded`. The version 5 report also records coordinator, workers,
 assignments, waves, runtimes, scoped-minimum status, and fallback reason.
 
 ## Build The Visual Plan Review

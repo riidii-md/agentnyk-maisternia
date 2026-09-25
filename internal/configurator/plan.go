@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/providers"
+	"github.com/riidii-md/agentnyk-maisternia/internal/providers"
 )
 
 func BuildPlan(repoRoot, home string, manifest Manifest, targetAgent string) (Plan, error) {

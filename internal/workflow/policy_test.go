@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +10,55 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestRepositoryUsesCanonicalGitHubIdentity(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	const (
+		canonical = "github.com/riidii-md/agentnyk-maisternia"
+		legacy    = "github.com/" + "kagi-" + "labs/agentnyk-maisternia"
+	)
+
+	paths := []string{
+		filepath.Join(root, "go.mod"),
+		filepath.Join(root, "Makefile"),
+		filepath.Join(root, ".goreleaser.yml"),
+		filepath.Join(root, "docs", "RELEASING.md"),
+	}
+	for _, relative := range []string{"cmd", "internal", filepath.Join("config", "schema")} {
+		err := filepath.WalkDir(filepath.Join(root, relative), func(path string, entry fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !entry.IsDir() && (filepath.Ext(path) == ".go" || filepath.Ext(path) == ".json") {
+				paths = append(paths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, path := range paths {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(content), legacy) {
+			t.Errorf("%s still references legacy repository %q", path, legacy)
+		}
+	}
+
+	module, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(module), "module "+canonical+"\n") {
+		t.Errorf("go.mod does not declare canonical module %q", canonical)
+	}
+}
 
 func TestRepositoryPolicyIsValidAndTriggersAreReadOnly(t *testing.T) {
 	t.Parallel()
@@ -165,8 +215,8 @@ func TestRepositoryReviewPolicyRequiresIndependentAgentGraph(t *testing.T) {
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatal(err)
 	}
-	if schema.Properties.SchemaVersion.Const != 4 {
-		t.Errorf("review report schema version = %d, want 4", schema.Properties.SchemaVersion.Const)
+	if schema.Properties.SchemaVersion.Const != 5 {
+		t.Errorf("review report schema version = %d, want 5", schema.Properties.SchemaVersion.Const)
 	}
 	if !slices.Contains(schema.Required, "execution") ||
 		schema.Properties.Execution.Ref != "#/$defs/execution" {

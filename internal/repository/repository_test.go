@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/settings"
+	"github.com/riidii-md/agentnyk-maisternia/internal/settings"
 )
 
 func TestResolveUsesOverridesBeforeInstalledCatalog(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/admin"
+	"github.com/riidii-md/agentnyk-maisternia/internal/admin"
 )
 
 const adminUsage = `Usage:

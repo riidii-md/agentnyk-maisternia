@@ -15,11 +15,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/catalog"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/collections"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/catalog"
+	"github.com/riidii-md/agentnyk-maisternia/internal/collections"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/environment"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
 )
 
 type Manager struct {

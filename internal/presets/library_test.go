@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/configurator"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/environment"
+	"github.com/riidii-md/agentnyk-maisternia/internal/configurator"
+	"github.com/riidii-md/agentnyk-maisternia/internal/environment"
 )
 
 func TestRepositoryPresetLibraryIsValid(t *testing.T) {

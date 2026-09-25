@@ -272,7 +272,7 @@ finding in `applied_fixes` with status `not-applicable` and reason
 means that the review process completed, not that the implementation is
 approved or merge-ready.
 
-Write `review.md` and schema-valid version 4 `review.json` under
+Write `review.md` and schema-valid version 5 `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or

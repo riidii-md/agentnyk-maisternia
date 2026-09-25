@@ -1,4 +1,4 @@
-module github.com/kagi-labs/agentnyk-maisternia
+module github.com/riidii-md/agentnyk-maisternia
 
 go 1.25.8
 

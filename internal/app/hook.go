@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/hookpacks"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presets"
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
+	"github.com/riidii-md/agentnyk-maisternia/internal/hookpacks"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presets"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presetsources"
 )
 
 const hookUsage = `Usage:

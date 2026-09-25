@@ -3,7 +3,7 @@ package admin
 import (
 	"context"
 
-	"github.com/kagi-labs/agentnyk-maisternia/internal/presetsources"
+	"github.com/riidii-md/agentnyk-maisternia/internal/presetsources"
 )
 
 func (l Loader) AddPresetSource(location string) (presetsources.Source, error) {
