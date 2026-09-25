@@ -52,6 +52,27 @@ read-only reviewer pools and defaults to `parallel-verify`; it does not grant
 write authority. Keep native subagent selection local when no cross-provider
 route was resolved.
 
+Read the installed `review-policy` and run its bounded multi-agent graph. Build
+one immutable evidence packet and assign applicable lenses to independent
+read-only subject lanes before dispatch. Use native subagents for current-harness
+lanes whenever the harness exposes them; this is required rather than
+best-effort. Routed external workers fill the same graph and do not duplicate
+already assigned lanes. The
+coordinator owns intake, synthesis, repair, and final verification and must not
+also serve as a reviewer or verifier in a full review.
+
+Run workers in bounded waves using actual harness capacity. Full implementation,
+plan, and direction reviews require at least three independent reviewer workers;
+tests-only review requires at least two. Prefer coherent subject lanes for
+behavior/correctness, design/coherence, trust/runtime, change scope, test
+intent/risk, and test fidelity/economy. A worker may own related lenses in one
+lane, but unrelated subjects must not be collapsed merely to reduce calls.
+
+Never silently fall back to the coordinator. A failed advertised spawn records
+`multi-agent-incomplete` and blocks the review. Sequential execution requires
+explicit `--allow-degraded`, must be recorded as `degraded-sequential`, and ends
+with gate status `degraded`, never `pass`.
+
 For the `maintainability` profile, run all implementation lenses and add the
 `best-practices` lens. First state the behavior contract that must remain
 unchanged. Deepen `correctness`, `consistency`, `architecture`,
@@ -222,16 +243,18 @@ persistent baseline failures as possible product defects. A campaign report
 records `test_audit_candidates`, `test_campaign`, and production versus test
 and support line counts; deletion count is never a success metric.
 
-Run one read-only reviewer per required lens, in parallel when supported. Add
-domain lenses only when the affected surface warrants them. Every candidate
+Assign every required lens to a bounded independent read-only subject lane and
+run the lanes in parallel waves. Add domain lenses only when the affected
+surface warrants them. Every candidate
 finding needs concrete grounding such as `file:line`, a short verbatim quote,
 a reproducible command or test, or an authoritative document.
 
-With several routed harnesses, distribute lenses before dispatch and preserve
+With several routed harnesses, distribute lenses across the same graph before dispatch and preserve
 provider/model attribution. Prefer a verifier from a different selected harness
 than the finding origin. A model committee is evidence diversity, not proof.
 
-For every candidate, launch an independent verifier whose job is to refute it.
+For every candidate, launch an independent verifier worker, different from its
+originating reviewer, whose job is to refute it.
 The verifier must read the relevant code or plan and return explicit `is_real`
 and `grounded` booleans. Keep a finding only when both are true. Record what was
 refuted and why, then deduplicate and rank confirmed findings by severity.
@@ -249,7 +272,7 @@ finding in `applied_fixes` with status `not-applicable` and reason
 means that the review process completed, not that the implementation is
 approved or merge-ready.
 
-Write `review.md` and schema-valid `review.json` under
+Write `review.md` and schema-valid version 4 `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or
@@ -259,3 +282,7 @@ authoring reports include `test_authoring_gates`, audit reports include
 `test_audit_candidates`, campaign reports include `test_campaign`, and
 maintainability reports also include `maintainability_inspections`,
 `analysis_tool_evidence`, and `maintainability_candidates`.
+Every report records the execution mode,
+coordinator, distinct worker identities, runtimes, providers, assignments,
+waves, scoped-minimum result, and fallback reason. Each lens and verification
+references its worker.

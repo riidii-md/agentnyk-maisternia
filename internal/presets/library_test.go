@@ -197,6 +197,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		t.Errorf("maintainability-review-tools preset = %#v", maintainabilityTools)
 	}
 	for _, resourceID := range []string{
+		"design-graph-policy",
 		"approval-policy",
 		"git-workflow-approvals-codex-rules",
 		"git-workflow-approvals-claude-permissions",
@@ -222,6 +223,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if !slices.Contains(shape.Contents.Commands, "work-question") {
 		t.Error("idea-shaping is missing the work-question command")
+	}
+	if !slices.Contains(shape.Contents.Settings, "design-graph-policy") {
+		t.Error("idea-shaping is missing the design graph policy")
 	}
 	for _, resourceID := range []string{"work-scout", "work-analyze", "work-direction", "work-plan-review"} {
 		if !slices.Contains(shape.Contents.Commands, resourceID) {
@@ -1752,7 +1756,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 		Delegation struct {
 			RoutingContract                        string `json:"routing_contract"`
 			CrossProviderStrategy                  string `json:"cross_provider_strategy"`
-			NativeSubagentsAllowed                 bool   `json:"native_subagents_allowed"`
+			NativeSubagentsRequiredWhenSupported   bool   `json:"native_subagents_required_when_supported"`
 			PreferDifferentProviderForVerification bool   `json:"prefer_different_provider_for_verification"`
 			DelegatesReadOnly                      bool   `json:"delegates_read_only"`
 			CoordinatorOwnsFixes                   bool   `json:"coordinator_owns_fixes"`
@@ -1931,7 +1935,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	}
 	if policy.Delegation.RoutingContract != "work-routing" ||
 		policy.Delegation.CrossProviderStrategy != "parallel-verify" ||
-		!policy.Delegation.NativeSubagentsAllowed ||
+		!policy.Delegation.NativeSubagentsRequiredWhenSupported ||
 		!policy.Delegation.PreferDifferentProviderForVerification ||
 		!policy.Delegation.DelegatesReadOnly ||
 		!policy.Delegation.CoordinatorOwnsFixes {
@@ -1961,7 +1965,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"fail on the pre-fix", "primary owner", "test-only production seams",
 		},
 		"config/workflow/phases/review-simplify.md": {
-			"name: work-review-simplify", "version: 0.2.0", "$ARGUMENTS", "work-review",
+			"name: work-review-simplify", "version: 0.3.0", "$ARGUMENTS", "work-review",
 			"implementation", "maintainability", "thin alias", "inspection obligations", "read-only",
 		},
 		"config/workflow/phases/test-review.md": {

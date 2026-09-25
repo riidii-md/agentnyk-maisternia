@@ -1,7 +1,7 @@
 ---
 name: work-review-simplify
 description: Run the canonical implementation review with the behavior-preserving maintainability profile.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-review-simplify - Maintainability Review And Repair
@@ -42,6 +42,8 @@ after its delimiter:
 Preserve an explicit `--disposition repair` or
 `--disposition report-only`. `/work-start-pr-review` supplies report-only for
 PR publication so this specialization cannot edit a contributor branch.
+Preserve `--allow-degraded` only when the user explicitly supplied it; the
+alias inherits the canonical blocked fallback and degraded reporting rules.
 
 Require an implementation target under the same resolution rules as
 `work-review`. Do not reinterpret a plan as implementation work.

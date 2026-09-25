@@ -60,7 +60,7 @@
       "work-routing-skill", "work-routing-runners"
     ],
     "hooks": [],
-    "settings": ["work-routing-profile-schema"]
+    "settings": ["design-graph-policy", "work-routing-profile-schema"]
   },
   "targets": ["codex", "claude", "antigravity", "hermes"]
 }

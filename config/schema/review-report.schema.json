@@ -10,6 +10,7 @@
     "mode",
     "target",
     "base_ref",
+    "execution",
     "lenses",
     "findings",
     "applied_fixes",
@@ -27,6 +28,7 @@
     "test_review_mode": {"enum": ["review", "authoring", "audit", "campaign"]},
     "target": {"type": "string", "minLength": 1, "maxLength": 4096},
     "base_ref": {"type": ["string", "null"], "maxLength": 256},
+    "execution": {"$ref": "#/$defs/execution"},
     "lenses": {
       "type": "array",
       "minItems": 1,
@@ -114,7 +116,7 @@
       "items": {"$ref": "#/$defs/maintainabilityCandidate"}
     },
     "summary": {"$ref": "#/$defs/summary"},
-    "gate_status": {"enum": ["pass", "fail", "blocked"]}
+    "gate_status": {"enum": ["pass", "fail", "blocked", "degraded"]}
   },
   "$defs": {
     "provider": {
@@ -282,24 +284,79 @@
         }
       }
     },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "provider", "runtime", "assignments", "wave", "status"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
+        "role": {"enum": ["reviewer", "verifier"]},
+        "provider": {"$ref": "#/$defs/provider"},
+        "runtime": {"enum": ["native-subagent", "external-harness", "coordinator-degraded"]},
+        "assignments": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 128}
+        },
+        "wave": {"type": "integer", "minimum": 1},
+        "status": {"enum": ["complete", "failed", "unavailable"]}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "coordinator",
+        "workers",
+        "waves",
+        "minimum_independent_reviewers_met",
+        "fallback_reason"
+      ],
+      "properties": {
+        "mode": {"enum": ["multi-agent", "multi-agent-incomplete", "degraded-sequential"]},
+        "coordinator": {"type": "string", "minLength": 1, "maxLength": 256},
+        "workers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/worker"}
+        },
+        "waves": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"}
+          }
+        },
+        "minimum_independent_reviewers_met": {"type": "boolean"},
+        "fallback_reason": {"type": ["string", "null"], "maxLength": 4096}
+      }
+    },
     "lens": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "provider", "reviewer", "status"],
+      "required": ["id", "provider", "reviewer", "worker_id", "status"],
       "properties": {
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
         "provider": {"$ref": "#/$defs/provider"},
         "reviewer": {"type": "string", "minLength": 1, "maxLength": 256},
+        "worker_id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
         "status": {"enum": ["complete", "failed", "unavailable", "skipped"]}
       }
     },
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["verifier", "provider", "is_real", "grounded", "rationale", "evidence"],
+      "required": ["verifier", "provider", "worker_id", "independent_from", "is_real", "grounded", "rationale", "evidence"],
       "properties": {
         "verifier": {"type": "string", "minLength": 1, "maxLength": 256},
         "provider": {"$ref": "#/$defs/provider"},
+        "worker_id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
+        "independent_from": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
         "is_real": {"type": "boolean"},
         "grounded": {"type": "boolean"},
         "rationale": {"type": "string", "minLength": 1, "maxLength": 4096},
@@ -623,6 +680,28 @@
     },
     {
       "if": {
+        "properties": {
+          "execution": {
+            "properties": {"mode": {"const": "multi-agent-incomplete"}},
+            "required": ["mode"]
+          }
+        },
+        "required": ["execution"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "minimum_independent_reviewers_met": {"const": false},
+              "fallback_reason": {"type": "string", "minLength": 1}
+            }
+          },
+          "gate_status": {"const": "blocked"}
+        }
+      }
+    },
+    {
+      "if": {
         "properties": {"scope": {"const": "tests"}},
         "required": ["scope"]
       },
@@ -716,6 +795,57 @@
           }
         },
         "required": ["maintainability_inspections"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {"mode": {"const": "multi-agent"}},
+            "required": ["mode"]
+          }
+        },
+        "required": ["execution"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "workers": {
+                "minItems": 2,
+                "contains": {
+                  "properties": {"role": {"const": "reviewer"}},
+                  "required": ["role"]
+                },
+                "minContains": 2
+              },
+              "minimum_independent_reviewers_met": {"const": true},
+              "fallback_reason": {"type": "null"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {"mode": {"const": "degraded-sequential"}},
+            "required": ["mode"]
+          }
+        },
+        "required": ["execution"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "minimum_independent_reviewers_met": {"const": false},
+              "fallback_reason": {"type": "string", "minLength": 1}
+            }
+          },
+          "gate_status": {"const": "degraded"}
+        }
       }
     }
   ]

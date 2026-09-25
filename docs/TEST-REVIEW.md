@@ -140,6 +140,12 @@ The specialized review contains four evidence-grounded lenses:
 - `economy-maintainability`: redundant assurance, test logic and abstraction,
   determinism, runtime cost, isolation, diagnostics, and fixture safety.
 
+Tests-only review runs these through at least two independent read-only workers:
+one for intent/oracles plus risk/edge coverage, and another for level/fidelity
+plus economy/maintainability. Candidate findings go to a different verifier
+worker. A single-agent fallback requires explicit `--allow-degraded` and cannot
+produce a full passing review gate.
+
 Each candidate finding must include concrete repository evidence, the affected
 contract or risk, impact, the smallest proposed correction, and an executable
 verification method. An independent verifier attempts to refute it before it

@@ -99,6 +99,207 @@ func TestReviewReportSchemaSupportsDirectionMode(t *testing.T) {
 	}
 }
 
+func TestRepositoryReviewPolicyRequiresIndependentAgentGraph(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "config", "workflow", "review-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		MaxParallelReviewers int      `json:"max_parallel_reviewers"`
+		Modes                []string `json:"modes"`
+		Execution            struct {
+			Strategy                    string `json:"strategy"`
+			NativeSubagents             string `json:"native_subagents"`
+			MinimumIndependentReviewers int    `json:"minimum_independent_reviewers"`
+			LaneIsolationRequired       bool   `json:"lane_isolation_required"`
+			CoordinatorMayReview        bool   `json:"coordinator_may_review"`
+			SequentialFallback          string `json:"sequential_fallback"`
+			DegradedFlag                string `json:"degraded_flag"`
+			FullGateRequiresMultiAgent  bool   `json:"full_gate_requires_multi_agent"`
+		} `json:"execution"`
+		Verification struct {
+			OneVerifierPerCandidate        bool `json:"one_verifier_per_candidate"`
+			VerifierMustUseDifferentWorker bool `json:"verifier_must_use_different_worker"`
+		} `json:"verification"`
+	}
+	if err := json.Unmarshal(data, &policy); err != nil {
+		t.Fatal(err)
+	}
+	if policy.MaxParallelReviewers < 3 ||
+		!slices.Contains(policy.Modes, "direction") ||
+		policy.Execution.Strategy != "bounded-parallel-waves" ||
+		policy.Execution.NativeSubagents != "required-when-supported" ||
+		policy.Execution.MinimumIndependentReviewers < 3 ||
+		!policy.Execution.LaneIsolationRequired ||
+		policy.Execution.CoordinatorMayReview ||
+		policy.Execution.SequentialFallback != "explicit-opt-in" ||
+		policy.Execution.DegradedFlag != "--allow-degraded" ||
+		!policy.Execution.FullGateRequiresMultiAgent ||
+		!policy.Verification.OneVerifierPerCandidate ||
+		!policy.Verification.VerifierMustUseDifferentWorker {
+		t.Fatalf("review execution policy = %#v, verification = %#v", policy.Execution, policy.Verification)
+	}
+
+	data, err = os.ReadFile(filepath.Join(root, "config", "schema", "review-report.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Required   []string `json:"required"`
+		Properties struct {
+			SchemaVersion struct {
+				Const int `json:"const"`
+			} `json:"schema_version"`
+			Execution struct {
+				Ref string `json:"$ref"`
+			} `json:"execution"`
+			GateStatus struct {
+				Enum []string `json:"enum"`
+			} `json:"gate_status"`
+		} `json:"properties"`
+		Definitions map[string]json.RawMessage `json:"$defs"`
+	}
+	if err := json.Unmarshal(data, &schema); err != nil {
+		t.Fatal(err)
+	}
+	if schema.Properties.SchemaVersion.Const != 4 {
+		t.Errorf("review report schema version = %d, want 4", schema.Properties.SchemaVersion.Const)
+	}
+	if !slices.Contains(schema.Required, "execution") ||
+		schema.Properties.Execution.Ref != "#/$defs/execution" {
+		t.Errorf("review report execution contract = required %t, ref %q", slices.Contains(schema.Required, "execution"), schema.Properties.Execution.Ref)
+	}
+	if !slices.Contains(schema.Properties.GateStatus.Enum, "degraded") {
+		t.Errorf("review gate statuses = %v, want degraded", schema.Properties.GateStatus.Enum)
+	}
+	executionDefinition, found := schema.Definitions["execution"]
+	if !found {
+		t.Fatal("review report schema is missing execution definition")
+	}
+	var execution struct {
+		Required   []string                   `json:"required"`
+		Properties map[string]json.RawMessage `json:"properties"`
+	}
+	if err := json.Unmarshal(executionDefinition, &execution); err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{
+		"mode", "coordinator", "workers", "waves", "minimum_independent_reviewers_met", "fallback_reason",
+	} {
+		if !slices.Contains(execution.Required, field) {
+			t.Errorf("execution required fields = %v, missing %q", execution.Required, field)
+		}
+		if _, found := execution.Properties[field]; !found {
+			t.Errorf("execution properties are missing %q", field)
+		}
+	}
+	var executionMode struct {
+		Enum []string `json:"enum"`
+	}
+	if err := json.Unmarshal(execution.Properties["mode"], &executionMode); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(executionMode.Enum, []string{
+		"multi-agent", "multi-agent-incomplete", "degraded-sequential",
+	}) {
+		t.Errorf("execution modes = %v", executionMode.Enum)
+	}
+}
+
+func TestRepositoryDirectionAndPlanUseComplexityGatedAgentGraphs(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "config", "workflow", "design-graph-policy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var policy struct {
+		SchemaVersion int `json:"schema_version"`
+		Routing       struct {
+			ExternalWorkers string `json:"external_workers"`
+			DuplicateLanes  bool   `json:"duplicate_lanes"`
+		} `json:"routing"`
+		Graphs map[string]struct {
+			Activation              string   `json:"activation"`
+			CoordinatorOwnsArtifact bool     `json:"coordinator_owns_artifact"`
+			WorkersAreReadOnly      bool     `json:"workers_are_read_only"`
+			NativeSubagents         string   `json:"native_subagents"`
+			SpawnFailure            string   `json:"spawn_failure"`
+			Lanes                   []string `json:"lanes"`
+		} `json:"graphs"`
+	}
+	if err := json.Unmarshal(data, &policy); err != nil {
+		t.Fatal(err)
+	}
+	if policy.SchemaVersion != 1 {
+		t.Fatalf("design graph schema version = %d, want 1", policy.SchemaVersion)
+	}
+	if policy.Routing.ExternalWorkers != "fill-same-graph" || policy.Routing.DuplicateLanes {
+		t.Fatalf("design graph routing = %#v", policy.Routing)
+	}
+	wantLanes := map[string][]string{
+		"direction": {"boundaries-interfaces-trust", "constraints-migration-operations", "alternatives-tradeoffs"},
+		"plan":      {"code-impact", "verification-evidence", "delivery-risk-sequencing"},
+	}
+	for graphID, lanes := range wantLanes {
+		graph, found := policy.Graphs[graphID]
+		if !found {
+			t.Errorf("design graph policy is missing %q", graphID)
+			continue
+		}
+		if graph.Activation != "complexity-gated" ||
+			!graph.CoordinatorOwnsArtifact ||
+			!graph.WorkersAreReadOnly ||
+			graph.NativeSubagents != "required-when-supported" ||
+			graph.SpawnFailure != "ask-before-sequential" ||
+			!slices.Equal(graph.Lanes, lanes) {
+			t.Errorf("design graph %q = %#v, want lanes %v", graphID, graph, lanes)
+		}
+	}
+
+	workflowPolicy, err := LoadPolicy(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, phase := range []string{"direction", "plan"} {
+		capabilities, routing, err := workflowPolicy.Phase(phase)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Contains(capabilities.Optional, "subagent.spawn") {
+			t.Errorf("phase %q does not advertise subagent.spawn", phase)
+		}
+		if routing.Strategy != "complexity_gated_parallel_synthesis" {
+			t.Errorf("phase %q routing strategy = %q", phase, routing.Strategy)
+		}
+	}
+
+	contracts := map[string][]string{
+		"config/workflow/phases/direction.md": {
+			"complexity-gated agent graph", "boundaries-interfaces-trust", "single canonical writer", "ask before sequential fallback",
+		},
+		"config/workflow/phases/plan.md": {
+			"complexity-gated agent graph", "code-impact", "single canonical writer", "ask before sequential fallback",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		normalized := strings.Join(strings.Fields(string(content)), " ")
+		for _, fragment := range required {
+			if !strings.Contains(normalized, fragment) {
+				t.Errorf("%s is missing %q", relative, fragment)
+			}
+		}
+	}
+}
+
 func TestRepositoryReviewPolicyDefinesSpecializedTestReview(t *testing.T) {
 	t.Parallel()
 

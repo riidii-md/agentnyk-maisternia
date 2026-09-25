@@ -31,6 +31,24 @@ not approval.
 If drafting the direction exposes a boundary, evidence, or human-constraint
 gap, return directly to scout, research, or grill before direction review.
 
+## Parallel Analysis, Single Authorship
+
+When the direction gate applies and native subagents are available,
+`/work-direction` runs three independent read-only analysis lanes in parallel:
+boundaries/interfaces/trust, constraints/migration/operations, and
+alternatives/tradeoffs. The coordinator alone writes the canonical direction
+and preserves material disagreement instead of deciding by vote.
+Routed external workers and native same-harness workers fill the same graph,
+without duplicating every lane at each provider.
+
+`/work-plan` uses the same pattern for non-trivial work: code impact,
+verification evidence, and delivery risk/sequencing run as independent lanes,
+then one coordinator writes the dependency-ordered plan. Small local work may
+skip this graph with a recorded reason. If advertised subagent spawning fails,
+the workflow asks before sequential fallback rather than silently reducing
+independence. The installed `design-graph-policy.json` carries this shared
+provider-neutral contract.
+
 ## Direction Artifact
 
 The artifact records outcomes and exclusions; system boundaries, ownership,

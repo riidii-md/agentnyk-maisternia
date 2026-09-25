@@ -24,6 +24,34 @@ Input:
 
 `$ARGUMENTS`
 
+## Run The Complexity-Gated Agent Graph
+
+Read the installed `design-graph-policy`. When the direction gate applies, use
+its complexity-gated agent graph. If the current harness exposes native
+subagents, they are required for lanes assigned to that harness. Routed external
+workers count toward the same graph. Dispatch one independent read-only worker
+for each bounded lane, in parallel up to the available capacity:
+
+- `boundaries-interfaces-trust`: system ownership, interfaces, sources of truth,
+  data or control flow, and trust boundaries;
+- `constraints-migration-operations`: compatibility, migration, rollout,
+  observability, recovery, and operational constraints;
+- `alternatives-tradeoffs`: materially different approaches, reversibility,
+  cost, risks, and rejected alternatives.
+
+Give each worker the accepted task, attributed human input, and the minimum
+evidence needed for its lane. Workers inspect evidence and return proposals;
+they do not edit the direction artifact. The coordinator is the single
+canonical writer. It reconciles disagreements and records unsupported
+assumptions instead of deciding by vote.
+
+Do not silently collapse an advertised multi-agent graph into coordinator-only
+work. If spawning is unexpectedly unavailable or fails, ask before sequential
+fallback. A provider that does not expose subagents may run the same
+lanes sequentially only after disclosing that limitation. For a small local
+task where `/work-analyze` recorded that no direction gate is needed, skip this
+graph and continue to `/work-plan`.
+
 ## Direction Contract
 
 Ground decisions in evidence. Preserve a user-authored sketch as attributed
