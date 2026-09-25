@@ -129,9 +129,11 @@ Never silently fall back to a single coordinator. If a harness advertises or
 exposes subagents but spawning fails, record `multi-agent-incomplete` and set
 the gate to `blocked`. Sequential execution is allowed only when the user
 explicitly supplies `--allow-degraded`.
-Record it as `degraded-sequential`, explain the fallback, and set gate status to
-`degraded`, never `pass`. A provider without subagent support follows the same
-explicit degraded path.
+Record it as `degraded-sequential` and explain the fallback. Use gate status
+`degraded`, never `pass`, only when the underlying review otherwise completes;
+preserve `fail` for invalid checks or evidence and `blocked` when required
+evidence cannot be obtained. A provider without subagent support follows the
+same explicit degraded path.
 
 ## Establish Evidence
 
@@ -593,6 +595,18 @@ runtime evidence. Require explicit `is_real` and
 and why. Merge duplicates and rank confirmed findings Critical, High, Medium,
 then Low.
 
+Before assigning the gate, perform the policy's semantic integrity check:
+worker IDs are unique; every worker appears in exactly one declared wave whose
+number matches its `wave`; every lens references a complete reviewer; every
+verification references a complete verifier; all referenced workers exist; and
+the verifier differs from the candidate's originating reviewer. A schema-valid
+shape without these relationships is blocked.
+
+In degraded sequential mode, a candidate still requires a genuinely distinct
+verifier. If none is available, record the candidate as `unverified`, do not
+apply its proposed fix, and set the gate to `blocked`. Never let the coordinator
+self-verify or promote an unverified candidate to confirmed or refuted.
+
 ## Report And Apply
 
 Write the initial report. Under repair disposition, apply every confirmed fix
@@ -634,7 +648,7 @@ status. Link confirmed candidates to canonical findings, fixes through finding
 IDs, test evidence, inspections, and independent verification without allowing
 raw analyzer output to bypass the canonical report.
 
-The version 5 report must also record the execution mode, coordinator, worker
+The version 6 report must also record the execution mode, coordinator, worker
 identity and runtime, provider, assignments, waves, whether the scoped minimum
 was met, and any fallback reason. Each lens and candidate verification must
 reference its worker. Provider/model labels without distinct worker executions

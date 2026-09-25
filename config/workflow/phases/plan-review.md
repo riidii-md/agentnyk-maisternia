@@ -79,8 +79,9 @@ lens exactly once and add domain lanes only when warranted.
 Do not silently collapse the graph. If native spawning is advertised or exposed
 but fails, record `multi-agent-incomplete` and block the review. A sequential
 run requires the user's explicit `--allow-degraded` flag, must record
-`degraded-sequential`, and finishes with a
-`degraded` gate rather than `pass`.
+`degraded-sequential`, and never finishes with `pass`. Use `degraded` only when
+the underlying review otherwise completes; preserve `fail` for invalid checks
+or evidence and `blocked` when required evidence cannot be obtained.
 
 ## Run Independent Lenses
 
@@ -146,7 +147,12 @@ Re-read the edited plan, rerun affected consistency and acceptance checks, and
 set the gate to `pass`, `fail`, or `blocked`. Write `review.md` and schema-valid
 `review.json` under `.agent-runs/reviews/<run-id>/`, including confirmed,
 refuted, applied, and blocked findings. A user-authorized sequential fallback
-uses `degraded`. The version 5 report also records coordinator, workers,
+uses `degraded` only for an otherwise-successful review and preserves `fail` or
+`blocked` when appropriate. Before assigning the gate, enforce the policy's
+semantic integrity rules: unique worker IDs, exact wave membership, resolved
+complete-role references, and a verifier distinct from the originating
+reviewer. If no distinct verifier is available, record the candidate as
+`unverified`, apply no correction from it, and block. The version 6 report also records coordinator, workers,
 assignments, waves, runtimes, scoped-minimum status, and fallback reason.
 
 ## Build The Visual Plan Review

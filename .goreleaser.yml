@@ -72,7 +72,7 @@ homebrew_casks:
     binaries:
       - maisternia
     repository:
-      owner: kagi-labs
+      owner: riidii-md
       name: homebrew-tap
       token: '{{ envOrDefault "HOMEBREW_TAP_TOKEN" "" }}'
     directory: Casks

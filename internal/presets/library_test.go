@@ -224,8 +224,10 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !slices.Contains(shape.Contents.Commands, "work-question") {
 		t.Error("idea-shaping is missing the work-question command")
 	}
-	if !slices.Contains(shape.Contents.Settings, "design-graph-policy") {
-		t.Error("idea-shaping is missing the design graph policy")
+	for _, resourceID := range []string{"design-graph-policy", "review-policy", "review-report-schema"} {
+		if !slices.Contains(shape.Contents.Settings, resourceID) {
+			t.Errorf("idea-shaping settings are missing %q", resourceID)
+		}
 	}
 	for _, resourceID := range []string{"work-scout", "work-analyze", "work-direction", "work-plan-review"} {
 		if !slices.Contains(shape.Contents.Commands, resourceID) {
@@ -1945,6 +1947,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	contracts := map[string][]string{
 		"config/workflow/phases/plan-review.md": {
 			"correctness-vs-code", "plan-delta", "is_real", "grounded",
+			"semantic integrity", "`unverified`", "apply no correction", "block",
 		},
 		"config/workflow/phases/review.md": {
 			"dependency-currency", "diff-analysis", "is_real", "grounded",
@@ -1963,6 +1966,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"NO_FINDINGS", "missing evidence",
 			"--test-mode authoring", "--test-mode audit", "--test-mode campaign",
 			"fail on the pre-fix", "primary owner", "test-only production seams",
+			"semantic integrity check", "`unverified`", "self-verify",
 		},
 		"config/workflow/phases/review-simplify.md": {
 			"name: work-review-simplify", "version: 0.3.0", "$ARGUMENTS", "work-review",
@@ -1985,7 +1989,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
 			"runtime-invariant-placement", "`clear`, `candidate`, `unknown`, or `not-applicable`",
-			"NO_FINDINGS", "missing evidence",
+			"NO_FINDINGS", "missing evidence", "semantically validate", "`unverified`",
 		},
 		"docs/REVIEW-WORKFLOW.md": {
 			"first behavior-preserving option", "YAGNI", "standard library", "native platform",
@@ -1994,8 +1998,9 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"trust boundaries", "commented-out code", "durable documentation",
 			"`delete`", "`reuse`", "`stdlib`", "`native`", "`dependency`", "`yagni`", "`shrink`",
 			"alternative-comparison", "contract-coherence", "error-and-validation-flow",
-			"runtime-invariant-placement", "maintainability_inspections", "schema version 5",
+			"runtime-invariant-placement", "maintainability_inspections", "schema version 6",
 			"authoring", "audit", "campaign", "test-only production seams",
+			"checks execution", "relationships that JSON shape", "`unverified`",
 		},
 		"docs/TEST-REVIEW.md": {
 			"Authoring mode", "Audit mode", "Campaign mode", "primary owner",
@@ -2086,8 +2091,8 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 	if !slices.Equal(reportSchema.Properties.Profile.Enum, []string{"standard", "maintainability"}) {
 		t.Fatalf("review report profiles = %v", reportSchema.Properties.Profile.Enum)
 	}
-	if reportSchema.Properties.SchemaVersion.Const != 5 {
-		t.Fatalf("review report schema version = %d, want 5", reportSchema.Properties.SchemaVersion.Const)
+	if reportSchema.Properties.SchemaVersion.Const != 6 {
+		t.Fatalf("review report schema version = %d, want 6", reportSchema.Properties.SchemaVersion.Const)
 	}
 	if reportSchema.Properties.MaintainabilityInspections.Type != "array" {
 		t.Fatalf("review report maintainability_inspections type = %q", reportSchema.Properties.MaintainabilityInspections.Type)

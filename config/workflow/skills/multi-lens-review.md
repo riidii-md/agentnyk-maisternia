@@ -71,7 +71,9 @@ lane, but unrelated subjects must not be collapsed merely to reduce calls.
 Never silently fall back to the coordinator. A failed advertised spawn records
 `multi-agent-incomplete` and blocks the review. Sequential execution requires
 explicit `--allow-degraded`, must be recorded as `degraded-sequential`, and ends
-with gate status `degraded`, never `pass`.
+with gate status `degraded`, never `pass`, only when the underlying review
+otherwise completes. Preserve `fail` or `blocked` when checks, evidence, or
+required verification do not complete.
 
 For the `maintainability` profile, run all implementation lenses and add the
 `best-practices` lens. First state the behavior contract that must remain
@@ -259,6 +261,15 @@ The verifier must read the relevant code or plan and return explicit `is_real`
 and `grounded` booleans. Keep a finding only when both are true. Record what was
 refuted and why, then deduplicate and rank confirmed findings by severity.
 
+Before assigning the gate, semantically validate the execution graph: unique
+worker IDs; exact wave membership matching each worker's declared wave;
+resolved lens and verification worker references; complete reviewer and
+verifier roles; and a verifier distinct from the originating reviewer. JSON
+shape validation does not replace this relationship check. If degraded
+sequential execution cannot obtain a distinct verifier, retain the candidate as
+`unverified`, apply no fix from it, and block the gate rather than
+self-verifying.
+
 Reviewers and verifiers remain read-only. Under repair disposition, the current
 coordinating harness owns mutations and verification. Apply every confirmed fix
 within the approved scope. Critical and High findings are blocking until
@@ -272,7 +283,7 @@ finding in `applied_fixes` with status `not-applicable` and reason
 means that the review process completed, not that the implementation is
 approved or merge-ready.
 
-Write `review.md` and schema-valid version 5 `review.json` under
+Write `review.md` and schema-valid version 6 `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
 Record the selected `standard` or `maintainability` profile and `full` or

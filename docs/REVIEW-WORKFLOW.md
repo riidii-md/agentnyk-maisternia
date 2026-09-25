@@ -412,6 +412,16 @@ survives only when:
 is_real && grounded
 ```
 
+Before the gate is assigned, the coordinator also checks execution
+relationships that JSON shape validation cannot prove: worker IDs are unique,
+wave membership is exact, every lens and verification references a declared
+complete worker with the required role, and a verifier differs from the
+originating reviewer. A failed relationship check blocks the review.
+
+Degraded sequential review does not waive verifier independence. When no
+distinct verifier is available, the candidate remains `unverified`, no proposed
+fix is applied, and the gate is `blocked` rather than self-verified.
+
 The coordinator records refuted candidates and why, deduplicates surviving
 findings, and ranks them Critical, High, Medium, then Low.
 
@@ -442,7 +452,7 @@ Every run writes:
 .agent-runs/reviews/<run-id>/review.json
 ```
 
-The JSON report conforms to schema version 5 of `review-report.schema.json` and preserves provider
+The JSON report conforms to schema version 6 of `review-report.schema.json` and preserves provider
 attribution, confirmed and refuted findings, applied or blocked fixes, checks,
 counts, and final gate status. It also records execution mode, coordinator,
 worker identities and runtimes, assignments, waves, whether the scoped minimum
@@ -454,12 +464,13 @@ reports add `test_audit_candidates`, and campaigns add `test_campaign`.
 Maintainability reports additionally include the four required
 `maintainability_inspections` records, analyzer provenance in
 `analysis_tool_evidence`, and correlated `maintainability_candidates`. Version
-5 requires `profile`, `scope`, `test_review_mode`, `test_evidence`, and
+6 requires `profile`, `scope`, `test_review_mode`, `test_evidence`, and
 `disposition` for implementation reports. It keeps the established core fields
 and meanings but is explicit because the
 strict schema rejects unknown fields. Consumers must branch on
-`schema_version`; version 4 is the pre-analyzer contract and existing artifacts
-are not rewritten. Version 1, 2, 3, or 4 reports must be regenerated before
+`schema_version`; version 4 is the pre-analyzer contract, version 5 is the
+analyzer-evidence contract without execution provenance, and existing artifacts
+are not rewritten. Version 1, 2, 3, 4, or 5 reports must be regenerated before
 they can satisfy the current gate.
 
 An external `pull_request.opened` event enters the separate read-only
@@ -473,7 +484,9 @@ Normal review requires native subagents when the current harness exposes them.
 If advertised spawning fails, the review blocks instead of silently becoming a
 single-agent review and records `multi-agent-incomplete`. Sequential execution
 is available only through explicit `--allow-degraded`; the report records
-`degraded-sequential` and the gate is `degraded`, never `pass`. The shared
+`degraded-sequential` and the gate is never `pass`. It is `degraded` only when
+the review otherwise completes, `fail` when checks or evidence are invalid, and
+`blocked` when required evidence or independent verification is unavailable. The shared
 `work-routing` skill selects cross-provider reviewers:
 
 ```text

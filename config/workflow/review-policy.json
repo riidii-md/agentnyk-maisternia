@@ -400,6 +400,13 @@
     "one_verifier_per_candidate": true,
     "verifier_must_attempt_refutation": true,
     "verifier_must_use_different_worker": true,
+    "semantic_integrity_check_required": true,
+    "unique_worker_ids_required": true,
+    "worker_references_must_resolve": true,
+    "wave_membership_must_match": true,
+    "unverified_candidate_status": "unverified",
+    "unverified_candidate_gate": "blocked",
+    "apply_unverified_candidates": false,
     "keep_only_when": ["is_real", "grounded"],
     "deduplicate_after_verification": true
   },

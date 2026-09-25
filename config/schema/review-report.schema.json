@@ -19,7 +19,7 @@
     "gate_status"
   ],
   "properties": {
-    "schema_version": {"const": 5},
+    "schema_version": {"const": 6},
     "id": {"type": "string", "pattern": "^[a-zA-Z0-9_.-]{1,128}$"},
     "mode": {"enum": ["direction", "plan", "plan-delta", "implementation"]},
     "disposition": {"enum": ["repair", "report-only"]},
@@ -320,11 +320,13 @@
         "workers": {
           "type": "array",
           "minItems": 1,
+          "uniqueItems": true,
           "items": {"$ref": "#/$defs/worker"}
         },
         "waves": {
           "type": "array",
           "minItems": 1,
+          "uniqueItems": true,
           "items": {
             "type": "array",
             "minItems": 1,
@@ -379,8 +381,7 @@
         "impact",
         "evidence",
         "proposed_fix",
-        "status",
-        "verification"
+        "status"
       ],
       "properties": {
         "id": {"type": "string", "pattern": "^[A-Z]+-[0-9]+$"},
@@ -404,9 +405,25 @@
           "items": {"type": "string", "pattern": "^MC-[0-9]+$"}
         },
         "proposed_fix": {"type": "string", "minLength": 1, "maxLength": 4096},
-        "status": {"enum": ["confirmed", "refuted"]},
+        "status": {"enum": ["confirmed", "refuted", "unverified"]},
         "verification": {"$ref": "#/$defs/verification"}
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"status": {"enum": ["confirmed", "refuted"]}},
+            "required": ["status"]
+          },
+          "then": {"required": ["verification"]}
+        },
+        {
+          "if": {
+            "properties": {"status": {"const": "unverified"}},
+            "required": ["status"]
+          },
+          "then": {"not": {"required": ["verification"]}}
+        }
+      ]
     },
     "appliedFix": {
       "type": "object",
@@ -812,15 +829,86 @@
           "execution": {
             "properties": {
               "workers": {
-                "minItems": 2,
-                "contains": {
-                  "properties": {"role": {"const": "reviewer"}},
-                  "required": ["role"]
-                },
-                "minContains": 2
+                "minItems": 2
               },
               "minimum_independent_reviewers_met": {"const": true},
               "fallback_reason": {"type": "null"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "allOf": [
+          {
+            "properties": {
+              "execution": {
+                "properties": {"mode": {"const": "multi-agent"}},
+                "required": ["mode"]
+              }
+            },
+            "required": ["execution"]
+          },
+          {
+            "properties": {"scope": {"const": "tests"}},
+            "required": ["scope"]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "workers": {
+                "contains": {
+                  "properties": {
+                    "role": {"const": "reviewer"},
+                    "status": {"const": "complete"}
+                  },
+                  "required": ["role", "status"]
+                },
+                "minContains": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "allOf": [
+          {
+            "properties": {
+              "execution": {
+                "properties": {"mode": {"const": "multi-agent"}},
+                "required": ["mode"]
+              }
+            },
+            "required": ["execution"]
+          },
+          {
+            "not": {
+              "properties": {"scope": {"const": "tests"}},
+              "required": ["scope"]
+            }
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "workers": {
+                "contains": {
+                  "properties": {
+                    "role": {"const": "reviewer"},
+                    "status": {"const": "complete"}
+                  },
+                  "required": ["role", "status"]
+                },
+                "minContains": 3
+              }
             }
           }
         }
@@ -844,7 +932,25 @@
               "fallback_reason": {"type": "string", "minLength": 1}
             }
           },
-          "gate_status": {"const": "degraded"}
+          "gate_status": {"enum": ["degraded", "fail", "blocked"]}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "findings": {
+            "contains": {
+              "properties": {"status": {"const": "unverified"}},
+              "required": ["status"]
+            }
+          }
+        },
+        "required": ["findings"]
+      },
+      "then": {
+        "properties": {
+          "gate_status": {"const": "blocked"}
         }
       }
     }
