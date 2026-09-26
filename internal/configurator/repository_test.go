@@ -540,11 +540,16 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 		"mdmaid-desk review wait <review-id> --json",
 		"keep the current agent turn open",
 		"one long-lived foreground waiter",
-		"longest supported blocking interval",
+		"longest safe blocking interval allowed by active harness policy",
 		"resume that same process or session until it exits",
 		"Do not start a replacement waiter",
-		"state changes",
-		"10–15 minute heartbeat",
+		"material state changes",
+		"waiter failure or required intervention",
+		"explicit user status request",
+		"final durable result",
+		"Do not narrate unchanged pending checks",
+		"review request ID, exact document revision",
+		"mdmaid.desk link or navigation route",
 		"Do not return a final response while the review is pending",
 		"surface the received outcome and human response text immediately",
 		"changes_requested",
@@ -560,6 +565,9 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 	}
 	if count := strings.Count(content, "mdmaid-desk review wait <review-id> --json"); count != 1 {
 		t.Errorf("readable-output skill has %d review wait commands, want exactly one", count)
+	}
+	if strings.Contains(content, "heartbeat") {
+		t.Error("readable-output skill permits periodic pending heartbeats")
 	}
 
 	validation := strings.Index(content, "mdmaid validate <artifact.md> --json")

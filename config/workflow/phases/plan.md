@@ -199,11 +199,12 @@ If the human skips AI review, record the AI review skip and use
 and exact revision, and wait for the durable result; keep the current agent turn open
 while the foreground waiter is pending. `waiting_for_approval` is an
 intermediate update, never a final response. If the execution tool yields a
-process/session ID, resume that same process until it exits. Surface the outcome
-and human response text immediately when it returns: approval continues to
-`/work-decide`, requested changes return to planning and the review choice,
-rejection stops or reshapes the work, and a stale request requires publication
-of the current revision.
+process/session ID, resume that same process until it exits.
+Apply the installed `readable-output` quiet-wait contract.
+Surface the outcome and human response text immediately
+when it returns: approval continues to `/work-decide`, requested changes return
+to planning and the review choice, rejection stops or reshapes the work, and a
+stale request requires publication of the current revision.
 
 Registration or presentation is not approval. Do not implement code, mark a
 direction or plan accepted, or claim implementation readiness.

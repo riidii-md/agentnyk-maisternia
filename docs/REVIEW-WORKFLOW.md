@@ -115,14 +115,18 @@ testable.
 After selected review passes, or after an explicit AI review skip, the exact
 final plan revision is validated and delivered through mdmaid.desk with an
 explicit `plan-decision` request. Passive documents
-still have no workflow actions. The producer records the request ID and exact
+still have no workflow actions. The installed `readable-output` skill is the canonical quiet-wait contract.
+The producer records the request ID and exact
 revision, keeps its current agent turn open on the foreground waiter, and
-receives both the human outcome and response text. A yielded execution-process
-ID must be resumed until completion with the longest harness-supported blocking
-interval; it is not a reason to finish the turn. The producer keeps one
+receives both the human outcome and response text. The initial update must
+include the review request ID, exact document revision, and an available
+mdmaid.desk link or navigation route. A yielded execution-process ID must be
+resumed until completion with the longest safe blocking interval allowed by
+active harness policy; it is not a reason to finish the turn. The producer keeps one
 long-lived foreground waiter, never starts a replacement or nested waiter, and
-reports state changes rather than narrating unchanged polls. When a harness
-requires visible liveness, it may emit at most a coarse 10–15 minute heartbeat.
+reports only for material state changes, a waiter failure or required
+intervention, an explicit user status request, or the final durable result.
+Do not narrate unchanged pending checks.
 `waiting_for_approval` is an intermediate status only. As soon as the waiter
 returns, the producer surfaces the decision and text and continues the mapped
 workflow without requiring another chat message. Presentation, opening, and
