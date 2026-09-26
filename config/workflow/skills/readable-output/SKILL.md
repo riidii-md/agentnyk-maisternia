@@ -167,14 +167,17 @@ durable result. The external command may sleep without model reasoning, but the
 enclosing turn must remain active. Do not background or detach the waiter.
 Do not return a final response while the review is pending; a
 `waiting_for_approval` receipt is an intermediate update only.
+The initial update must include the review request ID, exact document revision,
+and an available mdmaid.desk link or navigation route.
 
 If the execution tool yields a process or session ID instead of completed JSON,
-resume that same process or session until it exits. Use the longest supported blocking interval.
+resume that same process or session until it exits. Use the longest safe blocking interval allowed by active harness policy.
 A yielded ID proves only that the waiter is still running;
 it is not permission to finish the turn. Do not start a replacement waiter, create
 nested wait commands, or poll only to demonstrate liveness. Report user-visible
-updates when state changes. If the harness genuinely requires visible liveness,
-use at most a coarse 10–15 minute heartbeat. When the command exits,
+updates only for material state changes, a waiter failure or required intervention,
+an explicit user status request, or the final durable result.
+Do not narrate unchanged pending checks. When the command exits,
 surface the received outcome and human response text immediately, then apply
 the outcome routing below. Do not wait for another user chat message to inspect
 a completed waiter.

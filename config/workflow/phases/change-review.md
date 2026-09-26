@@ -315,6 +315,7 @@ mdmaid-desk review wait <review-id> --json
 Resume the same yielded process until it exits. `waiting_for_approval` is only
 an intermediate update. Tell the human that `mdmaid-desk tui` opens the Changes
 space and `c` selects it. Opening or reading the document is not approval.
+Apply the installed `readable-output` quiet-wait contract while this change decision remains pending.
 
 ## Revalidate And Route The Decision
 

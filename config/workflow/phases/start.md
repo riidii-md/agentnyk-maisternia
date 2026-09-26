@@ -148,6 +148,9 @@ opening a document, or a general request to start work. If an artifact or
 implementation changed while waiting, mark the old decision stale and present
 the current revision again.
 
+Apply the installed `readable-output` quiet-wait contract to every live
+mdmaid.desk decision without weakening its foreground-wait or approval rules.
+
 On an answer, incorporate the human's words and update affected artifacts.
 Return every changed direction or plan to its explicit AI review choice; do not
 automatically rerun optional AI review. Rerun only mandatory implementation

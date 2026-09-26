@@ -1008,6 +1008,35 @@ func TestRepositoryDirectionDecisionReadabilityContract(t *testing.T) {
 	}
 }
 
+func TestRepositoryHumanDecisionWaitsStayQuietWhilePending(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	phaseContracts := []string{
+		"config/workflow/phases/start.md",
+		"config/workflow/phases/plan.md",
+		"config/workflow/phases/plan-review.md",
+		"config/workflow/phases/change-review.md",
+	}
+	for _, relative := range phaseContracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(content), "Apply the installed `readable-output` quiet-wait contract") {
+			t.Errorf("%s does not delegate to the canonical quiet-wait contract", relative)
+		}
+	}
+
+	docs, err := os.ReadFile(filepath.Join(root, "docs/REVIEW-WORKFLOW.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(docs), "The installed `readable-output` skill is the canonical quiet-wait contract") {
+		t.Error("review workflow does not identify the canonical quiet-wait owner")
+	}
+}
+
 func repositoryTargetCount(resource configurator.Resource) int {
 	if strings.HasPrefix(resource.ID, "work-") &&
 		resource.ID != "work-routing-skill" &&

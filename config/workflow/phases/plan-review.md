@@ -220,7 +220,8 @@ Preserve the source plan path and content hash in `plan-review.md`. Then invoke
 mdmaid.desk as `kind=plan` in explicit `plan-decision` mode. Record its path,
 content hash, document revision, and review request ID. Then keep the current agent turn open on the foreground waiter. Report `waiting_for_approval` only as
 an intermediate update, never as a final response. Resume a yielded process or
-session ID until it exits. Surface the outcome and human response text immediately. Approval continues to `/work-decide`; `changes_requested`
+session ID until it exits.
+Apply the installed `readable-output` quiet-wait contract. Surface the outcome and human response text immediately. Approval continues to `/work-decide`; `changes_requested`
 returns to the plan and its explicit AI review choice; rejection stops or
 reshapes the work; and a stale request returns to current-revision publication
 and the explicit AI review choice. Registration is not approval: do not infer a decision from the
@@ -242,3 +243,6 @@ current agent turn open on the foreground waiter. Approval continues to
 AI review choice; rejection stops or reshapes; and stale returns to
 current-revision publication and the explicit AI review choice.
 Registration, opening, or closing is never direction approval.
+
+Apply the installed `readable-output` quiet-wait contract to direction
+decisions as well.
