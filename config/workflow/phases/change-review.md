@@ -286,8 +286,11 @@ mdmaid validate <change-review.md> --json
 ```
 
 Resolve the workspace by canonical repository root. Follow the installed
-readable-output `references/project-naming.md` contract. Register the validated
-artifact with an explicit revision-bound decision request:
+readable-output `references/project-naming.md` contract. After resolving the
+workspace and finalizing the exact planned tags, follow the installed
+readable-output `references/space-routing.md` contract before registration and
+run its scoped postcondition after successful registration. Register the
+validated artifact with an explicit revision-bound decision request:
 
 ```text
 mdmaid-desk register <change-review.md> \
@@ -313,8 +316,8 @@ mdmaid-desk review wait <review-id> --json
 ```
 
 Resume the same yielded process until it exits. `waiting_for_approval` is only
-an intermediate update. Tell the human that `mdmaid-desk tui` opens the Changes
-space and `c` selects it. Opening or reading the document is not approval.
+an intermediate update. Tell the human that `c` selects the Change reviews content mode; named Spaces are an independent global filter cycled with `x`.
+Opening or reading the document is not approval.
 Apply the installed `readable-output` quiet-wait contract while this change decision remains pending.
 
 ## Revalidate And Route The Decision

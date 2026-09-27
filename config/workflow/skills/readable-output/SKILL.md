@@ -88,6 +88,13 @@ Reuse a previously verified workspace ID while the canonical root is unchanged
 in the same live session. Resolve again after a workspace error or root change.
 Never create a new workspace merely because an earlier receipt is unavailable.
 
+Before choosing the register or import command, settle the document kind, title,
+project metadata, and up to three grounded subject tags using the rules below.
+After resolving the workspace and finalizing the exact planned tags, follow the
+installed readable-output `references/space-routing.md` contract before
+registration and run its scoped postcondition after successful registration.
+Space routing never changes the attention or decision semantics in this skill.
+
 If the artifact is already inside the intended workspace or one of its allowed
 artifact roots, run:
 

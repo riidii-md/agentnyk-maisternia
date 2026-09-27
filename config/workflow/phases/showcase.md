@@ -67,7 +67,10 @@ Only after validation succeeds, resolve the mdmaid.desk workspace from
 `MDMAID_DESK_WORKSPACE` or by matching the canonical current project root in
 `mdmaid-desk workspace list`. If the root is not registered, add it once with a
 stable collision-safe workspace ID. Follow the installed readable-output
-`references/project-naming.md` contract. Then run:
+`references/project-naming.md` contract. After resolving the workspace and
+finalizing the exact planned tags, follow the installed readable-output
+`references/space-routing.md` contract before registration and run its scoped
+postcondition after successful registration. Then run:
 
 ```text
 mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"

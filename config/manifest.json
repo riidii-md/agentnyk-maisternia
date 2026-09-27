@@ -619,6 +619,16 @@
       ]
     },
     {
+      "id": "readable-output-space-routing",
+      "source": "config/workflow/skills/readable-output/references/space-routing.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/readable-output/references/space-routing.md"},
+        {"agent": "claude", "path": ".claude/skills/readable-output/references/space-routing.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/readable-output/references/space-routing.md"},
+        {"agent": "hermes", "path": ".hermes/skills/readable-output/references/space-routing.md"}
+      ]
+    },
+    {
       "id": "decision-capture-skill",
       "source": "config/workflow/skills/decision-capture/SKILL.md",
       "targets": [
