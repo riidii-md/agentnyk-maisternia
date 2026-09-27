@@ -775,31 +775,40 @@ func TestRunCollectionCommandsAndOwnershipLifecycle(t *testing.T) {
 	}
 }
 
-func TestRunSoftwareEngineerCollectionInstallsProjectNamingContractForDeveloperProviders(t *testing.T) {
+func TestRunSoftwareEngineerCollectionInstallsReadableOutputReferencesForAllProviders(t *testing.T) {
 	t.Parallel()
 
 	repo := appRepositoryRoot(t)
+	spaceSource, err := os.ReadFile(filepath.Join(
+		repo,
+		"config", "workflow", "skills", "readable-output", "references", "space-routing.md",
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"collection", "apply", "--repo", repo, "--home", home,
+		"--scope", "user", "--target", "all", "--yes", "software-engineer",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("collection apply code = %d, stderr = %s", code, stderr.String())
+	}
 	tests := []struct {
-		target string
-		path   string
+		name        string
+		projectPath string
+		spacePath   string
 	}{
-		{target: "codex", path: ".codex/skills/readable-output/references/project-naming.md"},
-		{target: "claude", path: ".claude/skills/readable-output/references/project-naming.md"},
-		{target: "agy", path: ".config/agy/skills/readable-output/references/project-naming.md"},
+		{name: "codex", projectPath: ".codex/skills/readable-output/references/project-naming.md", spacePath: ".codex/skills/readable-output/references/space-routing.md"},
+		{name: "claude", projectPath: ".claude/skills/readable-output/references/project-naming.md", spacePath: ".claude/skills/readable-output/references/space-routing.md"},
+		{name: "antigravity", projectPath: ".config/agy/skills/readable-output/references/project-naming.md", spacePath: ".config/agy/skills/readable-output/references/space-routing.md"},
+		{name: "hermes", projectPath: ".hermes/skills/readable-output/references/project-naming.md", spacePath: ".hermes/skills/readable-output/references/space-routing.md"},
 	}
 	for _, tt := range tests {
-		t.Run(tt.target, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			home := t.TempDir()
-			var stdout, stderr bytes.Buffer
-			code := Run([]string{
-				"collection", "apply", "--repo", repo, "--home", home,
-				"--scope", "user", "--target", tt.target, "--yes", "software-engineer",
-			}, &stdout, &stderr)
-			if code != 0 {
-				t.Fatalf("collection apply code = %d, stderr = %s", code, stderr.String())
-			}
-			data, err := os.ReadFile(filepath.Join(home, filepath.FromSlash(tt.path)))
+			data, err := os.ReadFile(filepath.Join(home, filepath.FromSlash(tt.projectPath)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -809,6 +818,18 @@ func TestRunSoftwareEngineerCollectionInstallsProjectNamingContractForDeveloperP
 			} {
 				if !strings.Contains(string(data), snippet) {
 					t.Errorf("installed project-naming contract is missing %q", snippet)
+				}
+			}
+			spaceData, err := os.ReadFile(filepath.Join(home, filepath.FromSlash(tt.spacePath)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(spaceData) != string(spaceSource) {
+				t.Error("installed space-routing contract differs from canonical source")
+			}
+			for _, forbidden := range []string{"github.com/riidii-md", "space add riidii", "space add work", "EyWizards"} {
+				if strings.Contains(string(spaceData), forbidden) {
+					t.Errorf("installed space-routing contract contains task-local policy %q", forbidden)
 				}
 			}
 		})

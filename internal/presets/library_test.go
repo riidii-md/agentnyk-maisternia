@@ -24,6 +24,17 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if len(library.Presets) != 22 {
 		t.Fatalf("preset count = %d, want 22", len(library.Presets))
 	}
+	var spaceRoutingOwners []string
+	for _, preset := range library.Presets {
+		if slices.Contains(preset.Contents.Skills, "readable-output-space-routing") {
+			spaceRoutingOwners = append(spaceRoutingOwners, preset.ID)
+		}
+	}
+	slices.Sort(spaceRoutingOwners)
+	wantSpaceRoutingOwners := []string{"adaptive-readability", "idea-shaping", "standard-work"}
+	if !slices.Equal(spaceRoutingOwners, wantSpaceRoutingOwners) {
+		t.Errorf("Space-routing preset owners = %v, want exactly %v", spaceRoutingOwners, wantSpaceRoutingOwners)
+	}
 	for _, removedID := range []string{
 		"hook-safety",
 		"hook-continuity",
@@ -169,6 +180,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"decision-capture-skill",
 		"multi-lens-review-skill",
 		"readable-output-skill",
+		"readable-output-space-routing",
 		"session-retrospective-skill",
 	} {
 		if !slices.Contains(standard.Contents.Skills, resourceID) {
@@ -222,6 +234,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if !slices.Contains(shape.Contents.Skills, "readable-output-skill") {
 		t.Error("idea-shaping is missing the readable-output skill")
+	}
+	if !slices.Contains(shape.Contents.Skills, "readable-output-space-routing") {
+		t.Error("idea-shaping is missing the readable-output Space-routing contract")
 	}
 	if !slices.Contains(shape.Contents.Commands, "work-question") {
 		t.Error("idea-shaping is missing the work-question command")
@@ -395,6 +410,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"adapt-for-reader-principles",
 		"readable-output-skill",
 		"readable-output-project-naming",
+		"readable-output-space-routing",
 		"work-routing-skill",
 		"work-routing-runners",
 	}) {
@@ -611,9 +627,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(adaptive-readability) error = %v", err)
 	}
-	if len(adaptiveReadabilityManifest.Resources) != 13 {
+	if len(adaptiveReadabilityManifest.Resources) != 14 {
 		t.Fatalf(
-			"adaptive-readability resource count = %d, want 13",
+			"adaptive-readability resource count = %d, want 14",
 			len(adaptiveReadabilityManifest.Resources),
 		)
 	}

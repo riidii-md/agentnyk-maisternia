@@ -78,17 +78,23 @@ it includes the grounded ticket ID if available and the task name. The title
 must also state the document purpose. If the heading is generic or absent,
 derive a concise title with those details from the reader contract and grounded
 source, without changing source content.
-Never use the timestamped filename or document kind as the catalog title. Send
-the artifact to the desk with
-`mdmaid-desk register <artifact.md>`, selecting the closest document kind for
-the mode and using `--title "<catalog title>" --attention review`. Add
-`--task <id>` when the source has
+Never use the timestamped filename or document kind as the catalog title.
+Select the closest document kind for the mode and use
+`--title "<catalog title>" --attention review`. Add `--task <id>` when the source has
 an explicit stable task ID and pair it with
 `--feature-name "<minimal feature text>"`; omit both project options when no
 grounded Jira ID exists. Add up to three short lowercase `--tag <tag>` values
 only for grounded subject matter not already represented by workspace, task,
 or kind; never tag timestamps, filenames, workspace IDs, document kinds, or
-storage modes. Registration is a presentation action, not approval. If
+storage modes.
+
+After resolving the workspace and finalizing the exact planned tags, follow the
+installed readable-output `references/space-routing.md` contract before
+registration and run its scoped postcondition after successful registration.
+Send the artifact to the desk with
+`mdmaid-desk register <artifact.md>` and the resolved arguments.
+
+Registration is a presentation action, not approval. If
 mdmaid.desk is unavailable or rejects the document, preserve the Markdown
 artifact and return its path plus an exact retry command.
 Return only a short summary, the artifact path, and registration status in the

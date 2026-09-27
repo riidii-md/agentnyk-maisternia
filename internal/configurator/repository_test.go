@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -682,6 +683,157 @@ func TestRepositoryMdmaidProjectNamingContract(t *testing.T) {
 			!strings.Contains(publisher, "--feature-name") {
 			t.Errorf("%s bypasses the project-naming contract", relative)
 		}
+	}
+}
+
+func TestRepositoryMdmaidSpaceRoutingContract(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	const source = "config/workflow/skills/readable-output/references/space-routing.md"
+	data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(source)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	normalizedContent := strings.Join(strings.Fields(content), " ")
+	for _, snippet := range []string{
+		"for every publication",
+		"exact normalized tags",
+		"repository-namespace",
+		"OR semantics",
+		"zero, one, or many",
+		"--workspace",
+		"not an exact-workspace matcher",
+		"at least one matcher",
+		"All for this session",
+		"space matchers set",
+		"exclusive single-writer",
+		"classification deferred",
+		"Do not read or edit SQLite",
+		"exact document ID",
+		"does not grant approval",
+	} {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("space-routing reference is missing %q", snippet)
+		}
+	}
+	for _, clause := range []string{
+		"a repository-namespace matches a repository key only when it begins with that value plus `/`, never equality or an arbitrary string prefix",
+		"If exclusive single-writer authority cannot be established, do not invoke `space matchers set`",
+		"When Space commands or capabilities are absent but baseline registration is independently verified, passive delivery may proceed with `classification deferred`. Do not claim a Space. An exact-revision decision may continue only when its existing decision capability independently passes",
+		"For malformed Space JSON or a public-contract mismatch, stop routing, mutation, and desk delivery",
+		"For schema incompatibility or native runtime/module failure, preserve the artifact and stop desk delivery",
+		"For workspace or repository ambiguity, stop for human resolution before mutation or delivery",
+		"For a conflicting existing definition, preserve it and pause for explicit human resolution",
+		"An explicit session-only All choice permits baseline delivery; an exact-revision decision publication may also proceed only when its existing decision capability independently passes",
+		"For a healthy older daemon, do not mutate and do not fall back to SQLite. Permit baseline delivery only when the CLI/daemon pair independently proves it",
+		"If the scoped postcondition fails, the document remains delivered but its Space classification is unproven",
+		"make no “published to Space” claim",
+	} {
+		if !strings.Contains(normalizedContent, clause) {
+			t.Errorf("space-routing reference is missing condition-to-outcome clause %q", clause)
+		}
+	}
+	if strings.Contains(normalizedContent, "repository-namespace matches the same value") {
+		t.Error("space-routing reference incorrectly treats namespace equality as membership")
+	}
+	for _, forbidden := range []string{
+		"github.com/riidii-md",
+		"space add riidii",
+		"space add work",
+		"EyWizards",
+		`--name "Riidii"`,
+		`--name "Work"`,
+	} {
+		if strings.Contains(content, forbidden) {
+			t.Errorf("space-routing reference contains task-local policy %q", forbidden)
+		}
+	}
+
+	wantTargets := map[string]string{
+		"codex":       ".codex/skills/readable-output/references/space-routing.md",
+		"claude":      ".claude/skills/readable-output/references/space-routing.md",
+		"antigravity": ".config/agy/skills/readable-output/references/space-routing.md",
+		"hermes":      ".hermes/skills/readable-output/references/space-routing.md",
+	}
+	for provider, target := range wantTargets {
+		if got := manifestTargets(manifest, provider)[target]; got != source {
+			t.Errorf("%s space-routing source = %q, want %q", provider, got, source)
+		}
+	}
+
+	for _, relative := range []string{
+		"config/presets/adaptive-readability.json",
+		"config/presets/idea-shaping.json",
+		"config/presets/standard-work.json",
+	} {
+		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(data), `"readable-output-space-routing"`) {
+			t.Errorf("%s does not install the space-routing reference", relative)
+		}
+	}
+
+	publishers := make([]string, 0)
+	commandPattern := regexp.MustCompile(`mdmaid-desk\s+(?:register|import)\s+`)
+	workflowRoot := filepath.Join(repoRoot, "config", "workflow")
+	err = filepath.WalkDir(workflowRoot, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() || filepath.Ext(path) != ".md" {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		if commandPattern.Match(data) {
+			relative, relativeErr := filepath.Rel(repoRoot, path)
+			if relativeErr != nil {
+				return relativeErr
+			}
+			publishers = append(publishers, filepath.ToSlash(relative))
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(publishers) == 0 {
+		t.Fatal("no direct mdmaid.desk publishers discovered")
+	}
+	slices.Sort(publishers)
+	const routingInstruction = "After resolving the workspace and finalizing the exact planned tags, follow the installed readable-output `references/space-routing.md` contract before registration and run its scoped postcondition after successful registration."
+	for _, relative := range publishers {
+		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		publisher := strings.Join(strings.Fields(string(data)), " ")
+		commandIndex := commandPattern.FindStringIndex(publisher)
+		namingIndex := strings.Index(publisher, "project-naming.md")
+		routingIndex := strings.Index(publisher, routingInstruction)
+		if namingIndex < 0 || routingIndex < 0 || commandIndex == nil {
+			t.Errorf("%s bypasses the composed naming/routing/delivery contract", relative)
+			continue
+		}
+		if namingIndex > routingIndex || routingIndex > commandIndex[0] {
+			t.Errorf("%s must order project naming, Space preflight, then delivery", relative)
+		}
+	}
+
+	changeReview, err := os.ReadFile(filepath.Join(repoRoot, "config", "workflow", "phases", "change-review.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(changeReview), "Changes space") ||
+		!strings.Contains(string(changeReview), "Change reviews content mode") ||
+		!strings.Contains(string(changeReview), "named Spaces") {
+		t.Error("change-review navigation does not separate content mode from named Spaces")
 	}
 }
 

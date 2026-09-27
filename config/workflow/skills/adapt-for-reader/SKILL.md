@@ -202,15 +202,19 @@ Jira-ID, and minimal AI feature-text rules.
    or absent, derive a concise title with those details from the reader
    contract and grounded source. Never use only the timestamped filename or
    document kind as the catalog title.
-5. Run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
-   --title "<catalog title>" --attention review --task <jira-id>
-   --feature-name "<minimal feature text>"`. Omit both project options when no
-   grounded Jira ID exists. Prefer `decision`,
-   `definition`, `progress`, or `brief` when the selected mode makes the kind
-   clear. Add up to three short lowercase `--tag <tag>` values only when they
-   describe grounded subject matter that is not already represented by the workspace,
-   task, or kind. Never use timestamps, filenames, workspace IDs, document
-   kinds, or storage modes as tags.
+5. Prefer `decision`, `definition`, `progress`, or `brief` when the selected
+   mode makes the kind clear. Add up to three short lowercase `--tag <tag>`
+   values only when they describe grounded subject matter that is not already
+   represented by the workspace, task, or kind. Never use timestamps,
+   filenames, workspace IDs, document kinds, or storage modes as tags.
+
+After resolving the workspace and finalizing the exact planned tags, follow the
+installed readable-output `references/space-routing.md` contract before
+registration and run its scoped postcondition after successful registration.
+Then run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
+--title "<catalog title>" --attention review --task <jira-id>
+--feature-name "<minimal feature text>"`. Omit both project options when no
+grounded Jira ID exists.
 
 Registration sends the document to the desk; it does not imply approval and
 does not require starting the TUI or web client. If the CLI is unavailable or
