@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "machine-cleanup",
+  "name": "Machine Cleanup",
+  "description": "Opt-in local disk accounting and individually approved native cache/Docker cleanup, separate from task-owned work-cleanup.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["machine-cleanup-command"],
+    "prompts": [],
+    "skills": [
+      "machine-cleanup-skill",
+      "machine-cleanup-reporting",
+      "machine-cleanup-macos",
+      "machine-cleanup-linux",
+      "machine-cleanup-windows",
+      "machine-cleanup-docker",
+      "machine-cleanup-package-build-caches"
+    ],
+    "hooks": [],
+    "settings": ["approval-policy"]
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"]
+}

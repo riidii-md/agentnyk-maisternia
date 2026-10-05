@@ -84,6 +84,10 @@ The repository starts with:
 - `adaptive-readability`: reader- and task-aware text transformation with
   reusable defaults, situation overrides, explicit calibration, a clarification
   gate for materially ambiguous intent, and mdmaid.desk as the reading hub;
+- `machine-cleanup`: opt-in local disk accounting and individually approved
+  native cache/Docker cleanup, with detailed previews, protected recent/used
+  images, and explicit handoff when native enforcement is unavailable; see
+  [Machine Cleanup](MACHINE-CLEANUP.md);
 - `harness-profile`: read-only configuration, capability, and usage profiling;
 - `session-audit`: evidence-backed correctness, trajectory, process/safety, and
   cost review plus delegated bottleneck analysis for one completed run;

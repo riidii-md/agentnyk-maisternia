@@ -280,6 +280,44 @@
       }
     },
     {
+      "id": "machine-cleanup-destructive",
+      "description": "Require a fresh bounded native-manager decision for local machine cleanup; never authorize arbitrary host filesystem deletion.",
+      "operations": [
+        "host.cache.prune",
+        "host.cache.clear",
+        "host.docker.image.remove",
+        "host.docker.build_cache.prune",
+        "host.docker.backend.compact",
+        "host.trash.empty",
+        "host.log.prune"
+      ],
+      "decision": "ask",
+      "risk": "critical",
+      "requirements": ["human_present", "approved_task_scope", "local_only", "bounded_budget", "redacted_record"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
+      "id": "machine-cleanup-stateful",
+      "description": "Require a distinct exact-volume decision after state classification and consistent recovery or explicit loss acceptance.",
+      "operations": ["host.docker.volume.remove"],
+      "decision": "ask",
+      "risk": "critical",
+      "requirements": ["human_present", "approved_task_scope", "local_only", "bounded_budget", "redacted_record"],
+      "approval": {
+        "scope": "once",
+        "ttl_seconds": 300,
+        "max_uses": 1,
+        "require_preview": true,
+        "require_reason": true
+      }
+    },
+    {
       "id": "production-access",
       "description": "Require a fresh exact-target decision for read-only production access or a reversible production deployment.",
       "operations": ["production.read", "production.deploy_reversible"],
