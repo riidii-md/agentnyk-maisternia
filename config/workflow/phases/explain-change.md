@@ -85,10 +85,16 @@ finalizing the exact planned tags, follow the installed readable-output
 postcondition after successful registration. Then run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
+mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>" --json
 ```
 
 Omit both project options when no grounded Jira ID exists.
+
+Use `--json` for every `mdmaid-desk register` or `import` publication. After a
+successful publication, apply the installed readable-output full clickable URL
+receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
+a clickable Markdown link when a safe active origin is available; never
+substitute a route, relative path, document ID, or bare URL.
 
 Registration is presentation, not approval. If mdmaid-desk is missing, older
 than 0.1.19, or rejects the document or local media, preserve the bundle and
@@ -97,6 +103,7 @@ available until compatible registration succeeds.
 
 Return a concise summary, the artifact and generated diagram paths, the
 explained base and head/snapshot, chosen presentation, validation status, and
-mdmaid.desk registration status. For `mermaid`, also return the exact
-`mdmaid tui` command. Do not duplicate the full explanation in the terminal
-unless the user asks for it.
+mdmaid.desk registration status plus its clickable URL or explicit
+safe-link-unavailable result. For `mermaid`, also return the exact `mdmaid tui`
+command. Do not duplicate the full explanation in the terminal unless the user
+asks for it.

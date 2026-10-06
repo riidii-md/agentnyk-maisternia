@@ -308,6 +308,12 @@ mdmaid-desk register <change-review.md> \
 
 Omit both project options when no grounded Jira ID exists.
 
+Use `--json` for every `mdmaid-desk register` or `import` publication. After a
+successful publication, apply the installed readable-output full clickable URL
+receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
+a clickable Markdown link when a safe active origin is available; never
+substitute a route, relative path, document ID, or bare URL.
+
 Retain the document ID, document revision, review request ID, artifact content
 hash, and change fingerprint. Keep the current turn open and wait:
 
@@ -341,5 +347,6 @@ content, ambiguous scope, failed registration, an exited waiter without a
 durable response, or any identity mismatch blocks the gate.
 
 Return the artifact and diagram paths, resolved scope, change fingerprint,
-validation result, mdmaid.desk document/review IDs, durable outcome, response
-text, structured feedback anchors, and next phase.
+validation result, mdmaid.desk document/review IDs, its clickable URL or
+explicit safe-link-unavailable result, durable outcome, response text,
+structured feedback anchors, and next phase.

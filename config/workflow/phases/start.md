@@ -124,8 +124,11 @@ Update this command whenever the `standard-work` delivery graph gains a gate.
 ## Human checkpoints
 
 At every required human checkpoint, provide the durable Markdown document or
-validated mdmaid.desk review link, a short summary, the exact decision or
-question, and the consequence of each response. Use the installed
+the full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown link,
+a short summary, the exact decision or question, and the consequence of each
+response. Never substitute a bare route, relative path, document ID, or bare URL.
+When the readable-output safe-origin contract cannot produce a link, report its
+explicit safe-link-unavailable result and recovery guidance. Use the installed
 `readable-output` and phase-specific review contract where applicable. Keep
 one stable task-and-role artifact path across revisions. The discovery brief,
 direction, plan, and change review are separate roles; do not create a file

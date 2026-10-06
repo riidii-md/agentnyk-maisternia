@@ -73,17 +73,24 @@ finalizing the exact planned tags, follow the installed readable-output
 postcondition after successful registration. Then run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
+mdmaid-desk register <artifact.md> --workspace <id> --kind showcase --title "<document title>" --attention review --task <jira-id> --feature-name "<minimal feature text>" --json
 ```
 
 Omit both project options when no grounded Jira ID exists.
+
+Use `--json` for every `mdmaid-desk register` or `import` publication. After a
+successful publication, apply the installed readable-output full clickable URL
+receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
+a clickable Markdown link when a safe active origin is available; never
+substitute a route, relative path, document ID, or bare URL.
 
 Registration sends the document to mdmaid.desk but does not imply approval. Do
 not replace the durable Markdown with temporary output or HTML. If the desk CLI
 is unavailable or registration fails, preserve the Markdown artifact and
 report its path, the failure, and an exact retry command. Return a short summary
-plus the Markdown path and registration status instead of duplicating the full
-showcase in the terminal.
+plus the Markdown path, registration status, and clickable mdmaid.desk URL or
+explicit safe-link-unavailable result instead of duplicating the full showcase
+in the terminal.
 
 Do not edit repository source or configuration files, change unrelated external
 state, include secrets or private environment values, or dump sensitive raw
