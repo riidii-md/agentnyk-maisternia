@@ -1,7 +1,7 @@
 ---
 name: work-ready
 description: Derive whether the decision-ready and explicitly approved plan is safe to execute without inventing missing decisions.
-version: 0.5.0
+version: 0.6.0
 ---
 
 # /work-ready - Implementation Readiness Gate
@@ -26,6 +26,9 @@ Check:
   to proceed without inventing material architecture, interfaces, dependencies,
   code responsibilities or collaborations, or cross-component behavior;
 - fixed decisions, open decisions, and permitted executor discretion are explicit;
+- an approved bounded test plan covers material behavior/risk, existing evidence
+  and gaps, selected dispositions, faithful oracles, value, cost and residual
+  risk, or contains an evidence-backed no-test-change rationale;
 - the selected AI plan review passed, or an explicit AI review skip is recorded;
 - the approved plan content hash matches the current plan;
 - expanded proof exists when risk requires it;
@@ -41,3 +44,8 @@ a missing direction or plan decision, or proceed past unresolved critical ambigu
 An AI review skip waives only the optional AI review; it never waives plan
 completeness, exact-revision human approval, acceptance evidence, or repository
 verification after implementation.
+
+Do not invent missing material test scope during readiness. Return it to planning
+and the existing decision path. Apply the plan's materiality boundary, not a
+checklist requiring exhaustive cases or new test layers; template updates alone
+do not invalidate an already bounded approved plan.

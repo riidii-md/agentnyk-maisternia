@@ -1197,6 +1197,35 @@ func TestRepositoryWorkRunRationalePlacementContract(t *testing.T) {
 	}
 }
 
+func TestRepositoryTestPlanningAuthorityContract(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"direction":   {"material assurance choices", "routine test cases and commands belong to plan"},
+		"plan":        {"## Test Plan", "Inspect relevant existing tests", "reuse, change, add, remove, or no test changes", "cheapest faithful level", "distinct confidence", "residual risk", "Required repository and CI checks still run"},
+		"start":       {"consolidated test plan is visible"},
+		"ready":       {"approved bounded test plan", "Do not invent missing material test scope"},
+		"plan-review": {"portfolio grounding, gaps, economy, and authority"},
+		"run":         {"approved test disposition", "tests before implementation", "Inexpensive cases within the approved envelope", "Material assurance or cost changes"},
+		"prove":       {"selected high-risk entries", "same consolidated test plan"},
+		"handoff":     {"approved test portfolio", "materiality and discretion boundaries"},
+		"review":      {"reconcile actual test evidence", "before repairs expand or weaken test scope", "Standalone reviews"},
+	}
+	for phase, required := range contracts {
+		t.Run(phase, func(t *testing.T) {
+			content, err := os.ReadFile(filepath.Join(root, "config", "workflow", "phases", phase+".md"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			normalized := strings.Join(strings.Fields(string(content)), " ")
+			if issue := requiredFragmentsIssue(normalized, required); issue != "" {
+				t.Error(issue)
+			}
+		})
+	}
+}
+
 func TestRepositoryPlanExecutionDesignBoundaryContract(t *testing.T) {
 	t.Parallel()
 

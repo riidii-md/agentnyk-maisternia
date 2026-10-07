@@ -346,6 +346,27 @@ discretion. When execution discovers that a material design decision must change
 or is missing, it stops the affected task and returns to planning or plan-delta
 review and human decision rather than silently redesigning the solution.
 
+Test choices also stay within the approved plan's assurance and cost envelope.
+
+Every candidate plan includes one consolidated, proportionate Test Plan section:
+inspect relevant existing tests and rules, then identify evidence/gaps, reuse or
+changes, selected important scenarios, faithful levels and observable oracles,
+distinct value, setup/runtime/flakiness/maintenance cost, omissions and residual
+risk. Tasks reference that portfolio. A compact evidence-backed no-test-change
+rationale is valid for non-executable or trivial work; required repository and CI
+checks still run. There is no test-count, coverage or test-layer quota.
+
+Direction fixes material assurance architecture when applicable; readiness must
+not invent missing material test scope; optional proof expands selected risky
+entries in the same plan; handoff carries the approved portfolio; implementation
+review reconciles actual evidence with it. Execution follows approved dispositions
+and repository-required order, including tests-first, instead of adding tests by
+default. Inexpensive cases inside approved scope remain discretion. Material
+changes to assurance, fidelity, environments, dependencies, cost or accepted risk
+return to the existing revised-plan review-choice and human decision path before
+execution or review repairs expand or weaken scope. Template updates alone do not
+invalidate already bounded approved plans. No new phase or approval gate is added.
+
 Both execution commands prefer clear code over explanatory narration. Local
 comments remain for non-obvious constraints and consequences. Cross-cutting
 design belongs in durable Markdown or an ADR, product scope belongs in the

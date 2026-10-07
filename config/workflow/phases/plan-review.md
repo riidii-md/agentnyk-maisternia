@@ -1,7 +1,7 @@
 ---
 name: work-plan-review
 description: Adversarially review a full plan or targeted plan delta against the actual repository, verify every candidate finding, and apply confirmed corrections to the plan artifact.
-version: 0.6.0
+version: 0.7.0
 ---
 
 # /work-plan-review - Review A Plan Before Implementation
@@ -44,6 +44,14 @@ participants and consequences, and remain detailed enough to constrain planning
 without prematurely fixing incidental symbols. Do not demand file-by-file tasks
 or detailed test commands from a direction. The fresh-executor criterion below
 applies to implementation plans, not architectural directions.
+
+For directions, assess material assurance constraints without demanding routine
+test cases or commands. For plans, assess portfolio grounding, gaps, economy, and
+authority against the consolidated Test Plan contract in `/work-plan`: existing
+evidence, selected scenarios and faithful oracles, distinct value, justified cost
+and omissions, accepted residual risk, and materiality versus local discretion.
+Do not demand new tests or layers when existing evidence or a no-test-change
+rationale is sufficient; repository-required checks remain mandatory.
 
 Apply the fresh-executor criterion at risk-appropriate depth: a fresh executor
 must be able to implement the plan without inventing material architecture,
@@ -195,6 +203,9 @@ It must contain the complete reviewed plan—the final reviewed plan revision—
 a summary that requires the reader to open another file, plus:
 
 - a 60-second summary, scope, decisions, tradeoffs, and open questions;
+- the complete consolidated test portfolio, including existing evidence,
+  dispositions, value, cost, omissions and residual risk; do not replace it with
+  a testing summary that hides material choices;
 - current repository evidence separated from proposed rather than verified
   architecture and behavior;
 - planned interface, type, schema, ownership, dependency, state, and interaction

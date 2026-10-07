@@ -171,6 +171,39 @@ func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	if err := Render(repoRoot, output, manifest, "all"); err != nil {
 		t.Fatalf("Render(repository) error = %v", err)
 	}
+	testPlanningSources := map[string]string{
+		"work-direction":   "config/workflow/phases/direction.md",
+		"work-plan":        "config/workflow/phases/plan.md",
+		"work-start":       "config/workflow/phases/start.md",
+		"work-prove":       "config/workflow/phases/prove.md",
+		"work-ready":       "config/workflow/phases/ready.md",
+		"work-run":         "config/workflow/phases/run.md",
+		"work-handoff":     "config/workflow/phases/handoff.md",
+		"work-plan-review": "config/workflow/phases/plan-review.md",
+		"work-review":      "config/workflow/phases/review.md",
+	}
+	for _, resource := range manifest.Resources {
+		source, required := testPlanningSources[resource.ID]
+		if !required {
+			continue
+		}
+		if resource.Source != source {
+			t.Errorf("resource %s source = %q, want %q", resource.ID, resource.Source, source)
+		}
+		canonical, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(source)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, target := range resource.Targets {
+			if got := readRenderedFile(t, output, target.Path); got != string(canonical) {
+				t.Errorf("rendered %s differs from canonical %s", target.Path, source)
+			}
+		}
+		delete(testPlanningSources, resource.ID)
+	}
+	for id := range testPlanningSources {
+		t.Errorf("repository manifest missing test-planning resource %q", id)
+	}
 	assertRenderedFile(t, output, ".codex/prompts/work-plan.md")
 	assertRenderedFile(t, output, ".codex/prompts/work-start.md")
 	assertRenderedFile(t, output, ".codex/skills/work-start/SKILL.md")

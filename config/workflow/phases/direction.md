@@ -1,7 +1,7 @@
 ---
 name: work-direction
 description: Synthesize reviewed evidence and human input into a high-level architectural direction before detailed implementation planning.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-direction - Define The Architectural Direction
@@ -78,7 +78,14 @@ The durable Markdown architectural direction must contain:
 - migration, rollout, compatibility, observability, and recovery implications
   when relevant;
 - risks, assumptions, unresolved questions, and acceptance signals;
+- material assurance choices: behavior/risk classes, public observables and
+  testability boundaries, faithful evidence levels and environments, costly
+  evidence dependencies, and residual risk requiring human acceptance;
 - evidence and attributed human input supporting the decisions.
+
+Keep assurance at architectural altitude: routine test cases and commands belong
+to plan. Explain only choices that constrain the detailed test plan; do not
+mandate additional test layers or harnesses without distinct value and justified cost.
 
 ## Select The Simplest Complete Representation
 

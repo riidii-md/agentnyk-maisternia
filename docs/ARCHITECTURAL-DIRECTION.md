@@ -65,6 +65,13 @@ implementation constraints; rollout, compatibility, observability, and recovery
 implications; risks, assumptions, unresolved questions, and acceptance signals.
 It cites its evidence and attributed human input.
 
+Direction also records material assurance architecture: behavior/risk classes,
+public observables and testability boundaries, faithful evidence levels and
+environments, costly dependencies, and accepted residual risk. These constrain
+planning without dictating routine cases, test names or commands. Extra test
+layers and live harnesses need distinct value and justified cost. The detailed
+portfolio belongs to the existing plan, not a new testing workflow.
+
 It intentionally excludes file-by-file edits, exhaustive symbol inventories,
 final private-helper details, ordered coding tasks, and exhaustive test commands.
 Those belong to the detailed implementation plan, which must be executable by a
