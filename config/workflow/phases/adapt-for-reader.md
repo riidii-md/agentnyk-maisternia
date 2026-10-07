@@ -92,10 +92,17 @@ After resolving the workspace and finalizing the exact planned tags, follow the
 installed readable-output `references/space-routing.md` contract before
 registration and run its scoped postcondition after successful registration.
 Send the artifact to the desk with
-`mdmaid-desk register <artifact.md>` and the resolved arguments.
+`mdmaid-desk register <artifact.md> --json` and the resolved arguments.
+
+Use `--json` for every `mdmaid-desk register` or `import` publication. After a
+successful publication, apply the installed readable-output full clickable URL
+receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
+a clickable Markdown link when a safe active origin is available; never
+substitute a route, relative path, document ID, or bare URL.
 
 Registration is a presentation action, not approval. If
 mdmaid.desk is unavailable or rejects the document, preserve the Markdown
 artifact and return its path plus an exact retry command.
-Return only a short summary, the artifact path, and registration status in the
+Return only a short summary, the artifact path, registration status, and the
+clickable mdmaid.desk URL or explicit safe-link-unavailable result in the
 terminal unless the user explicitly asks for the full text inline.

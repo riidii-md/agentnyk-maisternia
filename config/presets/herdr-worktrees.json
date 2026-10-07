@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "herdr-worktrees",
+  "name": "Herdr Worktrees",
+  "description": "Add Git worktrees to exact Herdr sessions with native repository grouping or explicit independent clone-backed groups, and repair native grouping safely.",
+  "pipelines": [],
+  "contents": {
+    "mcp_refs": [],
+    "commands": ["herdr-add", "herdr-regroup"],
+    "prompts": [],
+    "skills": [
+      "herdr-worktrees-skill",
+      "herdr-worktrees-native",
+      "herdr-worktrees-isolated"
+    ],
+    "hooks": [],
+    "settings": []
+  },
+  "targets": ["codex", "claude", "antigravity", "hermes"],
+  "environment_packs": []
+}

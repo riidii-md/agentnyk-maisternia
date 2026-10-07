@@ -975,6 +975,58 @@
         {"agent": "antigravity", "path": ".config/agy/maisternia/policy/approval.json"},
         {"agent": "hermes", "path": ".hermes/maisternia/policy/approval.json"}
       ]
+    },
+    {
+      "id": "herdr-add",
+      "source": "config/workflow/phases/herdr-add.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/herdr-add.md"},
+        {"agent": "codex", "path": ".codex/skills/herdr-add/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/herdr-add.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/herdr-add.md"},
+        {"agent": "hermes", "path": ".hermes/skills/herdr-add/SKILL.md"}
+      ]
+    },
+    {
+      "id": "herdr-regroup",
+      "source": "config/workflow/phases/herdr-regroup.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/herdr-regroup.md"},
+        {"agent": "codex", "path": ".codex/skills/herdr-regroup/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/herdr-regroup.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/herdr-regroup.md"},
+        {"agent": "hermes", "path": ".hermes/skills/herdr-regroup/SKILL.md"}
+      ]
+    },
+    {
+      "id": "herdr-worktrees-skill",
+      "source": "config/workflow/skills/herdr-worktrees/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/herdr-worktrees/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/herdr-worktrees/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/herdr-worktrees/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/herdr-worktrees/SKILL.md"}
+      ]
+    },
+    {
+      "id": "herdr-worktrees-native",
+      "source": "config/workflow/skills/herdr-worktrees/references/native.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/herdr-worktrees/references/native.md"},
+        {"agent": "claude", "path": ".claude/skills/herdr-worktrees/references/native.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/herdr-worktrees/references/native.md"},
+        {"agent": "hermes", "path": ".hermes/skills/herdr-worktrees/references/native.md"}
+      ]
+    },
+    {
+      "id": "herdr-worktrees-isolated",
+      "source": "config/workflow/skills/herdr-worktrees/references/isolated.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/herdr-worktrees/references/isolated.md"},
+        {"agent": "claude", "path": ".claude/skills/herdr-worktrees/references/isolated.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/herdr-worktrees/references/isolated.md"},
+        {"agent": "hermes", "path": ".hermes/skills/herdr-worktrees/references/isolated.md"}
+      ]
     }
   ]
 }

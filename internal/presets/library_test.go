@@ -21,8 +21,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadLibrary() error = %v", err)
 	}
-	if len(library.Presets) != 23 {
-		t.Fatalf("preset count = %d, want 23", len(library.Presets))
+	if len(library.Presets) != 24 {
+		t.Fatalf("preset count = %d, want 24", len(library.Presets))
 	}
 	var spaceRoutingOwners []string
 	for _, preset := range library.Presets {

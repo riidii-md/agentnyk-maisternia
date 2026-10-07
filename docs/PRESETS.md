@@ -94,6 +94,9 @@ The repository starts with:
 - `harness-improvement`: post-run profiling, audit, repeated-pattern proposals,
   held-out replay, and human-approved installation;
 - `workflow-routing`: shared `@harness` routing and reusable workflow defaults;
+- `herdr-worktrees`: opt-in `/herdr-add` and `/herdr-regroup` commands for
+  exact named Herdr sessions, with native same-repository grouping and explicit
+  independent clone-backed named groups;
 - `codex-resource-lab`: a safe Codex-only example with one MCP reference,
   prompt, skill, hook, and settings resource;
 - `developer-context`: Context7 and read-only, repository-bounded GitNexus
@@ -135,6 +138,7 @@ maisternia preset show change-explanation-tools
 maisternia preset show multi-lens-review
 maisternia preset show adaptive-readability
 maisternia preset show harness-improvement
+maisternia preset show herdr-worktrees
 maisternia preset show codex-resource-lab
 maisternia preset show developer-context
 maisternia preset show project-docs-qmd
@@ -145,6 +149,14 @@ maisternia preset show approval-standard
 maisternia preset show hook-standard
 maisternia preset validate all
 ```
+
+`herdr-worktrees` is configuration-only and remains outside `standard-work`,
+`terminal-orchestration`, and tag-derived collections. Applying it installs two
+thin commands plus one progressive skill package; it does not install Herdr or
+mutate Git repositories and sessions. At runtime, native add/regroup remains
+inside one Git common directory. Explicit `--isolated-group` add creates or
+reuses an independent non-bare clone, with detached review worktrees by default
+and explicit `--editable` opt-in. See [Herdr worktree commands](HERDR-WORKTREES.md).
 
 `codex-resource-lab` makes all six content counters testable in the TUI. Its
 prompt and skill install to provider-native locations. Its MCP and hook files

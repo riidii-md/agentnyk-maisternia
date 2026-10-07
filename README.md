@@ -211,6 +211,9 @@ The catalog contains focused presets that can be installed independently:
 - `adaptive-readability` — adapt technical material to its reader and purpose;
 - `session-audit` and `harness-improvement` — review completed work and propose
   controlled improvements;
+- `herdr-worktrees` — add worktrees to exact named Herdr sessions using native
+  repository grouping or explicit independent clone-backed Review/Features
+  groups, and repair native grouping without moving live workspaces;
 - `hook-standard`, `hook-complete`, and `approval-standard` — install reusable
   safety and policy definitions;
 - `terminal-orchestration` — declare and verify the external terminal tools used
@@ -298,6 +301,7 @@ and remaining limitations.
 - [Installation and upgrades](docs/INSTALLATION.md)
 - [Admin terminal interface](docs/ADMIN.md)
 - [Preset library](docs/PRESETS.md)
+- [Herdr worktree commands](docs/HERDR-WORKTREES.md)
 - [Preset collections](docs/PRESET-COLLECTIONS.md)
 - [Provider adapters](docs/PROVIDERS.md)
 
