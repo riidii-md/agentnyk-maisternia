@@ -180,6 +180,14 @@ without running it.
 Provider rendering decides how commands are installed, and the harness executes
 them at runtime. Maisternia remains configuration-only.
 
+The focused `herdr-worktrees` preset follows the same boundary. It renders
+`/herdr-add` and `/herdr-regroup`; invoking them in a Herdr-managed harness may
+create Git worktrees, an explicitly requested independent clone-backed group,
+or native Herdr workspace provenance. Maisternia does not execute or track those
+runtime mutations, and preset uninstall does not remove their repositories,
+worktrees, workspaces, processes, or sessions. See
+[Herdr worktree commands](HERDR-WORKTREES.md).
+
 `/work-start-pr-review <PR>` is the guided entry point for reviewing an
 existing pull request. It is separate from feature and bug delivery. It asks
 whether the result should remain internal for repair or be published as PR
