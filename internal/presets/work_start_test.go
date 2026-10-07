@@ -98,6 +98,37 @@ func TestRepositoryWorkStartChecksGitBaseAndTaskWorktree(t *testing.T) {
 	}
 }
 
+func TestRepositoryWorkStartRequiresClickableMdmaidDeskURLs(t *testing.T) {
+	t.Parallel()
+
+	root := repositoryRoot(t)
+	contracts := map[string][]string{
+		"config/workflow/phases/start.md": {
+			"full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown link",
+			"Never substitute a bare route, relative path, document ID, or bare URL",
+		},
+		"docs/REVIEW-WORKFLOW.md": {
+			"full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown link",
+			"no safe clickable URL is currently available",
+		},
+	}
+	for relative, required := range contracts {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		normalized := strings.Join(strings.Fields(string(content)), " ")
+		for _, fragment := range required {
+			if !strings.Contains(normalized, fragment) {
+				t.Errorf("%s is missing clickable mdmaid.desk URL contract %q", relative, fragment)
+			}
+		}
+		if strings.Contains(normalized, "mdmaid.desk link or navigation route") {
+			t.Errorf("%s still permits a navigation route instead of a clickable URL", relative)
+		}
+	}
+}
+
 func TestRepositoryDirectionAndPlanRequireExplicitAIReviewChoice(t *testing.T) {
 	t.Parallel()
 

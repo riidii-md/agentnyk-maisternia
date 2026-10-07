@@ -119,8 +119,12 @@ still have no workflow actions. The installed `readable-output` skill is the can
 The producer records the request ID and exact
 revision, keeps its current agent turn open on the foreground waiter, and
 receives both the human outcome and response text. The initial update must
-include the review request ID, exact document revision, and an available
-mdmaid.desk link or navigation route. A yielded execution-process ID must be
+include the review request ID, exact document revision, and the full absolute
+HTTP(S) mdmaid.desk document URL as a clickable Markdown link. It must never
+substitute a bare route, relative path, document ID, or bare URL. When the safe
+origin contract cannot derive that link, it reports that no safe clickable URL
+is currently available and includes the diagnostic retry command instead of
+fabricating a URL. A yielded execution-process ID must be
 resumed until completion with the longest safe blocking interval allowed by
 active harness policy; it is not a reason to finish the turn. The producer keeps one
 long-lived foreground waiter, never starts a replacement or nested waiter, and

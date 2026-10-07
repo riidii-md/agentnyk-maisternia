@@ -11,6 +11,128 @@ import (
 	"testing"
 )
 
+var mdmaidDeskPublicationPattern = regexp.MustCompile(`mdmaid-desk\s+(?:register|import)\s+`)
+
+func repositoryWorkflowPublishers(t *testing.T, repoRoot string) []string {
+	t.Helper()
+
+	publishers := make([]string, 0)
+	workflowRoot := filepath.Join(repoRoot, "config", "workflow")
+	err := filepath.WalkDir(workflowRoot, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() || filepath.Ext(path) != ".md" {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		if !mdmaidDeskPublicationPattern.Match(data) {
+			return nil
+		}
+		relative, relativeErr := filepath.Rel(repoRoot, path)
+		if relativeErr != nil {
+			return relativeErr
+		}
+		publishers = append(publishers, filepath.ToSlash(relative))
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(publishers) == 0 {
+		t.Fatal("no direct mdmaid.desk publishers discovered")
+	}
+	slices.Sort(publishers)
+	return publishers
+}
+
+func mdmaidDeskPublicationCommands(content string) []string {
+	var prose strings.Builder
+	var fence strings.Builder
+	commands := make([]string, 0)
+	inFence := false
+
+	for _, line := range strings.Split(content, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			if inFence {
+				commands = append(commands, mdmaidDeskFencedPublicationCommands(fence.String())...)
+				fence.Reset()
+			}
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			fence.WriteString(line)
+			fence.WriteByte('\n')
+			continue
+		}
+		prose.WriteString(line)
+		prose.WriteByte('\n')
+	}
+
+	inlineCodePattern := regexp.MustCompile("`([^`]*)`")
+	for _, match := range inlineCodePattern.FindAllStringSubmatch(prose.String(), -1) {
+		command := strings.Join(strings.Fields(match[1]), " ")
+		if isMdmaidDeskPublicationCommand(command) {
+			commands = append(commands, command)
+		}
+	}
+	return commands
+}
+
+func mdmaidDeskFencedPublicationCommands(content string) []string {
+	commands := make([]string, 0)
+	current := make([]string, 0)
+	flush := func() {
+		if len(current) == 0 {
+			return
+		}
+		commands = append(commands, strings.Join(strings.Fields(strings.Join(current, "\n")), " "))
+		current = current[:0]
+	}
+
+	for _, line := range strings.Split(content, "\n") {
+		if isMdmaidDeskPublicationCommand(strings.TrimSpace(line)) {
+			flush()
+			current = append(current, line)
+			continue
+		}
+		if len(current) > 0 {
+			current = append(current, line)
+		}
+	}
+	flush()
+	return commands
+}
+
+func isMdmaidDeskPublicationCommand(command string) bool {
+	return mdmaidDeskPublicationPattern.MatchString(command) &&
+		(strings.HasPrefix(command, "mdmaid-desk register ") ||
+			strings.HasPrefix(command, "mdmaid-desk import "))
+}
+
+func TestMdmaidDeskPublicationCommandsSplitsFencedCommands(t *testing.T) {
+	t.Parallel()
+
+	content := "```text\n" +
+		"mdmaid-desk register <first.md> --workspace <id>\n" +
+		"mdmaid-desk import <second.md> --workspace <id> --json\n" +
+		"```\n"
+	commands := mdmaidDeskPublicationCommands(content)
+	if len(commands) != 2 {
+		t.Fatalf("publication commands = %q, want two commands", commands)
+	}
+	if slices.Contains(strings.Fields(commands[0]), "--json") {
+		t.Fatalf("first publication command unexpectedly contains --json: %q", commands[0])
+	}
+	if !slices.Contains(strings.Fields(commands[1]), "--json") {
+		t.Fatalf("second publication command is missing --json: %q", commands[1])
+	}
+}
+
 func TestRepositoryManifestRendersCanonicalWorkflowAndRouting(t *testing.T) {
 	t.Parallel()
 
@@ -528,7 +650,7 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	content := string(data)
+	content := strings.Join(strings.Fields(string(data)), " ")
 	for _, snippet := range []string{
 		"response, plan, review, analysis, research report, or command output",
 		".agent-runs/readable-output",
@@ -550,7 +672,7 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 		"final durable result",
 		"Do not narrate unchanged pending checks",
 		"review request ID, exact document revision",
-		"mdmaid.desk link or navigation route",
+		"full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown link",
 		"Do not return a final response while the review is pending",
 		"surface the received outcome and human response text immediately",
 		"changes_requested",
@@ -584,6 +706,75 @@ func TestRepositoryReadableOutputUsesMdmaidDeskAsTheReadingHub(t *testing.T) {
 	targets := manifestTargets(manifest, "codex")
 	if got := targets[".codex/skills/readable-output/SKILL.md"]; got != source {
 		t.Errorf("Codex readable-output source = %q, want %q", got, source)
+	}
+}
+
+func TestRepositoryMdmaidDeskPublishersRequireClickableURLs(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, _ := loadRepositoryManifest(t)
+	publishers := repositoryWorkflowPublishers(t, repoRoot)
+
+	for _, relative := range publishers {
+		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		content := strings.Join(strings.Fields(string(data)), " ")
+		for _, required := range []string{
+			"Use `--json` for every `mdmaid-desk register` or `import` publication",
+			"full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown link",
+		} {
+			if !strings.Contains(content, required) {
+				t.Errorf("%s is missing clickable URL contract %q", relative, required)
+			}
+		}
+		commands := mdmaidDeskPublicationCommands(string(data))
+		if len(commands) == 0 {
+			t.Errorf("%s has no effective mdmaid.desk publication command", relative)
+		}
+		for index, command := range commands {
+			if !slices.Contains(strings.Fields(command), "--json") {
+				t.Errorf("%s publication command %d is missing --json: %q", relative, index+1, command)
+			}
+		}
+	}
+
+	readableOutput, err := os.ReadFile(filepath.Join(repoRoot, "config/workflow/skills/readable-output/SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := strings.Join(strings.Fields(string(readableOutput)), " ")
+	for _, required := range []string{
+		"`schemaVersion: 1`",
+		"`document.route`",
+		"capture `mdmaid-desk daemon status` internally",
+		"Do not print, log, persist, quote, or relay its raw output",
+		"Accept only `http` or `https`",
+		"Exit nonzero, more or fewer than one `mdmaid.desk web:` line, or malformed output",
+		"reject user information",
+		"Discard its path, query, and fragment",
+		"must start with `/d/`",
+		"must not start with `//`",
+		"must not contain a scheme, authority, user information, query, or fragment",
+		"same origin and the same pathname",
+		"Do not include credentials, tokens, or secret query parameters",
+		"no safe clickable URL is currently available",
+		"Never substitute the route or raw status URL",
+		"diagnostic retry command `mdmaid-desk daemon status`",
+		"Never start it automatically",
+	} {
+		if !strings.Contains(content, required) {
+			t.Errorf("readable-output skill is missing safe clickable URL detail %q", required)
+		}
+	}
+	for _, forbidden := range []string{
+		"mdmaid.desk link or navigation route",
+		"the document ID or desk URL when the CLI provides one",
+	} {
+		if strings.Contains(content, forbidden) {
+			t.Errorf("readable-output skill still permits non-clickable receipt %q", forbidden)
+		}
 	}
 }
 
@@ -777,36 +968,7 @@ func TestRepositoryMdmaidSpaceRoutingContract(t *testing.T) {
 		}
 	}
 
-	publishers := make([]string, 0)
-	commandPattern := regexp.MustCompile(`mdmaid-desk\s+(?:register|import)\s+`)
-	workflowRoot := filepath.Join(repoRoot, "config", "workflow")
-	err = filepath.WalkDir(workflowRoot, func(path string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if entry.IsDir() || filepath.Ext(path) != ".md" {
-			return nil
-		}
-		data, readErr := os.ReadFile(path)
-		if readErr != nil {
-			return readErr
-		}
-		if commandPattern.Match(data) {
-			relative, relativeErr := filepath.Rel(repoRoot, path)
-			if relativeErr != nil {
-				return relativeErr
-			}
-			publishers = append(publishers, filepath.ToSlash(relative))
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(publishers) == 0 {
-		t.Fatal("no direct mdmaid.desk publishers discovered")
-	}
-	slices.Sort(publishers)
+	publishers := repositoryWorkflowPublishers(t, repoRoot)
 	const routingInstruction = "After resolving the workspace and finalizing the exact planned tags, follow the installed readable-output `references/space-routing.md` contract before registration and run its scoped postcondition after successful registration."
 	for _, relative := range publishers {
 		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))
@@ -814,7 +976,7 @@ func TestRepositoryMdmaidSpaceRoutingContract(t *testing.T) {
 			t.Fatal(err)
 		}
 		publisher := strings.Join(strings.Fields(string(data)), " ")
-		commandIndex := commandPattern.FindStringIndex(publisher)
+		commandIndex := mdmaidDeskPublicationPattern.FindStringIndex(publisher)
 		namingIndex := strings.Index(publisher, "project-naming.md")
 		routingIndex := strings.Index(publisher, routingInstruction)
 		if namingIndex < 0 || routingIndex < 0 || commandIndex == nil {

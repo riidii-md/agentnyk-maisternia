@@ -99,15 +99,20 @@ If the artifact is already inside the intended workspace or one of its allowed
 artifact roots, run:
 
 ```text
-mdmaid-desk register <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
+mdmaid-desk register <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review --task <jira-id> --feature-name "<minimal feature text>" --json
 ```
 
 If the artifact is outside the intended workspace and the user wants it stored
 there, run:
 
 ```text
-mdmaid-desk import <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review --task <jira-id> --feature-name "<minimal feature text>"
+mdmaid-desk import <artifact.md> --workspace <id> --kind <kind> --title "<title>" --attention review --task <jira-id> --feature-name "<minimal feature text>" --json
 ```
+
+Use `--json` for every `mdmaid-desk register` or `import` publication. Retain
+the structured receipt without echoing it wholesale, require
+`schemaVersion: 1`, and read `document.route`. A missing or invalid route blocks
+link creation; never derive a route from the document ID.
 
 `review` is the default attention state. Honor an explicit workflow request for
 `approval`, `failure`, or `changes_requested` when the artifact has that role.
@@ -127,6 +132,37 @@ reference, and add up to three grounded subject tags when useful.
 Registration is a presentation action, not approval. Do not start a persistent
 server, daemon, TUI, or browser unless the user explicitly asks in the current
 request.
+
+## Return a full clickable document URL
+
+After successful registration or import, capture `mdmaid-desk daemon status`
+internally to resolve the active web origin. Do not print, log, persist, quote,
+or relay its raw output because the reported web URL contains an authentication
+token. Exit nonzero, more or fewer than one `mdmaid.desk web:` line, or malformed
+output means that no safe active origin is available. Do not read private daemon
+state as a substitute.
+
+Parse the captured web URL with a URL parser. Accept only `http` or `https`,
+reject user information, and reduce it to its origin: scheme, host, and explicit
+port when present. Discard its path, query, and fragment, including the token.
+Require `document.route` to be a single origin-relative document path: it must
+start with `/d/`, must not start with `//`, and must not contain a scheme,
+authority, user information, query, or fragment. Resolve it against the
+sanitized origin and verify that the result has the same origin and the same
+pathname before presenting it.
+
+Return the full absolute HTTP(S) mdmaid.desk document URL as a clickable
+Markdown link, for example
+`[Open in mdmaid.desk](https://mdmaid.desk.localhost/d/...)`. Never substitute
+a bare route, relative path, document ID, or bare URL. Do not include
+credentials, tokens, or secret query parameters in the presented link.
+
+If status capture or validation fails, report that registration succeeded but
+no safe clickable URL is currently available. Never substitute the route or
+raw status URL. Preserve the document ID and revision, report the diagnostic
+retry command `mdmaid-desk daemon status`, and mention `mdmaid-desk web` only
+as an explicit user-run way to start a foreground service. Never start it
+automatically.
 
 Do not generate a standalone HTML copy or invoke `codex-readable-doc` as an
 implicit preview. Do not open a browser merely because Markdown was created,
@@ -157,8 +193,7 @@ or `import` command and retain its JSON receipt:
 ```text
 --attention approval \
 --expect plan-decision \
---request-message "<what the human should decide and any important focus>" \
---json
+--request-message "<what the human should decide and any important focus>"
 ```
 
 Read `reviewRequest.id` from the successful result, record it with the document
@@ -175,7 +210,10 @@ enclosing turn must remain active. Do not background or detach the waiter.
 Do not return a final response while the review is pending; a
 `waiting_for_approval` receipt is an intermediate update only.
 The initial update must include the review request ID, exact document revision,
-and an available mdmaid.desk link or navigation route.
+and the full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown
+link when the safe origin contract above succeeds. Otherwise state that no
+safe clickable URL is currently available; never print only the navigation
+route.
 
 If the execution tool yields a process or session ID instead of completed JSON,
 resume that same process or session until it exits. Use the longest safe blocking interval allowed by active harness policy.
@@ -242,6 +280,9 @@ After exit 0, return a short terminal summary containing:
 - the durable Markdown path;
 - the selected desk workspace;
 - whether `register` or `import` succeeded;
-- the document ID or desk URL when the CLI provides one.
+- the document ID and revision from the JSON receipt;
+- the full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown
+  link when the safe origin contract succeeds, or the explicit
+  safe-link-unavailable result and diagnostic retry command when it does not.
 
 Do not duplicate the full document in chat unless requested.

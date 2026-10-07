@@ -213,8 +213,14 @@ installed readable-output `references/space-routing.md` contract before
 registration and run its scoped postcondition after successful registration.
 Then run `mdmaid-desk register <artifact.md> --workspace <id> --kind <kind>
 --title "<catalog title>" --attention review --task <jira-id>
---feature-name "<minimal feature text>"`. Omit both project options when no
+--feature-name "<minimal feature text>" --json`. Omit both project options when no
 grounded Jira ID exists.
+
+Use `--json` for every `mdmaid-desk register` or `import` publication. After a
+successful publication, apply the installed readable-output full clickable URL
+receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
+a clickable Markdown link when a safe active origin is available; never
+substitute a route, relative path, document ID, or bare URL.
 
 Registration sends the document to the desk; it does not imply approval and
 does not require starting the TUI or web client. If the CLI is unavailable or
@@ -222,6 +228,7 @@ registration fails, preserve the Markdown artifact and report its path, the
 failure, and an exact retry command. Do not substitute a temporary-only file or
 an HTML-only renderer.
 
-Return a short terminal summary with the Markdown path and desk registration
-status. Do not duplicate the complete document in chat unless the user asks.
-Mention the selected mode or a key assumption only when useful.
+Return a short terminal summary with the Markdown path, desk registration
+status, and clickable mdmaid.desk URL or explicit safe-link-unavailable result.
+Do not duplicate the complete document in chat unless the user asks. Mention
+the selected mode or a key assumption only when useful.
