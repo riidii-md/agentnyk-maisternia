@@ -2,6 +2,85 @@
   "schema_version": 1,
   "resources": [
     {
+      "id": "machine-cleanup-command",
+      "source": "config/workflow/phases/machine-cleanup.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/machine-cleanup.md"},
+        {"agent": "claude", "path": ".claude/commands/machine-cleanup.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/machine-cleanup.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-skill",
+      "source": "config/workflow/skills/machine-cleanup/SKILL.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/SKILL.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/SKILL.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/SKILL.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-reporting",
+      "source": "config/workflow/skills/machine-cleanup/references/reporting.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/references/reporting.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/references/reporting.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/references/reporting.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/references/reporting.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-macos",
+      "source": "config/workflow/skills/machine-cleanup/references/macos.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/references/macos.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/references/macos.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/references/macos.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/references/macos.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-linux",
+      "source": "config/workflow/skills/machine-cleanup/references/linux.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/references/linux.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/references/linux.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/references/linux.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/references/linux.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-windows",
+      "source": "config/workflow/skills/machine-cleanup/references/windows.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/references/windows.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/references/windows.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/references/windows.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/references/windows.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-docker",
+      "source": "config/workflow/skills/machine-cleanup/references/docker.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/references/docker.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/references/docker.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/references/docker.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/references/docker.md"}
+      ]
+    },
+    {
+      "id": "machine-cleanup-package-build-caches",
+      "source": "config/workflow/skills/machine-cleanup/references/package-build-caches.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/machine-cleanup/references/package-build-caches.md"},
+        {"agent": "claude", "path": ".claude/skills/machine-cleanup/references/package-build-caches.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/machine-cleanup/references/package-build-caches.md"},
+        {"agent": "hermes", "path": ".hermes/skills/machine-cleanup/references/package-build-caches.md"}
+      ]
+    },
+    {
       "id": "work-routing-preferences",
       "source": "config/workflow/phases/routing-preferences.md",
       "targets": [

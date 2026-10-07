@@ -32,6 +32,10 @@ Maisternia provides:
 The name *Maisternia* transliterates the Ukrainian `майстерня`: a workshop where
 things are made, assembled, and tuned.
 
+The opt-in [Machine Cleanup](docs/MACHINE-CLEANUP.md) preset explains local disk
+usage by category and proposes individually approved native cache/Docker cleanup.
+It is separate from task finalization and never grants automatic system cleanup.
+
 ## Project status
 
 AgentnykMaisternia is **pre-release**. The configurator and embedded preset

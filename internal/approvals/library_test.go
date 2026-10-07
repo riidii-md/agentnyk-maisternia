@@ -17,8 +17,8 @@ func TestRepositoryApprovalPolicyIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if len(policy.Rules) != 24 {
-		t.Fatalf("rule count = %d, want 24", len(policy.Rules))
+	if len(policy.Rules) != 26 {
+		t.Fatalf("rule count = %d, want 26", len(policy.Rules))
 	}
 	if policy.DefaultDecision != "ask" {
 		t.Fatalf("default decision = %q, want ask", policy.DefaultDecision)

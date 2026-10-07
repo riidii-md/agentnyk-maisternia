@@ -133,6 +133,30 @@ policy proves its state is the intended or documented success-equivalent state,
 the command records a no-op without transition/write capability, an
 `issue.update` grant, or a provider mutation call.
 
+## Machine Cleanup Approvals
+
+`/machine-cleanup` is a separate opt-in host-storage workflow, not task-owned
+`/work-cleanup`. Native-manager operations use `host.cache.prune`,
+`host.cache.clear`, `host.docker.image.remove`, `host.docker.build_cache.prune`,
+`host.docker.backend.compact`, `host.trash.empty`, and `host.log.prune` under
+`machine-cleanup-destructive`. Exact classified stateful volume removal uses
+`host.docker.volume.remove` under `machine-cleanup-stateful` instead.
+
+Both rules are critical asks with `human_present`, `approved_task_scope`,
+`local_only`, `bounded_budget`, and `redacted_record` requirements; grants are
+once-scoped, five minutes, one use, with preview and reason. They do not add a
+raw-delete exception to `filesystem.outside_workspace_destructive`. Scope is
+the proven manager/native object selection, not an arbitrary host path. The
+skill additionally binds identity, protected sets, consumers, locks, recovery,
+and command safety state; drift requires a fresh decision.
+
+Outside-workspace inventory uses its existing read gate; private/deeper reads
+need narrower consent. A durable redacted write-ahead receipt and proven native
+exact-target/one-use enforcement are mandatory for dispatch. A portable policy
+file and text “yes” cannot prove enforcement. Unsupported mappings remain
+inventory/handoff-only. See [Machine Cleanup](MACHINE-CLEANUP.md) for provider
+limits and the shared-policy installation/rollback behavior.
+
 ## Provider Mapping
 
 The portable policy is stricter than a prompt, but it is not yet active native
