@@ -1,7 +1,7 @@
 ---
 name: work-start
 description: Start or resume standard work and advance through its phases until a human response or an external blocker is required.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-start - Guided Standard Work
@@ -93,7 +93,10 @@ the available workspace rules.
    decision and record it with `/work-decide direction` before detailed
    planning. Requested changes return to direction and the review choice; a
    stale revision also returns to that choice.
-5. Create the `/work-plan` document and expand proof when needed. Present the
+5. Create the `/work-plan` document and expand proof when needed. Carry direction's
+   material assurance constraints and ensure the consolidated test plan is visible
+   before presentation, including a justified no-test-change disposition when
+   appropriate. Present the
    exact candidate plan, then stop for the same explicit choice: `run AI review
    now`, `skip AI review`, or `review later`. AI review is optional. Do not
    automatically invoke `/work-plan-review`; run `/work-plan-review plan` only

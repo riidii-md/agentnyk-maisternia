@@ -1,7 +1,7 @@
 ---
 name: work-run
 description: Execute an approved implementation contract in small verified steps and report only genuinely completed outcomes.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-run - Execute the Approved Plan
@@ -19,8 +19,10 @@ For each pass:
 1. Read the approved plan or handoff plus the current session's progress and
    select the first unfinished unblocked task.
 2. Reconfirm the task against current code and repository rules.
-3. Implement only that task.
-4. Add or update focused tests.
+3. Follow the approved test disposition and repository-required order, including
+   tests before implementation when required. Reuse evidence or make no test
+   changes when the approved rationale supports it; do not create tests by default.
+4. Implement only that task and its approved focused test changes.
 5. Run the task criteria and smallest relevant checks.
 6. Report result, files, checks, attempt count, and next action to the
    coordinating session.
@@ -45,6 +47,13 @@ explicit AI review choice again. Invoke `/work-plan-review plan-delta` only if
 the human selects AI review, then obtain the required human decision before
 resuming. Reconfirmation against current code does not authorize the executor
 to fill a material gap in the approved plan.
+
+Inexpensive cases within the approved envelope remain executor discretion, as
+defined by the plan's Test Plan contract. Material assurance or cost changes
+(including a new live harness, production seam, meaningful runtime increase,
+weakened coverage or changed accepted residual risk) return to the same revised-plan
+review-choice and human decision path before execution. Required repository and CI
+checks remain mandatory even when no test changes are planned.
 
 ## Place Rationale Deliberately
 

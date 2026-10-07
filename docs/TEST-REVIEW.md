@@ -33,6 +33,24 @@ Confirmed Critical and High assurance gaps block completion. Lower-severity
 maintainability findings are advisory unless they demonstrate false assurance,
 flakiness, security exposure, or significant ongoing maintenance cost.
 
+## Plan Before Authoring
+
+Test economy starts in the existing `/work-plan`, before human approval, not only
+in retrospective review. Its consolidated Test Plan owns existing-evidence
+inspection, selected behavior/risk coverage and scenarios, dispositions, faithful
+oracles, distinct value, cost, omissions and residual risk. Direction supplies
+material assurance constraints without exhaustive cases. A justified no-test-change
+disposition is valid; required repository and CI checks are still mandatory.
+
+When an approved plan governs the change, review reconciles actual evidence with
+that portfolio. Cheap cases inside its approved envelope remain executor discretion.
+Material assurance or cost changes return to the existing planning, review-choice
+and human decision path before repairs expand or weaken scope. This applies the
+authority boundary in `/work-plan`; it adds no testing phase or approval gate.
+Standalone reviews without an approved plan use accepted requirements and repository
+rules, rather than invent historical approval. Existing specialized lenses and
+authoring gates remain in force.
+
 ## Test Review Modes
 
 `review` remains the default mode embedded in every implementation review. It

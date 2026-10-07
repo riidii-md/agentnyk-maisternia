@@ -1,7 +1,7 @@
 ---
 name: work-handoff
 description: Compile an approved plan for a fresh executor only when execution context will change.
-version: 0.5.0
+version: 0.6.0
 ---
 
 # /work-handoff - Compile a Self-Contained Execution Contract
@@ -33,6 +33,8 @@ Compile:
   and control flow;
 - ordered tasks;
 - acceptance contract;
+- approved test portfolio, existing evidence, dispositions, value, cost and
+  residual risk, with materiality and discretion boundaries from the plan;
 - verification commands;
 - guardrails and approval boundaries;
 - fixed decisions, open decisions, and permitted executor discretion;

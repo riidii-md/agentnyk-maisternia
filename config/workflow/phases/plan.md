@@ -1,7 +1,7 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.6.0
+version: 0.7.0
 ---
 
 # /work-plan - Create the Implementation Plan
@@ -152,6 +152,42 @@ explicit statement that there are none, expected behavior, failure and edge case
 focused tests, and observable completion evidence. Avoid broad tasks such as
 "implement the backend" that require the executor to perform hidden decomposition.
 
+## Test Plan
+
+Every candidate plan owns one consolidated, proportionate test plan before human
+decision. Inspect relevant existing tests and repository rules first. Separate
+observed evidence from unknown coverage; do not assume a test name proves behavior.
+Carry material assurance constraints from the approved direction when it applies.
+
+For each material behavior or risk, record compactly:
+
+- relevant existing evidence, its fidelity and gaps;
+- disposition: reuse, change, add, remove, or no test changes;
+- selected normal, edge, failure or recovery scenarios where they matter, the
+  cheapest faithful level/environment, and the observable oracle;
+- how the evidence adds distinct confidence or diagnostic value; repeated
+  evidence at another level needs a distinct risk it detects;
+- cost: setup, dependencies, runtime, flakiness and maintenance where relevant;
+- intentional omissions and residual risk, including who must accept it.
+
+Use a compact table or prose, not a mandatory taxonomy or test-count/coverage
+quota. For trivial or non-executable work, a short no-test-change rationale is
+sufficient when it identifies relevant evidence, explains why test changes add
+no useful confidence, and states residual risk. Missing evidence stays unknown;
+inconvenience or smallness alone does not justify omission. Removal needs surviving
+proof and the established review authority. Required repository and CI checks still run.
+Tasks reference this section rather than create competing portfolios.
+
+The human decision fixes material behavior/risk coverage, fidelity, environments,
+dependencies, cost tradeoffs and accepted residual risk. Exact names, helper
+organization and equivalent assertions remain executor discretion. Inexpensive
+cases within that approved envelope do not need another decision. A new live
+harness, production seam, material runtime increase, weakened assurance or changed
+accepted risk returns to the existing revised-plan review-choice and decision
+path before execution. Do not rewrite existing approved plans merely because
+templates changed; return only when active material assurance is unbounded or
+new evidence changes the approved scope.
+
 Return:
 
 - Discovered repository rules
@@ -177,6 +213,8 @@ Return:
 - Risk and blast-radius checks
 - Migration or rollout concerns
 - Acceptance contract with observable evidence and expected verification
+- Consolidated test plan, including existing evidence, dispositions, value, cost
+  and residual risk
 - Stop conditions
 - Open decisions requiring human judgment
 - Whether `/work-prove` is needed as an optional expansion

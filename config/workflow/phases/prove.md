@@ -1,7 +1,7 @@
 ---
 name: work-prove
 description: Expand a candidate plan's acceptance contract when risk requires more detailed observable proof.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-prove - Define the Acceptance Contract
@@ -17,7 +17,9 @@ Input:
 
 `$ARGUMENTS`
 
-For every task, define:
+Expand selected high-risk entries in the candidate plan's same consolidated test plan;
+do not create a second portfolio or mandatory proof artifact. For each selected
+task, define:
 
 - setup or initial state;
 - action or command;
