@@ -31,7 +31,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		}
 	}
 	slices.Sort(spaceRoutingOwners)
-	wantSpaceRoutingOwners := []string{"adaptive-readability", "idea-shaping", "standard-work"}
+	wantSpaceRoutingOwners := []string{"adaptive-readability", "harness-improvement", "harness-profile", "herdr-worktrees", "idea-shaping", "machine-cleanup", "multi-lens-review", "parallel-work", "scored-experiment", "session-audit", "standard-work", "workflow-routing"}
 	if !slices.Equal(spaceRoutingOwners, wantSpaceRoutingOwners) {
 		t.Errorf("Space-routing preset owners = %v, want exactly %v", spaceRoutingOwners, wantSpaceRoutingOwners)
 	}
@@ -331,6 +331,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := parallel.Contents.Skills; !slices.Equal(got, []string{
 		"parallel-work-skill", "work-routing-skill", "work-routing-runners",
+		"readable-output-skill", "readable-output-project-naming",
+		"readable-output-space-routing", "readable-output-document-wording",
 	}) {
 		t.Fatalf("parallel-work skills = %v", got)
 	}
@@ -379,6 +381,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := multiReview.Contents.Skills; !slices.Equal(got, []string{
 		"multi-lens-review-skill", "work-routing-skill", "work-routing-runners",
+		"readable-output-skill", "readable-output-project-naming",
+		"readable-output-space-routing", "readable-output-document-wording",
 	}) {
 		t.Fatalf("multi-lens-review skills = %v", got)
 	}
@@ -413,6 +417,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		"readable-output-space-routing",
 		"work-routing-skill",
 		"work-routing-runners",
+		"readable-output-document-wording",
 	}) {
 		t.Fatalf("adaptive-readability skills = %v", got)
 	}
@@ -442,6 +447,8 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	}
 	if got := profile.Contents.Skills; !slices.Equal(got, []string{
 		"session-retrospective-skill", "work-routing-skill", "work-routing-runners",
+		"readable-output-skill", "readable-output-project-naming",
+		"readable-output-space-routing", "readable-output-document-wording",
 	}) {
 		t.Fatalf("harness-profile skills = %v", got)
 	}
@@ -579,9 +586,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(scored-experiment) error = %v", err)
 	}
-	if len(experimentManifest.Resources) != 5 {
+	if len(experimentManifest.Resources) != 9 {
 		t.Fatalf(
-			"scored-experiment resource count = %d, want 5",
+			"scored-experiment resource count = %d, want 9",
 			len(experimentManifest.Resources),
 		)
 	}
@@ -595,9 +602,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(parallel-work) error = %v", err)
 	}
-	if len(parallelManifest.Resources) != 10 {
+	if len(parallelManifest.Resources) != 14 {
 		t.Fatalf(
-			"parallel-work resource count = %d, want 10",
+			"parallel-work resource count = %d, want 14",
 			len(parallelManifest.Resources),
 		)
 	}
@@ -611,9 +618,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(multi-lens-review) error = %v", err)
 	}
-	if len(multiReviewManifest.Resources) != 11 {
+	if len(multiReviewManifest.Resources) != 15 {
 		t.Fatalf(
-			"multi-lens-review resource count = %d, want 11",
+			"multi-lens-review resource count = %d, want 15",
 			len(multiReviewManifest.Resources),
 		)
 	}
@@ -627,9 +634,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(adaptive-readability) error = %v", err)
 	}
-	if len(adaptiveReadabilityManifest.Resources) != 14 {
+	if len(adaptiveReadabilityManifest.Resources) != 15 {
 		t.Fatalf(
-			"adaptive-readability resource count = %d, want 14",
+			"adaptive-readability resource count = %d, want 15",
 			len(adaptiveReadabilityManifest.Resources),
 		)
 	}
@@ -643,9 +650,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(harness-improvement) error = %v", err)
 	}
-	if len(improvementManifest.Resources) != 14 {
+	if len(improvementManifest.Resources) != 18 {
 		t.Fatalf(
-			"harness-improvement resource count = %d, want 14",
+			"harness-improvement resource count = %d, want 18",
 			len(improvementManifest.Resources),
 		)
 	}

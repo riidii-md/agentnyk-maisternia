@@ -11,7 +11,11 @@
     "skills": [
       "herdr-worktrees-skill",
       "herdr-worktrees-native",
-      "herdr-worktrees-isolated"
+      "herdr-worktrees-isolated",
+      "readable-output-skill",
+      "readable-output-project-naming",
+      "readable-output-space-routing",
+      "readable-output-document-wording"
     ],
     "hooks": [],
     "settings": []

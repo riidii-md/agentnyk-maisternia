@@ -5,6 +5,12 @@ description: Build an evidence-grounded explanation of an implementation change 
 
 # Change Explanation
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Use this skill when the reader needs to understand what changed without reading
 the entire diff, or needs to understand a reviewed plan before implementation.
 The result combines a compact narrative with the smallest visual forms that

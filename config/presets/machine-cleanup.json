@@ -15,7 +15,11 @@
       "machine-cleanup-linux",
       "machine-cleanup-windows",
       "machine-cleanup-docker",
-      "machine-cleanup-package-build-caches"
+      "machine-cleanup-package-build-caches",
+      "readable-output-skill",
+      "readable-output-project-naming",
+      "readable-output-space-routing",
+      "readable-output-document-wording"
     ],
     "hooks": [],
     "settings": ["approval-policy"]

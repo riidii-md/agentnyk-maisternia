@@ -5,6 +5,12 @@ description: Publish a response, plan, review, analysis, research report, or com
 
 # Deliver Readable Output
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Treat mdmaid.desk as the canonical reading hub. `mdmaid` validates or renders a
 document; `mdmaid-desk` catalogs it. Rendering Markdown to HTML, opening a local
 file, or running a helper that only calls `mdmaid` is not desk delivery.
@@ -32,6 +38,43 @@ Discovery may share one evolving brief; direction, implementation plan, and
 change review are separate roles. When a calling workflow supplies a stable
 task-and-role path, update it for a new revision instead of creating a
 timestamped sibling. A new content hash never inherits earlier approval.
+
+## Document-bound human checkpoints
+
+Apply this prerequisite when an actual document is the basis of a requested
+human response, or before reporting that document as waiting for a response.
+Ordinary clarification without a document does not require creating one.
+
+1. Finalize the exact current revision: complete authorized wording, screening,
+   validation, and the local content hash before delivery.
+2. Register or import that revision successfully with `--json`. Require exit 0
+   and a valid `schemaVersion: 1` receipt; a local artifact alone is insufficient.
+3. Verify and retain the artifact path, operation, workspace, returned document ID,
+   document revision, receipt, and local content hash. Recompute the local hash
+   after publication and stop if the source changed. A prior revision's receipt
+   does not cover changed content.
+4. Only after successful delivery, present the registered document and request
+   the response or report waiting. Use the existing safe-link outcome below.
+
+For candidate plan/direction AI-review choices and document-based discovery
+questions, register passively with `--attention review`. Do not add `--expect`
+or a decision waiter for those choices. Retain existing conversational response
+rules for parallel plans, improvement proposals, and preferences. Exact
+direction/plan/change decisions keep their authenticated transport, revision
+binding, and foreground quiet-wait contracts.
+
+If validation, registration/import, or receipt verification fails, preserve
+the artifact and report **delivery blocked** with the exact recovery command.
+Do not report waiting for review, approval, or a response. Successful delivery
+without a safe clickable URL is different: report `safe-link-unavailable`,
+retain the receipt, and give the existing diagnostic recovery and local artifact
+link. Missing link availability never waives successful desk delivery.
+
+Registration is not approval. Attention, opening, reading, archiving, and elapsed
+time do not record a decision or authorize AI review. Internal artifacts,
+copied evidence, machine-readable records, and archived packages are not
+response-dependent automatically. Space setup questions remain prerequisites;
+preserve their existing authority and fallback rules.
 
 ## Validate before delivery
 

@@ -5,6 +5,12 @@ description: Use after a completed agent task to profile the active harness, aud
 
 # Session Retrospective
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Use this skill when a completed run should become evidence for improving the
 agent harness. It applies to correctness, token and latency cost, commands,
 prompts, skills, MCP servers, hooks, settings, plugins, and model routing.

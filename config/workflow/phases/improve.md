@@ -6,6 +6,12 @@ version: 0.1.0
 
 # /work-improve - Propose A Harness Improvement
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Use completed profiles and audits to improve the harness over time. Optimize
@@ -68,8 +74,13 @@ Write the proposal and replay report under:
 Update the proposal and human-decision fields in `record.json` using the
 installed retrospective record schema.
 
+Register the exact proposal through readable-output before requesting acceptance.
+Central-store copying alone is insufficient. Task-owned proposal/replay presentation
+in mdmaid.desk is permitted before acceptance; it does not authorize installation.
+
 Finish with one decision request: `accept`, `reject`, `revise`, or `collect more
-evidence`. Do not install, push, publish, or mutate provider configuration until
+evidence`. Do not install, push,
+publish unrelated content, or mutate provider configuration until
 the user explicitly accepts the reviewed proposal. After acceptance, use the
 normal `maisternia` plan, conflict-resolution, backup, apply, and rollback flow.
 

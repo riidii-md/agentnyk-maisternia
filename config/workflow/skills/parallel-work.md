@@ -5,6 +5,12 @@ description: Use when an approved implementation can be decomposed into independ
 
 # Parallel Work
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Use this skill to reduce wall-clock delivery time with a dependency-aware plan.
 
 Use the installed `work-routing` skill when an invocation or worker explicitly

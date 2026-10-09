@@ -708,6 +708,16 @@
       ]
     },
     {
+      "id": "readable-output-document-wording",
+      "source": "config/workflow/skills/readable-output/references/document-wording.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/readable-output/references/document-wording.md"},
+        {"agent": "claude", "path": ".claude/skills/readable-output/references/document-wording.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/readable-output/references/document-wording.md"},
+        {"agent": "hermes", "path": ".hermes/skills/readable-output/references/document-wording.md"}
+      ]
+    },
+    {
       "id": "decision-capture-skill",
       "source": "config/workflow/skills/decision-capture/SKILL.md",
       "targets": [

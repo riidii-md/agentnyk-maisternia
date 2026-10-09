@@ -6,6 +6,12 @@ version: 0.3.0
 
 # /work-direction - Define The Architectural Direction
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Create a high-level architectural direction from the accepted task definition,
@@ -136,7 +142,10 @@ Write one durable Markdown direction artifact at an explicit task artifact path
 when provided, otherwise under `.agent-runs/readable-output/`. Reuse its stable
 task-and-role path for revisions, validate it, and record its content hash.
 
-Present the exact candidate direction and ask one explicit workflow question.
+Register the exact candidate direction through readable-output passively
+with `--attention review` before presenting the AI-review question. Do not add
+`--expect` for that choice. Present the exact candidate direction and ask one
+explicit workflow question.
 AI review is optional. Offer `run AI review now`, `skip AI review` so the human
 can inspect and decide on this revision directly, or `review later` and stop.
 Do not automatically invoke `/work-plan-review`.

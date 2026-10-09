@@ -32,8 +32,12 @@
       "adapt-for-reader-modes",
       "adapt-for-reader-preferences",
       "adapt-for-reader-principles",
-      "readable-output-skill", "readable-output-project-naming", "readable-output-space-routing",
-      "work-routing-skill", "work-routing-runners"
+      "readable-output-skill",
+      "readable-output-project-naming",
+      "readable-output-space-routing",
+      "work-routing-skill",
+      "work-routing-runners",
+      "readable-output-document-wording"
     ],
     "hooks": [],
     "settings": ["reader-profile-schema", "work-routing-profile-schema"]

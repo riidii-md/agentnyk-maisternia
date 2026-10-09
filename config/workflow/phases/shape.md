@@ -6,6 +6,12 @@ version: 0.3.0
 
 # /work-shape - Shape an Idea
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Turn an incomplete idea into an evidence-backed decision and implementation
@@ -70,13 +76,14 @@ of recording a hidden phase transition.
   a durable checkpoint is useful; do not create one document per phase.
 - Treat the direction and implementation plan as separate durable
   checkpoints, reusing stable task-and-role paths for revisions.
-- The shaping request authorizes task-owned direction Markdown artifacts,
-  optional review artifacts only after the human selects AI review, plus local
-  mdmaid.desk decision registration for the exact direction when this
-  conditional gate is required. Treat this
-  presentation as scoped `workflow.artifact_write`, subject to the existing
-  desk publication policy. It does not authorize modifying target-project
-  files or publishing other documents.
+- The shaping request authorizes task-owned direction artifacts and other
+  task-owned documents needed for human checkpoints
+  and their scoped desk presentation. Optional review artifacts still require
+  the human's explicit AI-review choice; exact direction decisions retain their
+  existing authenticated mode and mdmaid.desk decision registration.
+  Treat presentation as `workflow.artifact_write`,
+  subject to the existing desk publication policy. It does not authorize modifying target-project
+  files or publishing unrelated content.
 - Write other new Markdown artifacts only when the user requests them or the
   current task separately authorizes artifact output.
 - Do not use Maisternia as a task database, phase controller, source ledger, or

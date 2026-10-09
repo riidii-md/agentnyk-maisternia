@@ -69,6 +69,24 @@ repair, and reporting machinery.
 
 ## Delivery Gates
 
+Workflow-authored English documents use STE-inspired wording by default.
+Keep headings, section order, lists, tables, diagrams, required fields, and
+technical meaning during the wording pass. Preserve commands, paths, links,
+quotations, patch blocks, evidence, and the force of `must`, `should`, and
+`may`. The current request and reader language take precedence. A wording-only
+request bypasses structural adaptation, including `always-ask`; separately
+requested structural changes retain their existing gates. This default does
+not claim full ASD-STE100 compliance.
+
+Before asking for a response to an actual document or reporting it as waiting,
+successfully register its exact current revision in mdmaid.desk and retain
+its validated receipt and local hash. Candidate AI-review choices use passive
+delivery; exact decisions retain authenticated revision binding. Failed delivery
+is **delivery blocked**, not waiting. An unavailable safe link after successful
+registration has its separate recovery path. Ordinary questions require no
+document.
+
+
 The standard delivery DAG now distinguishes the two gates:
 
 ```mermaid

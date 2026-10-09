@@ -6,6 +6,12 @@ version: 0.7.0
 
 # Lens Review
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Resolve the target as `plan`, `plan-delta`, or `implementation`. An explicit
 target wins. Do not refuse a plan review because no code diff exists. Review
 plans against the actual repository, not against prose alone.

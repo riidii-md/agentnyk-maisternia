@@ -36,8 +36,13 @@
     ],
     "prompts": [],
     "skills": [
-      "session-retrospective-skill", "work-routing-skill",
-      "work-routing-runners"
+      "session-retrospective-skill",
+      "work-routing-skill",
+      "work-routing-runners",
+      "readable-output-skill",
+      "readable-output-project-naming",
+      "readable-output-space-routing",
+      "readable-output-document-wording"
     ],
     "hooks": [],
     "settings": [
