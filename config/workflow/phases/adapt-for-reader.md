@@ -6,6 +6,12 @@ version: 0.1.0
 
 # /work-adapt-for-reader - Adapt Text to Its Reader
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Transform supplied text, referenced files, or current conversation context for
@@ -16,6 +22,15 @@ the reader and use described in:
 Use the installed `adapt-for-reader` skill and its mode, preference, and design
 principle references. Preserve meaning, evidence, uncertainty, constraints, and
 source provenance.
+
+Wording-only requests: when the user asks only to revise wording or preserve
+structure, apply the document-wording reference and preserve structure,
+requested depth, requested reader language, evidence, and protected literals.
+This branch takes precedence even when `always-ask` is configured.
+Skip reader clarification, view/depth selection, and hierarchy transformation.
+After fidelity verification, deliver through the existing publication contract
+when delivery is requested or required, then return from this branch.
+For separately requested structural adaptation, use the existing gates below.
 
 Resolve preferences by the skill's precedence rules; the current request wins.
 If the reader or intended use is missing and plausible choices

@@ -65,6 +65,14 @@ distinct units.
 
 ## Approval and preservation
 
+The preset includes shared wording and document-delivery references.
+Inline inventory and cleanup previews remain document-free. If an authorized,
+redacted report is the basis of a human response, register its exact revision
+before asking. Registration does not approve an inventory read or cleanup batch.
+Keep disclosure, destination approval, fresh one-use grants, drift checks,
+write-ahead receipts, and protected data rules.
+
+
 Before an outside-workspace traversal, the user sees exact roots, metadata,
 commands, duration, and available bounds. Personal filenames/deep scans require
 an additional narrower decision. Scans are shallow, no-follow, same-mount,

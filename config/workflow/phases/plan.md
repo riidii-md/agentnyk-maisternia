@@ -6,6 +6,12 @@ version: 0.7.0
 
 # /work-plan - Create the Implementation Plan
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Produce an actionable implementation proposal. When the direction gate applied,
@@ -223,7 +229,11 @@ Write the complete plan as durable Markdown at the explicit task artifact path
 when one exists, otherwise under `.agent-runs/readable-output/`. Validate it and
 record its exact content hash. When expanded proof is required, complete
 `/work-prove` before presenting the review choice. Once proof is included or
-not needed, present the candidate plan and ask one explicit workflow question.
+not needed, proceed to candidate delivery.
+Register the exact candidate through readable-output passively
+with `--attention review` before presenting the question. Do not add `--expect`
+for the AI-review choice. Then present the candidate plan and ask one explicit
+workflow question.
 AI review is optional. Offer `run AI review now`,
 `skip AI review` so the human can inspect and decide on this revision directly,
 or `review later` and stop. Do not automatically invoke `/work-plan-review`.

@@ -104,9 +104,17 @@
     ],
     "prompts": [],
     "skills": [
-      "change-explanation-skill", "change-explanation-graph-contract",
-      "multi-lens-review-skill", "readable-output-skill", "readable-output-project-naming", "readable-output-space-routing", "decision-capture-skill",
-      "session-retrospective-skill", "work-routing-skill", "work-routing-runners"
+      "change-explanation-skill",
+      "change-explanation-graph-contract",
+      "multi-lens-review-skill",
+      "readable-output-skill",
+      "readable-output-project-naming",
+      "readable-output-space-routing",
+      "decision-capture-skill",
+      "session-retrospective-skill",
+      "work-routing-skill",
+      "work-routing-runners",
+      "readable-output-document-wording"
     ],
     "hooks": [],
     "settings": [

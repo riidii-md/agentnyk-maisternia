@@ -25,7 +25,14 @@
     "mcp_refs": [],
     "commands": ["work-experiment", "work-routing-preferences"],
     "prompts": [],
-    "skills": ["work-routing-skill", "work-routing-runners"],
+    "skills": [
+      "work-routing-skill",
+      "work-routing-runners",
+      "readable-output-skill",
+      "readable-output-project-naming",
+      "readable-output-space-routing",
+      "readable-output-document-wording"
+    ],
     "hooks": [],
     "settings": ["work-routing-profile-schema"]
   },

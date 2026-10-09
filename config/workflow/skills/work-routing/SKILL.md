@@ -5,6 +5,12 @@ description: Route provider-neutral /work-* commands across harnesses, models, a
 
 # Work Routing
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Keep `/work-*` as the workflow identity; routing is execution metadata. Load
 this skill only for a route signal or saved profile, except for
 `/work-routing-preferences`.

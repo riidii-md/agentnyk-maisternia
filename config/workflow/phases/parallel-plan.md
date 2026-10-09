@@ -6,6 +6,12 @@ version: 0.1.0
 
 # /work-parallel-plan - Create A Parallel Implementation Plan
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible explicit route, an active session route exists, or the exact `.maisternia/work-routing.json` or `${XDG_CONFIG_HOME:-~/.config}/maisternia/work-routing.json` exists. Otherwise continue locally without loading it. After loading, continue only with its cleaned task.
 
 Create an implementation plan that can safely run more than one task at a time.
@@ -94,3 +100,7 @@ Markdown view must include:
 - exact human approval requested.
 
 Leave approval status as `draft` until the user explicitly approves the plan.
+
+Register the exact parallel plan through readable-output before requesting acceptance.
+Central-store copying alone is insufficient. Keep the existing response rules;
+desk registration does not approve execution.

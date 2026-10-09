@@ -5,6 +5,12 @@ description: Adapt existing or generated text to a specific reader, purpose, tim
 
 # Adapt for Reader
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Optimize reader success, not word count or visual polish. Make it easier for the
 intended reader to find, understand, evaluate, and use the information without
 changing its meaning, evidence, uncertainty, or required detail.
@@ -17,6 +23,15 @@ changing its meaning, evidence, uncertainty, or required detail.
 - Choose and apply a reader view and depth
 - Verify fidelity and reader success
 - Deliver through mdmaid.desk and optionally calibrate preferences
+
+Wording-only requests: when the user asks only to revise wording or preserve
+structure, apply the document-wording reference and preserve structure,
+requested depth, requested reader language, evidence, and protected literals.
+This branch takes precedence even when `always-ask` is configured.
+Skip reader clarification, view/depth selection, and hierarchy transformation.
+After fidelity verification, deliver through the existing publication contract
+when delivery is requested or required, then return from this branch.
+For separately requested structural adaptation, use the existing gates below.
 
 ## Resolve the reader contract
 

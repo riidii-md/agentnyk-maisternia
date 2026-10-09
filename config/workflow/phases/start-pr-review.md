@@ -6,6 +6,12 @@ version: 0.2.0
 
 # /work-start-pr-review - Guided Pull Request Review
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` for review-phase preferences only when
 `$ARGUMENTS` has a plausible explicit route, an active session route exists,
 or the exact `.maisternia/work-routing.json` or

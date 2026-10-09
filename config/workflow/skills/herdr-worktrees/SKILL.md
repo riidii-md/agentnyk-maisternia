@@ -5,6 +5,12 @@ description: Add Git worktrees to exact named Herdr sessions or repair native sa
 
 # Herdr Worktrees
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Operate Git checkouts and Herdr workspaces as two separate systems with separate
 identity proof. Sidebar labels and position are presentation, never repository
 or workspace identity.
@@ -115,6 +121,13 @@ mutation.
 Perform every Git mutation directly under the controlled profile.
 
 ## Authority and confirmation
+
+Inline redacted previews and conversational confirmation remain document-free.
+When an actual durable preview or proposal document is the basis of confirmation,
+register its exact redacted revision through readable-output before asking.
+Registration never supplies mutation confirmation. Preserve the fresh exact
+confirmation and identity revalidation below.
+
 
 Inspect before mutation. Resolve the exact repository, common directory,
 session, parent workspace, child paths, branch/ref state, and conflicts. Build a

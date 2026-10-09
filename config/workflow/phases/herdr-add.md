@@ -6,6 +6,12 @@ version: 0.1.0
 
 # /herdr-add - Add a Herdr Worktree
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Use the installed `herdr-worktrees` skill to handle:
 
 `$ARGUMENTS`

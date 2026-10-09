@@ -5,6 +5,12 @@ description: Capture a technical, product, process, risk, or business decision a
 
 # Decision Capture
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Use this skill when a decision and its rationale should survive the current
 conversation.
 
@@ -27,7 +33,8 @@ request or approval. Otherwise keep the durable Markdown under:
 ```
 
 Use the installed `readable-output` skill when the user asks to publish the
-decision to mdmaid.desk or an active workflow already requires desk delivery.
+decision to mdmaid.desk, an active workflow already requires desk delivery,
+or the decision document is the basis of a human response.
 The Markdown file remains the canonical artifact.
 
 ## Keep Browser Presentation Opt-In

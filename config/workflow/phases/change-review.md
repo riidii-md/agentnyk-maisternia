@@ -6,6 +6,12 @@ version: 0.3.1
 
 # /work-change-review - Decide And Deliver A Change Review
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible
 explicit route, an active session route exists, or the exact
 `.maisternia/work-routing.json` or
@@ -273,8 +279,17 @@ does not prove that mdmaid.desk can render a native diff or that the complete
 patch was embedded. Treat a missing, malformed, empty, truncated, reordered,
 or mismatched extracted patch as a blocked gate.
 Do not call `mdmaid-desk register` until both the native-diff preflight and
-`mdmaid validate` pass. After registration, compare the returned artifact
-content hash with the preflighted local artifact and stop on any mismatch.
+`mdmaid validate` pass. Preserve the local artifact hash before and after publication
+and require equality. Require the receipt and review request to match the same
+document ID and revision. Preserve source fingerprint revalidation,
+authenticated transport, and server stale checks.
+
+If a documented public content hash is available, compare it with the preflighted
+local hash and stop on mismatch. Otherwise state that direct remote hash comparison is unavailable;
+describe only the supported server-bound revision guarantee. Do not invent receipt fields,
+read private storage, or claim direct remote-byte verification. Block if local hash
+stability or request binding cannot be established, or if direct remote hash
+equality is explicitly required.
 
 ## Validate And Publish The Gate
 

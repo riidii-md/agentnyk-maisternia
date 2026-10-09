@@ -39,6 +39,10 @@ func TestHerdrWorktreesPresetContract(t *testing.T) {
 		"herdr-worktrees-skill",
 		"herdr-worktrees-native",
 		"herdr-worktrees-isolated",
+		"readable-output-skill",
+		"readable-output-project-naming",
+		"readable-output-space-routing",
+		"readable-output-document-wording",
 	}; !slices.Equal(got, want) {
 		t.Fatalf("skills = %v, want %v", got, want)
 	}
@@ -102,21 +106,21 @@ func TestHerdrWorktreesManifestAndRenderedPackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(manifest.Resources), 104; got != want {
+	if got, want := len(manifest.Resources), 105; got != want {
 		t.Fatalf("repository resources = %d, want %d", got, want)
 	}
 	repositoryTargets := 0
 	for _, resource := range manifest.Resources {
 		repositoryTargets += len(resource.Targets)
 	}
-	if got, want := repositoryTargets, 396; got != want {
+	if got, want := repositoryTargets, 400; got != want {
 		t.Fatalf("repository target mappings = %d, want %d", got, want)
 	}
 	selected, err := SelectManifest(preset, manifest)
 	if err != nil {
 		t.Fatalf("SelectManifest() error = %v", err)
 	}
-	if got, want := len(selected.Resources), 5; got != want {
+	if got, want := len(selected.Resources), 9; got != want {
 		t.Fatalf("selected resources = %d, want %d", got, want)
 	}
 
@@ -124,6 +128,22 @@ func TestHerdrWorktreesManifestAndRenderedPackage(t *testing.T) {
 		source  string
 		targets []string
 	}{
+		"readable-output-skill": {
+			source:  "config/workflow/skills/readable-output/SKILL.md",
+			targets: []string{"codex:.codex/skills/readable-output/SKILL.md", "claude:.claude/skills/readable-output/SKILL.md", "antigravity:.config/agy/skills/readable-output/SKILL.md", "hermes:.hermes/skills/readable-output/SKILL.md"},
+		},
+		"readable-output-project-naming": {
+			source:  "config/workflow/skills/readable-output/references/project-naming.md",
+			targets: []string{"codex:.codex/skills/readable-output/references/project-naming.md", "claude:.claude/skills/readable-output/references/project-naming.md", "antigravity:.config/agy/skills/readable-output/references/project-naming.md", "hermes:.hermes/skills/readable-output/references/project-naming.md"},
+		},
+		"readable-output-space-routing": {
+			source:  "config/workflow/skills/readable-output/references/space-routing.md",
+			targets: []string{"codex:.codex/skills/readable-output/references/space-routing.md", "claude:.claude/skills/readable-output/references/space-routing.md", "antigravity:.config/agy/skills/readable-output/references/space-routing.md", "hermes:.hermes/skills/readable-output/references/space-routing.md"},
+		},
+		"readable-output-document-wording": {
+			source:  "config/workflow/skills/readable-output/references/document-wording.md",
+			targets: []string{"codex:.codex/skills/readable-output/references/document-wording.md", "claude:.claude/skills/readable-output/references/document-wording.md", "antigravity:.config/agy/skills/readable-output/references/document-wording.md", "hermes:.hermes/skills/readable-output/references/document-wording.md"},
+		},
 		"herdr-add": {
 			source: "config/workflow/phases/herdr-add.md",
 			targets: []string{
@@ -199,8 +219,8 @@ func TestHerdrWorktreesManifestAndRenderedPackage(t *testing.T) {
 			}
 		}
 	}
-	if targetCount != 22 {
-		t.Fatalf("selected target mappings = %d, want 22", targetCount)
+	if targetCount != 38 {
+		t.Fatalf("selected target mappings = %d, want 38", targetCount)
 	}
 }
 

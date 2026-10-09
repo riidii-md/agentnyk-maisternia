@@ -114,6 +114,15 @@ or arbitrary Git configuration. `/herdr-regroup` cannot target it.
 
 ## Safety and recovery
 
+The preset includes the shared document-wording and publisher bundle.
+Inline previews and confirmation stay document-free. When an actual redacted
+preview document is used for confirmation, register that revision before asking.
+Registration never confirms a Git or Herdr mutation. Keep exact fresh confirmation
+immediately before each non-no-op mutation set and revalidate preview identity.
+A proven no-op needs no additional confirmation. The bundle grants no session,
+cleanup, rollback, or broader mutation authority.
+
+
 - Remote URLs stay opaque and are excluded from previews and reports. Embedded
   user information, tokens, query data, fragments, controls, and option-like
   leading-hyphen values are refused. The validated credential-free URL is

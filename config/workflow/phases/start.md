@@ -6,6 +6,12 @@ version: 0.2.0
 
 # /work-start - Guided Standard Work
 
+When this invocation authors or revises document prose, read the installed
+`readable-output` skill's `references/document-wording.md` and apply it before finalization.
+Before requesting a human response to an actual document, use that skill's
+**Document-bound human checkpoints** contract. Ordinary clarification does not
+require a document, structural adaptation, or publication.
+
 Routing gate (lazy): load `work-routing` for phase-scoped preferences only when
 `$ARGUMENTS` has a plausible explicit route, an active session route exists,
 or the exact
@@ -126,6 +132,9 @@ Update this command whenever the `standard-work` delivery graph gains a gate.
 
 ## Human checkpoints
 
+Before a document-bound checkpoint, complete readable-output's successful
+exact-revision registration and receipt checks. Deliver the stable discovery
+brief before asking its question; a local link alone does not prove delivery.
 At every required human checkpoint, provide the durable Markdown document or
 the full absolute HTTP(S) mdmaid.desk document URL as a clickable Markdown link,
 a short summary, the exact decision or question, and the consequence of each
