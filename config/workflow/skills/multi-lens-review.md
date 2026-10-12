@@ -1,7 +1,7 @@
 ---
 name: lens-review
 description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, behavior-preserving maintainability review, and adversarial verification.
-version: 0.7.0
+version: 0.8.0
 ---
 
 # Lens Review
@@ -57,6 +57,28 @@ route such as `/work-review @agy @codex @claude -- <target>` selects independent
 read-only reviewer pools and defaults to `parallel-verify`; it does not grant
 write authority. Keep native subagent selection local when no cross-provider
 route was resolved.
+
+## Confirm Review Authority And Cadence
+
+An explicit review request authorizes one review of the requested target, including
+its bounded finding-verification and repair loop. It does not authorize recurring
+reviews after later tasks, phases, waves, or commits. A generic implementation
+request does not authorize repeated reviews.
+
+Before a workflow-triggered implementation review, confirm the agreed boundary
+from the plan or current conversation. If cadence is missing or this would add a
+cycle, recommend one final review and ask before launching review workers. Follow
+`/work-run`'s cadence contract. Cite and resolve conflicting mandatory repository
+instructions before the affected review or commit; do not silently waive a gate
+or choose its frequency.
+
+Honor a later cadence change for future reviews. Ask separately whether to finish
+or stop already-running reviewers. Rerun only affected review obligations
+invalidated by fixes within the authorized review. Existing agreement or an
+explicit review invocation needs no repeated permission question. Direction and
+plan review retain their explicit optional-review choice.
+
+## Execute The Review Graph
 
 Read the installed `review-policy` and run its bounded multi-agent graph. Build
 one immutable evidence packet and assign applicable lenses to independent
