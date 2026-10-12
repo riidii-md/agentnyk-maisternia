@@ -10,6 +10,8 @@ It is deliberately separate from `/work-review`:
   shaped, and how data moves;
 - review searches for defects, risks, and missing evidence and may make a merge
   recommendation;
+- plain `/work-change-review` adds the complete frozen Git diff to the analysis
+  and publishes it passively to mdmaid.desk;
 - `/work-change-review implementation-approval` reuses the complete
   explanation contract, adds the
   frozen native diff and automated findings, and requests explicit approval.

@@ -217,10 +217,9 @@ func TestRepositoryWorkStartPRReviewContract(t *testing.T) {
 			"untrusted executable code", "disposable sandbox", "source visibility",
 		},
 		"config/workflow/phases/change-review.md": {
-			"implementation-approval", "pr-feedback", "internal repair", "PR publication",
-			"ask where the review should land", "line comments", "summary comment",
+			"implementation-approval", "desk-review", "mdmaid.desk",
+			"Do not post PR comments or replies",
 			"merge target", "merge-base", "main", "develop", "last rework",
-			"expected head", "post-publication reconciliation", "source visibility", "outbound",
 		},
 		"config/workflow/phases/review.md": {
 			"--disposition repair", "--disposition report-only",
@@ -261,7 +260,11 @@ func TestRepositoryPRReviewSafetyClauses(t *testing.T) {
 			"Honor an explicit destination in the invocation or current conversation. When it is absent or ambiguous, ask one short question and wait. Do not infer PR publication merely because a PR exists, and do not silently keep feedback local after the user selects PR publication. The selected destination authorizes only the matching repair or review-comment path; it does not authorize commits, pushes, approvals, requests for changes, ticket transitions, or merges.",
 			"Do not locally execute PR-controlled tests, builds, scripts, hooks, package-manager lifecycle steps, generators, or binaries unless the user explicitly authorizes that execution and it runs in a disposable sandbox with no credentials or secrets, no host write access, no network by default, isolated caches, and bounded resources.",
 			"Private evidence may ground an internal conclusion, but must not be quoted, linked, summarized, or otherwise disclosed to a broader PR audience.",
-			"In PR publication mode, `/work-change-review pr-feedback --destination pr` is the sole owner of the detailed freshness, expected-head binding, exact outbound body screening, posting, retry, and post-publication reconciliation protocol.",
+			"This command owns PR-feedback synthesis and publication. Enter this stage only when the user selected PR publication for this PR review workflow.",
+			"Private evidence may support internal verification but must not be quoted, linked, summarized, or inferentially disclosed to a broader audience.",
+			"Screen the exact outbound line-comment and summary bodies and anchors for secrets, credentials, PII, private links, and restricted context; rewrite or withhold unsafe evidence while preserving a useful public finding.",
+			"Immediately before PR publication, refresh the PR head, full diff, relevant comments, and required checks or CI. If evidence used by the draft changed, mark the draft stale and return to the affected review and synthesis steps. Bind the provider review submission and line comments to the expected head SHA through a revision precondition when supported. Without one, perform the narrowest possible final head check immediately before writing and record the weaker guarantee.",
+			"Prefer one provider review submission when it can atomically contain the selected line comments and summary comment. Otherwise post deterministically, record each remote response ID and URL, and retry only items proven not to have been created. After writing, perform post-publication reconciliation: re-read the live head, required checks, created review, and relevant threads. Exclude the workflow's own newly created response IDs from concurrent-comment drift. If the head or checks changed, or a created item is not attached to the expected head and anchor, report the result as stale or partial and return to context synchronization without automatically reposting.",
 		},
 		"config/workflow/phases/review.md": {
 			"A read-only disposition does not authorize executing review-controlled tests, builds, scripts, hooks, package lifecycle steps, generators, or binaries on the host. Such execution requires explicit user authorization and a disposable credential-free sandbox with no host writes, no network by default, isolated caches, and bounded resources.",
@@ -272,11 +275,8 @@ func TestRepositoryPRReviewSafetyClauses(t *testing.T) {
 			"Under repair disposition, a `candidate` inspection may pass only after every linked finding is refuted or its confirmed fix is applied and verified. Under report-only disposition, it may pass when every linked finding is independently resolved as refuted or confirmed and each confirmed fix is recorded as `not-applicable`; this passes the review process, not the implementation.",
 		},
 		"config/workflow/phases/change-review.md": {
-			"When the caller or current standard-work phase explicitly supplies the mode and destination, preserve it. Otherwise, if the invocation could mean either internal repair or PR publication, ask where the review should land and wait. Do not infer the destination merely because a PR exists.",
-			"Private evidence may support internal verification but must not be quoted, linked, summarized, or inferentially disclosed to a broader audience.",
-			"Screen the exact outbound line-comment and summary bodies and anchors for secrets, credentials, PII, private links, and restricted context; rewrite or withhold unsafe evidence while preserving a useful public finding.",
-			"Immediately before PR publication, refresh the PR head, full diff, relevant comments, and required checks or CI. If evidence used by the draft changed, mark the draft stale and return to the affected review and synthesis steps. Bind the provider review submission and line comments to the expected head SHA through a revision precondition when supported. Without one, perform the narrowest possible final head check immediately before writing and record the weaker guarantee.",
-			"Prefer one provider review submission when it can atomically contain the selected line comments and summary comment. Otherwise post deterministically, record each remote response ID and URL, and retry only items proven not to have been created. After writing, perform post-publication reconciliation: re-read the live head, required checks, created review, and relevant threads. Exclude the workflow's own newly created response IDs from concurrent-comment drift. If the head or checks changed, or a created item is not attached to the expected head and anchor, report the result as stale or partial and return to context synchronization without automatically reposting.",
+			"An earlier PR-publication destination, saved route, existing PR, or publication receipt does not change this command's destination.",
+			"Do not post PR comments or replies, submit provider reviews, edit source, commit, push, approve, request changes, or merge through this command.",
 		},
 	}
 	for relative, clauses := range contracts {

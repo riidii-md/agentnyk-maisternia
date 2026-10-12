@@ -1,16 +1,22 @@
 # Mandatory Human Change Review
 
+Plain `/work-change-review` defaults to `desk-review`: it analyzes the complete
+Git diff and publishes the explanation and native patch to mdmaid.desk with
+`--attention review`. It does not require a prior automated review or create an
+approval request. Missing or stale verification remains visible in the document.
+An existing PR, earlier PR-publication destination, saved route, or publication
+receipt cannot redirect this command to PR comments or replies.
+
 `/work-change-review implementation-approval` is the required implementation
 gate between successful automated review and PR preparation. It publishes one
 first-class mdmaid.desk Change Review containing both a readable explanation
 and the exact native diff.
 
-The command also has a separate `pr-feedback` mode used by
-`/work-start-pr-review`. That mode validates a unified review of an existing PR
-and either returns it for internal repair or publishes line and summary
-comments. When the mode or destination is ambiguous, the command asks where
-the review should land. Posting feedback never constitutes implementation or
-merge approval.
+`/work-start-pr-review` owns unified PR-feedback synthesis and publication when
+the user selects that destination. The old `pr-feedback` and `--destination pr`
+arguments do not authorize PR writes through `/work-change-review`; they produce
+the desk analysis and identify the separate PR workflow. Posting feedback never
+constitutes implementation or merge approval.
 
 ## One artifact, two reading depths
 
@@ -50,8 +56,8 @@ do not independently discover findings.
 
 ## Exact decision boundary
 
-The producer fingerprints the exact source snapshot, validates the Markdown,
-registers it as `kind=change-review`, and requests a revision-bound
+Both modes fingerprint the exact source snapshot, validate the Markdown, and
+register it as `kind=change-review`. Only implementation-approval requests a revision-bound
 `change-decision`. Approval applies only while the document revision, content
 hash, and source fingerprint still match. Any implementation change makes the
 decision stale.
