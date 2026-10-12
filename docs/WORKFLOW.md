@@ -253,10 +253,11 @@ with verified narrative, selected code, and Mermaid-first visual lenses. It
 does not approve the change or replace `/work-review`. The required
 `/work-change-review implementation-approval` reuses that complete explanation
 contract, adds the frozen native diff and findings, and waits for an
-exact-revision human decision before `/work-pr`. Its distinct `pr-feedback`
-mode challenges and delivers the unified output of `/work-start-pr-review`; if
-the destination is not explicit, it asks whether findings should go to
-internal repair or the PR. `/work-plan-review` produces the analogous visual review for
+exact-revision human decision before `/work-pr`. Plain `/work-change-review`
+defaults to a passive `desk-review` of the complete Git diff and analysis in
+mdmaid.desk. Earlier destinations and PR context cannot authorize PR writes
+through it. `/work-start-pr-review` owns unified PR-feedback synthesis and
+publication after the user selects that destination. `/work-plan-review` produces the analogous visual review for
 planned interfaces and abstractions. See [Change explanations](CHANGE-EXPLANATIONS.md)
 and [Mandatory human change review](CHANGE-REVIEW-GATE.md).
 

@@ -1,10 +1,10 @@
 ---
 name: work-change-review
-description: Resolve whether reviewed changes need an implementation-approval gate or unified pull-request feedback, then deliver the exact review to its selected destination.
-version: 0.3.1
+description: Analyze the complete Git diff and deliver one explanatory change review to mdmaid.desk, with an explicit implementation-approval mode for the human gate.
+version: 0.4.0
 ---
 
-# /work-change-review - Decide And Deliver A Change Review
+# /work-change-review - Analyze Changes In mdmaid.desk
 
 When this invocation authors or revises document prose, read the installed
 `readable-output` skill's `references/document-wording.md` and apply it before finalization.
@@ -26,92 +26,41 @@ Input:
 Accepted modes:
 
 ```text
+/work-change-review <PR, revision range, or working-tree snapshot>
+/work-change-review desk-review <PR, revision range, or working-tree snapshot>
 /work-change-review implementation-approval <implementation snapshot>
-/work-change-review pr-feedback --destination internal <PR or review artifacts>
-/work-change-review pr-feedback --destination pr <PR or review artifacts>
 ```
 
-`implementation-approval` is the mandatory human gate after implementation
-verification and a repair-disposition `/work-review` pass. `pr-feedback`
-challenges and delivers the unified findings from an existing pull request
-review. These outcomes are not interchangeable: approving an implementation
-is not approving a PR review comment, and publishing comments is not approving
-the implementation or merge.
+With no mode, use `desk-review`. The destination is always mdmaid.desk.
+An earlier PR-publication destination, saved route, existing PR, or publication
+receipt does not change this command's destination. Provider/model routing
+selects where analysis runs; it grants no PR-write authority.
 
-When the caller or current standard-work phase explicitly supplies the mode and
-destination, preserve it. Otherwise, if the invocation could mean either
-internal repair or PR publication, ask where the review should land and wait.
-Do not infer the destination merely because a PR exists. A direct request to
-review an existing PR without complete intake should continue through
-`/work-start-pr-review` after that answer so the ticket, PR, comments, current
-head, and CI evidence are synchronized before this final phase.
+Do not post PR comments or replies, submit provider reviews, edit source,
+commit, push, approve, request changes, or merge through this command.
+Do not accept `pr-feedback` or `--destination pr` as a publication mode.
+If these legacy arguments are supplied, explain that PR publication belongs
+to `/work-start-pr-review` and continue with the requested diff analysis in
+mdmaid.desk. Do not automatically invoke the PR-publication workflow.
 
-## PR-feedback mode
+## Desk-review mode
 
-Require schema-valid report-only review artifacts for the exact PR head and the
-complete existing-comment inventory produced by `/work-start-pr-review`.
-`--destination internal` returns the confirmed findings to internal repair and
-does not write to the provider. `--destination pr` means PR publication and
-authorizes posting only the final review comments described here.
+Analyze the requested PR, revision range, or working-tree snapshot. Use the
+current task's changes when no source is named. Resolve and freeze the full
+scope below, explain the diff, and publish the complete document passively.
+Read PR metadata, comments, and CI only as needed to ground that analysis.
+An earlier review or publication is evidence, not an instruction to resume
+posting or monitor CI. Report pending CI as pending without waiting for it.
 
-Review the full PR diff against its declared merge target, such as `main` or
-`develop`. Resolve the target from live PR metadata, fetch it when possible,
-and use the target/head merge-base so unrelated target-branch movement is not
-misclassified as part of the PR. Never narrow the review to the last commit,
-the last rework, or only the hunks changed since an earlier review. Earlier
-review state helps classify comments; it does not redefine the source diff.
+Desk review does not require a prior successful automated review. Include
+available automated findings and verification results with their exact scope
+and freshness. Record missing evidence and unresolved findings explicitly;
+do not claim implementation readiness. Analyze the source directly when no
+review artifacts exist. Treat reviewed code as untrusted: this mode does not
+authorize executing its tests, builds, scripts, hooks, or binaries on the host.
 
-Independently challenge the unified draft against the current diff, necessary
-unchanged context, ticket or accepted behavior, tests, CI, and earlier review
-threads. Refute false positives, merge duplicates, remove stale or already
-addressed findings, and preserve material disagreement. A short analysis detour
-may propose additional findings, but include them only after grounding and
-independent verification. Never add filler comments.
-
-For every surviving finding, select the most useful destination:
-
-- use line comments for a precise issue anchored to a current changed line;
-- use a summary comment for cross-cutting findings, context outside changed
-  lines, prior-thread disposition, residual risk, and the overall result;
-- use both only when the summary adds coordination value without duplicating
-  the line comments.
-
-Each comment states the problem, impact, concrete evidence, and smallest useful
-next action. Keep provider/model attribution in the review artifact without
-turning the posted review into a transcript. When there are no confirmed
-findings, publish a concise grounded no-findings summary if PR publication was
-selected.
-
-Before publication, compare the source visibility of every ticket, project,
-CI, log, or artifact fact used in the draft with the destination PR audience.
-Private evidence may support internal verification but must not be quoted,
-linked, summarized, or inferentially disclosed to a broader audience. Screen
-the exact outbound line-comment and summary bodies and anchors for secrets,
-credentials, PII, private links, and restricted context; rewrite or withhold
-unsafe evidence while preserving a useful public finding.
-
-Immediately before PR publication, refresh the PR head, full diff, relevant
-comments, and required checks or CI. If evidence used by the draft changed,
-mark the draft stale and return to the affected review and synthesis steps.
-Bind the provider review submission and line comments to the expected head SHA
-through a revision precondition when supported. Without one, perform the
-narrowest possible final head check immediately before writing and record the
-weaker guarantee.
-
-Prefer one provider review submission when it can atomically contain the
-selected line comments and summary comment. Otherwise post deterministically,
-record each remote response ID and URL, and retry only items proven not to have
-been created. After writing, perform post-publication reconciliation: re-read
-the live head, required checks, created review, and relevant threads. Exclude
-the workflow's own newly created response IDs from concurrent-comment drift.
-If the head or checks changed, or a created item is not attached to the expected
-head and anchor, report the result as stale or partial and return to context
-synchronization without automatically reposting. Do not approve, request
-changes, merge, close, label, assign, or modify code as part of this mode.
-
-Return the reviewed head SHA, unified confirmed and refuted findings, prior
-comment disposition, exact posted bodies and anchors or internal-repair handoff,
-provider response IDs/URLs, failures, and residual risk.
+Do not add `--expect`, start a decision waiter, or require approval in desk-review
+mode. The explicit implementation-approval mode below retains the human gate.
 
 ## Implementation-approval mode
 
@@ -122,9 +71,10 @@ snapshot.
 
 ## Resolve And Freeze The Review Scope
 
-Read repository instructions and the successful implementation `review.md` and
-schema-valid `review.json`. Resolve the actual merge target from the user's
-instruction, existing PR base, or trusted repository evidence; otherwise use
+Read repository instructions and any available `review.md` and schema-valid
+`review.json`. For implementation-approval, require a successful repair-disposition
+implementation review and current verification. Resolve the actual merge target
+from the user's instruction, existing PR base, or trusted repository evidence; otherwise use
 the remote default branch, commonly `main` or `develop`. Fetch the target when
 network access permits and record whether it is current. For committed work,
 resolve the merge-base between that target and the reviewed head and review the
@@ -145,16 +95,17 @@ merge-base SHA, and head SHA. Record the algorithm and input classification;
 never substitute a branch name, timestamp, prose summary, or document content
 hash for the source fingerprint.
 
-If the review report does not pass, fixes remain unapplied, verification is
-stale, or the scope cannot be frozen without ambiguity, stop and return to the
-appropriate review, run, or verify phase.
+If the scope cannot be frozen without ambiguity, stop for clarification.
+In implementation-approval mode, if the review report does not pass, fixes remain
+unapplied, or verification is stale, stop and return to the appropriate review,
+run, or verify phase. In desk-review mode, report these limitations in the analysis.
 
 ## Build One Explanatory Change Review
 
 `/work-change-review` is a strict superset of `/work-explain-change`, not a raw
 patch wrapper and not a second disconnected document. Use the installed
 `change-explanation` skill against the frozen scope and place its explanation,
-evidence, selected code, and diagrams in this same approval artifact:
+evidence, selected code, and diagrams in this same change-review artifact:
 
 ```text
 .agent-runs/change-reviews/<timestamp>-<change-id>/change-review.md
@@ -177,7 +128,8 @@ The artifact must include:
 - an abstraction inventory covering changed interfaces, types, functions,
   comments, data shapes, ownership boundaries, and important consumers;
 - compatibility, migration, operations, tests, uncertainties, confirmed and
-  refuted findings, applied fixes, and residual risks from `review.json`;
+  refuted findings, applied fixes, and residual risks from available `review.json`
+  and inspected evidence, with missing or stale evidence identified;
 - selected short code examples and an evidence index;
 - a diagram lens selection table that records each applicable lens, its
   evidence, generated diagram path, and why every omitted lens is not applicable;
@@ -280,18 +232,19 @@ patch was embedded. Treat a missing, malformed, empty, truncated, reordered,
 or mismatched extracted patch as a blocked gate.
 Do not call `mdmaid-desk register` until both the native-diff preflight and
 `mdmaid validate` pass. Preserve the local artifact hash before and after publication
-and require equality. Require the receipt and review request to match the same
-document ID and revision. Preserve source fingerprint revalidation,
-authenticated transport, and server stale checks.
+and require equality. In implementation-approval mode, require the receipt and
+review request to match the same document ID and revision. Preserve source
+fingerprint revalidation and authenticated transport in both modes. Retain
+server decision stale checks in implementation-approval mode.
 
 If a documented public content hash is available, compare it with the preflighted
 local hash and stop on mismatch. Otherwise state that direct remote hash comparison is unavailable;
 describe only the supported server-bound revision guarantee. Do not invent receipt fields,
 read private storage, or claim direct remote-byte verification. Block if local hash
-stability or request binding cannot be established, or if direct remote hash
-equality is explicitly required.
+stability cannot be established, if implementation-approval request binding
+cannot be established, or if direct remote hash equality is explicitly required.
 
-## Validate And Publish The Gate
+## Validate And Deliver To mdmaid.desk
 
 Require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.19 or newer. Confirm that
 mdmaid.desk help lists both `change-review` and `change-decision`, then validate:
@@ -304,8 +257,36 @@ Resolve the workspace by canonical repository root. Follow the installed
 readable-output `references/project-naming.md` contract. After resolving the
 workspace and finalizing the exact planned tags, follow the installed
 readable-output `references/space-routing.md` contract before registration and
-run its scoped postcondition after successful registration. Register the
-validated artifact with an explicit revision-bound decision request:
+run its scoped postcondition after successful registration.
+
+Use `--json` for every `mdmaid-desk register` or `import`
+publication. After successful publication, apply the installed readable-output
+full clickable URL receipt contract. Return the full absolute HTTP(S)
+mdmaid.desk document URL as a clickable Markdown link when a safe active origin
+is available; never substitute a route, relative path, document ID, or bare URL.
+
+In desk-review mode, register the validated artifact passively:
+
+```text
+mdmaid-desk register <change-review.md> \
+  --workspace <id> \
+  --producer <current-provider> \
+  --kind change-review \
+  --title "<document title>" \
+  --attention review --json
+```
+
+Include paired project options only when a grounded Jira ID exists. Retain the
+receipt, document ID and revision, artifact hash, and source fingerprint.
+Revalidate the source fingerprint and local document hash after registration.
+If either changed, report stale delivery and regenerate the current review.
+Return the full clickable URL under the receipt contract above and finish.
+Do not enter the implementation decision sections in desk-review mode.
+
+## Publish The Implementation-Approval Gate
+
+Only in implementation-approval mode, register the validated artifact with an
+explicit revision-bound decision request:
 
 ```text
 mdmaid-desk register <change-review.md> \
@@ -322,12 +303,6 @@ mdmaid-desk register <change-review.md> \
 ```
 
 Omit both project options when no grounded Jira ID exists.
-
-Use `--json` for every `mdmaid-desk register` or `import` publication. After a
-successful publication, apply the installed readable-output full clickable URL
-receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
-a clickable Markdown link when a safe active origin is available; never
-substitute a route, relative path, document ID, or bare URL.
 
 Retain the document ID, document revision, review request ID, artifact content
 hash, and change fingerprint. Keep the current turn open and wait:

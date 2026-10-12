@@ -242,8 +242,10 @@ regression controls, contract ownership, test-pruning evidence, and preservation
 review. See [Specialized test review](TEST-REVIEW.md).
 
 `standard-work` installs `/work-explain-change` as an on-demand understanding
-tool, not an approval gate by itself. Mermaid is the default; PR Lens animation
-is explicit opt-in. The mandatory
+tool, not an approval gate by itself. Plain `/work-change-review` publishes the
+complete diff and explanatory analysis to mdmaid.desk in passive `desk-review`
+mode. PR publication belongs to `/work-start-pr-review` and cannot be inherited
+by a desk review. Mermaid is the default; PR Lens animation is explicit opt-in. The mandatory
 `/work-change-review implementation-approval` phase is a strict
 superset: it combines the same narrative and evidence-selected architecture,
 class, entity-relationship, state, sequence, requirement, dependency, and

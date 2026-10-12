@@ -1,7 +1,7 @@
 ---
 name: work-start-pr-review
 description: Coordinate an existing pull request review from complete context intake through routed review, unified feedback, and either internal repair or PR comment publication.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-start-pr-review - Guided Pull Request Review
@@ -106,7 +106,7 @@ suite based on risk:
 - `/work-review-simplify` for behavior-preserving maintainability;
 - `/work-test-review` for focused test evidence;
 - an existing-comment audit for the fetched review threads;
-- `/work-change-review pr-feedback` for final synthesis and delivery.
+- this command's PR-feedback synthesis and publication stage for final delivery.
 
 Resolve which commands to run, the review focus, and the harnesses, model, and
 reasoning or effort for each routed phase. Reuse explicit arguments, trusted
@@ -131,11 +131,10 @@ across harnesses, commands, and prior threads. Create one unified review draft
 ordered by severity and reviewability. Each proposed comment must include its
 claim, impact, evidence, and smallest useful next action.
 
-Use `/work-change-review` with the resolved mode:
-
-- internal repair uses `implementation-approval` after fixes and verification;
-- PR publication uses `pr-feedback --destination pr` to challenge the unified
-  draft, incorporate only grounded additions, and publish it.
+Internal repair uses `/work-change-review implementation-approval` after fixes
+and verification. PR publication continues through this command's publication
+stage below. `/work-change-review` delivers diff analysis to mdmaid.desk;
+never delegate provider comments or replies to it.
 
 The final synthesis may take a short analysis detour to test the as-is draft
 for omissions, false positives, stale anchors, duplicated comments, or a more
@@ -154,13 +153,66 @@ verify the changed implementation, rerun affected reviews, resynthesize, and
 present a new exact snapshot for approval. Report the final implementation
 review and remaining risk.
 
-In PR publication mode, `/work-change-review pr-feedback --destination pr` is
-the sole owner of the detailed freshness, expected-head binding, exact outbound
-body screening, posting, retry, and post-publication reconciliation protocol.
-Use line comments for precise findings and a summary comment for cross-cutting
-results. Consume its result once: stale or partial publication returns to
-context synchronization, while a reconciled success completes. Do not perform
-a second publication pass here.
+## PR-feedback synthesis and publication
+
+This command owns PR-feedback synthesis and publication. Enter this stage only
+when the user selected PR publication for this PR review workflow. A later
+`/work-change-review` invocation does not resume this stage, even when an earlier
+destination or publication receipt exists.
+
+Require schema-valid report-only review artifacts for the exact PR head and the
+complete existing-comment inventory from context synchronization above.
+Review the full PR diff against its declared merge target, such as `main` or
+`develop`. Use the target/head merge-base; earlier review state helps classify
+comments but does not redefine the source diff.
+
+Independently challenge the unified draft against the current diff, necessary
+unchanged context, ticket or accepted behavior, tests, CI, and earlier review
+threads. Refute false positives, merge duplicates, remove stale or already
+addressed findings, and preserve material disagreement. A short analysis detour
+may propose additional findings, but include them only after grounding and
+independent verification. Never add filler comments.
+
+For every surviving finding, select the most useful placement:
+
+- use line comments for a precise issue anchored to a current changed line;
+- use a summary comment for cross-cutting findings, context outside changed
+  lines, prior-thread disposition, residual risk, and the overall result;
+- use both only when the summary adds coordination value without duplicating
+  the line comments.
+
+Each comment states the problem, impact, concrete evidence, and smallest useful
+next action. Keep provider/model attribution in the review artifact without
+turning the posted review into a transcript.
+
+Before publication, compare the source visibility of every ticket, project,
+CI, log, or artifact fact used in the draft with the destination PR audience.
+Private evidence may support internal verification but must not be quoted,
+linked, summarized, or inferentially disclosed to a broader audience.
+Screen the exact outbound line-comment and summary bodies and anchors for secrets,
+credentials, PII, private links, and restricted context; rewrite or withhold
+unsafe evidence while preserving a useful public finding.
+
+Immediately before PR publication, refresh the PR head, full diff, relevant
+comments, and required checks or CI. If evidence used by the draft changed,
+mark the draft stale and return to the affected review and synthesis steps.
+Bind the provider review submission and line comments to the expected head SHA
+through a revision precondition when supported. Without one, perform the
+narrowest possible final head check immediately before writing and record the
+weaker guarantee.
+
+Prefer one provider review submission when it can atomically contain the
+selected line comments and summary comment. Otherwise post deterministically,
+record each remote response ID and URL, and retry only items proven not to have
+been created. After writing, perform post-publication reconciliation: re-read
+the live head, required checks, created review, and relevant threads. Exclude
+the workflow's own newly created response IDs from concurrent-comment drift.
+If the head or checks changed, or a created item is not attached to the expected
+head and anchor, report the result as stale or partial and return to context
+synchronization without automatically reposting.
+
+A reconciled success completes this stage. Do not perform a second publication
+pass or repeat existing findings without new evidence.
 
 Post the complete grounded review selected for PR publication, including a
 concise no-findings result when that is the verified outcome. Do not approve,
