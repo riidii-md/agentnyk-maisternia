@@ -67,6 +67,37 @@ primary owner per contract, and independently verifies that removals did not
 erase its only proof. These modes reuse the canonical disposition, verifier,
 repair, and reporting machinery.
 
+## Implementation Review Cadence
+
+Agree review timing before launching implementation reviewers. Recommend one final
+review of the complete integrated change. Intermediate reviews can help at risky
+boundaries, but the plan must name those boundaries, scope, time and token cost,
+and effects on commits. An explicit session choice or approval of a plan that
+clearly includes cadence records agreement. Task or commit approval alone does
+not supply an omitted cadence. This choice is separate from optional AI review
+of the direction or plan.
+
+Task tests, CI checks, and parallel integration barriers continue during execution
+in repository-required gate order, including review before verification when required.
+They do not automatically launch multi-lens reviews. When a previously approved
+plan omits cadence, ask before reviewer dispatch and continue independent authorized
+implementation and focused checks. Do not reopen a choice already made.
+
+Surface a mandatory repository review gate by citing its exact instruction before
+the affected review or commit. Resolve conflicts with the requested cadence instead
+of silently waiving the gate or interpreting a per-commit rule as a per-wave rule.
+A single reviewed diff covers multiple commits only when the rule permits it and
+the reviewed evidence covers their contents; it cannot satisfy a rule requiring a
+fresh review for each commit. Defer optional commits when needed for final-only
+review. Do not create checkpoint commits to trigger reviews.
+
+An explicit review command authorizes one review of its target and the bounded
+verification and repair loop. Rerun only obligations invalidated by fixes. It
+does not authorize future reviews after each task, phase, wave, or commit.
+Later cadence choices govern future reviews; ask separately whether to finish
+or stop reviewers already running. No duplicate permission question is needed
+for an agreed boundary or explicit review request.
+
 ## Delivery Gates
 
 Workflow-authored English documents use STE-inspired wording by default.

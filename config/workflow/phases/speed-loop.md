@@ -1,7 +1,7 @@
 ---
 name: work-speed-loop
 description: Coordinate dependency-aware planning, bounded parallel execution, integration, and verification to reduce wall-clock delivery time without sacrificing correctness.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-speed-loop - Fast Parallel Work Loop
@@ -36,6 +36,11 @@ Input:
 6. After each verified barrier, launch newly ready tasks up to the configured
    concurrency limit.
 7. Run final integration verification and review before declaring completion.
+
+Follow `/work-run`'s implementation review cadence contract. Do not infer a review
+cycle from each verified barrier. Carry the human's agreed boundaries across all
+waves and the sequential fallback; ask before review workers launch when cadence
+is missing or must change, and resolve conflicting repository gates explicitly.
 
 ## Provider Degradation
 

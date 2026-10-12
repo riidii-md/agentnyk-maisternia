@@ -1,7 +1,7 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.7.0
+version: 0.8.0
 ---
 
 # /work-plan - Create the Implementation Plan
@@ -52,6 +52,29 @@ or an accepted constraint, risk, user experience, compatibility, or
 long-term ownership, present the concrete alternatives and ask the user before
 finalizing the plan. Choose between equivalent implementation details without
 asking.
+
+## Agree Implementation Review Cadence
+
+Make implementation review timing visible in the proposal. Recommend one final
+implementation review of the integrated change unless repository-required review
+gates or concrete risk justify named intermediate boundaries. Separate focused
+task tests and integration checks from multi-lens review cycles. State the gates,
+review scope, expected time and token cost, and effects on commit sequencing.
+Preserve repository-required gate order, including review before verification
+when required.
+
+Carry forward an explicit cadence choice from the current session. Otherwise
+ask the human to choose one final review or reviews at the proposed named
+boundaries before launching implementation review workers. An explicit approval
+of a plan that clearly includes this cadence also records agreement. Do not infer
+agreement from approval of implementation tasks or a commit list that omits it.
+This choice is separate from the optional AI review of the plan itself.
+
+Cite the exact repository instruction for mandatory review timing. If it conflicts
+with the requested cadence, resolve the conflict before the affected review or
+commit. Do not silently waive a gate or invent an interpretation that permits
+batching. Ordinary test and CI checks remain required. Record the agreed cadence
+in the plan or existing session evidence; no separate artifact is required.
 
 ## Run The Complexity-Gated Agent Graph
 
@@ -216,6 +239,7 @@ Return:
 - Material alternatives and tradeoffs
 - Files and patterns to change or reuse, with inspect-only unknowns explicit
 - Ordered implementation tasks
+- Implementation review cadence, required gates, scope, cost, and human agreement
 - Risk and blast-radius checks
 - Migration or rollout concerns
 - Acceptance contract with observable evidence and expected verification

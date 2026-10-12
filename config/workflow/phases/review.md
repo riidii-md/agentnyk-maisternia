@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with implementation repair or report-only disposition, an optional behavior-preserving maintainability profile, and independent refutation.
-version: 0.8.0
+version: 0.9.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -97,6 +97,27 @@ The current harness remains coordinator and owns every confirmed fix.
 Any subset of `@codex`, `@claude`, `@agy`, and `@hermes` may be requested;
 `work-routing` filters it through the current safe-runner contract and never
 silently substitutes an unavailable harness.
+
+## Confirm Review Authority And Cadence
+
+An explicit review request authorizes one review of the requested target, including
+its bounded finding-verification and repair loop. It does not authorize recurring
+reviews after later tasks, phases, waves, or commits. A generic implementation
+request does not authorize repeated reviews.
+
+For a workflow-triggered implementation review, confirm that this is an agreed
+review boundary in the plan or current conversation. When cadence is absent or
+this boundary would add a cycle, recommend one final review and ask before launching
+review workers. Follow `/work-run`'s cadence contract; cite and resolve any conflicting
+mandatory repository instruction before the affected review or commit. A rule
+requiring review does not let the coordinator silently choose its frequency.
+
+Honor a later cadence change for future reviews. Ask separately what to do with
+already-running reviewers; do not infer cancellation or permission to launch more.
+Rerun only affected review obligations invalidated by fixes within this review;
+a new target or additional boundary needs its own authority. Existing agreement
+or an explicit review invocation needs no repeated permission question. Direction
+and plan review retain their existing explicit optional-review choice.
 
 ## Resolve The Execution Graph
 

@@ -147,6 +147,11 @@ may conflict semantically after integration. Every wave therefore has a barrier:
 5. release newly ready dependent tasks.
 
 Final repository verification and independent review run after the last wave.
+The human agrees implementation review cadence in the plan or current session.
+Recommend one final review; intermediate multi-lens reviews need named, agreed
+boundaries. Wave integration checks do not authorize another review cycle. Honor
+repository-required review gates and resolve conflicting timing before the
+affected review or commit. See [Implementation review cadence](REVIEW-WORKFLOW.md#implementation-review-cadence).
 
 An invocation may select coordinators or worker pools with the shared route:
 

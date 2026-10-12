@@ -1,7 +1,7 @@
 ---
 name: work-parallel-run
 description: Execute an approved dependency-aware plan in bounded parallel waves with isolated workers, deterministic integration, and verification barriers.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-parallel-run - Execute An Approved Parallel Plan
@@ -68,6 +68,13 @@ After every worker in the wave finishes:
 7. recompute ready tasks and the remaining critical path.
 
 Do not start dependents from an unverified parent result.
+
+Follow `/work-run`'s implementation review cadence contract, including agreement
+before review workers launch and resolution of conflicting repository gates.
+A wave barrier runs integration checks; it does not authorize another multi-lens
+review. Keep intermediate reviews to agreed boundaries. With final-only cadence,
+run one implementation review after all waves integrate, in repository-required
+gate order.
 
 ## Failure And Replan Rules
 

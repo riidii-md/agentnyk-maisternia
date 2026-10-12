@@ -1,7 +1,7 @@
 ---
 name: work-run
 description: Execute an approved implementation contract in small verified steps and report only genuinely completed outcomes.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work-run - Execute the Approved Plan
@@ -19,6 +19,32 @@ Implement an approved handoff in small, restartable steps.
 Input:
 
 `$ARGUMENTS`
+
+## Honor Implementation Review Cadence
+
+Read the agreed cadence from the plan and current conversation. Do not turn task
+checks, wave barriers, or planned commits into automatic multi-lens reviews.
+Run focused tests as work progresses; run implementation review at the agreed
+boundaries. A final-only choice means review the complete integrated change
+after implementation. Preserve repository-required gate order, including review
+before verification when required, and finish review before any action that requires it.
+
+If cadence is missing, recommend one final review and ask before launching review
+workers. Continue authorized implementation and focused checks that do not depend
+on the answer. Do not reopen an existing choice or rewrite an approved plan merely
+because this template changed. Honor later explicit choices for future reviews;
+ask separately whether to finish or stop a review already running.
+
+Surface mandatory repository gates with the exact instruction and explain any
+conflict before the affected review or commit. Do not reinterpret a per-commit
+rule as a per-wave rule. One review may cover several later commits only when
+the rule permits it and the reviewed evidence covers their actual contents.
+Do not claim a final-only cadence satisfies a requirement for a fresh review of
+each commit. Defer optional commits when needed to honor an agreed final review.
+Do not create checkpoint commits merely to trigger review or bypass required
+checks. Commit authority remains separate.
+
+## Execute Each Task
 
 For each pass:
 

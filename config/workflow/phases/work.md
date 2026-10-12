@@ -1,7 +1,7 @@
 ---
 name: work
 description: Conduct provider-neutral work through the smallest useful discovery, decision, execution, verification, and review phases.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work - Provider-Neutral Work Conductor
@@ -57,6 +57,12 @@ silently skip required readiness, acceptance evidence, approval, implementation
 verification, or implementation review gates. Do not manufacture separate
 artifacts when the approved plan already contains sufficient evidence, and do
 not require a handoff when the same agent continues in the same session.
+
+Follow `/work-run`'s agreed implementation review cadence. Do not add intermediate
+review cycles without agreement. When cadence is absent, recommend one final
+review and ask before launching implementation review workers. Surface any
+conflicting mandatory repository gate with its exact instruction before the
+affected review or commit; do not silently waive it or choose new boundaries.
 
 The decision sequence is evidence and focused human context, optional user
 sketch, conditional direction, explicit optional-review choice and direction

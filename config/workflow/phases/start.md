@@ -1,7 +1,7 @@
 ---
 name: work-start
 description: Start or resume standard work and advance through its phases until a human response or an external blocker is required.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-start - Guided Standard Work
@@ -110,9 +110,16 @@ the available workspace rules.
    human plan decision, record the skip and decision with `/work-decide plan`,
    and check `/work-ready` before implementation.
 6. After approval, execute `/work-run` in the same session unless a fresh
-   executor makes `/work-handoff` necessary. Continue through `/work-verify`
-   and `/work-review`. Apply requested fixes and repeat affected verification
-   and review phases until they pass or a real blocker remains.
+   executor makes `/work-handoff` necessary. Read and carry the agreed implementation
+   review cadence from the plan or current session under `/work-run`'s contract.
+   Do not add a review after each task, phase, wave, or commit. If cadence is
+   absent, ask before launching implementation review workers; continue independent
+   authorized implementation and focused checks. At the agreed review boundary,
+   continue through `/work-verify` and `/work-review` in repository-required gate
+   order. Apply requested fixes and
+   repeat affected verification until it passes or a real blocker remains.
+   Rerun only affected review obligations invalidated by fixes; do not start
+   unrelated review cycles or change cadence without agreement.
 7. Generate the mandatory `/work-change-review implementation-approval`
    document for the exact
    implementation snapshot. Present it, wait for the human response, and
