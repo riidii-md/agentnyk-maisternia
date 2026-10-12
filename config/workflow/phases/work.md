@@ -1,7 +1,7 @@
 ---
 name: work
 description: Conduct provider-neutral work through the smallest useful discovery, decision, execution, verification, and review phases.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work - Provider-Neutral Work Conductor
@@ -25,7 +25,9 @@ Input:
 1. Discover the active task from explicit arguments, the current conversation,
    ticket, branch, worktree, repository, PR, or user-supplied artifact.
 2. Infer completed and pending work from evidence available in the current
-   session; do not create bookkeeping merely to run the workflow.
+   session and the selected task's `progress.md`. Reuse the standard-work
+   summary instead of creating additional bookkeeping. Saved context is not
+   approval; revalidate referenced decisions and current repository evidence.
 3. Report the current phase, status, blockers, approvals, and next action.
 4. Validate that required artifacts for the next phase exist.
 5. Recommend exactly one next phase. Treat research, the conditional direction

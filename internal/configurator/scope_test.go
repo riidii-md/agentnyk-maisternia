@@ -60,7 +60,9 @@ func TestProjectScopeStoresReplacementBackupsLocally(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertOnlyAction(t, plan, ActionConflict)
+	if actionForResource(t, plan, "resource").State != ActionConflict {
+		t.Fatal("customized provider target did not remain a conflict")
+	}
 
 	now := time.Date(2026, 8, 6, 12, 0, 0, 0, time.UTC)
 	if err := Apply(plan, ApplyOptions{

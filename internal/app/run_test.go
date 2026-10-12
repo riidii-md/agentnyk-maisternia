@@ -1152,6 +1152,13 @@ func TestHookApplySupportsProjectScope(t *testing.T) {
 	if !strings.Contains(stdout.String(), "at project scope") {
 		t.Fatalf("project apply output = %q", stdout.String())
 	}
+	if !strings.Contains(stdout.String(), ".gitignore (exclude local .agent-runs task artifacts)") {
+		t.Fatalf("project ignore change missing from CLI preview: %q", stdout.String())
+	}
+	ignore, err := os.ReadFile(filepath.Join(project, ".gitignore"))
+	if err != nil || string(ignore) != "/.agent-runs/\n" {
+		t.Fatalf("project ignore = %q, error = %v", ignore, err)
+	}
 	if _, err := os.Stat(filepath.Join(
 		project,
 		".codex",

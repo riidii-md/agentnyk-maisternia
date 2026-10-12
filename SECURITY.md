@@ -38,8 +38,9 @@ Current controls:
 - read-only trigger authority enforcement;
 - private, symlink-rejecting local settings storage;
 - terminal-control sanitization before untrusted configuration data is rendered;
-- an observational admin TUI with no approval, apply, dispatch, or external
-  write controls.
+- an admin TUI with guarded configuration apply and environment installation;
+  each write requires review and explicit confirmation. The TUI does not
+  approve or dispatch agent work.
 
 ## Secret Handling
 

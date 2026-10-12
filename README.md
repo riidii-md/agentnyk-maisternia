@@ -296,6 +296,8 @@ and remaining limitations.
 
 ## Documentation
 
+Use the [project document map](docs/README.md) to select sources by task.
+
 ### Get started
 
 - [Installation and upgrades](docs/INSTALLATION.md)

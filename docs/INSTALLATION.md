@@ -99,6 +99,15 @@ Applying the same preset again updates changed resources and reconciles
 resources removed from the preset. Exclusive unchanged targets are backed up
 and removed, shared targets are retained, and local drift becomes a conflict.
 
+Project-scoped configuration installs also preview an additive `.gitignore`
+change for `/.agent-runs/`. Confirmed apply creates the file or appends the rule,
+preserves existing rules and file permissions, and backs up any changed file.
+Repeat installs do not duplicate a final rule. Stale plans, symlink targets, and
+non-file targets are rejected before writes. The rule remains after uninstall
+because saved task artifacts can remain on disk. It does not untrack files
+already committed to Git. User-scoped installs do not change project ignore
+rules; add `/.agent-runs/` in each project that uses local workflow artifacts.
+
 `apply` aborts on conflicts by default. An explicit `--conflicts keep` or
 `--conflicts replace` decision is required to continue. Replacement backs up
 the existing target before writing.

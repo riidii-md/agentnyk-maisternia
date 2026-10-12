@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with implementation repair or report-only disposition, an optional behavior-preserving maintainability profile, and independent refutation.
-version: 0.8.0
+version: 0.9.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -147,6 +147,15 @@ Discover repository rules, accepted contract, base ref, changed files, actual
 code around every changed path, tests, generated-file rules, CI, migrations,
 and verification evidence. A diff identifies changed behavior but is not enough
 context by itself. Do not trust builder summaries as proof.
+
+Reconcile affected documents with actual behavior and the accepted contract.
+Use the project document map and the plan's maintenance tasks when available;
+otherwise inspect relevant existing product, architecture, design, security,
+code-convention, and testing sources. Check changed commands and links, and keep
+proposals and historical decisions distinct from current implementation. Report
+unresolved contradictions with evidence. Do not pass a required document update
+that remains inaccurate or lacks necessary evidence. Return correction findings
+through the existing repair and review path; do not add another approval gate.
 
 When an approved plan governs the change, reconcile actual test evidence with its
 consolidated test portfolio: dispositions, covered behavior/risk, fidelity, value,

@@ -374,15 +374,21 @@ func TestLoaderPlansAndAppliesPresetForSelectedProvidersAndProject(t *testing.T)
 	if err != nil {
 		t.Fatalf("PlanPreset() error = %v", err)
 	}
-	if plan.ActionCount != 8 || len(plan.ByProvider) != 2 ||
+	if plan.ActionCount != 9 || len(plan.ByProvider) != 3 ||
 		plan.ByProvider[0].Provider != "claude" ||
-		plan.ByProvider[1].Provider != "codex" {
+		plan.ByProvider[1].Provider != "codex" || plan.ByProvider[2].Provider != "project" {
 		t.Fatalf("project plan = %#v", plan)
 	}
 	if plan.StatePath != configurator.StatePathForScope(project, configurator.ScopeProject) {
 		t.Fatalf("state path = %q", plan.StatePath)
 	}
 	for _, action := range plan.Actions {
+		if action.ProjectIgnore {
+			if action.TargetPath != ".gitignore" || action.Agent != "project" || string(action.DesiredContent) != "/.agent-runs/\n" {
+				t.Fatalf("invalid project ignore preview: %#v", action)
+			}
+			continue
+		}
 		if (action.Agent != "codex" && action.Agent != "claude") ||
 			!strings.HasPrefix(action.DestinationPath, project+string(os.PathSeparator)) {
 			t.Fatalf("action escaped selected provider/project: %#v", action)
@@ -391,6 +397,10 @@ func TestLoaderPlansAndAppliesPresetForSelectedProvidersAndProject(t *testing.T)
 
 	if err := loader.ApplyPreset(request, configurator.ConflictAbort); err != nil {
 		t.Fatalf("ApplyPreset() error = %v", err)
+	}
+	ignore, err := os.ReadFile(filepath.Join(project, ".gitignore"))
+	if err != nil || string(ignore) != "/.agent-runs/\n" {
+		t.Fatalf("multi-provider apply ignore = %q, error = %v", ignore, err)
 	}
 	for _, relative := range []string{
 		".codex/maisternia/hook-packs/safety.json",
@@ -433,7 +443,7 @@ func TestLoaderLeavesUnselectedInstalledProvidersUntouched(t *testing.T) {
 		t.Fatalf("PlanPreset(claude) error = %v", err)
 	}
 	for _, action := range plan.Actions {
-		if action.Agent != "claude" {
+		if action.Agent != "claude" && !action.ProjectIgnore {
 			t.Fatalf("unselected provider entered plan: %#v", action)
 		}
 	}

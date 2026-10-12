@@ -1,7 +1,7 @@
 ---
 name: work-start
 description: Start or resume standard work and advance through its phases until a human response or an external blocker is required.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-start - Guided Standard Work
@@ -66,12 +66,24 @@ the available workspace rules.
    moving work. Record the selected base, its verified tip or freshness limit,
    task branch, worktree path, and any unresolved blocker in task evidence.
 
+## Persistent task summary
+
+Read the installed `readable-output` skill's `references/task-context.md`
+before saving or resuming task progress. The coordinator maintains the selected
+`progress.md`, defaulting to `.agent-runs/work/<task-id>/progress.md`, after Git
+preflight, after each completed phase and implementation step, before pausing,
+and before context compaction when the harness gives advance notice. Follow the
+shared contract for task identity, fields, privacy, safe writes, and recovery.
+Report the path so another session can resume. The coordinator saves read-only
+phase results outside those phases; brief and scout remain read-only.
+
 ## Advance the workflow
 
 1. Read repository instructions, the task, current conversation, existing
-   artifacts, and installed phase contracts. Run the Git workspace preflight,
-   identify work already completed and the next unmet gate. Do not repeat a
-   completed phase or infer a decision from a document's existence.
+   artifacts, the selected progress file, and installed phase contracts. Run the
+   Git workspace preflight and identify completed work and the next unmet gate. Do not repeat a
+   completed phase or infer a decision from a document's existence. Apply the
+   persistent task summary's recovery rules, then refresh it at each checkpoint.
 2. Gather facts through `/work-brief`, `/work-scout`, and `/work-analyze`.
    Research when evidence is missing and use `/work-grill` when focused human
    context is needed. Classify the conditional architectural direction gate;

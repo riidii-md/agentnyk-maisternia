@@ -272,6 +272,45 @@ Provider-native invocation differs by harness:
 Codex does not load `.codex/commands/`. Restart Codex after applying a preset so
 new native skills are indexed for suggestions.
 
+### Project Documents And Persistent Task Summaries
+
+Scout returns a project document map for product goals, architecture, design and
+interaction rules, security, code conventions, and testing. It discovers existing
+equivalents rather than requiring fixed filenames. Each entry identifies the
+source, relevant sections, task relevance, and current, proposed, historical,
+missing, inaccessible, or contradicted status. Read only the relevant sections.
+For this repository, start with [the project document map](README.md).
+
+Plans identify affected document updates or an evidence-backed reason why no
+updates are needed. Execution makes the approved updates. Verification and review
+reconcile them with accepted behavior and the current implementation. Unresolved
+required corrections follow the existing repair path. This adds no approval gate.
+
+The active harness coordinator keeps one compact local task summary at an explicit
+path or `.agent-runs/work/<task-id>/progress.md`. The shared `readable-output`
+reference `references/task-context.md` defines its fields, safe-write rules, and
+recovery checks. Standard Work and Idea Shaping install that reference for every
+declared provider. It is configuration guidance, not a Maisternia runtime service.
+
+The coordinator saves the document map, goal, constraints, decision references,
+completed and remaining work, verification evidence, failed approaches, open
+questions, and next action. It updates the file at completed phase and
+implementation boundaries, before pauses, and before compaction when notified.
+Read-only phases return evidence and do not gain write authority. Progress files
+contain safe summaries and references, not credentials, transcripts, or raw logs.
+Keep them out of commits by default. They remain on disk between sessions; another
+machine needs a separately authorized transfer of the necessary safe artifacts.
+
+To continue in another session, open the same worktree and provide the task's
+progress path to `/work-start`. `/work-brief` can inspect it without changing it.
+The new session verifies task identity, branch, worktree, actual changes, and
+referenced decisions before continuing. A saved summary is not approval. Missing
+or stale evidence returns to the existing gate. A sudden interruption can leave
+the summary behind current work, so it is never the only proof of completion.
+
+Existing installations receive these contracts only after a reviewed preset
+reapply through the normal conflict, drift, backup, and confirmation flow.
+
 ### Clean Up or Finalize Work Manually
 
 `/work-cleanup` remains a manually invoked command outside the `standard-work`

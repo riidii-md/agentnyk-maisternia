@@ -1,7 +1,7 @@
 ---
 name: work-scout
 description: Gather repository, environment, and task facts with read-only inspection before analysis or implementation.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-scout - Gather Facts
@@ -34,10 +34,32 @@ Record inaccessible systems as unknown rather than claiming they are unaffected.
 Separate discovered facts from inferences. Do not choose a final solution or
 edit files.
 
+## Project document map
+
+Find existing equivalents for product goals, current architecture, design and
+interaction rules, security, code conventions, and testing. Start with the
+repository root instructions and documentation index. Apply relevant nested
+instructions to their directory scope. Do not require fixed filenames such as
+`PRD.md` or `DESIGN_SYSTEM.md`. Code, component libraries, ADRs, and trusted
+project references may supply the context.
+
+For each topic, return its source path or URL, relevant sections, task relevance,
+and status: current, proposed, historical, missing, inaccessible, or contradicted
+by inspected evidence. Cite the evidence for a contradiction. A document's name
+or date alone does not prove that it describes current behavior. Separate the
+current implementation from approved intent. Preserve unknowns when verification
+is unavailable; do not invent product decisions or silently resolve conflicts.
+
+Do not read every document. Read the relevant sections and follow references
+only when the task requires them. Discovery remains read-only. Return the map
+to the coordinator for inclusion in an existing task artifact or progress file;
+do not create or update project documents during scout.
+
 Return:
 
 - Handoff summary
 - Facts with source paths or URLs
+- Project document map
 - Unknowns
 - Scope boundaries
 - Likely affected subsystems

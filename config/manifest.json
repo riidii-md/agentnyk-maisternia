@@ -2,6 +2,16 @@
   "schema_version": 1,
   "resources": [
     {
+      "id": "readable-output-task-context",
+      "source": "config/workflow/skills/readable-output/references/task-context.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/skills/readable-output/references/task-context.md"},
+        {"agent": "claude", "path": ".claude/skills/readable-output/references/task-context.md"},
+        {"agent": "antigravity", "path": ".config/agy/skills/readable-output/references/task-context.md"},
+        {"agent": "hermes", "path": ".hermes/skills/readable-output/references/task-context.md"}
+      ]
+    },
+    {
       "id": "machine-cleanup-command",
       "source": "config/workflow/phases/machine-cleanup.md",
       "targets": [

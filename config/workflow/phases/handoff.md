@@ -1,7 +1,7 @@
 ---
 name: work-handoff
 description: Compile an approved plan for a fresh executor only when execution context will change.
-version: 0.6.0
+version: 0.7.0
 ---
 
 # /work-handoff - Compile a Self-Contained Execution Contract
@@ -47,6 +47,16 @@ Compile:
 - retry, parking, and stop behavior;
 - worktree and branch;
 - progress and event locations.
+
+Include the selected progress artifact path, the project document map, affected
+document updates, and the current completed and remaining work. Link to the
+latest summary rather than copying a second mutable progress record. Saved
+context is not approval. Apply the installed `readable-output` skill's
+`references/task-context.md`. Require the fresh executor to revalidate task identity,
+repository state, verification evidence, and exact-revision decision references
+before selecting the first unfinished task. A stale or missing reference returns
+to the existing evidence or approval gate. Refreshing the summary does not
+change this handoff's immutable execution contract.
 
 The handoff may summarize but must not expand scope, weaken evidence, or alter
 the approved plan. A material change invalidates approval and returns to plan

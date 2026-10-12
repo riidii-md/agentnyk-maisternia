@@ -252,6 +252,13 @@ func buildPlanForScope(
 		}
 	}
 
+	if scope == ScopeProject && (len(desired) > 0 || (presetID == "" && len(plan.Actions) > 0)) {
+		ignore, err := buildProjectIgnore(targetRoot)
+		if err != nil {
+			return Plan{}, err
+		}
+		plan.Actions = append(plan.Actions, ignore)
+	}
 	sortPlanActions(&plan)
 	return plan, nil
 }

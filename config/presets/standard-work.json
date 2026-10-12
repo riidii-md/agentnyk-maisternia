@@ -114,7 +114,8 @@
       "session-retrospective-skill",
       "work-routing-skill",
       "work-routing-runners",
-      "readable-output-document-wording"
+      "readable-output-document-wording",
+      "readable-output-task-context"
     ],
     "hooks": [],
     "settings": [
