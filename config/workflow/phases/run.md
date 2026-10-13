@@ -60,6 +60,19 @@ For each pass:
    coordinating session.
 7. Repeat.
 
+Update the affected documents as part of each approved implementation task.
+Keep proposed behavior separate from implemented behavior and preserve useful
+historical decisions. If a document conflict requires a new product or material
+design decision, return to the existing decision path before changing it.
+
+Maintain the plan's selected `progress.md` after each completed implementation
+step and before pausing or a notified context compaction. Read the installed
+`readable-output` skill's `references/task-context.md`. Record actual results,
+current verification evidence, blockers, and the next action. The summary cannot
+change the approved plan. Revalidate saved state against the repository and referenced decisions
+before resuming in a new session. In guided work the coordinator owns writes;
+standalone execution uses the coordinator named by the approved plan.
+
 Prefer non-login shell execution for routine commands so startup scripts do not
 add unrelated output or latency.
 
@@ -134,5 +147,7 @@ parked, all remaining work is blocked, or the configured run cap is reached.
 Do not commit, push, open a PR, weaken criteria, touch production data, or
 perform destructive actions without explicit authorization.
 
-Do not create or update a Maisternia runtime task. Use a progress artifact only
-when the approved plan explicitly supplies one.
+Do not create or update a Maisternia runtime task. Use the progress artifact path
+recorded in the approved plan; guided standard-work supplies it by default.
+If a legacy plan lacks that path, the coordinator may maintain its existing
+task-local summary under `/work-start` without changing scope or approval.

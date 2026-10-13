@@ -1,7 +1,7 @@
 ---
 name: work-brief
 description: Produce a concise task and session refresher from current evidence, decisions, progress, and remaining work.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-brief - Quick Task and Session Refresher
@@ -27,6 +27,16 @@ commits, and explicitly referenced artifacts. Infer a task identifier from
 arguments, branch, path, or conversation when possible. Separate facts from
 assumptions and use read-only checks only; do not require an external task-state
 store.
+
+Read the task's selected `progress.md` when present. Locate it from an explicit
+path, existing task artifacts, or the matching task ID under `.agent-runs/work/`.
+If several files could match, resolve task identity before selecting one. Treat
+the saved summary as context, not approval. Use read-only inspection to
+revalidate the task identity, branch, worktree, current files, and referenced
+decisions. Use the installed `readable-output` skill's `references/task-context.md`
+for recovery safeguards. Mark unsupported or stale status as unknown and report
+the next evidence check. Include the progress path and relevant project document sources
+in the refresher. Do not update the summary; the coordinator owns persistence.
 
 Return:
 

@@ -580,7 +580,14 @@ func combinePresetPlans(plans []configurator.Plan) configurator.Plan {
 		PresetID: plans[0].PresetID,
 	}
 	for _, plan := range plans {
-		combined.Actions = append(combined.Actions, plan.Actions...)
+		for _, action := range plan.Actions {
+			if action.ProjectIgnore && slices.ContainsFunc(combined.Actions, func(existing configurator.Action) bool {
+				return existing.ProjectIgnore
+			}) {
+				continue
+			}
+			combined.Actions = append(combined.Actions, action)
+		}
 	}
 	return combined
 }

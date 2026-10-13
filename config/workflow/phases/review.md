@@ -169,6 +169,15 @@ code around every changed path, tests, generated-file rules, CI, migrations,
 and verification evidence. A diff identifies changed behavior but is not enough
 context by itself. Do not trust builder summaries as proof.
 
+Reconcile affected documents with actual behavior and the accepted contract.
+Use the project document map and the plan's maintenance tasks when available;
+otherwise inspect relevant existing product, architecture, design, security,
+code-convention, and testing sources. Check changed commands and links, and keep
+proposals and historical decisions distinct from current implementation. Report
+unresolved contradictions with evidence. Do not pass a required document update
+that remains inaccurate or lacks necessary evidence. Return correction findings
+through the existing repair and review path; do not add another approval gate.
+
 When an approved plan governs the change, reconcile actual test evidence with its
 consolidated test portfolio: dispositions, covered behavior/risk, fidelity, value,
 cost and accepted omissions. Apply `/work-plan`'s materiality boundary and return

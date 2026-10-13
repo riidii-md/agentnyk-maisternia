@@ -83,6 +83,8 @@ type Action struct {
 	Reason          string
 	Removal         bool
 	PreserveTarget  bool
+	// ProjectIgnore is an additive project rule, not owned provider configuration.
+	ProjectIgnore bool
 }
 
 type Plan struct {

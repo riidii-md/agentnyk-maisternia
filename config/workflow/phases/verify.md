@@ -1,7 +1,7 @@
 ---
 name: work-verify
 description: Discover and run repository-specific verification gates, preserve evidence, and report readiness accurately.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # /work-verify - Run Repository-Specific Checks
@@ -27,6 +27,15 @@ CI, and hooks.
 Run the smallest relevant checks first, then broaden with risk. Preserve full
 logs. Classify failures as regression, environment, flaky, pre-existing, or
 unknown.
+
+Check affected documents against the accepted behavior and current implementation.
+Reconcile the plan's document updates or no-document-change rationale. Verify
+changed commands, paths, links, examples, and interface or security descriptions
+at the smallest faithful level. Label proposals and historical decisions so
+they cannot be mistaken for current behavior. Report unresolved contradictions
+with their sources and return required corrections to execution. Do not claim
+consistency when required evidence is unavailable. Return this evidence to the
+coordinator for the selected progress summary.
 
 Return commands, results, failure classification, remaining risk, log paths, and
 whether independent review can begin.

@@ -53,6 +53,12 @@ func Apply(plan Plan, options ApplyOptions) error {
 
 	// Preflight the complete plan before the first write to reduce partial applies.
 	for _, action := range plan.Actions {
+		if action.ProjectIgnore {
+			if err := verifyProjectIgnoreStillValid(plan.Home, scope, action); err != nil {
+				return err
+			}
+			continue
+		}
 		if err := verifyPresetOwnershipStillValid(state, plan, action); err != nil {
 			return err
 		}
@@ -61,7 +67,19 @@ func Apply(plan Plan, options ApplyOptions) error {
 		}
 	}
 
+	// Install the ignore rule first, so a later partial apply keeps local task
+	// artifacts excluded. It is retained on uninstall and never owns .gitignore.
 	for _, action := range plan.Actions {
+		if action.ProjectIgnore {
+			if err := applyProjectIgnore(plan.Home, scope, action, appliedAt); err != nil {
+				return err
+			}
+		}
+	}
+	for _, action := range plan.Actions {
+		if action.ProjectIgnore {
+			continue
+		}
 		if action.State == ActionRelease {
 			releasePresetOwnership(state, plan.PresetID, action)
 			if action.PreserveTarget {

@@ -181,6 +181,26 @@ explicit statement that there are none, expected behavior, failure and edge case
 focused tests, and observable completion evidence. Avoid broad tasks such as
 "implement the backend" that require the executor to perform hidden decomposition.
 
+## Document maintenance
+
+Use scout's project document map to identify affected documents when behavior,
+interfaces, architecture, design and interaction rules, security assumptions,
+code conventions, testing, or commands change. Discover existing equivalents
+when no map is available. Include their updates in the ordered tasks and
+acceptance evidence. For each affected topic, name the source, planned change,
+and consistency check. An evidence-backed no-document-change rationale is valid
+when existing documents remain accurate. Do not create a fixed set of documents
+or rewrite unrelated material. Keep proposed, implemented, and historical
+descriptions distinct; unresolved product decisions remain human decisions.
+
+Record the progress artifact path and its coordinator in the plan. Reuse the
+path selected by `/work-start`; otherwise default to
+`.agent-runs/work/<task-id>/progress.md` in the task workspace. This authorizes
+the executor to maintain the compact summary within the approved task. Apply
+the installed `readable-output` skill's `references/task-context.md` for fields,
+safe writes, privacy, and recovery. The summary cannot amend the approved plan
+or grant approval. Planning alone does not start an implementation run.
+
 ## Test Plan
 
 Every candidate plan owns one consolidated, proportionate test plan before human
@@ -238,6 +258,8 @@ Return:
 - Fixed decisions and permitted executor discretion
 - Material alternatives and tradeoffs
 - Files and patterns to change or reuse, with inspect-only unknowns explicit
+- Affected documents, planned updates and consistency checks, or a no-document-change rationale
+- Progress artifact path and coordinator
 - Ordered implementation tasks
 - Implementation review cadence, required gates, scope, cost, and human agreement
 - Risk and blast-radius checks

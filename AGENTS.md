@@ -5,6 +5,12 @@
 This repository owns AgentnykMaisternia's provider-neutral workflow definitions
 and the `maisternia` installer.
 
+## Project Context
+
+Use [the project document map](docs/README.md) to find relevant product,
+architecture, interaction, security, and testing sources. Read the sections
+that apply to the task. Keep affected documents consistent with changed code.
+
 ## Development
 
 - Use the Go standard library unless a dependency removes substantial
