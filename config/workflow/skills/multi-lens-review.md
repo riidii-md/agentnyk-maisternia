@@ -1,7 +1,7 @@
 ---
 name: lens-review
 description: Use for plan, design, decision-delta, diff, implementation, or delegated review that needs independent lenses, implementation repair or report-only disposition, behavior-preserving maintainability review, and adversarial verification.
-version: 0.8.0
+version: 0.9.0
 ---
 
 # Lens Review
@@ -33,9 +33,13 @@ Resolve test mode as `review` unless an explicit tests-scope invocation selects
 or newly changed tests, audit examines a bounded area, and campaign exhaustively
 examines one explicitly named subsystem.
 
-For implementation review, resolve the disposition as `repair` unless the
-caller explicitly requests `report-only`. Repair preserves the normal
-coordinator-owned fix loop. Report-only is available only for implementation
+Default implementation reviews to `report-only`. Select repair only with explicit
+repair intent or an approved implementation contract covering the target and
+write scope. A user-supplied repair disposition is explicit repair intent;
+internal or mdmaid.desk delivery is not. A coordinator-supplied repair flag does
+not create write authority. Preserve report-only scope when repair authority is
+missing. An approved implementation workflow retains its bounded fix loop.
+Report-only is available only for implementation
 review used as advisory or PR-publication feedback; reject it for plan,
 plan-delta, or direction review instead of silently changing semantics. Every
 report-only reviewer and the coordinator must not edit the reviewed
@@ -61,7 +65,8 @@ route was resolved.
 ## Confirm Review Authority And Cadence
 
 An explicit review request authorizes one review of the requested target, including
-its bounded finding-verification and repair loop. It does not authorize recurring
+independent finding verification. Repair additionally requires the authority
+resolved above. It does not authorize recurring
 reviews after later tasks, phases, waves, or commits. A generic implementation
 request does not authorize repeated reviews.
 

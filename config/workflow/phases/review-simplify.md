@@ -1,7 +1,7 @@
 ---
 name: work-review-simplify
 description: Run the canonical implementation review with the behavior-preserving maintainability profile.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-review-simplify - Maintainability Review And Repair
@@ -47,7 +47,9 @@ after its delimiter:
 
 Preserve an explicit `--disposition repair` or
 `--disposition report-only`. `/work-start-pr-review` supplies report-only for
-PR publication so this specialization cannot edit a contributor branch.
+internal reports and PR publication so this specialization cannot edit a contributor
+branch. Inherit the canonical repair-authority check; this alias does not turn
+internal or desk delivery into repair permission.
 Preserve `--allow-degraded` only when the user explicitly supplied it; the
 alias inherits the canonical blocked fallback and degraded reporting rules.
 

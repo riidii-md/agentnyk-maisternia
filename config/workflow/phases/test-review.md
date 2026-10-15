@@ -1,7 +1,7 @@
 ---
 name: work-test-review
 description: Review test evidence for changed behavior through intent, risk, fidelity, and maintainability lenses using the canonical implementation-review engine.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-test-review - Specialized Test Review And Repair
@@ -49,7 +49,9 @@ a large target; it requires an explicit invocation and one named subsystem.
 
 Preserve an explicit `--disposition repair` or
 `--disposition report-only`. `/work-start-pr-review` supplies report-only for
-PR publication so this specialization cannot edit a contributor branch.
+internal reports and PR publication so this specialization cannot edit a contributor
+branch. Inherit the canonical repair-authority check; this alias does not turn
+internal or desk delivery into repair permission.
 Preserve `--allow-degraded` only when the user explicitly supplied it; the
 alias inherits the canonical blocked fallback and degraded reporting rules.
 

@@ -79,9 +79,10 @@ The repository starts with:
   `/work-change-review implementation-approval` gate,
   and `/work-test-review` for focused review of test evidence. Its separate
   `/work-start-pr-review` pipeline synchronizes an existing PR's ticket, diff,
-  comments, and CI, asks whether feedback is for internal repair or PR
-  publication, routes the chosen reviews, and publishes only in the latter
-  mode;
+  comments, and CI, separates internal delivery or PR publication from repair
+  authority, defaults to report-only, and edits only under an explicit repair
+  request or an approved implementation contract. It publishes comments only
+  when PR publication was selected;
 - `idea-shaping`: source intake, optional question-to-action focusing,
   bounded cross-system scouting, research, grill, brainstorm, challenge,
   complexity-gated multi-agent direction and planning synthesis, explicit

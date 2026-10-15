@@ -4,6 +4,9 @@ Plain `/work-change-review` defaults to `desk-review`: it analyzes the complete
 Git diff and publishes the explanation and native patch to mdmaid.desk with
 `--attention review`. It does not require a prior automated review or create an
 approval request. Missing or stale verification remains visible in the document.
+Both modes preserve source and tests. Desk delivery does not select approval or
+authorize repair. Unresolved findings do not block the complete explanatory
+desk artifact, and do not justify substituting a findings-only report.
 An existing PR, earlier PR-publication destination, saved route, or publication
 receipt cannot redirect this command to PR comments or replies.
 

@@ -2140,7 +2140,7 @@ func TestRepositoryMultiLensReviewContract(t *testing.T) {
 			"semantic integrity check", "`unverified`", "self-verify",
 		},
 		"config/workflow/phases/review-simplify.md": {
-			"name: work-review-simplify", "version: 0.3.0", "$ARGUMENTS", "work-review",
+			"name: work-review-simplify", "version: 0.4.0", "$ARGUMENTS", "work-review",
 			"implementation", "maintainability", "thin alias", "inspection obligations", "read-only",
 		},
 		"config/workflow/phases/test-review.md": {

@@ -1,7 +1,7 @@
 ---
 name: work-review
 description: Run evidence-grounded multi-lens review of a plan, plan delta, diff, PR, or implementation, with implementation repair or report-only disposition, an optional behavior-preserving maintainability profile, and independent refutation.
-version: 0.9.0
+version: 0.10.0
 ---
 
 # /work-review - Multi-Lens Review And Repair
@@ -68,10 +68,15 @@ Campaign is an explicit exhaustive audit of one subsystem and must name that
 subsystem. Test mode changes the depth and required evidence, not authority,
 disposition, severity, independent verification, or final verification.
 
-The default review disposition is `--disposition repair`, preserving the
-normal review-and-repair workflow. `--disposition report-only` is available for
-implementation review when the output will be advisory or published as review
-feedback. Under report-only disposition every reviewer and the coordinator
+Default implementation reviews to `--disposition report-only`. Select repair only
+with explicit repair intent or an approved implementation contract that already
+grants write authority for the target. A user-supplied `--disposition repair` is
+an explicit repair request; a destination such as internal or mdmaid.desk is not.
+A coordinator-supplied repair flag does not create write authority. If repair
+authority is missing, preserve report-only scope rather than inventing it.
+An approved implementation workflow retains its bounded review-and-repair loop.
+
+Under report-only disposition every reviewer and the coordinator
 must not edit the reviewed implementation, its tests, plan, or contributor
 branch. They may write only task-owned review artifacts. A report-only run
 still verifies and deduplicates every candidate, runs safe read-only checks,
@@ -85,9 +90,9 @@ generators, or binaries on the host. Such execution requires explicit user
 authorization and a disposable credential-free sandbox with no host writes,
 no network by default, isolated caches, and bounded resources.
 
-An existing PR chosen for PR publication by `/work-start-pr-review` must use
-report-only. An internal repair review uses repair unless the user explicitly
-asks for advice without edits. The disposition changes mutation authority, not
+An existing PR chosen for an internal report or PR publication by
+`/work-start-pr-review` must use report-only. An explicitly authorized internal
+repair review uses repair within the approved write scope. The disposition changes mutation authority, not
 the selected lenses, evidence standard, severity, or routing strategy.
 
 When `work-routing` resolves several harnesses, use `parallel-verify`: distribute
@@ -101,7 +106,8 @@ silently substitutes an unavailable harness.
 ## Confirm Review Authority And Cadence
 
 An explicit review request authorizes one review of the requested target, including
-its bounded finding-verification and repair loop. It does not authorize recurring
+independent finding verification. Repair additionally requires the authority
+resolved above. It does not authorize recurring
 reviews after later tasks, phases, waves, or commits. A generic implementation
 request does not authorize repeated reviews.
 

@@ -74,14 +74,15 @@
       "phases": [
         "resolve-destination", "sync-pr-context", "select-review-suite",
         "run-reviews", "synthesize-feedback", "implementation-approval",
-        "internal-repair", "verify-repair", "pr-feedback"
+        "internal-repair", "verify-repair", "internal-report", "pr-feedback"
       ],
       "edges": [
         {"from": "resolve-destination", "to": "sync-pr-context", "condition": "destination selected"},
         {"from": "sync-pr-context", "to": "select-review-suite"},
         {"from": "select-review-suite", "to": "run-reviews"},
         {"from": "run-reviews", "to": "synthesize-feedback"},
-        {"from": "synthesize-feedback", "to": "implementation-approval", "condition": "internal repair review passes"},
+        {"from": "synthesize-feedback", "to": "implementation-approval", "condition": "explicitly authorized internal repair review passes"},
+        {"from": "synthesize-feedback", "to": "internal-report", "condition": "internal report-only review completes"},
         {"from": "synthesize-feedback", "to": "pr-feedback", "condition": "PR publication review passes"},
         {"from": "implementation-approval", "to": "internal-repair", "condition": "changes requested"},
         {"from": "implementation-approval", "to": "implementation-approval", "condition": "decision stale", "loop": true},

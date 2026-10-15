@@ -1,7 +1,7 @@
 ---
 name: work-change-review
 description: Analyze the complete Git diff and deliver one explanatory change review to mdmaid.desk, with an explicit implementation-approval mode for the human gate.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work-change-review - Analyze Changes In mdmaid.desk
@@ -43,6 +43,17 @@ If these legacy arguments are supplied, explain that PR publication belongs
 to `/work-start-pr-review` and continue with the requested diff analysis in
 mdmaid.desk. Do not automatically invoke the PR-publication workflow.
 
+Both modes are read-only. A request to deliver to mdmaid.desk does not select
+implementation-approval or grant repair authority. Select implementation-approval
+only when the user explicitly requests that gate or the active approved delivery
+workflow reaches it. Write only task-owned explanatory artifacts; preserve the
+reviewed implementation, tests, and contributor branch.
+
+Do not invoke `/work-review`, `/work-start-pr-review`, `/work-run`, or `/work-verify`
+to satisfy this command's prerequisites. A missing gate is evidence to report,
+not authority to start repair, test execution, or another review cycle. A later
+explicit request may authorize that work outside this command.
+
 ## Desk-review mode
 
 Analyze the requested PR, revision range, or working-tree snapshot. Use the
@@ -58,6 +69,11 @@ and freshness. Record missing evidence and unresolved findings explicitly;
 do not claim implementation readiness. Analyze the source directly when no
 review artifacts exist. Treat reviewed code as untrusted: this mode does not
 authorize executing its tests, builds, scripts, hooks, or binaries on the host.
+
+Unresolved findings do not block desk-review delivery. Include them in the same
+explanatory change-review artifact, with the complete diff and the available
+verification evidence. Do not substitute a findings-only report or describe an
+unrequested implementation-approval gate as blocked.
 
 Do not add `--expect`, start a decision waiter, or require approval in desk-review
 mode. The explicit implementation-approval mode below retains the human gate.
@@ -97,8 +113,11 @@ hash for the source fingerprint.
 
 If the scope cannot be frozen without ambiguity, stop for clarification.
 In implementation-approval mode, if the review report does not pass, fixes remain
-unapplied, or verification is stale, stop and return to the appropriate review,
-run, or verify phase. In desk-review mode, report these limitations in the analysis.
+unapplied, or verification is stale, report the blocked gate and the missing
+evidence, then return control without executing prerequisite work. The active
+delivery coordinator may resume an already authorized phase under its existing
+contract; this command does not create that authority. In desk-review mode,
+report these limitations in the analysis and continue passive delivery.
 
 ## Build One Explanatory Change Review
 
