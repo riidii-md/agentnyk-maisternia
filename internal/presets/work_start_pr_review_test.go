@@ -33,7 +33,7 @@ func TestRepositoryWorkStartPRReviewIsInstalledByStandardWork(t *testing.T) {
 	wantPhases := []string{
 		"resolve-destination", "sync-pr-context", "select-review-suite",
 		"run-reviews", "synthesize-feedback", "implementation-approval",
-		"internal-repair", "verify-repair", "pr-feedback",
+		"internal-repair", "verify-repair", "internal-report", "pr-feedback",
 	}
 	if !slices.Equal(reviewPipeline.Phases, wantPhases) {
 		t.Fatalf("pr-review phases = %v, want %v", reviewPipeline.Phases, wantPhases)
@@ -43,7 +43,8 @@ func TestRepositoryWorkStartPRReviewIsInstalledByStandardWork(t *testing.T) {
 		{From: "sync-pr-context", To: "select-review-suite"},
 		{From: "select-review-suite", To: "run-reviews"},
 		{From: "run-reviews", To: "synthesize-feedback"},
-		{From: "synthesize-feedback", To: "implementation-approval", Condition: "internal repair review passes"},
+		{From: "synthesize-feedback", To: "implementation-approval", Condition: "explicitly authorized internal repair review passes"},
+		{From: "synthesize-feedback", To: "internal-report", Condition: "internal report-only review completes"},
 		{From: "synthesize-feedback", To: "pr-feedback", Condition: "PR publication review passes"},
 		{From: "implementation-approval", To: "internal-repair", Condition: "changes requested"},
 		{From: "implementation-approval", To: "implementation-approval", Condition: "decision stale", Loop: true},
@@ -257,7 +258,7 @@ func TestRepositoryPRReviewSafetyClauses(t *testing.T) {
 	root := repositoryRoot(t)
 	contracts := map[string][]string{
 		"config/workflow/phases/start-pr-review.md": {
-			"Honor an explicit destination in the invocation or current conversation. When it is absent or ambiguous, ask one short question and wait. Do not infer PR publication merely because a PR exists, and do not silently keep feedback local after the user selects PR publication. The selected destination authorizes only the matching repair or review-comment path; it does not authorize commits, pushes, approvals, requests for changes, ticket transitions, or merges.",
+			"Honor an explicit destination in the invocation or current conversation. When it is absent or ambiguous, ask one short question and wait. Do not infer PR publication merely because a PR exists, and do not silently keep feedback local after the user selects PR publication. An internal destination authorizes delivery of findings, not implementation changes. PR publication authorizes only the review-comment path; neither destination authorizes commits, pushes, approvals, requests for changes, ticket transitions, or merges.",
 			"Do not locally execute PR-controlled tests, builds, scripts, hooks, package-manager lifecycle steps, generators, or binaries unless the user explicitly authorizes that execution and it runs in a disposable sandbox with no credentials or secrets, no host write access, no network by default, isolated caches, and bounded resources.",
 			"Private evidence may ground an internal conclusion, but must not be quoted, linked, summarized, or otherwise disclosed to a broader PR audience.",
 			"This command owns PR-feedback synthesis and publication. Enter this stage only when the user selected PR publication for this PR review workflow.",

@@ -1,7 +1,7 @@
 ---
 name: work-start-pr-review
-description: Coordinate an existing pull request review from complete context intake through routed review, unified feedback, and either internal repair or PR comment publication.
-version: 0.3.0
+description: Coordinate an existing pull request review with separate delivery and repair authority, from complete intake through report-only feedback, authorized repair, or PR comment publication.
+version: 0.4.0
 ---
 
 # /work-start-pr-review - Guided Pull Request Review
@@ -26,22 +26,30 @@ Input:
 Review an existing pull request. This is a review workflow, not the feature and
 bug delivery workflow owned by `/work-start`.
 
-## Resolve where feedback lands
+## Resolve destination and repair authority
 
 Before running reviews, establish where the review should land:
 
-- **internal repair**: keep findings off the pull request, apply confirmed fixes
-  only within the user's approved workspace scope, verify them, and prepare the
-  branch for a later push;
+- **internal report**: keep findings off the pull request and deliver them in the
+  current conversation or to mdmaid.desk when requested;
 - **PR publication**: keep the contributor's implementation read-only and post
   the final review to the existing pull request.
 
 Honor an explicit destination in the invocation or current conversation. When
 it is absent or ambiguous, ask one short question and wait. Do not infer PR
 publication merely because a PR exists, and do not silently keep feedback local
-after the user selects PR publication. The selected destination authorizes only
-the matching repair or review-comment path; it does not authorize commits,
+after the user selects PR publication. An internal destination authorizes delivery
+of findings, not implementation changes. PR publication authorizes only the
+review-comment path; neither destination authorizes commits,
 pushes, approvals, requests for changes, ticket transitions, or merges.
+
+Resolve mutation authority separately from where the review should land. Default
+to `--disposition report-only`. Use `--disposition repair` only with explicit repair
+intent or an approved implementation contract covering this PR and the allowed
+write scope. Requests to "review internally", "fetch and review internally", or
+deliver to mdmaid.desk do not authorize internal repair or implementation approval.
+Confirm that authority before any implementation/test edits or repair-specific
+indexing. Keep an existing explicit repair choice; do not ask for it again.
 
 PR publication is read-only and does not require a writable checkout. Before
 internal repair begins, inspect the PR head repository and branch, current
@@ -116,10 +124,11 @@ choose a non-local harness, model, or reasoning level. Several harnesses use
 the canonical `parallel-verify` strategy; the current harness remains the
 coordinator.
 
-For internal repair, run the selected implementation reviews with
-`--disposition repair`. For PR publication, use
+For explicitly authorized internal repair, run the selected implementation reviews
+with `--disposition repair`. For internal reports and PR publication, use
 `--disposition report-only`; reviewers and the coordinator must not edit the
-reviewed implementation. Preserve provider/model attribution and material
+reviewed implementation. Carry the disposition into every routed worker and
+specialized review alias. Preserve provider/model attribution and material
 disagreement. A specialized command may be omitted when its focus is already
 covered and the user did not request a separate pass, but report that choice.
 
@@ -131,8 +140,10 @@ across harnesses, commands, and prior threads. Create one unified review draft
 ordered by severity and reviewability. Each proposed comment must include its
 claim, impact, evidence, and smallest useful next action.
 
-Internal repair uses `/work-change-review implementation-approval` after fixes
-and verification. PR publication continues through this command's publication
+Explicitly authorized internal repair uses `/work-change-review implementation-approval`
+after fixes and verification. Internal report-only review returns the findings;
+when a desk change review is requested, use `/work-change-review desk-review`
+with the current head and available findings. PR publication continues through this command's publication
 stage below. `/work-change-review` delivers diff analysis to mdmaid.desk;
 never delegate provider comments or replies to it.
 
@@ -144,7 +155,12 @@ review look substantial.
 
 ## Repair or publish
 
-In internal repair mode, apply only independently confirmed fixes within the
+For internal report-only review, deliver the findings without entering repair or
+implementation approval. Confirmed unresolved findings remain visible in the
+report; they do not prevent explanatory desk delivery. A completed report-only
+review is not approval of the implementation or permission to publish it.
+
+In explicitly authorized internal repair mode, apply only independently confirmed fixes within the
 approved scope, run repository-required checks within the execution boundary
 above, rerun affected lenses, and stop before commit or push unless separately
 requested. If implementation approval returns structured change requests,

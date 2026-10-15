@@ -5,7 +5,7 @@
 The `multi-lens-review` preset provides one evidence standard for plans,
 decision deltas, diffs, pull requests, and implementations. It separates
 candidate generation from finding verification and separates read-only review
-workers from the coordinator. In the default `repair` disposition the
+workers from the coordinator. In the explicitly authorized `repair` disposition the
 coordinator applies verified fixes; in `report-only` it must not modify the
 reviewed implementation or contributor branch.
 
@@ -43,11 +43,24 @@ explicit plan, design, contract, or decision delta is reviewable even when
 there is no code diff. The default profile is `standard`; `maintainability`
 applies only to implementation targets.
 
-The default disposition is `repair`: the coordinator applies independently
-confirmed fixes within approved scope and verifies them. `report-only` keeps
+The default implementation disposition is `report-only`. Repair requires an
+explicit repair request or an approved implementation contract with write
+authority for the target. The coordinator then applies independently confirmed
+fixes within that scope and verifies them. `report-only` keeps
 the reviewed implementation and contributor branch read-only while producing
 the same grounded, independently verified findings. `/work-start-pr-review`
-uses report-only whenever feedback will be published to an existing PR.
+uses report-only for internal reports as well as PR publication. Internal or
+mdmaid.desk delivery does not authorize code or test edits. Review aliases and
+routed workers preserve the selected disposition. Approved implementation work
+retains its bounded repair loop.
+
+Plain `/work-change-review` produces the read-only explanatory desk artifact.
+It does not launch repair or another review to fill missing evidence. Unresolved
+findings remain in the complete explanation rather than blocking delivery or
+replacing it with a findings-only report. Explicit implementation-approval still
+requires a passing review, current verification, and the exact-snapshot human
+decision. Missing prerequisites block that gate and are reported to the caller;
+the gate itself does not execute them.
 
 `/work-review-simplify` is a thin alias for `/work-review implementation
 --profile maintainability`. It reads the canonical review workflow rather than
@@ -91,8 +104,9 @@ the reviewed evidence covers their contents; it cannot satisfy a rule requiring 
 fresh review for each commit. Defer optional commits when needed for final-only
 review. Do not create checkpoint commits to trigger reviews.
 
-An explicit review command authorizes one review of its target and the bounded
-verification and repair loop. Rerun only obligations invalidated by fixes. It
+An explicit review command authorizes one review of its target and independent
+finding verification. Repair requires separate authority for the target. Rerun
+only obligations invalidated by authorized fixes. It
 does not authorize future reviews after each task, phase, wave, or commit.
 Later cadence choices govern future reviews; ask separately whether to finish
 or stop reviewers already running. No duplicate permission question is needed
