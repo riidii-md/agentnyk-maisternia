@@ -15,6 +15,8 @@ func TestChangeReviewDefaultsToDeskRegardlessOfEarlierPRDestination(t *testing.T
 		"Do not accept `pr-feedback` or `--destination pr` as a publication mode",
 		"Do not automatically invoke the PR-publication workflow",
 		"Desk review does not require a prior successful automated review",
+		"Report pending CI as pending without waiting for it.",
+		"In implementation-approval mode, if the review report does not pass, fixes remain unapplied, or verification is stale, stop and return to the appropriate review, run, or verify phase. In desk-review mode, report these limitations in the analysis.",
 		"--attention review --json",
 		"Do not add `--expect`, start a decision waiter, or require approval in desk-review mode",
 		"complete merge-base-to-head change", "staged, unstaged, and untracked",
@@ -32,6 +34,53 @@ func TestChangeReviewDefaultsToDeskRegardlessOfEarlierPRDestination(t *testing.T
 		if strings.Contains(text, forbidden) {
 			t.Errorf("change-review still routes to PR publication via %q", forbidden)
 		}
+	}
+}
+
+func TestDeskReviewPreservesExplicitRangeSemantics(t *testing.T) {
+	t.Parallel()
+	text := documentContractText(t, repositoryRoot(t), "config/workflow/phases/change-review.md")
+	for _, required := range []string{
+		"In desk-review mode, resolve an explicitly supplied range before merge-target defaults",
+		"`A..B` compares the exact endpoint trees with `git diff A B`",
+		"`A...B` compares the merge-base of A and B to B with `git diff A...B`",
+		"Do not replace an explicit range with the current PR base or default branch",
+		"Record the comparison kind and both resolved endpoint SHAs",
+		"For PR targets, branch or working-tree reviews without an explicit range, and all implementation-approval snapshots",
+	} {
+		if !strings.Contains(text, required) {
+			t.Errorf("explicit range contract missing %q", required)
+		}
+	}
+	if issue := orderedFragmentsIssue(text, []string{
+		"resolve an explicitly supplied range", "For PR targets", "resolve the merge-base",
+	}); issue != "" {
+		t.Error(issue)
+	}
+	docs := documentContractText(t, repositoryRoot(t), "docs/CHANGE-REVIEW-GATE.md")
+	if !strings.Contains(docs, "Explicit desk-review ranges preserve their requested comparison") {
+		t.Error("change-review documentation does not preserve explicit ranges")
+	}
+	if strings.Contains(docs, "source snapshot is always the complete change against its actual merge target") {
+		t.Error("documentation still overrides explicit range semantics")
+	}
+}
+
+func TestChangeReviewSecretBlockerPreservesReadOnlySource(t *testing.T) {
+	t.Parallel()
+	text := documentContractText(t, repositoryRoot(t), "config/workflow/phases/change-review.md")
+	for _, required := range []string{
+		"If a patch would expose a secret, stop delivery without reproducing the secret and leave the reviewed source untouched",
+		"Source remediation requires a separately authorized repair",
+		"After remediation, freeze a fresh source snapshot and regenerate the complete patch",
+		"Never silently redact the canonical patch",
+	} {
+		if !strings.Contains(text, required) {
+			t.Errorf("read-only secret blocker contract missing %q", required)
+		}
+	}
+	if strings.Contains(text, "remove the secret from the implementation") {
+		t.Error("change review still instructs source remediation without repair authority")
 	}
 }
 

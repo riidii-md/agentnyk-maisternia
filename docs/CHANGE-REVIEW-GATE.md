@@ -4,6 +4,8 @@ Plain `/work-change-review` defaults to `desk-review`: it analyzes the complete
 Git diff and publishes the explanation and native patch to mdmaid.desk with
 `--attention review`. It does not require a prior automated review or create an
 approval request. Missing or stale verification remains visible in the document.
+Failed or pending CI remains evidence in the complete diff document; it does
+not turn desk delivery into a CI wait or a short blocker-only report.
 An existing PR, earlier PR-publication destination, saved route, or publication
 receipt cannot redirect this command to PR comments or replies.
 
@@ -62,10 +64,21 @@ register it as `kind=change-review`. Only implementation-approval requests a rev
 hash, and source fingerprint still match. Any implementation change makes the
 decision stale.
 
-The source snapshot is always the complete change against its actual merge
-target: the PR base or selected destination branch such as `main` or `develop`.
-The workflow resolves the target/head merge-base and never substitutes the last
-commit, latest rework, or delta since a previous review.
+Explicit desk-review ranges preserve their requested comparison: `A..B` compares
+the exact endpoint trees, while `A...B` compares their merge-base to B. The source
+fingerprint records that comparison kind and its resolved commit SHAs.
+
+PR targets, branch or working-tree reviews without an explicit range, and every
+implementation-approval snapshot retain the complete change against the actual
+merge target: the PR base or selected destination branch such as `main` or
+`develop`. For those scopes, the workflow resolves the target/head merge-base
+and never substitutes the last commit, latest rework, or delta since a previous
+review.
+
+If the exact patch would expose a secret, delivery stops without reproducing
+it or editing the reviewed source. Source remediation needs a separately
+authorized repair. After that repair, the producer freezes a fresh snapshot
+and regenerates its full patch rather than silently redacting evidence.
 
 The human may approve, Request Changes with file or hunk anchors, or reject.
 Only approval permits `/work-pr`. The gate remains read-only: mdmaid.desk does
