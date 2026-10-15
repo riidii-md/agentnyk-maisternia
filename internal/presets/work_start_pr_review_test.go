@@ -205,7 +205,7 @@ func TestRepositoryWorkStartPRReviewContract(t *testing.T) {
 	root := repositoryRoot(t)
 	contracts := map[string][]string{
 		"config/workflow/phases/start.md": {
-			"/work-change-review implementation-approval",
+			"/work-human-review implementation-approval",
 		},
 		"config/workflow/phases/start-pr-review.md": {
 			"name: work-start-pr-review", "$ARGUMENTS", "same conversation",
@@ -213,12 +213,12 @@ func TestRepositoryWorkStartPRReviewContract(t *testing.T) {
 			"ticket", "PR description", "current head", "existing review threads", "CI",
 			"work-review", "work-review-simplify", "work-test-review",
 			"harnesses", "model", "reasoning", "focus",
-			"unified", "work-change-review", "line comments", "summary comment",
+			"unified", "work-human-review", "line comments", "summary comment",
 			"stale", "Do not merge", "dedicated worktree", "required checks",
 			"untrusted executable code", "disposable sandbox", "source visibility",
 		},
 		"config/workflow/phases/change-review.md": {
-			"implementation-approval", "desk-review", "mdmaid.desk",
+			"implementation-approval", "human-review", "mdmaid.desk",
 			"Do not post PR comments or replies",
 			"merge target", "merge-base", "main", "develop", "last rework",
 		},
@@ -276,7 +276,7 @@ func TestRepositoryPRReviewSafetyClauses(t *testing.T) {
 			"Under repair disposition, a `candidate` inspection may pass only after every linked finding is refuted or its confirmed fix is applied and verified. Under report-only disposition, it may pass when every linked finding is independently resolved as refuted or confirmed and each confirmed fix is recorded as `not-applicable`; this passes the review process, not the implementation.",
 		},
 		"config/workflow/phases/change-review.md": {
-			"An earlier PR-publication destination, saved route, existing PR, or publication receipt does not change this command's destination.",
+			"An earlier PR-publication destination, saved route, existing PR, or publication receipt does not change",
 			"Do not post PR comments or replies, submit provider reviews, edit source, commit, push, approve, request changes, or merge through this command.",
 		},
 	}

@@ -132,10 +132,12 @@ phase results outside those phases; brief and scout remain read-only.
    repeat affected verification until it passes or a real blocker remains.
    Rerun only affected review obligations invalidated by fixes; do not start
    unrelated review cycles or change cadence without agreement.
-7. Generate the mandatory `/work-change-review implementation-approval`
+7. Generate the mandatory `/work-human-review implementation-approval`
    document for the exact
-   implementation snapshot. Present it, wait for the human response, and
-   preserve its revision-bound `change-decision`. If changes are requested,
+   implementation snapshot. Present it with a revision-bound `change-decision`,
+   then finish the turn at the pending human checkpoint. The desk retains the
+   request; the agent does not poll for it. On an explicit resume, inspect the
+   durable response once and continue. If changes are requested,
    return to run, verify, review, and change review. Prepare `/work-pr` only
    when publication was requested and the change decision is approved.
 

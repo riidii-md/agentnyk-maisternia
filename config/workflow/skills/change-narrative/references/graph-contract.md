@@ -1,6 +1,6 @@
-# PR Lens graph contract for change explanations
+# PR Lens graph contract for change narratives
 
-This reference covers the small subset needed by `/work-explain-change`. The
+This reference covers the small subset needed by `change-narrative`. The
 installed PR Lens validator is authoritative; unknown fields are rejected.
 
 Use schema `0.1.0` with `kind: graph`. Each node belongs to a declared lane.
@@ -29,7 +29,7 @@ A minimal architecture and data-flow document looks like this:
     "repo": {"owner": "example", "name": "desk", "host": "github.com"},
     "base": {"sha": "1111111", "ref": "main"},
     "head": {"sha": "2222222", "ref": "feature/local-media"},
-    "generator": {"name": "work-explain-change", "version": "0.1.0"}
+    "generator": {"name": "work-human-review", "version": "0.1.0"}
   },
   "lanes": [
     {"id": "document", "label": "Document"},

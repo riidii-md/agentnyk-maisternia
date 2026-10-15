@@ -1,9 +1,9 @@
 ---
-name: change-explanation
-description: Build an evidence-grounded explanation of an implementation change or reviewed plan with selected code, abstractions, and visual lenses.
+name: change-narrative
+description: Build the evidence-grounded prose and diagrams used inside a human change review or plan review.
 ---
 
-# Change Explanation
+# Change Narrative
 
 When this invocation authors or revises document prose, read the installed
 `readable-output` skill's `references/document-wording.md` and apply it before finalization.
@@ -11,10 +11,9 @@ Before requesting a human response to an actual document, use that skill's
 **Document-bound human checkpoints** contract. Ordinary clarification does not
 require a document, structural adaptation, or publication.
 
-Use this skill when the reader needs to understand what changed without reading
-the entire diff, or needs to understand a reviewed plan before implementation.
-The result combines a compact narrative with the smallest visual forms that
-make the implementation or proposal clear.
+Use this internal skill to write the narrative and selected diagrams inside a
+human change review or plan review. `/work-human-review` owns the complete Git
+diff, source fingerprint, mdmaid.desk publication, and decision request.
 
 Read [references/graph-contract.md](references/graph-contract.md) before writing
 `graph.json`.
@@ -38,13 +37,15 @@ Read [references/graph-contract.md](references/graph-contract.md) before writing
    uncommitted evidence.
 
 Do not include credentials, tokens, personal data, or private environment
-values. A standalone explanation does not include a large raw patch. When
-`/work-change-review` invokes this skill, that caller separately owns the
-complete bounded approval patch and must stop rather than expose a secret.
+values. When `/work-human-review` invokes this skill, write directly in its
+single change-review document. That caller owns the complete bounded patch
+and must stop rather than expose a secret. Do not create or register a second
+explanation document.
 
 ## Explanation contract
 
-Write a standalone `explanation.md` that includes, when supported by evidence:
+Write the narrative in the calling review artifact. Include, when supported
+by evidence:
 
 - a 60-second summary and the user-visible or operator-visible outcome;
 - requested intent versus verified implementation;
@@ -73,7 +74,9 @@ run. Use this precedence, from highest to lowest:
    clear request for animated web or Mermaid diagrams.
 2. The project preference at
    `.maisternia/reader-profile.json` under
-   `workflows.work-explain-change.presentation`.
+   `workflows.work-human-review.presentation`. An existing
+   `workflows.work-explain-change.presentation` value is a legacy fallback when
+   the new key is absent.
 3. The user preference at
    `${XDG_CONFIG_HOME:-~/.config}/maisternia/reader-profile.json` under the
    same key.
@@ -92,7 +95,7 @@ run:
 - `animated-web` authors a PR Lens graph, embeds selected local SVG assets, and
   is intended for mdmaid.desk in a browser. Do not also include Mermaid
   versions.
-- `mermaid` authors Mermaid directly in `explanation.md` so mdmaid and
+- `mermaid` authors Mermaid directly in the calling artifact so mdmaid and
   mdmaid.desk can render it in web and terminal readers. Do not create or link
   PR Lens assets for this mode. Treat `static-tui` as a backward-compatible
   alias and normalize it to `mermaid` before generation.
@@ -158,7 +161,7 @@ any upload in this workflow.
 
 Inspect `rendered/manifest.json`. Select the highest useful architecture asset
 and at most one changed data-flow asset. Link their exact relative SVG paths
-from `explanation.md` with descriptive alt text. Do not guess the
+from the calling artifact with descriptive alt text. Do not guess the
 content-addressed filename. The `animated` edges and messages should illuminate
 the changed interaction, not decorate every connection.
 
@@ -197,7 +200,7 @@ When `/work-plan-review` reuses these lenses, treat plan interfaces,
 relationships, requirements, and flows as proposed rather than verified.
 Ground them in the complete reviewed plan and cite current repository evidence
 separately. Never describe a planned class, entity, state, sequence, dependency,
-or requirement as implemented. Embed selected Mermaid sources in the standalone
+or requirement as implemented. Embed selected Mermaid sources in the
 plan-review artifact and record why each other lens is not applicable.
 
 ## Verification

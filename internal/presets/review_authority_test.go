@@ -15,7 +15,7 @@ func TestRepositoryReviewSeparatesDestinationFromRepairAuthority(t *testing.T) {
 			"Both modes are read-only",
 			"A request to deliver to mdmaid.desk does not select implementation-approval",
 			"Do not invoke `/work-review`, `/work-start-pr-review`, `/work-run`, or `/work-verify` to satisfy this command's prerequisites",
-			"Unresolved findings do not block desk-review delivery",
+			"Unresolved findings do not block human-review delivery",
 			"report the blocked gate and the missing evidence",
 		},
 		"config/workflow/phases/start-pr-review.md": {

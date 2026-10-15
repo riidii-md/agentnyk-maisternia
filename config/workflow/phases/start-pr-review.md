@@ -140,11 +140,11 @@ across harnesses, commands, and prior threads. Create one unified review draft
 ordered by severity and reviewability. Each proposed comment must include its
 claim, impact, evidence, and smallest useful next action.
 
-Explicitly authorized internal repair uses `/work-change-review implementation-approval`
+Explicitly authorized internal repair uses `/work-human-review implementation-approval`
 after fixes and verification. Internal report-only review returns the findings;
-when a desk change review is requested, use `/work-change-review desk-review`
+when a desk change review is requested, use `/work-human-review human-review`
 with the current head and available findings. PR publication continues through this command's publication
-stage below. `/work-change-review` delivers diff analysis to mdmaid.desk;
+stage below. `/work-human-review` delivers diff analysis to mdmaid.desk;
 never delegate provider comments or replies to it.
 
 The final synthesis may take a short analysis detour to test the as-is draft
@@ -173,7 +173,7 @@ review and remaining risk.
 
 This command owns PR-feedback synthesis and publication. Enter this stage only
 when the user selected PR publication for this PR review workflow. A later
-`/work-change-review` invocation does not resume this stage, even when an earlier
+`/work-human-review` invocation does not resume this stage, even when an earlier
 destination or publication receipt exists.
 
 Require schema-valid report-only review artifacts for the exact PR head and the

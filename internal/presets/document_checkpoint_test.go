@@ -17,6 +17,8 @@ func TestDocumentCheckpointDeliveryContract(t *testing.T) {
 		"Do not report waiting", "safe-link-unavailable", "--attention review", "Do not add `--expect`",
 		"Ordinary clarification", "Registration is not approval", "prior revision",
 		"copied evidence", "Space setup",
+		"`/work-human-review` uses its durable background checkpoint",
+		"Do not use the foreground plan/direction waiter below",
 	}); issue != "" {
 		t.Fatal(issue)
 	}
@@ -87,6 +89,34 @@ func TestDocumentCheckpointChangeEvidence(t *testing.T) {
 		"private storage", "direct remote-byte verification", "Block",
 		"source fingerprint", "stale", "## Prove The Native Diff Before Registration",
 		"--expect change-decision", "review wait",
+	}); issue != "" {
+		t.Fatal(issue)
+	}
+}
+
+func TestDirectHumanReviewKeepsDiffAndCreatesBackgroundDecision(t *testing.T) {
+	t.Parallel()
+	text := documentContractText(t, repositoryRoot(t), "config/workflow/phases/change-review.md")
+	if issue := requiredFragmentsIssue(text, []string{
+		"name: work-human-review", "/work-human-review human-review",
+		"to see a change in mdmaid.desk",
+		"--expect change-decision", "Do not start `mdmaid-desk review wait`",
+		"Do not require `review.json`", "Do not modify implementation files",
+		"complete native diff", "implementation-approval remains mandatory",
+		"return the receipt and clickable link, then", "finish the turn",
+		"Never use repeated agent tool calls to poll", "review show <review-id> --json",
+	}); issue != "" {
+		t.Fatal(issue)
+	}
+}
+
+func TestChangeReviewReusesDeskPreflight(t *testing.T) {
+	t.Parallel()
+	text := documentContractText(t, repositoryRoot(t), "config/workflow/phases/change-review.md")
+	if issue := requiredFragmentsIssue(text, []string{
+		"reuse a successful capability preflight", "one workspace lookup",
+		"one Space and repository inventory", "do not call `mdmaid-desk review show`",
+		"only after successful registration", "do not revalidate unchanged content",
 	}); issue != "" {
 		t.Fatal(issue)
 	}

@@ -113,6 +113,16 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "work-human-review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["presentation"],
+          "properties": {
+            "presentation": {
+              "enum": ["animated-web", "mermaid", "static-tui"]
+            }
+          }
+        },
         "work-explain-change": {
           "type": "object",
           "additionalProperties": false,

@@ -223,7 +223,7 @@ a summary that requires the reader to open another file, plus:
   not applicable;
 - the smallest evidence-complete Mermaid portfolio.
 
-Use the installed `change-explanation` skill in plan evidence mode. Evaluate
+Use the installed `change-narrative` skill in plan evidence mode. Evaluate
 `flowchart`, `classDiagram`, `erDiagram`, `stateDiagram-v2`,
 `sequenceDiagram`, and `requirementDiagram`. Do not force every visual lens,
 invent interfaces, or present planned relationships as implemented. Retain each

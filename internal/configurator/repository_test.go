@@ -818,7 +818,6 @@ func TestRepositoryDeskDocumentTitlesIdentifyTaskAndPurpose(t *testing.T) {
 	contracts := map[string]string{
 		"config/workflow/phases/change-review.md":          "--title \"<document title>\"",
 		"config/workflow/phases/showcase.md":               "--title \"<document title>\"",
-		"config/workflow/phases/explain-change.md":         "--title \"<document title>\"",
 		"config/workflow/phases/adapt-for-reader.md":       "--title \"<catalog title>\"",
 		"config/workflow/skills/readable-output/SKILL.md":  "--title \"<title>\"",
 		"config/workflow/skills/adapt-for-reader/SKILL.md": "--title \"<catalog title>\"",
@@ -895,7 +894,6 @@ func TestRepositoryMdmaidProjectNamingContract(t *testing.T) {
 		"config/workflow/skills/adapt-for-reader/SKILL.md",
 		"config/workflow/phases/adapt-for-reader.md",
 		"config/workflow/phases/change-review.md",
-		"config/workflow/phases/explain-change.md",
 		"config/workflow/phases/showcase.md",
 	} {
 		data, err := os.ReadFile(filepath.Join(repoRoot, filepath.FromSlash(relative)))

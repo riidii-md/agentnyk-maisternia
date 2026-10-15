@@ -49,7 +49,7 @@ func TestRepositoryWorkStartIsInstalledByStandardWork(t *testing.T) {
 			"work-brief", "work-scout", "work-analyze", "work-research",
 			"work-grill", "work-direction", "work-plan", "work-plan-review",
 			"work-decide", "work-ready", "work-run",
-			"work-verify", "work-review", "work-change-review", "work-pr",
+			"work-verify", "work-review", "work-human-review", "work-pr",
 		} {
 			if !slices.ContainsFunc(targetsByID[phaseID], func(phaseTarget configurator.Target) bool {
 				return phaseTarget.Agent == target.Agent

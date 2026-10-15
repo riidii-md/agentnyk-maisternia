@@ -29,10 +29,11 @@ let a profile weaken a safety, accuracy, accessibility, or repository rule.
 
 Workflow-specific preferences use the same scope and precedence without
 becoming general reader defaults. The supported workflow setting is
-`workflows.work-explain-change.presentation`, with default `mermaid`, explicit
+`workflows.work-human-review.presentation`, with default `mermaid`, explicit
 `animated-web`, or legacy alias `static-tui`. It selects one diagram
 presentation and viewing medium; it does not change narrative evidence or the
-general `visuals` preference.
+general `visuals` preference. An existing
+`workflows.work-explain-change.presentation` value is a legacy fallback.
 
 ## Preference dimensions
 
@@ -154,7 +155,7 @@ current task or session.
     }
   ],
   "workflows": {
-    "work-explain-change": {
+    "work-human-review": {
       "presentation": "mermaid"
     }
   }

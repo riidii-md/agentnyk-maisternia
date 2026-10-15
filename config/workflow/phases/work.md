@@ -46,7 +46,7 @@ Input:
    be presented for human attention, record the explicit decision against its
    content hash, and pass the implementation-readiness gate.
 8. After verification and independent implementation review pass, require
-   `/work-change-review implementation-approval` and a durable `approved`
+   `/work-human-review implementation-approval` and a durable `approved`
    decision for the exact implementation snapshot before `/work-pr`,
    publication, or completion.
 9. Ask before implementation, permission escalation, commit, push, PR, or a
