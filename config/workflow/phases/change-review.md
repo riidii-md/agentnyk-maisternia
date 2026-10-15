@@ -89,11 +89,27 @@ snapshot.
 
 Read repository instructions and any available `review.md` and schema-valid
 `review.json`. For implementation-approval, require a successful repair-disposition
-implementation review and current verification. Resolve the actual merge target
-from the user's instruction, existing PR base, or trusted repository evidence; otherwise use
-the remote default branch, commonly `main` or `develop`. Fetch the target when
-network access permits and record whether it is current. For committed work,
-resolve the merge-base between that target and the reviewed head and review the
+implementation review and current verification.
+
+In desk-review mode, resolve an explicitly supplied range before merge-target
+defaults:
+
+- `A..B` compares the exact endpoint trees with `git diff A B`, including when
+  neither endpoint is an ancestor of the other;
+- `A...B` compares the merge-base of A and B to B with `git diff A...B`.
+
+Resolve both endpoints to immutable commit SHAs. Do not replace an explicit
+range with the current PR base or default branch. Record the comparison kind
+and both resolved endpoint SHAs; for a three-dot range, also record the
+merge-base SHA. These explicit desk-review semantics do not narrow a PR review
+or implementation-approval snapshot.
+
+For PR targets, branch or working-tree reviews without an explicit range, and
+all implementation-approval snapshots, resolve the actual merge target from
+the user's instruction, existing PR base, or trusted repository evidence;
+otherwise use the remote default branch, commonly `main` or `develop`. Fetch
+the target when network access permits and record whether it is current.
+For these scopes, resolve the merge-base between that target and the reviewed head and review the
 complete merge-base-to-head change. Never substitute `HEAD^`, the last commit,
 the last rework, or the previously reviewed delta for the merge-target diff.
 
@@ -103,11 +119,14 @@ implementation files. Exclude ignored files and task-owned review artifacts
 from the source snapshot. If the merge target is ambiguous, stop and ask rather
 than selecting the current branch or most recent commit as the base.
 
-Record a reproducible **change fingerprint** over the exact base/head or
-working-tree snapshot. The fingerprint input must include changed paths,
+Record a reproducible **change fingerprint** over the exact comparison or
+working-tree snapshot. Include the comparison kind and resolved endpoint SHAs.
+The fingerprint input must include changed paths,
 statuses, rename targets, mode changes, binary markers, patch bytes, and hashes
-of included untracked files. It must also record the merge-target ref and SHA,
-merge-base SHA, and head SHA. Record the algorithm and input classification;
+of included untracked files. For merge-target scopes, also record the
+merge-target ref and SHA, merge-base SHA, and head SHA. For an explicit two-dot
+range, record that the endpoint comparison does not use a merge-base; do not
+invent merge-target metadata. Record the algorithm and input classification;
 never substitute a branch name, timestamp, prose summary, or document content
 hash for the source fingerprint.
 
@@ -201,8 +220,10 @@ Bound each file and line and keep the validated artifact within mdmaid.desk
 limits: at most 256 files, 2,048 hunks, 50,000 diff lines, 16 KiB per line, and
 1,024 characters per path. If the exact change cannot fit, reduce or split the
 implementation scope before requesting approval. Never silently truncate code.
-If a patch would expose a secret, stop and remove the secret from the
-implementation instead of redacting approval evidence.
+If a patch would expose a secret, stop delivery without reproducing the secret
+and leave the reviewed source untouched. Source remediation requires a
+separately authorized repair. After remediation, freeze a fresh source snapshot
+and regenerate the complete patch. Never silently redact the canonical patch.
 
 ## Prove The Native Diff Before Registration
 
