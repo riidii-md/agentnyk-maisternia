@@ -54,7 +54,8 @@ mdmaid.desk delivery does not authorize code or test edits. Review aliases and
 routed workers preserve the selected disposition. Approved implementation work
 retains its bounded repair loop.
 
-Plain `/work-change-review` produces the read-only explanatory desk artifact.
+Plain `/work-human-review` produces the read-only explanatory desk artifact
+and creates a revision-bound decision request.
 It does not launch repair or another review to fill missing evidence. Unresolved
 findings remain in the complete explanation rather than blocking delivery or
 replacing it with a findings-only report. Explicit implementation-approval still

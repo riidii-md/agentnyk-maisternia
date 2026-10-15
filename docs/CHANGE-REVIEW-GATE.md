@@ -1,31 +1,35 @@
 # Mandatory Human Change Review
 
-Plain `/work-change-review` defaults to `desk-review`: it analyzes the complete
-Git diff and publishes the explanation and native patch to mdmaid.desk with
-`--attention review`. It does not require a prior automated review or create an
-approval request. Missing or stale verification remains visible in the document.
-Both modes preserve source and tests. Desk delivery does not select approval or
-authorize repair. Unresolved findings do not block the complete explanatory
-desk artifact, and do not justify substituting a findings-only report.
-Failed or pending CI remains evidence in the complete diff document; it does
-not turn desk delivery into a CI wait or a short blocker-only report.
-An existing PR, earlier PR-publication destination, saved route, or publication
-receipt cannot redirect this command to PR comments or replies.
+Plain `/work-human-review` analyzes the complete Git diff and publishes the
+explanation and native patch to mdmaid.desk with a revision-bound decision
+request. It can report missing or stale verification without claiming that the
+standard-work implementation gate has passed. An existing PR or earlier
+publication destination cannot redirect this command to PR comments or replies.
+Both modes preserve source and tests. Unresolved findings do not block the
+complete explanatory artifact or justify a findings-only report. Failed or
+pending CI remains evidence in the complete diff document and does not turn
+delivery into a CI wait or a short blocker-only report.
 
-`/work-change-review implementation-approval` is the required implementation
+`/work-human-review implementation-approval` is the required implementation
 gate between successful automated review and PR preparation. It publishes one
 first-class mdmaid.desk Change Review containing both a readable explanation
 and the exact native diff.
 
 `/work-start-pr-review` owns unified PR-feedback synthesis and publication when
 the user selects that destination. The old `pr-feedback` and `--destination pr`
-arguments do not authorize PR writes through `/work-change-review`; they produce
+arguments do not authorize PR writes through `/work-human-review`; they produce
 the desk analysis and identify the separate PR workflow. Posting feedback never
 constitutes implementation or merge approval.
 
+A direct `/work-human-review` request uses `human-review` mode. It still embeds
+the complete Git diff and creates a revision-bound desk decision request.
+It can run without a prior automated implementation review; the document says
+which checks have not been established. Standard-work still requires its
+verification and automated review gates before an approval permits PR work.
+
 ## One artifact, two reading depths
 
-The Change Review is a strict superset of `/work-explain-change`. Its narrative
+The Change Review is a strict superset of the internal `change-narrative` skill. Its narrative
 contains the summary, intent versus verified behavior, before/after model,
 changed abstractions and interfaces, selected code, compatibility and
 operational notes, tests, findings, risks, diagrams, and evidence index. The
@@ -61,13 +65,17 @@ do not independently discover findings.
 
 ## Exact decision boundary
 
-Both modes fingerprint the exact source snapshot, validate the Markdown, and
-register it as `kind=change-review`. Only implementation-approval requests a revision-bound
-`change-decision`. Approval applies only while the document revision, content
+The producer fingerprints the exact source snapshot, validates the Markdown,
+registers it as `kind=change-review`, and requests a revision-bound
+`change-decision`. The desk holds the pending request after the agent reports
+the link and finishes its turn. An event-driven supervisor may wait for the
+decision in the background and resume the agent. Without one, the agent checks
+the durable request once when the user resumes the task. Repeated agent polling
+is unnecessary. Approval applies only while the document revision, content
 hash, and source fingerprint still match. Any implementation change makes the
 decision stale.
 
-Explicit desk-review ranges preserve their requested comparison: `A..B` compares
+Explicit human-review ranges preserve their requested comparison: `A..B` compares
 the exact endpoint trees, while `A...B` compares their merge-base to B. The source
 fingerprint records that comparison kind and its resolved commit SHAs.
 

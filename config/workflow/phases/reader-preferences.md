@@ -30,12 +30,14 @@ view-selection policy (`infer`, `ask-when-ambiguous`, or `always-ask`) and its
 scope (`explicit-command` or `all-invocations`). Ask in short rounds and reuse
 supplied answers.
 
-When the user wants a durable diagram choice for `/work-explain-change`, also
+When the user wants a durable diagram choice for `/work-human-review`, also
 offer the workflow-specific `presentation` preference: `mermaid` is the
 default and embeds source that mdmaid and mdmaid.desk render in web and terminal
 views, while `animated-web` explicitly selects PR Lens motion. Accept existing
 `static-tui` values as a legacy alias for `mermaid`. Store new choices only at
-`workflows.work-explain-change.presentation`; do not turn it into a general
+`workflows.work-human-review.presentation`; read an existing
+`workflows.work-explain-change.presentation` value as a fallback until it is
+migrated. Do not turn it into a general
 visuals or medium preference.
 
 Do not configure harness delegation in the reader profile. Direct the user to

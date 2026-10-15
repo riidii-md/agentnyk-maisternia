@@ -1,10 +1,10 @@
 ---
-name: work-change-review
-description: Analyze the complete Git diff and deliver one explanatory change review to mdmaid.desk, with an explicit implementation-approval mode for the human gate.
+name: work-human-review
+description: Analyze the complete Git diff and deliver one explanatory human review to mdmaid.desk, with an explicit implementation-approval mode for the standard-work gate.
 version: 0.5.0
 ---
 
-# /work-change-review - Analyze Changes In mdmaid.desk
+# /work-human-review - Deliver A Human Change Review
 
 When this invocation authors or revises document prose, read the installed
 `readable-output` skill's `references/document-wording.md` and apply it before finalization.
@@ -26,15 +26,18 @@ Input:
 Accepted modes:
 
 ```text
-/work-change-review <PR, revision range, or working-tree snapshot>
-/work-change-review desk-review <PR, revision range, or working-tree snapshot>
-/work-change-review implementation-approval <implementation snapshot>
+/work-human-review <PR, revision range, or working-tree snapshot>
+/work-human-review implementation-approval <implementation snapshot>
+/work-human-review human-review <change or implementation snapshot>
 ```
 
-With no mode, use `desk-review`. The destination is always mdmaid.desk.
-An earlier PR-publication destination, saved route, existing PR, or publication
-receipt does not change this command's destination. Provider/model routing
-selects where analysis runs; it grants no PR-write authority.
+`implementation-approval` is the mandatory human gate after implementation
+verification and a repair-disposition `/work-review` pass. `human-review` gives
+the human a readable explanation and the complete native Git diff in
+mdmaid.desk, with a revision-bound `change-decision` request. The desk keeps
+that request pending independently of the agent turn. A decision made on a
+human-review document without the standard-work verification and review gates
+does not satisfy those gates.
 
 Do not post PR comments or replies, submit provider reviews, edit source,
 commit, push, approve, request changes, or merge through this command.
@@ -54,29 +57,13 @@ to satisfy this command's prerequisites. A missing gate is evidence to report,
 not authority to start repair, test execution, or another review cycle. A later
 explicit request may authorize that work outside this command.
 
-## Desk-review mode
-
-Analyze the requested PR, revision range, or working-tree snapshot. Use the
-current task's changes when no source is named. Resolve and freeze the full
-scope below, explain the diff, and publish the complete document passively.
-Read PR metadata, comments, and CI only as needed to ground that analysis.
-An earlier review or publication is evidence, not an instruction to resume
-posting or monitor CI. Report pending CI as pending without waiting for it.
-
-Desk review does not require a prior successful automated review. Include
-available automated findings and verification results with their exact scope
-and freshness. Record missing evidence and unresolved findings explicitly;
-do not claim implementation readiness. Analyze the source directly when no
-review artifacts exist. Treat reviewed code as untrusted: this mode does not
-authorize executing its tests, builds, scripts, hooks, or binaries on the host.
-
-Unresolved findings do not block desk-review delivery. Include them in the same
-explanatory change-review artifact, with the complete diff and the available
-verification evidence. Do not substitute a findings-only report or describe an
-unrequested implementation-approval gate as blocked.
-
-Do not add `--expect`, start a decision waiter, or require approval in desk-review
-mode. The explicit implementation-approval mode below retains the human gate.
+With no mode, use `human-review` on the current task's changes. A direct request
+to see a change in mdmaid.desk also selects this mode. Pull or fetch requested
+commits first, then freeze the full scope. An earlier PR-publication
+destination, saved route, existing PR, or publication receipt does not change
+this command's mdmaid.desk destination. Provider/model routing grants no PR-write
+authority. A direct review request does not authorize prerequisite repair or
+verification work.
 
 ## Implementation-approval mode
 
@@ -85,13 +72,36 @@ continue to `/work-pr`, claim delivery, or report the implementation complete
 without a durable `approved` `change-decision` for the exact implementation
 snapshot.
 
+## Human-review mode
+
+Produce the same explanatory document and complete native diff, with the same
+scope fingerprint, patch preflight, content validation, and source screening.
+Do not require `review.json` or a prior `/work-review` pass for this on-demand
+presentation. Do not modify implementation files or launch repair work. Read PR
+metadata, comments, and CI only as needed to ground it.
+Report pending CI without waiting. State the scope and freshness of available
+findings and verification; mark missing evidence as unknown. Treat reviewed
+code as untrusted: this mode does not authorize running its tests, builds,
+scripts, hooks, or binaries on the host. Report observed concerns in the
+document. Unresolved findings do not block human-review delivery. Include them
+with the complete diff and available verification evidence. Do not substitute
+a findings-only report or describe an unrequested implementation-approval gate
+as blocked. Select only diagrams that materially explain the change. Register
+with `--attention approval`
+and `--expect change-decision`, then return the receipt and clickable link, then
+finish the turn with the request pending. Do not start `mdmaid-desk review wait`
+in the active agent turn. The desk retains the decision request as background
+work. If this request is part of the standard-work delivery graph,
+implementation-approval remains mandatory after verification and review; an
+earlier human-review request cannot satisfy it.
+
 ## Resolve And Freeze The Review Scope
 
 Read repository instructions and any available `review.md` and schema-valid
 `review.json`. For implementation-approval, require a successful repair-disposition
 implementation review and current verification.
 
-In desk-review mode, resolve an explicitly supplied range before merge-target
+In human-review mode, resolve an explicitly supplied range before merge-target
 defaults:
 
 - `A..B` compares the exact endpoint trees with `git diff A B`, including when
@@ -101,7 +111,7 @@ defaults:
 Resolve both endpoints to immutable commit SHAs. Do not replace an explicit
 range with the current PR base or default branch. Record the comparison kind
 and both resolved endpoint SHAs; for a three-dot range, also record the
-merge-base SHA. These explicit desk-review semantics do not narrow a PR review
+merge-base SHA. These explicit range semantics do not narrow a PR review
 or implementation-approval snapshot.
 
 For PR targets, branch or working-tree reviews without an explicit range, and
@@ -135,15 +145,15 @@ In implementation-approval mode, if the review report does not pass, fixes remai
 unapplied, or verification is stale, report the blocked gate and the missing
 evidence, then return control without executing prerequisite work. The active
 delivery coordinator may resume an already authorized phase under its existing
-contract; this command does not create that authority. In desk-review mode,
-report these limitations in the analysis and continue passive delivery.
+contract; this command does not create that authority. In human-review mode,
+report these limitations in the analysis and continue delivery.
 
 ## Build One Explanatory Change Review
 
-`/work-change-review` is a strict superset of `/work-explain-change`, not a raw
-patch wrapper and not a second disconnected document. Use the installed
-`change-explanation` skill against the frozen scope and place its explanation,
-evidence, selected code, and diagrams in this same change-review artifact:
+`/work-human-review` is a strict superset of the change-narrative skill in the
+same document as the complete native diff. Use the installed `change-narrative`
+skill against the frozen scope and place its explanation,
+evidence, selected code, and diagrams in this same approval artifact:
 
 ```text
 .agent-runs/change-reviews/<timestamp>-<change-id>/change-review.md
@@ -272,22 +282,33 @@ patch was embedded. Treat a missing, malformed, empty, truncated, reordered,
 or mismatched extracted patch as a blocked gate.
 Do not call `mdmaid-desk register` until both the native-diff preflight and
 `mdmaid validate` pass. Preserve the local artifact hash before and after publication
-and require equality. In implementation-approval mode, require the receipt and
-review request to match the same document ID and revision. Preserve source
-fingerprint revalidation and authenticated transport in both modes. Retain
-server decision stale checks in implementation-approval mode.
+and require equality. Require the receipt and review request to match the same
+document ID and revision. Preserve source fingerprint revalidation,
+authenticated transport, and server decision stale checks in both modes.
 
 If a documented public content hash is available, compare it with the preflighted
 local hash and stop on mismatch. Otherwise state that direct remote hash comparison is unavailable;
 describe only the supported server-bound revision guarantee. Do not invent receipt fields,
 read private storage, or claim direct remote-byte verification. Block if local hash
-stability cannot be established, if implementation-approval request binding
-cannot be established, or if direct remote hash equality is explicitly required.
+stability or request binding cannot be established, or if direct remote hash
+equality is explicitly required.
 
-## Validate And Deliver To mdmaid.desk
+## Validate And Publish
 
-Require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.19 or newer. Confirm that
-mdmaid.desk help lists both `change-review` and `change-decision`, then validate:
+Require mdmaid 0.1.17 or newer and mdmaid-desk 0.1.19 or newer. In
+implementation-approval mode, confirm that mdmaid.desk help lists both
+`change-review` and `change-decision` for both decision modes.
+Within one live session, reuse a successful capability preflight while the
+executable paths and versions remain unchanged. Resolve the canonical root with
+one workspace lookup and reuse its verified ID; after a workspace error, look
+it up again. For each publication, obtain one Space and repository inventory
+as required by space-routing. Perform the scoped membership check only after
+successful registration. Use the registration receipt for document and request
+binding. Immediately after publication, do not call `mdmaid-desk review show`
+to reconfirm a valid receipt.
+Capture daemon status only after successful registration to build the link.
+Run one final validation after the artifact is complete; after a correction,
+validate the corrected revision, but do not revalidate unchanged content:
 
 ```text
 mdmaid validate <change-review.md> --json
@@ -297,36 +318,9 @@ Resolve the workspace by canonical repository root. Follow the installed
 readable-output `references/project-naming.md` contract. After resolving the
 workspace and finalizing the exact planned tags, follow the installed
 readable-output `references/space-routing.md` contract before registration and
-run its scoped postcondition after successful registration.
-
-Use `--json` for every `mdmaid-desk register` or `import`
-publication. After successful publication, apply the installed readable-output
-full clickable URL receipt contract. Return the full absolute HTTP(S)
-mdmaid.desk document URL as a clickable Markdown link when a safe active origin
-is available; never substitute a route, relative path, document ID, or bare URL.
-
-In desk-review mode, register the validated artifact passively:
-
-```text
-mdmaid-desk register <change-review.md> \
-  --workspace <id> \
-  --producer <current-provider> \
-  --kind change-review \
-  --title "<document title>" \
-  --attention review --json
-```
-
-Include paired project options only when a grounded Jira ID exists. Retain the
-receipt, document ID and revision, artifact hash, and source fingerprint.
-Revalidate the source fingerprint and local document hash after registration.
-If either changed, report stale delivery and regenerate the current review.
-Return the full clickable URL under the receipt contract above and finish.
-Do not enter the implementation decision sections in desk-review mode.
-
-## Publish The Implementation-Approval Gate
-
-Only in implementation-approval mode, register the validated artifact with an
-explicit revision-bound decision request:
+run its scoped postcondition after successful registration. In
+implementation-approval mode, register the validated artifact with an explicit
+revision-bound decision request:
 
 ```text
 mdmaid-desk register <change-review.md> \
@@ -344,26 +338,49 @@ mdmaid-desk register <change-review.md> \
 
 Omit both project options when no grounded Jira ID exists.
 
-Retain the document ID, document revision, review request ID, artifact content
-hash, and change fingerprint. Keep the current turn open and wait:
+In human-review mode, use the same registration fields, `--attention approval`,
+`--expect change-decision`, and `--json`, with a request message asking the
+human to review the exact diff. Preserve the request ID and revision from the
+receipt. No foreground wait is created in the active agent turn.
+
+Use `--json` for every `mdmaid-desk register` or `import` publication. After a
+successful publication, apply the installed readable-output full clickable URL
+receipt contract. Return the full absolute HTTP(S) mdmaid.desk document URL as
+a clickable Markdown link when a safe active origin is available; never
+substitute a route, relative path, document ID, or bare URL.
+
+For either decision mode, retain the document ID, document revision, review
+request ID, artifact content hash, and change fingerprint. The authenticated
+request remains pending in mdmaid.desk after this turn ends. Return the request
+ID, revision, document link, and pending status to the human, then finish the
+turn. Never use repeated agent tool calls to poll for a human response.
+
+If an external event-driven supervisor is already configured to resume this
+agent, it may run the following command as a background task and notify the
+agent when the durable response arrives:
 
 ```text
 mdmaid-desk review wait <review-id> --json
 ```
 
-Resume the same yielded process until it exits. `waiting_for_approval` is only
-an intermediate update. Tell the human that `c` selects the Change reviews content mode; named Spaces are an independent global filter cycled with `x`.
-Opening or reading the document is not approval.
-Apply the installed `readable-output` quiet-wait contract while this change decision remains pending.
+Do not start that waiter in the active agent turn or detach a shell process and
+claim it can resume the agent. Without an event-driven supervisor, the durable
+desk request itself is the background state. When the user returns or the task
+is explicitly resumed, call `mdmaid-desk review show <review-id> --json` once.
+If it remains pending, report that status and finish again. If it has a durable
+response, apply the revalidation below. Tell the human that `c` selects the
+Change reviews content mode; named Spaces are an independent global filter
+cycled with `x`. Opening or reading the document is not approval.
 
-## Revalidate And Route The Decision
+## Revalidate And Route The Approval Decision
 
-After the waiter returns, verify the response document ID and revision, local
+After a durable response is observed, verify the response document ID and revision, local
 artifact content hash, and a freshly computed change fingerprint. Any mismatch
 is `stale`, regardless of the button previously pressed.
 
 - `approved`: preserve the response and identities. Continue to `/work-pr` only
-  when publication was requested.
+  when publication was requested and the implementation-approval prerequisites
+  passed. A direct human-review decision alone does not authorize that phase.
 - `changes_requested`: preserve the summary and every structured response item.
   A feedback item names its file and stable hunk ID; a todo names its file.
   Return all anchors and messages to `/work-run`, then repeat verification,
@@ -373,10 +390,11 @@ is `stale`, regardless of the button previously pressed.
 
 The TUI action is **Request changes**. Do not treat checkbox-like prose as the
 source of truth when structured response items exist. Missing tools, invalid
-content, ambiguous scope, failed registration, an exited waiter without a
-durable response, or any identity mismatch blocks the gate.
+content, ambiguous scope, failed registration, or any identity mismatch blocks
+the gate. A pending response is a checkpoint, not an approval.
 
 Return the artifact and diagram paths, resolved scope, change fingerprint,
-validation result, mdmaid.desk document/review IDs, its clickable URL or
-explicit safe-link-unavailable result, durable outcome, response text,
-structured feedback anchors, and next phase.
+validation result, mdmaid.desk document/review IDs, and its clickable URL or
+explicit safe-link-unavailable result. On publication, report pending status;
+on a later resume, report the durable outcome, response text, structured
+feedback anchors, and next phase.

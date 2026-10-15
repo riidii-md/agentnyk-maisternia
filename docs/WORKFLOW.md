@@ -140,8 +140,7 @@ preset:
     - /work-review
     - /work-review-simplify
     - /work-test-review
-    - /work-change-review
-    - /work-explain-change
+    - /work-human-review
   targets:
     codex:
       render_as: prompts_and_skills
@@ -180,8 +179,7 @@ Canonical commands use the `/work-*` namespace:
 /work-review
 /work-review-simplify
 /work-test-review
-/work-change-review
-/work-explain-change
+/work-human-review
 /work-pr
 /work-showcase
 /work-cleanup
@@ -247,17 +245,14 @@ They add owner-boundary, regression-control, deletion-evidence, and preservation
 requirements without changing review authority.
 See [Specialized test review](TEST-REVIEW.md).
 
-`/work-explain-change` is an on-demand companion to the delivery DAG rather
-than a required phase. It explains a PR, commit, range, or working-tree snapshot
-with verified narrative, selected code, and Mermaid-first visual lenses. It
-does not approve the change or replace `/work-review`. The required
-`/work-change-review implementation-approval` reuses that complete explanation
-contract, adds the frozen native diff and findings, and waits for an
-exact-revision human decision before `/work-pr`. Plain `/work-change-review`
-defaults to a passive `desk-review` of the complete Git diff and analysis in
-mdmaid.desk. Earlier destinations and PR context cannot authorize PR writes
-through it. `/work-start-pr-review` owns unified PR-feedback synthesis and
-publication after the user selects that destination. `/work-plan-review` produces the analogous visual review for
+`change-narrative` is an internal skill for verified narrative, selected code,
+and Mermaid-first visual lenses. `/work-human-review` uses it in the same
+document as the frozen native diff and findings. The
+`implementation-approval` mode creates an exact-revision human decision before
+`/work-pr`. A direct invocation creates a separate desk decision without
+claiming that standard-work verification and automated review passed.
+`/work-start-pr-review` owns unified PR-feedback synthesis and publication
+after the user selects that destination. `/work-plan-review` produces the analogous visual review for
 planned interfaces and abstractions. See [Change explanations](CHANGE-EXPLANATIONS.md)
 and [Mandatory human change review](CHANGE-REVIEW-GATE.md).
 

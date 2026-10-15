@@ -74,9 +74,9 @@ The repository starts with:
   human approval; standard
   and opt-in simplicity-focused execution commands; and the standard bounded
   routine approval resources. After a PR is successfully created, it offers an
-  optional evidence-backed session analysis. It installs Mermaid-first
-  `/work-explain-change`, the mandatory explanatory
-  `/work-change-review implementation-approval` gate,
+  optional evidence-backed session analysis. It installs the internal
+  `change-narrative` skill and the mandatory explanatory
+  `/work-human-review implementation-approval` gate,
   and `/work-test-review` for focused review of test evidence. Its separate
   `/work-start-pr-review` pipeline synchronizes an existing PR's ticket, diff,
   comments, and CI, separates internal delivery or PR publication from repair
@@ -95,7 +95,7 @@ The repository starts with:
 - `terminal-orchestration`: provider-neutral machine setup for Zellij, Tatami,
   Herdr, Mdmaid, mdmaid.desk, and two pinned Herdr plugins;
 - `change-explanation-tools`: provider-neutral machine setup for the pinned PR
-  Lens, Mdmaid, and mdmaid.desk versions used by `/work-explain-change`;
+  Lens, Mdmaid, and mdmaid.desk versions used by `/work-human-review`;
 - `maintainability-review-tools`: provider-neutral, opt-in machine setup for
   pinned jscpd evidence used by canonical maintainability implementation
   review;
@@ -242,13 +242,10 @@ quota. Explicit `authoring`, `audit`, and subsystem `campaign` modes add
 regression controls, contract ownership, test-pruning evidence, and preservation
 review. See [Specialized test review](TEST-REVIEW.md).
 
-`standard-work` installs `/work-explain-change` as an on-demand understanding
-tool, not an approval gate by itself. Plain `/work-change-review` publishes the
-complete diff and explanatory analysis to mdmaid.desk in passive `desk-review`
-mode. PR publication belongs to `/work-start-pr-review` and cannot be inherited
-by a desk review. Mermaid is the default; PR Lens animation is explicit opt-in. The mandatory
-`/work-change-review implementation-approval` phase is a strict
-superset: it combines the same narrative and evidence-selected architecture,
+`standard-work` installs the internal `change-narrative` skill for the mandatory
+`/work-human-review implementation-approval` phase. Mermaid is the default;
+PR Lens animation is explicit opt-in. The review combines narrative and
+evidence-selected architecture,
 class, entity-relationship, state, sequence, requirement, dependency, and
 data-flow lenses with the complete native diff and a revision-bound
 `change-decision`. `/work-plan-review` applies the same Mermaid vocabulary to

@@ -5,30 +5,30 @@ import (
 	"testing"
 )
 
-func TestChangeReviewDefaultsToDeskRegardlessOfEarlierPRDestination(t *testing.T) {
+func TestHumanReviewDefaultsToDeskDecisionRegardlessOfEarlierPRDestination(t *testing.T) {
 	t.Parallel()
 	text := documentContractText(t, repositoryRoot(t), "config/workflow/phases/change-review.md")
 	for _, required := range []string{
-		"With no mode, use `desk-review`",
-		"An earlier PR-publication destination, saved route, existing PR, or publication receipt does not change this command's destination",
+		"With no mode, use `human-review`",
+		"An earlier PR-publication destination, saved route, existing PR, or publication receipt does not change",
 		"Do not post PR comments or replies",
 		"Do not accept `pr-feedback` or `--destination pr` as a publication mode",
 		"Do not automatically invoke the PR-publication workflow",
-		"Desk review does not require a prior successful automated review",
-		"Report pending CI as pending without waiting for it.",
+		"Report pending CI without waiting",
 		"In implementation-approval mode, if the review report does not pass, fixes remain unapplied, or verification is stale, report the blocked gate and the missing evidence, then return control without executing prerequisite work.",
-		"In desk-review mode, report these limitations in the analysis and continue passive delivery.",
-		"--attention review --json",
-		"Do not add `--expect`, start a decision waiter, or require approval in desk-review mode",
+		"In human-review mode, report these limitations in the analysis and continue delivery.",
+		"Do not require `review.json` or a prior `/work-review` pass",
+		"--attention approval", "--expect change-decision",
+		"Do not start `mdmaid-desk review wait`",
 		"complete merge-base-to-head change", "staged, unstaged, and untracked",
 		"canonical patch artifact", "byte-for-byte", "mdmaid validate", "change-decision",
 	} {
 		if !strings.Contains(text, required) {
-			t.Errorf("desk change-review contract missing %q", required)
+			t.Errorf("human change-review contract missing %q", required)
 		}
 	}
 	for _, forbidden := range []string{
-		"/work-change-review pr-feedback", "## PR-feedback mode",
+		"/work-human-review pr-feedback", "## PR-feedback mode",
 		"ask where the review should land", "authorizes posting",
 		"Otherwise post deterministically", "exact posted bodies",
 	} {
@@ -38,11 +38,11 @@ func TestChangeReviewDefaultsToDeskRegardlessOfEarlierPRDestination(t *testing.T
 	}
 }
 
-func TestDeskReviewPreservesExplicitRangeSemantics(t *testing.T) {
+func TestHumanReviewPreservesExplicitRangeSemantics(t *testing.T) {
 	t.Parallel()
 	text := documentContractText(t, repositoryRoot(t), "config/workflow/phases/change-review.md")
 	for _, required := range []string{
-		"In desk-review mode, resolve an explicitly supplied range before merge-target defaults",
+		"In human-review mode, resolve an explicitly supplied range before merge-target defaults",
 		"`A..B` compares the exact endpoint trees with `git diff A B`",
 		"`A...B` compares the merge-base of A and B to B with `git diff A...B`",
 		"Do not replace an explicit range with the current PR base or default branch",
@@ -59,7 +59,7 @@ func TestDeskReviewPreservesExplicitRangeSemantics(t *testing.T) {
 		t.Error(issue)
 	}
 	docs := documentContractText(t, repositoryRoot(t), "docs/CHANGE-REVIEW-GATE.md")
-	if !strings.Contains(docs, "Explicit desk-review ranges preserve their requested comparison") {
+	if !strings.Contains(docs, "Explicit human-review ranges preserve their requested comparison") {
 		t.Error("change-review documentation does not preserve explicit ranges")
 	}
 	if strings.Contains(docs, "source snapshot is always the complete change against its actual merge target") {
@@ -94,13 +94,13 @@ func TestPRPublicationRemainsOwnedByStartPRReview(t *testing.T) {
 		"Immediately before PR publication, refresh the PR head, full diff",
 		"Screen the exact outbound line-comment and summary bodies and anchors",
 		"post-publication reconciliation", "expected head SHA", "without automatically reposting",
-		"/work-change-review implementation-approval",
+		"/work-human-review implementation-approval",
 	} {
 		if !strings.Contains(text, required) {
 			t.Errorf("PR publication contract missing %q", required)
 		}
 	}
-	if strings.Contains(text, "/work-change-review pr-feedback") {
+	if strings.Contains(text, "/work-human-review pr-feedback") {
 		t.Error("PR review delegates publication to the desk-only command")
 	}
 }

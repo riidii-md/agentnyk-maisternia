@@ -100,13 +100,13 @@
       "work-start", "work-start-pr-review", "work-conductor", "work-brief", "work-scout", "work-analyze",
       "work-research", "work-grill", "work-direction", "work-decide", "work-ready", "work-plan", "work-prove",
       "work-plan-review", "work-handoff", "work-run", "work-run-simplify", "work-verify",
-      "work-review", "work-review-simplify", "work-test-review", "work-change-review", "work-explain-change", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
+      "work-review", "work-review-simplify", "work-test-review", "work-human-review", "work-pr", "work-session-analysis", "work-showcase", "work-cleanup",
       "work-routing-preferences"
     ],
     "prompts": [],
     "skills": [
-      "change-explanation-skill",
-      "change-explanation-graph-contract",
+      "change-narrative-skill",
+      "change-narrative-graph-contract",
       "multi-lens-review-skill",
       "readable-output-skill",
       "readable-output-project-naming",

@@ -25,7 +25,7 @@ var documentPublisherBundle = []string{
 
 var documentSkillRoots = []string{
 	"readable-output/SKILL.md", "adapt-for-reader/SKILL.md",
-	"decision-capture/SKILL.md", "change-explanation/SKILL.md",
+	"decision-capture/SKILL.md", "change-narrative/SKILL.md",
 	"multi-lens-review.md", "parallel-work.md", "session-retrospective.md",
 	"work-routing/SKILL.md", "herdr-worktrees/SKILL.md",
 	"machine-cleanup/SKILL.md",

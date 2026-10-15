@@ -60,8 +60,9 @@ For candidate plan/direction AI-review choices and document-based discovery
 questions, register passively with `--attention review`. Do not add `--expect`
 or a decision waiter for those choices. Retain existing conversational response
 rules for parallel plans, improvement proposals, and preferences. Exact
-direction/plan/change decisions keep their authenticated transport, revision
-binding, and foreground quiet-wait contracts.
+direction/plan/change decisions keep their authenticated transport and revision
+binding. Direction and plan decisions use the foreground quiet-wait contract;
+`/work-human-review` uses its durable background checkpoint instead.
 
 If validation, registration/import, or receipt verification fails, preserve
 the artifact and report **delivery blocked** with the exact recovery command.
@@ -218,6 +219,13 @@ Ordinary readable output remains passive. Do not add review expectations,
 decision controls, or a wait merely because attention is `approval`. Enter
 decision mode only when the calling workflow explicitly requires a human
 direction or plan decision for the exact artifact revision.
+
+For `/work-human-review` and its `change-decision`, follow that command's
+durable background checkpoint: publish the revision-bound request, return the
+receipt, and finish the agent turn. Do not use the foreground plan/direction
+waiter below for that command. A configured event-driven supervisor may use
+`mdmaid-desk review wait` outside the active agent turn; without one, inspect
+the stored response once when the task is resumed.
 
 Before decision-mode delivery, check `mdmaid-desk --help` for
 `--expect plan-decision` and `review wait`. If either capability is absent,

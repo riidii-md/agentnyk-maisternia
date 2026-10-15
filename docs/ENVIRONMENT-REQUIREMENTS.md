@@ -46,7 +46,8 @@ npm install --global mdmaid@0.1.17
 ```
 
 The environment-only `change-explanation-tools` preset references the smaller
-`change-explanation` pack used by the optional `/work-explain-change` command.
+`change-explanation` pack used by `/work-human-review` and its internal
+`change-narrative` skill.
 That pack pins PR Lens CLI `0.2.0`, Mdmaid `0.1.17`, and mdmaid.desk `0.1.19`.
 The desk version provides authenticated workspace-local SVG media and the
 `change-review`/`change-decision` contract. Presence-based detection does not
