@@ -1,6 +1,30 @@
 {
   "schema_version": 1,
   "phases": {
+    "analyze-collaboration": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": [],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "research-collaboration": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": [],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "direction-collaboration": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": [],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
+    "plan-collaboration": {
+      "authority": "artifact_write",
+      "required": ["filesystem.read", "repository.read", "workflow.artifact_write"],
+      "optional": [],
+      "forbidden": ["filesystem.workspace_write", "git.commit", "git.push", "external.write", "production.access"]
+    },
     "brief": {
       "authority": "read_only",
       "required": ["filesystem.read", "repository.read"],

@@ -1,7 +1,7 @@
 ---
 name: work-research
 description: Research and compare solution directions using current primary evidence, explicit criteria, and tradeoffs.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-research - Compare Solution Directions
@@ -42,5 +42,10 @@ Do not edit files.
 
 Return options, recommendation, rejected directions, risks, user decisions,
 architectural constraints and cross-system implications for `/work-direction`
-when the gate applies, and whether the task is ready or needs a focused grill
-question. If direction is not required, pass findings directly to `/work-plan`.
+when the gate applies, and remaining evidence or human constraints. In guided
+standard work or idea shaping, return findings to the coordinator for
+`/work-collaborate research` before direction, option comparison, or planning,
+even when the agent has no questions. The coordinator presents the updated
+discovery brief and offers discussion, more research, and an optional human
+draft. When direction is not required, proceed to `/work-plan` only after the
+human explicitly continues. This research phase remains read-only.

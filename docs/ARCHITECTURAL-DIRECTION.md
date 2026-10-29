@@ -16,21 +16,23 @@ with one evident approach can bypass it if `/work-analyze` records why.
 Unknown impact calls for more scouting or research, not an assumed bypass.
 
 ```text
-SCOUT -> ANALYZE -> [RESEARCH <-> GRILL] -> DIRECTION
-                                            -> AI REVIEW CHOICE
+SCOUT -> ANALYZE -> COLLABORATE -> [RESEARCH -> COLLABORATE] -> DIRECTION
+                                            -> COLLABORATE + AI REVIEW CHOICE
                                                -> [DIRECTION REVIEW]
                                             -> HUMAN DIRECTION DECISION
                                             -> DETAILED WORK PLAN
 ```
 
-The bracketed research and grill steps are conditional. `/work-grill sketch`
-may, after presenting a short evidence summary, invite the human to describe
-their preferred architecture, boundaries, non-negotiables, acceptable
-tradeoffs, and concerns in their own words. The response is attributed input,
-not approval.
+Research is conditional. Collaboration follows analysis and any research even
+when the agent has no questions. Its optional human-draft mode invites the human
+to describe desired behavior, architecture, boundaries, non-negotiables,
+tradeoffs, and concerns. `/work-grill sketch` remains available within that
+interaction. The response is attributed input, not approval. Direction
+presentation includes collaboration and the existing explicit AI-review choice
+before the exact-revision decision. See [Human collaboration](COLLABORATION.md).
 
 If drafting the direction exposes a boundary, evidence, or human-constraint
-gap, return directly to scout, research, or grill before presenting the review
+gap, return directly to scout, research, or collaboration before presenting the review
 choice.
 
 ## Parallel Analysis, Single Authorship

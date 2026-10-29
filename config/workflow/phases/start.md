@@ -1,7 +1,7 @@
 ---
 name: work-start
 description: Start or resume standard work and advance through its phases until a human response or an external blocker is required.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-start - Guided Standard Work
@@ -85,25 +85,36 @@ phase results outside those phases; brief and scout remain read-only.
    completed phase or infer a decision from a document's existence. Apply the
    persistent task summary's recovery rules, then refresh it at each checkpoint.
 2. Gather facts through `/work-brief`, `/work-scout`, and `/work-analyze`.
-   Research when evidence is missing and use `/work-grill` when focused human
-   context is needed. Classify the conditional architectural direction gate;
+   Enter `/work-collaborate analyze` after analysis, even when no human fact is
+   missing. Research when evidence is missing or the human requests it, then
+   enter `/work-collaborate research` after research. Classify the conditional
+   architectural direction gate;
    record evidence for a skip or return to scout or research when impact is
    unknown. Record why expanded proof or handoff applies or can be skipped.
    Evidence may support an AI-review recommendation, but only the human selects
    or skips direction or plan AI review. Apply each phase contract in this
    session; do not merely print the next command or follow a fixed checklist.
-3. When a material human fact is needed, resolve what available evidence can
-   answer first. Then write or update one durable discovery brief at a
+3. At each discovery collaboration checkpoint, resolve what available evidence
+   can answer first. Then write or update one durable discovery brief at a
    task-specific artifact path, otherwise under `.agent-runs/readable-output/`.
    Include the task, bounded evidence, assumptions, options when useful, the
-   exact question, and what its answer changes. Before writing or presenting
-   the brief, screen and redact credentials, tokens, raw logs, transcripts,
+   invitation to discuss, correct scope, expand research, provide a human draft,
+   or continue. Include focused questions and what their answers change when
+   needed. Before writing or presenting the brief, screen and redact
+   credentials, tokens, raw logs, transcripts,
    private configuration, and sensitive source bodies. Summarize necessary
    evidence and cite safe source locations instead of copying raw content.
-   Present the document and wait for the human response.
+   Present the document through mdmaid.desk and wait for the human response.
+   Use discussion by default, `/work-grill` inside collaboration for focused
+   questions, and optional human-draft mode before direction. A question's answer
+   keeps collaboration open. Advance only when the human continues explicitly;
+   a research request returns to research and its checkpoint. A scope change
+   returns to analysis. Reuse the same brief across discovery revisions.
 4. When architectural direction is required, create and present the exact
-   `/work-direction` revision, then stop for an explicit AI review choice. AI
-   review is optional. Ask whether to `run AI review now`, `skip AI review` so
+   `/work-direction` revision through `/work-collaborate direction`. Discuss it
+   until the human continues, combining continuation with an explicit AI review
+   choice when the reply supplies both. AI review is optional. Ask whether to
+   `run AI review now`, `skip AI review` so
    the human can inspect and decide on the current revision, or `review later`
    and pause. Do not automatically invoke `/work-plan-review`. Run
    `/work-plan-review direction` only after the first choice. After a passing
@@ -114,9 +125,11 @@ phase results outside those phases; brief and scout remain read-only.
 5. Create the `/work-plan` document and expand proof when needed. Carry direction's
    material assurance constraints and ensure the consolidated test plan is visible
    before presentation, including a justified no-test-change disposition when
-   appropriate. Present the
-   exact candidate plan, then stop for the same explicit choice: `run AI review
-   now`, `skip AI review`, or `review later`. AI review is optional. Do not
+   appropriate. Present the exact candidate plan through
+   `/work-collaborate plan`, discuss it until the
+   human continues, combining continuation with the same explicit choice when
+   supplied together: `run AI review now`, `skip AI review`, or `review later`.
+   AI review is optional. Do not
    automatically invoke `/work-plan-review`; run `/work-plan-review plan` only
    when selected. A skipped AI review does not approve the plan: wait for the
    human plan decision, record the skip and decision with `/work-decide plan`,
@@ -142,9 +155,10 @@ phase results outside those phases; brief and scout remain read-only.
    when publication was requested and the change decision is approved.
 
 The delivery route is Git workspace preflight → brief → scout → analyze →
-optional research or human question → conditional architectural direction →
-explicit AI review choice → optional direction review → direction decision →
-plan → optional proof → explicit AI review choice → optional plan review →
+analysis collaboration → optional research and research collaboration →
+conditional architectural direction → direction collaboration and explicit AI
+review choice → optional direction review → direction decision →
+plan → optional proof → plan collaboration and explicit AI review choice → optional plan review →
 plan decision → readiness → optional handoff → run → verify →
 implementation review → change review →
 optional PR preparation. Failed verification or review returns to the relevant
@@ -152,6 +166,15 @@ earlier phase; requested changes return to the affected document or code phase.
 Update this command whenever the `standard-work` delivery graph gains a gate.
 
 ## Human checkpoints
+
+Collaboration is a required part of the flow after analysis and after research,
+and accompanies direction and plan presentation. It applies even when the agent
+has no questions. Follow `/work-collaborate` in the current conversation, retain
+the human's draft as attributed input, and keep discussion open until the human
+continues. Do not require another `/work-*` invocation. A review selection or
+explicit skip may express continuation, but it never replaces a direction or
+plan approval. Do not repeat an unchanged checkpoint whose explicit continuation
+is already present in the conversation; material revisions reopen it.
 
 Before a document-bound checkpoint, complete readable-output's successful
 exact-revision registration and receipt checks. Deliver the stable discovery
@@ -188,6 +211,8 @@ Apply the installed `readable-output` quiet-wait contract to every live
 mdmaid.desk decision without weakening its foreground-wait or approval rules.
 
 On an answer, incorporate the human's words and update affected artifacts.
+Discussion, grill answers, and drafts remain at the collaboration checkpoint
+until explicit continuation; only then resume the next valid phase.
 Return every changed direction or plan to its explicit AI review choice; do not
 automatically rerun optional AI review. Rerun only mandatory implementation
 verification or review invalidated by an implementation change, then resume

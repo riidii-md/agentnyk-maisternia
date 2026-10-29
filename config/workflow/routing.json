@@ -1,6 +1,10 @@
 {
   "schema_version": 1,
   "phases": {
+    "analyze-collaboration": {"strategy": "current_conversation", "authority": "artifact_write"},
+    "research-collaboration": {"strategy": "current_conversation", "authority": "artifact_write"},
+    "direction-collaboration": {"strategy": "current_conversation", "authority": "artifact_write"},
+    "plan-collaboration": {"strategy": "current_conversation", "authority": "artifact_write"},
     "brief": {"strategy": "current_or_fast", "authority": "read_only"},
     "scout": {"strategy": "current_or_fast", "authority": "read_only"},
     "analyze": {"strategy": "strong_reasoning", "authority": "read_only"},

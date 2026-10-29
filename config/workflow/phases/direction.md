@@ -1,7 +1,7 @@
 ---
 name: work-direction
 description: Synthesize reviewed evidence and human input into a high-level architectural direction before detailed implementation planning.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-direction - Define The Architectural Direction
@@ -141,6 +141,12 @@ the relevant evidence or decision step rather than presenting the artifact.
 Write one durable Markdown direction artifact at an explicit task artifact path
 when provided, otherwise under `.agent-runs/readable-output/`. Reuse its stable
 task-and-role path for revisions, validate it, and record its content hash.
+
+Enter `/work-collaborate direction` with the exact candidate. Invite questions,
+tradeoffs, and corrections, and keep discussion open until explicit human
+continuation. Use the existing AI-review choice within this checkpoint; a
+selected review or explicit skip may also express continuation. Revisions return
+to collaboration and a fresh choice, and a human draft remains attributed input.
 
 Register the exact candidate direction through readable-output passively
 with `--attention review` before presenting the AI-review question. Do not add

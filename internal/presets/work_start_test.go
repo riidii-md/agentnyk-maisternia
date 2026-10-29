@@ -47,7 +47,7 @@ func TestRepositoryWorkStartIsInstalledByStandardWork(t *testing.T) {
 	for _, target := range startTargets {
 		for _, phaseID := range []string{
 			"work-brief", "work-scout", "work-analyze", "work-research",
-			"work-grill", "work-direction", "work-plan", "work-plan-review",
+			"work-collaborate", "work-grill", "work-direction", "work-plan", "work-plan-review",
 			"work-decide", "work-ready", "work-run",
 			"work-verify", "work-review", "work-human-review", "work-pr",
 		} {

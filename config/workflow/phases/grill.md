@@ -1,7 +1,7 @@
 ---
 name: work-grill
 description: Use when shaping work needs focused human clarification before options can converge.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-grill - Ask the Next Useful Question
@@ -17,6 +17,13 @@ Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible 
 Run focused clarification in the current conversation. Use question mode for
 the single unanswered question with highest decision value, or optional sketch
 mode after scout, analysis, and relevant research have supplied context.
+
+In guided standard work and idea shaping, `/work-collaborate` invokes this as
+its focused grill mode. It is part of the normal collaboration checkpoint.
+Answering a focused question does not close collaboration or advance the flow;
+return the answer to the checkpoint and wait for explicit human continuation.
+The standalone command remains available for direct clarification. Existing
+`sketch` mode supplies the optional human-draft interaction in collaboration.
 
 Accepted forms:
 

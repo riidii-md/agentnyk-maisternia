@@ -1,7 +1,7 @@
 ---
 name: work-plan
 description: Create a reviewable implementation proposal with ordered changes, decisions, acceptance evidence, risks, and verification gates.
-version: 0.8.0
+version: 0.9.0
 ---
 
 # /work-plan - Create the Implementation Plan
@@ -200,6 +200,12 @@ the executor to maintain the compact summary within the approved task. Apply
 the installed `readable-output` skill's `references/task-context.md` for fields,
 safe writes, privacy, and recovery. The summary cannot amend the approved plan
 or grant approval. Planning alone does not start an implementation run.
+
+Before the AI-review choice, use `/work-collaborate plan` to discuss the exact
+candidate and its test plan. Keep the checkpoint open until explicit human
+continuation. A selected AI review or explicit skip may also express
+continuation. Requested changes return to planning, collaboration, and a fresh
+AI-review choice. Continuation never substitutes for the plan decision.
 
 ## Test Plan
 
