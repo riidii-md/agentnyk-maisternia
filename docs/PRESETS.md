@@ -68,7 +68,10 @@ The repository starts with:
   `/work-start` as its guided entry point on Codex, Claude Code, and Antigravity,
   advancing automatically until a reviewable document and human response are
   needed. Hermes support awaits its missing phase contracts. It includes
-  optional research, a conditional architectural direction, explicit optional
+  collaboration after analysis and any research, plus direction and plan
+  discussion, through `/work-collaborate`. Discussion, focused grill questions,
+  and optional human drafts share these checkpoints. It includes optional
+  research, a conditional architectural direction, explicit optional
   AI-review choices for direction and plan, expanded proof, handoff, and PR
   preparation; the exact plan delivered through mdmaid.desk before explicit
   human approval; standard
@@ -84,7 +87,8 @@ The repository starts with:
   request or an approved implementation contract. It publishes comments only
   when PR publication was selected;
 - `idea-shaping`: source intake, optional question-to-action focusing,
-  bounded cross-system scouting, research, grill, brainstorm, challenge,
+  bounded cross-system scouting, research, collaboration with discussion, grill,
+  and optional human-draft modes, brainstorm, challenge,
   complexity-gated multi-agent direction and planning synthesis, explicit
   optional AI-review choices before direction and plan decisions, and
   mdmaid.desk delivery for phase artifacts;

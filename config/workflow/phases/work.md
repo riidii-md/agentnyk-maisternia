@@ -1,7 +1,7 @@
 ---
 name: work
 description: Conduct provider-neutral work through the smallest useful discovery, decision, execution, verification, and review phases.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # /work - Provider-Neutral Work Conductor
@@ -35,6 +35,9 @@ Input:
    selected by evidence, risk, executor continuity, and publication intent.
    Direction and plan AI review are selected only by the human at the explicit
    review-choice checkpoint, never by inferred risk.
+   After analysis and any research, recommend `/work-collaborate` until explicit
+   human continuation is recorded for the current evidence. Direction and plan
+   presentation also include collaboration; grill and human-draft are its modes.
 6. Require an architectural direction and explicit direction decision
    before the detailed implementation plan for cross-system, cross-owner,
    trust-boundary, public-contract, persistent-data, migration, rollout,
@@ -66,9 +69,10 @@ review and ask before launching implementation review workers. Surface any
 conflicting mandatory repository gate with its exact instruction before the
 affected review or commit; do not silently waive it or choose new boundaries.
 
-The decision sequence is evidence and focused human context, optional user
-sketch, conditional direction, explicit optional-review choice and direction
-decision, detailed implementation plan, explicit optional-review choice and
+The decision sequence is analysis and collaboration, optional research and
+collaboration with an optional human draft, conditional direction and
+collaboration, explicit optional-review choice and direction decision, detailed
+implementation plan and collaboration, explicit optional-review choice and
 plan decision, then execution.
 
 ## Output

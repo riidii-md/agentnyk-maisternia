@@ -1,7 +1,7 @@
 ---
 name: work-shape
 description: Use when an incomplete idea needs evidence, human clarification, options, challenge, a decision, and a plan.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # /work-shape - Shape an Idea
@@ -24,14 +24,26 @@ create or resume a Maisternia runtime task.
 ## Workflow
 
 ```text
-INTAKE -> [SCOUT] -> ANALYZE -> RESEARCH <-> GRILL -> BRAINSTORM <-> CHALLENGE
-    -> [DECIDE | DIRECTION -> AI REVIEW CHOICE -> DIRECTION DECISION]
-    -> PLAN -> AI REVIEW CHOICE -> FINAL
+INTAKE -> [SCOUT] -> ANALYZE -> COLLABORATE -> [RESEARCH -> COLLABORATE]
+    -> BRAINSTORM <-> CHALLENGE
+    -> [DECIDE | DIRECTION -> COLLABORATE + AI REVIEW CHOICE -> DIRECTION DECISION]
+    -> PLAN -> COLLABORATE + AI REVIEW CHOICE -> FINAL
 ```
 
 Move through the smallest useful sequence. Resume from the conversation when
 earlier work is already sufficient; do not repeat completed research or
-questions merely to satisfy the diagram.
+questions merely to satisfy the diagram. Completed evidence does not bypass an
+unanswered collaboration checkpoint. Reuse an explicit continuation already
+given for the same unchanged evidence; material revisions reopen the checkpoint.
+
+Enter `/work-collaborate analyze` after analysis and `/work-collaborate research`
+after research, even when the agent has no questions. Present the current
+discovery brief through mdmaid.desk and discuss it in the current conversation.
+Use discussion by default, grill for focused clarification, and optional
+human-draft mode to develop the human's preferred solution before direction.
+Keep discussion open until the human continues explicitly. Answering one
+question does not finish the checkpoint. More research returns to research and
+its collaboration checkpoint; changed scope returns to analysis.
 
 New contradictory or requirement-changing evidence can return the discussion
 to research. Weak options can return it to brainstorming, and a missing human
@@ -48,20 +60,23 @@ of recording a hidden phase transition.
 - Analyze: define the problem and classify whether architectural direction is
   required.
 - Research: resolve discoverable facts and identify contradictions.
-- Grill: ask one high-value human question at a time, or optionally collect a
-  user-authored architecture sketch after presenting the evidence context.
+- Collaborate: use `/work-collaborate` to discuss findings, correct scope,
+  request more research, or develop an optional human draft. Focused grill
+  questions are a mode within this step. Preserve drafts as attributed input.
 - Brainstorm: produce three to five materially different options.
 - Challenge: test options against evidence, constraints, and failure modes.
 - Decide, when direction is not required: record the human's option choice
   before detailed planning; final acceptance of the whole shape comes later.
 - Direction, when required: synthesize the high-level architecture, boundaries,
   decisions, rejected alternatives, and implementation constraints.
-- AI review choice and direction decision: ask whether to run AI review now,
+- Direction collaboration, AI review choice, and direction decision: discuss
+  the exact candidate through `/work-collaborate direction`, then ask whether to run AI review now,
   skip AI review, or review later. Run `/work-plan-review direction` only when selected,
   then obtain explicit human approval for the exact revision.
 - Plan: produce detailed ordered work, risks, acceptance criteria, and stop
   conditions constrained by the approved direction when one was required.
-- Plan AI review choice: ask whether to run AI review now, skip AI review, or
+- Plan collaboration and AI review choice: discuss the exact candidate through
+  `/work-collaborate plan`, then ask whether to run AI review now, skip AI review, or
   review later. Run `/work-plan-review plan` only when selected.
 - Do not automatically invoke `/work-plan-review` for direction or plan.
 - Final: require explicit human acceptance before treating the shape as
@@ -72,8 +87,9 @@ of recording a hidden phase transition.
 - Keep coordination in the current harness session by default.
 - Use explicit artifacts already supplied by the user when they help resume the
   work.
-- Use one evolving discovery brief for scout, analysis, research, and grill when
-  a durable checkpoint is useful; do not create one document per phase.
+- Use one evolving discovery brief for scout, analysis, research, and
+  collaboration. Register each checkpoint's exact revision before inviting
+  discussion under readable-output; do not create one document per phase.
 - Treat the direction and implementation plan as separate durable
   checkpoints, reusing stable task-and-role paths for revisions.
 - The shaping request authorizes task-owned direction artifacts and other

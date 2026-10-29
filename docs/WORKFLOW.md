@@ -108,14 +108,17 @@ preset:
     default:
       dag:
         scout: [analyze]
-        analyze: [scout, research, grill, direction, plan]
-        research: [grill, direction, plan]
-        grill: [research, direction, plan]
-        direction: [direction-review when selected, direction-decision when skipped, scout, research, grill]
+        analyze: [scout, analyze-collaboration]
+        analyze-collaboration: [analyze, scout, research when human continues, direction when human continues, plan when human continues]
+        research: [research-collaboration]
+        research-collaboration: [research, analyze, direction when human continues, plan when human continues]
+        direction: [direction-collaboration, scout, research]
+        direction-collaboration: [direction, analyze, research, direction-review when human continues and selects review, direction-decision when human continues and skips review]
         direction-review: [direction-decision, direction, research]
         direction-decision: [plan, direction, analyze]
-        plan: [prove, plan-review when proof complete and selected, decide when proof complete and skipped]
-        prove: [plan-review when selected, decide when skipped]
+        plan: [prove, plan-collaboration when proof complete]
+        prove: [plan-collaboration]
+        plan-collaboration: [plan, analyze, research, plan-review when human continues and selects review, decide when human continues and skips review]
         plan-review: [decide, plan]
         decide: [ready, plan]
         ready: [handoff, run, plan]
@@ -130,6 +133,7 @@ preset:
   commands:
     - /work-scout
     - /work-start-pr-review
+    - /work-collaborate
     - /work-grill
     - /work-direction
     - /work-plan
@@ -159,6 +163,7 @@ Canonical commands use the `/work-*` namespace:
 /work-start-pr-review
 /work-shape
 /work-source
+/work-collaborate
 /work-grill
 /work-brainstorm
 /work-question
@@ -191,10 +196,14 @@ Claude Code, and Antigravity. It gathers evidence, selects the next applicable
 phase, and keeps advancing in the same conversation. Before task edits, it
 checks the task's base branch against its remote and verifies a dedicated task
 worktree. It preserves edits in other checkouts and reports when base freshness
-cannot be verified. When human input is needed, it creates or updates a durable
-discovery brief, architectural direction, plan, or change review, presents the
-exact question or revision-bound decision, and waits. The next user response
-resumes the workflow from that checkpoint. Other `/work-*` commands remain
+cannot be verified. It enters collaboration after analysis and after any
+research, and when presenting direction or a plan, even when the agent has no
+questions. It registers the current discovery brief, direction, or plan in
+mdmaid.desk, then discusses it in the active conversation until explicit human
+continuation. Focused grill questions and optional human drafts are modes within
+collaboration. A question's answer keeps that checkpoint open. Direction and plan
+retain their explicit AI-review choices and revision-bound decisions. The next
+applicable phase resumes without another command. Other `/work-*` commands remain
 available for direct phase work; `/work` reports status and the next phase
 without running it.
 Provider rendering decides how commands are installed, and the harness executes
@@ -233,7 +242,8 @@ human decision. After synthesis, the human chooses whether to run AI review,
 skip it, or review later; review is never started automatically. A small,
 local, reversible task can go directly to
 planning after an evidence-backed skip; this route remains available after
-research or grill. See [Architectural direction](ARCHITECTURAL-DIRECTION.md).
+research collaboration. See [Human collaboration](COLLABORATION.md) and
+[Architectural direction](ARCHITECTURAL-DIRECTION.md).
 
 `/work-test-review` specializes the canonical implementation review around test
 intent and oracles, risk and edge coverage, level and fidelity, and economical

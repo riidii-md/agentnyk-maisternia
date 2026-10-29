@@ -13,6 +13,7 @@ repository instructions or require every document to be read.
 | Code conventions | [Repository instructions](../AGENTS.md), [Contributing](../CONTRIBUTING.md), affected code and sibling tests | Implementing or reviewing Go code and configuration contracts. |
 | Testing | [Repository checks](../AGENTS.md#verification), [Contributing](../CONTRIBUTING.md), [CI](../.github/workflows/ci.yml), [Test review](TEST-REVIEW.md) | Selecting checks, changing test evidence, or evaluating workflow contracts. |
 | Task decisions and progress | The selected task's direction, plan, decision receipts, and `.agent-runs/work/<task-id>/progress.md` | Resuming a task or identifying approved scope and unfinished work. These local artifacts are not committed by default. |
+| Human collaboration | [Collaboration checkpoints](COLLABORATION.md), [Idea shaping](IDEA-SHAPING-PIPELINE.md), [Architectural direction](ARCHITECTURAL-DIRECTION.md) | Changing discussion, grill, human-draft, continuation, or document checkpoint behavior. |
 
 Current implementation must be checked against code and test evidence. Documents
 may contain implemented behavior, proposals, or historical decisions. Keep those

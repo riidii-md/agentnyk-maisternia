@@ -1,7 +1,7 @@
 ---
 name: work-analyze
 description: Define the accepted task, constraints, risks, unknowns, and acceptance criteria before solution work begins.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # /work-analyze - Define the Task
@@ -45,3 +45,8 @@ Return:
 - Questions needing user decisions
 - Direction-gate result: required, not required, or unknown, with evidence
 - Recommended next phase
+
+In guided standard work or idea shaping, return these findings to the coordinator
+for `/work-collaborate analyze` before research, direction, or planning. This
+checkpoint applies even when no human fact is missing. The coordinator writes
+and presents the discovery brief; this phase remains read-only.

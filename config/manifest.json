@@ -2,6 +2,17 @@
   "schema_version": 1,
   "resources": [
     {
+      "id": "work-collaborate",
+      "source": "config/workflow/phases/collaborate.md",
+      "targets": [
+        {"agent": "codex", "path": ".codex/prompts/work-collaborate.md"},
+        {"agent": "codex", "path": ".codex/skills/work-collaborate/SKILL.md"},
+        {"agent": "claude", "path": ".claude/commands/work-collaborate.md"},
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-collaborate.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-collaborate/SKILL.md"}
+      ]
+    },
+    {
       "id": "readable-output-task-context",
       "source": "config/workflow/skills/readable-output/references/task-context.md",
       "targets": [
