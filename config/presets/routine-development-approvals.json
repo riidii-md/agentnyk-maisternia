@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "routine-development-approvals",
   "name": "Routine Development Approvals",
-  "description": "Opt-in Codex and Claude Code configuration that auto-approves narrow read-only GitHub and npm metadata commands while keeping publication, reruns, secrets, and global installation prompted.",
+  "description": "Opt-in native approvals for trusted Go verification and formatting, plus read-only GitHub and npm metadata. Includes Codex rules, Claude permissions, AGY permissions and Gemini CLI policies. Publication, reruns, secrets, and global installation remain prompted. Google native policies require user scope.",
   "pipelines": [],
   "contents": {
     "mcp_refs": [],
@@ -12,8 +12,10 @@
     "hooks": [],
     "settings": [
       "routine-development-approvals-codex-rules",
-      "routine-development-approvals-claude-permissions"
+      "routine-development-approvals-claude-permissions",
+      "routine-development-approvals-agy-permissions",
+      "routine-development-approvals-gemini-policy"
     ]
   },
-  "targets": ["codex", "claude"]
+  "targets": ["codex", "claude", "antigravity"]
 }

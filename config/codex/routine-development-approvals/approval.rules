@@ -1,5 +1,23 @@
-# These exact read-only command prefixes may leave the sandbox without asking.
+# These exact command prefixes may leave the sandbox without asking after the
+# preset is explicitly applied for trusted development. Go checks execute code;
+# use direct commands and provision cache/module access in the session preflight.
 # More restrictive rules from other active layers still win.
+prefix_rule(
+    pattern = ["go", ["test", "vet", "build"]],
+    decision = "allow",
+    justification = "Routine Go verification in trusted development is approved by this opt-in preset.",
+    match = ["go test ./...", "go test -race ./...", "go test -coverprofile=coverage.out ./...", "go vet ./...", "go build ./cmd/maisternia"],
+    not_match = ["go run ./cmd/maisternia", "go install example.invalid/tool@latest", "go clean -modcache", "sh -c 'go test ./...'"],
+)
+
+prefix_rule(
+    pattern = ["gofmt", "-w"],
+    decision = "allow",
+    justification = "Scoped Go source formatting is approved for trusted development.",
+    match = ["gofmt -w cmd internal"],
+    not_match = ["sh -c 'gofmt -w cmd internal'"],
+)
+
 prefix_rule(
     pattern = ["gh", "pr", ["checks", "list", "view"]],
     decision = "allow",

@@ -105,6 +105,31 @@ silently substitutes an unavailable harness.
 
 ## Confirm Review Authority And Cadence
 
+Generic continuation and status questions do not authorize review. Resolve the
+explicit request or agreed boundary, exact target/revision, disposition, authorized
+repair batch, and human-selected next action before worker dispatch. A pending
+review-choice checkpoint is not answered by "continue" alone. A question about
+stalled review requires an explanation of code changes, closed findings, remaining
+blockers, and the next implementation task; it cannot change the review target.
+
+## Review Exit Contract
+
+The default limit is one repair batch and one focused recheck. Freeze the initial
+finding set and apply only authorized repairs. A recheck verifies those repairs
+and their direct regressions; it does not open another full review or a new target.
+On closure, deliver the report and return control to the human. If a recheck leaves
+or introduces a material issue, record the residual finding, its evidence, and
+the exact next choices instead of silently extending the episode. A later repair
+batch, broader pass, or target change needs a new explicit human choice. Existing
+authority for one review or implementation scope is not recurring review authority.
+
+Do not hide unresolved safety or acceptance failures to fit the limit. Mark the
+affected gate `fail` or `blocked` as appropriate and continue only independent
+authorized implementation. Honor a user-selected tighter limit. A completed
+finding set must lead to delivery, not more reviewer launches. This contract
+also applies to plan, direction, PR, test, and maintainability reviews in every
+harness, including routed workers.
+
 An explicit review request authorizes one review of the requested target, including
 independent finding verification. Repair additionally requires the authority
 resolved above. It does not authorize recurring
@@ -670,8 +695,8 @@ within approved scope:
   or unrelated scope, mark it blocked rather than guessing.
 
 Critical and High findings are blocking. Run focused checks after each repair
-group, then repository-required final verification. Re-run affected lenses when
-a fix materially changes behavior. For the maintainability profile, also rerun
+group, then repository-required final verification. Re-run affected lenses only
+in the authorized focused recheck when a fix materially changes behavior. For the maintainability profile, also rerun
 the affected analyzer passes against the repaired snapshot and preserve both
 the original and replacement evidence identities. Gate status is `pass` only
 when confirmed fixes are applied and checks pass; otherwise return `fail` or
@@ -699,6 +724,14 @@ maintainability-inspection matrix when that profile is selected, the
 status. Link confirmed candidates to canonical findings, fixes through finding
 IDs, test evidence, inspections, and independent verification without allowing
 raw analyzer output to bypass the canonical report.
+
+Validate the report once with `maisternia review validate <review.json>` before
+delivery. It checks the full current schema and worker relationships offline.
+Use `--repo <catalog>` only for an explicitly selected catalog override.
+`maisternia doctor` checks schema/compiler compatibility. If the command is unavailable,
+report that version/setup blocker; do not search for validators, downgrade the
+schema, or build a custom validator inside the review. A valid report is not
+implementation approval and can still contain a failed or blocked gate.
 
 The version 6 report must also record the execution mode, coordinator, worker
 identity and runtime, provider, assignments, waves, whether the scoped minimum

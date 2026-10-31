@@ -37,6 +37,7 @@ Usage:
   maisternia render [options] --output <dir>
   maisternia apply [options] --yes
   maisternia event validate [options] <event.json>
+  maisternia review validate [options] <review.json>
   maisternia provider list [options]
   maisternia provider inspect [options] <provider>
   maisternia provider doctor [options] [provider|all]
@@ -96,6 +97,8 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return runPresetCommand(args[1:], stdout, stderr)
 	case "event":
 		return runEventCommand(args[1:], stdout, stderr)
+	case "review":
+		return runReviewCommand(args[1:], stdout, stderr)
 	case "provider":
 		return runProviderCommand(args[1:], stdout, stderr)
 	case "doctor", "inventory", "plan", "render", "apply":
@@ -119,6 +122,18 @@ func RunWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 
 	switch command {
 	case "doctor":
+		reviewPresent, err := workflow.ReviewSchemaPresent(options.repo)
+		if err != nil {
+			fmt.Fprintf(stderr, "error: %v\n", err)
+			return 1
+		}
+		if reviewPresent {
+			if err := workflow.CheckReviewSchema(options.repo); err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			fmt.Fprintln(stdout, "review schema validator compatible: JSON Schema 2020-12 (offline)")
+		}
 		approvalPresent, err := approvals.Present(options.repo)
 		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)

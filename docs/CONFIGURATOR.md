@@ -273,10 +273,24 @@ Whole-file replacement is not sufficient for every provider:
   that Claude may update.
 
 The manifest supports one deliberately narrow structured merge today:
-`json-array-union`. It adds declared JSON values at an explicit JSON pointer,
+`json-array-union`. It adds declared JSON values at an explicit `json_pointer`,
+or at up to 16 distinct paths in `json_pointers` for one atomic update. A merge
+must choose exactly one form. Multiple pointers let one permission resource add
+allow and ask entries together without competing writers for the same file. It
 preserves unknown keys and existing array values, backs up before updates, and
 fails closed on malformed or wrongly typed documents. `developer-context` uses
-it for Claude's `/permissions/allow` array.
+it for Claude's `/permissions/allow` array. Project-scoped routine development
+approvals use it for `/permissions/allow` and `/permissions/ask` in
+`.claude/settings.local.json`. Planning, source/target drift, symlink, conflict,
+backup, and confirmation checks apply unchanged; a bad secondary array prevents
+the complete update.
+
+The same additive permission merge targets AGY's user settings at
+`.gemini/antigravity-cli/settings.json`. A separate owned Gemini CLI TOML policy
+uses `.gemini/policies/maisternia-routine-development.toml`. These exact paths
+are allowed native exceptions for the existing `antigravity` target; the rest of
+`.gemini` remains outside its managed boundary. These Google native formats
+activate in user scope, not by placing them under a project root.
 
 Broader object and TOML merging still requires the full format-aware lifecycle:
 

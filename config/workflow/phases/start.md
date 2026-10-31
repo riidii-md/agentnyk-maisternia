@@ -141,8 +141,9 @@ phase results outside those phases; brief and scout remain read-only.
    absent, ask before launching implementation review workers; continue independent
    authorized implementation and focused checks. At the agreed review boundary,
    continue through `/work-verify` and `/work-review` in repository-required gate
-   order. Apply requested fixes and
-   repeat affected verification until it passes or a real blocker remains.
+   order. Apply only the authorized repair batch, run its focused recheck,
+   and report completion or remaining blockers. Return control for the next action;
+   do not start another repair batch from a review result alone.
    Rerun only affected review obligations invalidated by fixes; do not start
    unrelated review cycles or change cadence without agreement.
 7. Generate the mandatory `/work-human-review implementation-approval`
@@ -166,6 +167,13 @@ earlier phase; requested changes return to the affected document or code phase.
 Update this command whenever the `standard-work` delivery graph gains a gate.
 
 ## Human checkpoints
+
+Generic continuation and status questions do not authorize review. Bind each
+review to its explicit choice or agreed boundary, target, repair authority, and
+exit. The default limit is one repair batch and one focused recheck. On completion
+or a residual blocker, report the result and return control to the human for the
+next action. Do not interpret a complaint about review as a new review request.
+Follow `/work-review`'s review exit contract before dispatching more workers.
 
 Collaboration is a required part of the flow after analysis and after research,
 and accompanies direction and plan presentation. It applies even when the agent
@@ -215,8 +223,9 @@ Discussion, grill answers, and drafts remain at the collaboration checkpoint
 until explicit continuation; only then resume the next valid phase.
 Return every changed direction or plan to its explicit AI review choice; do not
 automatically rerun optional AI review. Rerun only mandatory implementation
-verification or review invalidated by an implementation change, then resume
-from the next valid phase. A request for changes loops to the appropriate phase;
+verification or the authorized focused recheck invalidated by a repair, within
+the same review episode. After delivery, resume only the human-selected next
+phase. A request for changes loops to the appropriate phase;
 rejection stops the task unless the human explicitly requests reshaping, in
 which case return to analysis. Cancellation stops the task. Ask only for
 information or authority that cannot be derived from existing evidence. Do all

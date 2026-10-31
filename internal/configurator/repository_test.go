@@ -570,6 +570,10 @@ func TestRepositoryRendersRoutineDevelopmentApprovalConfiguration(t *testing.T) 
 		t.Fatalf("decode Claude routine development permissions: %v", err)
 	}
 	if got := claudeFragment.Permissions.Allow; !slices.Equal(got, []string{
+		"Bash(go test *)",
+		"Bash(go vet *)",
+		"Bash(go build *)",
+		"Bash(gofmt -w *)",
 		"Bash(gh pr checks *)",
 		"Bash(gh pr list *)",
 		"Bash(gh pr view *)",

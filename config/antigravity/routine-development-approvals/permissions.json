@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "command(go test)",
+      "command(go vet)",
+      "command(go build)",
+      "command(gofmt -w)",
+      "command(gh pr checks)",
+      "command(gh pr list)",
+      "command(gh pr view)",
+      "command(gh run view)",
+      "command(gh run watch)",
+      "command(npm view)"
+    ],
+    "ask": [
+      "command(git push)",
+      "command(gh pr create)",
+      "command(gh run rerun)",
+      "command(gh issue create)",
+      "command(gh secret set)",
+      "command(npm publish)",
+      "command(npm install --global)",
+      "command(npm install -g)"
+    ]
+  }
+}

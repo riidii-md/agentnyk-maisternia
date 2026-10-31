@@ -277,6 +277,9 @@ func TestManifestRejectsInvalidJSONArrayUnionMerge(t *testing.T) {
 		{"unsupported strategy", &MergeSpec{Strategy: "replace", JSONPointer: "/permissions/allow"}},
 		{"relative pointer", &MergeSpec{Strategy: MergeJSONArrayUnion, JSONPointer: "permissions/allow"}},
 		{"empty pointer", &MergeSpec{Strategy: MergeJSONArrayUnion}},
+		{"ambiguous pointers", &MergeSpec{Strategy: MergeJSONArrayUnion, JSONPointer: "/permissions/allow", JSONPointers: []string{"/permissions/ask"}}},
+		{"duplicate pointers", &MergeSpec{Strategy: MergeJSONArrayUnion, JSONPointers: []string{"/permissions/allow", "/permissions/allow"}}},
+		{"invalid list pointer", &MergeSpec{Strategy: MergeJSONArrayUnion, JSONPointers: []string{"permissions/allow"}}},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -290,6 +293,27 @@ func TestManifestRejectsInvalidJSONArrayUnionMerge(t *testing.T) {
 				t.Fatal("ValidateManifest() error = nil, want invalid merge error")
 			}
 		})
+	}
+}
+
+func TestMultipleJSONArrayUnionRejectsMalformedTargetWithoutWriting(t *testing.T) {
+	t.Parallel()
+	repo, home := t.TempDir(), t.TempDir()
+	writeFile(t, filepath.Join(repo, "config/permissions.json"), `{"permissions":{"allow":["Bash(go test *)"],"ask":["Bash(npm publish *)"]}}`)
+	manifest := jsonArrayUnionManifest("config/permissions.json")
+	manifest.Resources[0].Targets[0].Merge = &MergeSpec{Strategy: MergeJSONArrayUnion, JSONPointers: []string{"/permissions/allow", "/permissions/ask"}}
+	destination := filepath.Join(home, ".claude/settings.json")
+	original := `{"permissions":{"allow":[],"ask":"malformed"}}`
+	writeFile(t, destination, original)
+	if _, err := BuildPlan(repo, home, manifest, "claude"); err == nil {
+		t.Fatal("accepted malformed secondary array")
+	}
+	data, err := os.ReadFile(destination)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != original {
+		t.Fatal("mutated target during failed planning")
 	}
 }
 

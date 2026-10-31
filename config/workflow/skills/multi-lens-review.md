@@ -6,6 +6,15 @@ version: 0.9.0
 
 # Lens Review
 
+Generic continuation and status questions do not authorize review. Resolve the
+explicit review trigger or agreed boundary, target/revision, disposition, repair
+authority, and chosen next action before dispatch. Follow `/work-review`'s review
+exit contract: one repair batch and one focused recheck by default. On closure
+or a residual blocker, deliver the result and return control to the human.
+Do not switch targets or launch another pass from a status complaint. New or
+unresolved material findings remain explicit blockers; they do not extend the
+episode automatically. These rules apply to all harnesses and routed workers.
+
 When this invocation authors or revises document prose, read the installed
 `readable-output` skill's `references/document-wording.md` and apply it before finalization.
 Before requesting a human response to an actual document, use that skill's
@@ -319,6 +328,12 @@ approved or merge-ready.
 Write `review.md` and schema-valid version 6 `review.json` under
 `.agent-runs/reviews/<run-id>/`. Report confirmed findings, applied changes,
 refuted findings and rationale, checks, unresolved blockers, and gate status.
+
+Run `maisternia review validate <review.json>` once before delivery. The command
+checks the current schema and worker relationships offline; `maisternia doctor`
+checks compiler compatibility. Report a missing command as a setup/version
+blocker. Do not search for packages, alter the schema, or build an ad hoc
+validator during review. Report validity is not implementation approval.
 Record the selected `standard` or `maintainability` profile and `full` or
 `tests` scope and selected `repair` or `report-only` disposition in the report.
 Implementation reports include `test_review_mode` and `test_evidence`;

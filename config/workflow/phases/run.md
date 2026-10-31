@@ -22,6 +22,14 @@ Input:
 
 ## Honor Implementation Review Cadence
 
+Generic continuation and status questions do not authorize review. In particular,
+"continue" does not select AI review at a pending review-choice checkpoint, and
+"why are we stuck reviewing?" requests a status explanation, not another review.
+Bind every review to its user-selected target and next action. The default limit
+is one repair batch and one focused recheck when repair is authorized. On closure
+or a residual blocker, report the result and return control to the human; do not
+switch targets or reopen review. Follow `/work-review`'s review exit contract.
+
 Read the agreed cadence from the plan and current conversation. Do not turn task
 checks, wave barriers, or planned commits into automatic multi-lens reviews.
 Run focused tests as work progresses; run implementation review at the agreed
@@ -75,6 +83,18 @@ standalone execution uses the coordinator named by the approved plan.
 
 Prefer non-login shell execution for routine commands so startup scripts do not
 add unrelated output or latency.
+
+## Prepare Routine Go Verification Once
+
+When Go checks are required, perform `/work-verify`'s Go preflight once and reuse
+it until the environment changes. Inspect only GOCACHE, GOMODCACHE, and the
+required toolchain/module access. Verify cache access and effective native
+approvals in the coordinator and worker worktrees. Run tests, vet, build, and
+scoped formatting as direct commands; keep edits, scripts, environment setup,
+and log redirection separate so native command allowances remain reusable.
+Do not retry the same permission failure for each task. Resolve the bounded
+cache or command permission once, or record the blocker and continue independent
+work. Do not disable sandboxing or widen shell permissions to make checks run.
 
 ## Preserve The Approved Design Boundary
 

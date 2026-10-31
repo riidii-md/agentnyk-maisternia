@@ -124,8 +124,8 @@ preset:
         ready: [handoff, run, plan]
         handoff: [run]
         run: [verify]
-        verify: [review, run]
-        review: [change-review, run]
+        verify: [review when explicitly selected or at an agreed boundary, run]
+        review: [change-review when human continues, run when human selects repairs or implementation]
         change-review: [pr, run, analyze, change-review]
   mcps:
     - github
@@ -244,6 +244,42 @@ local, reversible task can go directly to
 planning after an evidence-backed skip; this route remains available after
 research collaboration. See [Human collaboration](COLLABORATION.md) and
 [Architectural direction](ARCHITECTURAL-DIRECTION.md).
+
+### Review completion and continuation
+
+These contracts are shared by Codex, Claude Code, Antigravity, and Hermes,
+including routed workers. An explicit review choice or agreed review boundary
+selects one target and revision. Generic continuation and questions about status
+do not start a review, select a pending AI-review option, or switch its target.
+
+Review and repair authority are separate. An authorized repair review defaults
+to one repair batch and one focused recheck. It then delivers closed and residual
+findings and returns control to the human for the next action. A newly found
+material issue remains a blocker; it does not silently start another review or
+repair batch. The review preset's recheck edges terminate rather than returning
+to dispatch or apply. Required safety, acceptance, and exact-plan decision gates
+remain in force.
+
+All harnesses use the same offline report validation command:
+
+```bash
+maisternia review validate .agent-runs/reviews/example/review.json
+maisternia doctor
+```
+
+The command validates the complete current JSON Schema 2020-12 definition and
+worker relationships: unique identities, exact wave membership, complete role
+references, and independent finding verification. Exit 0 means a valid report,
+including reports with findings or failed/blocked gates; it is not implementation
+approval. Usage errors return 2; invalid data or unavailable schemas return 1.
+`doctor` compiles the selected catalog's schema with the same engine. Neither
+command dispatches agents, repairs code, fetches references, or executes tests.
+
+The binary includes the reviewed Apache-2.0 `santhosh-tekuri/jsonschema/v6`
+library, pinned in `go.mod`. It replaces per-session partial validators and
+separate Node/Ajv setup. External network and file schema loaders are disabled;
+only the selected schema and embedded metaschemas are available. Input is bounded
+to an 8 MiB regular file. Library instance-value diagnostics are not echoed.
 
 `/work-test-review` specializes the canonical implementation review around test
 intent and oracles, risk and edge coverage, level and fidelity, and economical

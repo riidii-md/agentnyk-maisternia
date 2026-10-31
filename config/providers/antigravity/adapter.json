@@ -7,13 +7,19 @@
     "config_roots": [
       {
         "path": ".gemini/antigravity-cli",
-        "purpose": "CLI settings and runtime data",
-        "ownership": "runtime",
+        "purpose": "Native CLI settings and runtime data; only declared settings keys are managed",
+        "ownership": "mixed",
         "required": false
       },
       {
         "path": ".gemini/config",
         "purpose": "Global customizations, skills, and plugins",
+        "ownership": "mixed",
+        "required": false
+      },
+      {
+        "path": ".gemini/policies",
+        "purpose": "Gemini CLI companion policy files; only the declared Maisternia policy is managed",
         "ownership": "mixed",
         "required": false
       }

@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"path"
 	"sort"
 	"strings"
 )
@@ -52,6 +53,21 @@ func ManagedTargetRoot(providerID string) (string, bool) {
 	}
 	root, exists := managedTargetRoots[canonical]
 	return root, exists
+}
+
+// ManagedTargetAllowed retains the legacy provider tree and admits only the
+// declared native Google files, never the surrounding runtime/configuration tree.
+func ManagedTargetAllowed(providerID, relative string) bool {
+	canonical, exists := CanonicalID(providerID)
+	if !exists || path.IsAbs(relative) || path.Clean(relative) != relative {
+		return false
+	}
+	root, _ := ManagedTargetRoot(canonical)
+	if relative == root || strings.HasPrefix(relative, root+"/") {
+		return true
+	}
+	return canonical == Antigravity && (relative == ".gemini/antigravity-cli/settings.json" ||
+		relative == ".gemini/policies/maisternia-routine-development.toml")
 }
 
 func LegacyAliases(providerID string) []string {

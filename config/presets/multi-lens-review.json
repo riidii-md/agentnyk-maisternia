@@ -22,8 +22,7 @@
         {"from": "report", "to": "final", "condition": "repair disposition and no confirmed findings"},
         {"from": "report", "to": "final", "condition": "report-only review complete"},
         {"from": "apply", "to": "verify-fixes"},
-        {"from": "verify-fixes", "to": "dispatch", "condition": "material behavior changed", "loop": true},
-        {"from": "verify-fixes", "to": "apply", "condition": "confirmed fix incomplete", "loop": true},
+        {"from": "verify-fixes", "to": "final", "condition": "residual findings or failed checks; return control to the human"},
         {"from": "verify-fixes", "to": "final", "condition": "all confirmed fixes applied and checks pass"}
       ]
     }

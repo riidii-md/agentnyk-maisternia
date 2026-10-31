@@ -35,6 +35,14 @@ only because the repository has no implementation diff.
 
 ## Resolve And Ground The Target
 
+Generic continuation and status questions do not authorize review. Use the
+explicit direction/plan review choice for this exact target. Follow `/work-review`'s
+review exit contract: one repair batch and one focused recheck by default, then
+deliver closed and residual findings and return control to the human. Do not
+silently change the target, start another pass, or treat a question about review
+progress as permission to review implementation. Preserve the required exact-plan
+decision; a completed review is not implementation approval.
+
 Read repository instructions, the complete direction, plan, or design, relevant source
 code, tests, schemas, dependencies, migrations, CI, and accepted decisions. For
 `plan-delta`, identify exactly which tasks, interfaces, assumptions, acceptance
@@ -152,8 +160,12 @@ confirmed findings and rank them Critical, High, Medium, then Low.
 
 ## Report And Apply
 
-Write the report before mutation. Then the coordinator, not a reviewer, edits
-the plan or design document to apply every confirmed fix within scope. Do not
+Write the report before mutation. A review request alone does not select the
+next action. Apply plan corrections only when explicit correction intent or
+the accepted review contract authorizes that one repair batch. Otherwise,
+deliver the findings and return control for the correction decision; preserve
+the source plan and mark its approval path blocked. When authorized, the
+coordinator, not a reviewer, edits the plan or design document. Do not
 silently resolve product decisions or accepted risk; mark those fixes blocked
 and ask the user. Critical and High findings are blocking.
 
@@ -170,6 +182,11 @@ complete-role references, and a verifier distinct from the originating
 reviewer. If no distinct verifier is available, record the candidate as
 `unverified`, apply no correction from it, and block. The version 6 report also records coordinator, workers,
 assignments, waves, runtimes, scoped-minimum status, and fallback reason.
+
+Run `maisternia review validate <review.json>` once before delivery. This validates
+the current schema and worker relationships offline; `maisternia doctor` checks
+compatibility. If unavailable, report the missing version/setup rather than
+searching for packages, changing the schema, or writing a temporary validator.
 
 ## Finalize The Reviewed Direction For Its Reader
 

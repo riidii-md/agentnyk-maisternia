@@ -37,8 +37,9 @@ type Target struct {
 }
 
 type MergeSpec struct {
-	Strategy    string `json:"strategy"`
-	JSONPointer string `json:"json_pointer"`
+	Strategy     string   `json:"strategy"`
+	JSONPointer  string   `json:"json_pointer,omitempty"`
+	JSONPointers []string `json:"json_pointers,omitempty"`
 }
 
 type ActionState string

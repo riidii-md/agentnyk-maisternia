@@ -16,6 +16,28 @@ Routing gate (lazy): load `work-routing` only when `$ARGUMENTS` has a plausible 
 
 Verify the current change using the repository's actual commands.
 
+## Go Preflight
+
+When Go checks are required, inspect only GOCACHE, GOMODCACHE, and required
+toolchain/module access with `go env GOCACHE GOMODCACHE GOTOOLCHAIN`. Do not dump
+the full environment. Verify writable build-cache access once in the current
+sandbox, along with module access needed by the repository's actual checks.
+Reuse the result in the coordinator and worker worktrees until settings change.
+
+Run test, vet, build, and scoped formatting as direct commands. Keep edits,
+scripts, environment setup, and log redirection separate; use the runner's output
+capture rather than changing an approved command into an opaque shell wrapper.
+Check loaded native routine-development approvals once, including their scope
+and inheritance. Existing approvals do not remove a filesystem or network limit.
+
+Do not retry the same permission failure for each check. Use a task-owned writable
+cache configured in the session environment when supported, or obtain the bounded
+cache access once. Keep dependency/toolchain network access separate from offline
+checks. Do not persist global Go settings, grant blanket shell execution, or
+disable a provider sandbox. Report an unsupported native permission mapping;
+never invent an allowlist for a harness that cannot enforce it. Continue checks
+that do not depend on the blocker.
+
 Input:
 
 `$ARGUMENTS`
