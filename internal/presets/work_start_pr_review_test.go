@@ -316,8 +316,7 @@ func TestRepositoryMultiLensReviewDispositionBranches(t *testing.T) {
 		{From: "report", To: "final", Condition: "repair disposition and no confirmed findings"},
 		{From: "report", To: "final", Condition: "report-only review complete"},
 		{From: "apply", To: "verify-fixes"},
-		{From: "verify-fixes", To: "dispatch", Condition: "material behavior changed", Loop: true},
-		{From: "verify-fixes", To: "apply", Condition: "confirmed fix incomplete", Loop: true},
+		{From: "verify-fixes", To: "final", Condition: "residual findings or failed checks; return control to the human"},
 		{From: "verify-fixes", To: "final", Condition: "all confirmed fixes applied and checks pass"},
 	}
 	if !slices.Equal(edges, wantEdges) {

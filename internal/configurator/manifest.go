@@ -118,8 +118,7 @@ func ValidateManifest(repoRoot string, manifest Manifest) error {
 			if err != nil {
 				return fmt.Errorf("resource %q target %q: %w", resource.ID, target.Agent, err)
 			}
-			if targetRelative != root &&
-				!strings.HasPrefix(targetRelative, root+string(filepath.Separator)) {
+			if !providers.ManagedTargetAllowed(canonicalAgent, filepath.ToSlash(targetRelative)) {
 				return fmt.Errorf(
 					"resource %q target %q must stay under %s",
 					resource.ID,

@@ -117,10 +117,10 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 		{From: "ready", To: "plan", Condition: "not ready", Loop: true},
 		{From: "handoff", To: "run"},
 		{From: "run", To: "verify"},
-		{From: "verify", To: "review", Condition: "pass"},
+		{From: "verify", To: "review", Condition: "pass and explicit review choice or agreed review boundary"},
 		{From: "verify", To: "analyze", Condition: "failed", Loop: true},
-		{From: "review", To: "run", Condition: "changes", Loop: true},
-		{From: "review", To: "change-review", Condition: "pass"},
+		{From: "review", To: "run", Condition: "human selects repairs or continued implementation", Loop: true},
+		{From: "review", To: "change-review", Condition: "pass and human continues to implementation approval"},
 		{From: "change-review", To: "pr", Condition: "approved and publication requested"},
 		{From: "change-review", To: "run", Condition: "changes requested", Loop: true},
 		{From: "change-review", To: "analyze", Condition: "rejected and reshape requested", Loop: true},
@@ -1652,12 +1652,14 @@ func TestRepositoryRoutineDevelopmentApprovalsPreset(t *testing.T) {
 	if !found {
 		t.Fatal("routine-development-approvals preset missing")
 	}
-	if got := preset.Targets; !slices.Equal(got, []string{"codex", "claude"}) {
+	if got := preset.Targets; !slices.Equal(got, []string{"codex", "claude", "antigravity"}) {
 		t.Fatalf("routine-development-approvals targets = %v", got)
 	}
 	if got := preset.Contents.Settings; !slices.Equal(got, []string{
 		"routine-development-approvals-codex-rules",
 		"routine-development-approvals-claude-permissions",
+		"routine-development-approvals-agy-permissions",
+		"routine-development-approvals-gemini-policy",
 	}) {
 		t.Fatalf("routine-development-approvals settings = %v", got)
 	}
@@ -1673,8 +1675,8 @@ func TestRepositoryRoutineDevelopmentApprovalsPreset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(routine-development-approvals) error = %v", err)
 	}
-	if len(selected.Resources) != 2 {
-		t.Fatalf("routine-development-approvals resource count = %d, want 2", len(selected.Resources))
+	if len(selected.Resources) != 4 {
+		t.Fatalf("routine-development-approvals resource count = %d, want 4", len(selected.Resources))
 	}
 }
 

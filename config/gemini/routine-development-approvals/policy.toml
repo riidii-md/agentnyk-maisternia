@@ -1,0 +1,16 @@
+# Gemini CLI user policy. AGY uses its own JSON permission resource instead.
+# Priority 0 is the lowest user-policy priority; higher-priority user/admin
+# restrictions win. Inspect effective policies when existing priorities tie.
+# Keep plan mode read-only, and leave shell parsing/redirection checks enabled.
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["go test", "go vet", "go build", "gofmt -w", "gh pr checks", "gh pr list", "gh pr view", "gh run view", "gh run watch", "npm view"]
+decision = "allow"
+priority = 0
+modes = ["default", "autoEdit"]
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["git push", "gh pr create", "gh run rerun", "gh issue create", "gh secret set", "npm publish", "npm install --global", "npm install -g"]
+decision = "ask_user"
+priority = 999

@@ -329,9 +329,7 @@ func appendRemovedPresetResources(
 		if err != nil {
 			return fmt.Errorf("preset %q install state target: %w", presetID, err)
 		}
-		managedRoot, _ := providers.ManagedTargetRoot(canonicalAgent)
-		if targetRelative != managedRoot &&
-			!strings.HasPrefix(targetRelative, managedRoot+string(filepath.Separator)) {
+		if !providers.ManagedTargetAllowed(canonicalAgent, filepath.ToSlash(targetRelative)) {
 			return fmt.Errorf(
 				"preset %q install state target %q escapes provider root",
 				presetID,

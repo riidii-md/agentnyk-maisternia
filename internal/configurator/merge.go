@@ -19,10 +19,30 @@ func validateMergeSpec(spec *MergeSpec) error {
 	if spec.Strategy != MergeJSONArrayUnion {
 		return fmt.Errorf("unsupported merge strategy %q", spec.Strategy)
 	}
-	if _, err := parseJSONPointer(spec.JSONPointer); err != nil {
-		return err
+	if spec.JSONPointer != "" && len(spec.JSONPointers) != 0 {
+		return fmt.Errorf("merge must use json_pointer or json_pointers, not both")
+	}
+	if len(spec.JSONPointers) > 16 {
+		return fmt.Errorf("merge supports at most 16 JSON pointers")
+	}
+	seen := make(map[string]bool)
+	for _, pointer := range spec.pointers() {
+		if _, err := parseJSONPointer(pointer); err != nil {
+			return err
+		}
+		if seen[pointer] {
+			return fmt.Errorf("merge repeats a JSON pointer")
+		}
+		seen[pointer] = true
 	}
 	return nil
+}
+
+func (spec *MergeSpec) pointers() []string {
+	if len(spec.JSONPointers) != 0 {
+		return spec.JSONPointers
+	}
+	return []string{spec.JSONPointer}
 }
 
 func validateJSONArrayUnionSource(path string, spec *MergeSpec) error {
@@ -30,8 +50,10 @@ func validateJSONArrayUnionSource(path string, spec *MergeSpec) error {
 	if err != nil {
 		return err
 	}
-	if _, err := arrayAtPointer(value, spec.JSONPointer); err != nil {
-		return fmt.Errorf("merge source: %w", err)
+	for _, pointer := range spec.pointers() {
+		if _, err := arrayAtPointer(value, pointer); err != nil {
+			return fmt.Errorf("merge source: %w", err)
+		}
 	}
 	return nil
 }
@@ -41,11 +63,6 @@ func buildJSONArrayUnion(sourcePath, destinationPath string, spec *MergeSpec, de
 	if err != nil {
 		return nil, "", false, fmt.Errorf("decode merge source: %w", err)
 	}
-	managedValues, err := arrayAtPointer(source, spec.JSONPointer)
-	if err != nil {
-		return nil, "", false, fmt.Errorf("merge source: %w", err)
-	}
-
 	destination := make(map[string]any)
 	if destinationExists {
 		destination, err = decodeJSONObjectFile(destinationPath)
@@ -53,21 +70,26 @@ func buildJSONArrayUnion(sourcePath, destinationPath string, spec *MergeSpec, de
 			return nil, "", false, fmt.Errorf("decode merge target: %w", err)
 		}
 	}
-	targetValues, err := arrayAtPointerOrCreate(destination, spec.JSONPointer)
-	if err != nil {
-		return nil, "", false, fmt.Errorf("merge target: %w", err)
-	}
-
 	changed := !destinationExists
-	for _, managedValue := range managedValues {
-		if containsJSONValue(targetValues, managedValue) {
-			continue
+	for _, pointer := range spec.pointers() {
+		managedValues, err := arrayAtPointer(source, pointer)
+		if err != nil {
+			return nil, "", false, fmt.Errorf("merge source: %w", err)
 		}
-		targetValues = append(targetValues, managedValue)
-		changed = true
-	}
-	if err := setArrayAtPointer(destination, spec.JSONPointer, targetValues); err != nil {
-		return nil, "", false, fmt.Errorf("merge target: %w", err)
+		targetValues, err := arrayAtPointerOrCreate(destination, pointer)
+		if err != nil {
+			return nil, "", false, fmt.Errorf("merge target: %w", err)
+		}
+		for _, managedValue := range managedValues {
+			if containsJSONValue(targetValues, managedValue) {
+				continue
+			}
+			targetValues = append(targetValues, managedValue)
+			changed = true
+		}
+		if err := setArrayAtPointer(destination, pointer, targetValues); err != nil {
+			return nil, "", false, fmt.Errorf("merge target: %w", err)
+		}
 	}
 
 	data, err := json.MarshalIndent(destination, "", "  ")

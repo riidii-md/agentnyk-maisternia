@@ -61,6 +61,73 @@ The `approval-standard` preset contains only this policy. The focused safety
 and delegation selections and both hook bundles include it because those hooks
 refer to the same authority boundary.
 
+## Routine Go development
+
+The opt-in `routine-development-approvals` preset includes direct `go test`,
+`go vet`, `go build`, and `gofmt -w` allowances for Codex, Claude Code,
+Antigravity CLI (`agy`), and Gemini CLI. Test flags such as race and coverage
+remain covered. `standard-work` includes the same resources.
+Codex installs a native rules file. For Claude project scope, both the allow
+and ask arrays merge additively into `.claude/settings.local.json`; existing
+denials and unrelated settings remain intact. The readable fragment remains
+available. Claude user scope does not load `~/.claude/settings.local.json`:
+activate that fragment in native user settings explicitly if user-wide rules
+are intended. Maisternia does not replace the mixed user settings file.
+Publication, CI reruns, secrets, and global installation keep their prompt rules.
+This is trusted development authority: Go checks execute repository code and
+formatting writes the selected source paths. It is not a general `go`, shell,
+Python, install, run, or cleanup allowance.
+
+The shared execution and verification preflight applies to all four harnesses.
+Inspect only `GOCACHE`, `GOMODCACHE`, and `GOTOOLCHAIN`; verify cache/module access
+and the effective loaded rules once, including worker worktrees. Permission
+rules do not remove filesystem or network restrictions. Resolve a bounded cache
+permission once or configure a task-owned writable cache in the session
+environment. Keep dependency/toolchain downloads separate from offline checks.
+Do not rewrite global Go settings or disable sandboxing to avoid prompts.
+
+Keep verification as direct commands and capture their output through the runner.
+Bundling edits, scripts, assignments, or redirects can change the native approval
+target and defeat prefix reuse. Do not retry the same environment failure for
+each check. Hermes receives the shared workflow contract without a native
+command-allowlist mapping. Do not invent unsupported settings or broaden
+headless authority.
+
+The Google selection (`--target agy`, canonically `antigravity`) installs two
+different native formats in user scope:
+
+- AGY settings at `~/.gemini/antigravity-cli/settings.json`: additive unions of
+  `/permissions/allow` and `/permissions/ask`, preserving denials and other keys.
+- Gemini CLI policy at `~/.gemini/policies/maisternia-routine-development.toml`:
+  tool-scoped rules for direct commands. Go allowances apply to `default` and
+  `autoEdit`, not `plan`. The allow priority is 0; higher-priority user/admin
+  policies win. Inspect existing equal-priority policies before activation.
+
+Only these declared native files are admitted outside the legacy AGY tree;
+credentials, sessions, and other `.gemini` paths remain outside managed targets.
+Google native activation requires user scope. Project-local Gemini policy
+discovery is not assumed, and custom provider-home overrides require explicit
+path review. These settings do not change sandbox or execution modes. The native
+formats are documented by [AGY](https://antigravity.google/docs/permissions/)
+and [Gemini CLI](https://geminicli.com/docs/reference/policy-engine/).
+
+Preview Google user-scope activation:
+
+```bash
+maisternia preset plan --scope user --target agy routine-development-approvals
+```
+
+Preview project-scoped installation before applying it explicitly:
+
+```bash
+maisternia preset plan --scope project --project /path/to/repository --target all routine-development-approvals
+```
+
+Use the native provider's effective-rule diagnostics after installation. Codex
+prefix rules and Claude command patterns are enforced by the respective harness,
+not by this workflow's prose. See the [Codex rules](https://learn.chatgpt.com/docs/agent-configuration/rules)
+and [Claude permission rules](https://code.claude.com/docs/en/permissions).
+
 ## Approval Grants
 
 An approval is not a reusable phrase such as "the user said yes." A valid grant

@@ -106,14 +106,14 @@ func TestHerdrWorktreesManifestAndRenderedPackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(manifest.Resources), 106; got != want {
+	if got, want := len(manifest.Resources), 108; got != want {
 		t.Fatalf("repository resources = %d, want %d", got, want)
 	}
 	repositoryTargets := 0
 	for _, resource := range manifest.Resources {
 		repositoryTargets += len(resource.Targets)
 	}
-	if got, want := repositoryTargets, 404; got != want {
+	if got, want := repositoryTargets, 407; got != want {
 		t.Fatalf("repository target mappings = %d, want %d", got, want)
 	}
 	selected, err := SelectManifest(preset, manifest)

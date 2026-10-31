@@ -29,9 +29,9 @@ func TestRepositoryRegistryDefinesCanonicalProviders(t *testing.T) {
 	if antigravity.ID != Antigravity {
 		t.Fatalf("Resolve(agy).ID = %q, want %q", antigravity.ID, Antigravity)
 	}
-	if got := antigravity.Renderer.ConfigRoots; len(got) != 2 ||
+	if got := antigravity.Renderer.ConfigRoots; len(got) != 3 ||
 		got[0].Path != ".gemini/antigravity-cli" ||
-		got[1].Path != ".gemini/config" {
+		got[1].Path != ".gemini/config" || got[2].Path != ".gemini/policies" {
 		t.Fatalf("Antigravity roots = %#v", got)
 	}
 

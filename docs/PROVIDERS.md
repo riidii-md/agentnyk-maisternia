@@ -158,7 +158,7 @@ workflows to native prompts and skills.
 |---|---|
 | Claude Code | `~/.claude/` |
 | Codex CLI | `~/.codex/` |
-| Antigravity | `~/.gemini/antigravity-cli/`, `~/.gemini/config/` |
+| Antigravity | `~/.gemini/antigravity-cli/`, `~/.gemini/config/`, `~/.gemini/policies/` |
 | Hermes | `~/.hermes/` |
 
 Roots are marked with ownership:
@@ -181,6 +181,14 @@ The existing workflow manifest still renders phase prompts under:
 This is retained to avoid silently relocating existing managed files. It is not
 listed as an Antigravity-owned configuration root, and `maisternia` does not claim
 that the current Antigravity CLI consumes it.
+
+Routine development approvals now have native user-scope mappings: an additive
+permission merge into `.gemini/antigravity-cli/settings.json` for AGY, and the
+owned `.gemini/policies/maisternia-routine-development.toml` file for Gemini CLI.
+Both are selected with the existing `antigravity`/`agy` target; this does not add
+a separate Gemini provider identity or claim its workflow renderer is complete.
+Only those exact files extend the legacy managed target boundary. Runtime
+directories are not synchronized. See [routine Go development](APPROVAL-POLICY.md#routine-go-development).
 
 The next renderer increment should:
 

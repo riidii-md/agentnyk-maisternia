@@ -888,7 +888,36 @@
       "id": "routine-development-approvals-claude-permissions",
       "source": "config/claude/routine-development-approvals/permissions.json",
       "targets": [
-        {"agent": "claude", "path": ".claude/maisternia/fragments/routine-development-approvals.permissions.json"}
+        {"agent": "claude", "path": ".claude/maisternia/fragments/routine-development-approvals.permissions.json"},
+        {
+          "agent": "claude",
+          "path": ".claude/settings.local.json",
+          "merge": {
+            "strategy": "json-array-union",
+            "json_pointers": ["/permissions/allow", "/permissions/ask"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "routine-development-approvals-agy-permissions",
+      "source": "config/antigravity/routine-development-approvals/permissions.json",
+      "targets": [
+        {
+          "agent": "antigravity",
+          "path": ".gemini/antigravity-cli/settings.json",
+          "merge": {
+            "strategy": "json-array-union",
+            "json_pointers": ["/permissions/allow", "/permissions/ask"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "routine-development-approvals-gemini-policy",
+      "source": "config/gemini/routine-development-approvals/policy.toml",
+      "targets": [
+        {"agent": "antigravity", "path": ".gemini/policies/maisternia-routine-development.toml"}
       ]
     },
     {
