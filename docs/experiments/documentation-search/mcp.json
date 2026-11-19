@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "exa-trial": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp"
+    },
+    "tavily-trial": {
+      "type": "http",
+      "url": "https://mcp.tavily.com/mcp/",
+      "headers": {"X-Tavily-Access-Mode": "keyless"}
+    }
+  }
+}

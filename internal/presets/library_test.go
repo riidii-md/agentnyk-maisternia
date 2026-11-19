@@ -504,7 +504,7 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if !found {
 		t.Fatal("codex-resource-lab preset missing")
 	}
-	if got := resourceLab.Contents; len(got.MCPRefs) != 1 ||
+	if got := resourceLab.Contents; len(got.MCPRefs) != 0 ||
 		len(got.Prompts) != 1 ||
 		len(got.Skills) != 1 ||
 		len(got.Hooks) != 1 ||
@@ -581,9 +581,9 @@ func TestRepositoryPresetLibraryIsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectManifest(codex-resource-lab) error = %v", err)
 	}
-	if len(resourceLabManifest.Resources) != 5 {
+	if len(resourceLabManifest.Resources) != 4 {
 		t.Fatalf(
-			"codex-resource-lab resource count = %d, want 5",
+			"codex-resource-lab resource count = %d, want 4",
 			len(resourceLabManifest.Resources),
 		)
 	}
@@ -1533,6 +1533,9 @@ func TestRepositoryDeveloperContextAndGoReleaserValidationPresets(t *testing.T) 
 	}) {
 		t.Fatalf("developer-context settings = %v", got)
 	}
+	if got := developerContext.Contents.Skills; !slices.Equal(got, []string{"documentation-lookup-skill"}) {
+		t.Fatalf("developer-context documentation skills = %v", got)
+	}
 	if got := developerContext.EnvironmentPacks; !slices.Equal(got, []string{"developer-context"}) {
 		t.Fatalf("developer-context environment packs = %v", got)
 	}
@@ -1565,8 +1568,8 @@ func TestRepositoryDeveloperContextAndGoReleaserValidationPresets(t *testing.T) 
 	if err != nil {
 		t.Fatalf("SelectManifest(developer-context) error = %v", err)
 	}
-	if len(developerManifest.Resources) != 3 {
-		t.Fatalf("developer-context resource count = %d, want 3", len(developerManifest.Resources))
+	if len(developerManifest.Resources) != 4 {
+		t.Fatalf("developer-context resource count = %d, want 4", len(developerManifest.Resources))
 	}
 	projectDocsQMD, found := library.Get("project-docs-qmd")
 	if !found {

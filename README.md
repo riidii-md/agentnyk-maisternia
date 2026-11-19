@@ -326,6 +326,7 @@ Use the [project document map](docs/README.md) to select sources by task.
 - [Change explanations](docs/CHANGE-EXPLANATIONS.md)
 - [Mandatory human change review](docs/CHANGE-REVIEW-GATE.md)
 - [Environment requirements](docs/ENVIRONMENT-REQUIREMENTS.md)
+- [Documentation search and provider trials](docs/DOCUMENTATION-SEARCH.md)
 
 ## License
 

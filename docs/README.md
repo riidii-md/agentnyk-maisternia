@@ -12,6 +12,7 @@ repository instructions or require every document to be read.
 | Security | [Security model](../SECURITY.md), [Configuration boundary](CONFIGURATION-BOUNDARY.md), [Approval policy](APPROVAL-POLICY.md) | Changing paths, files, permissions, secrets, installation, or trust boundaries. |
 | Code conventions | [Repository instructions](../AGENTS.md), [Contributing](../CONTRIBUTING.md), affected code and sibling tests | Implementing or reviewing Go code and configuration contracts. |
 | Testing | [Repository checks](../AGENTS.md#verification), [Contributing](../CONTRIBUTING.md), [CI](../.github/workflows/ci.yml), [Test review](TEST-REVIEW.md) | Selecting checks, changing test evidence, or evaluating workflow contracts. |
+| Public documentation search | [Source-first lookup and migration](DOCUMENTATION-SEARCH.md), [Exa and Tavily retrieval pilot](experiments/documentation-search/README.md) | Looking up version-matched public sources, retiring Context7, or comparing optional search integrations. |
 | Task decisions and progress | The selected task's direction, plan, decision receipts, and `.agent-runs/work/<task-id>/progress.md` | Resuming a task or identifying approved scope and unfinished work. These local artifacts are not committed by default. |
 | Human collaboration | [Collaboration checkpoints](COLLABORATION.md), [Idea shaping](IDEA-SHAPING-PIPELINE.md), [Architectural direction](ARCHITECTURAL-DIRECTION.md) | Changing discussion, grill, human-draft, continuation, or document checkpoint behavior. |
 

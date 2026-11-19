@@ -445,7 +445,8 @@
         {"agent": "codex", "path": ".codex/prompts/work-research.md"},
         {"agent": "codex", "path": ".codex/skills/work-research/SKILL.md"},
         {"agent": "claude", "path": ".claude/commands/work-research.md"},
-        {"agent": "antigravity", "path": ".config/agy/prompts/work-research.md"}
+        {"agent": "antigravity", "path": ".config/agy/prompts/work-research.md"},
+        {"agent": "hermes", "path": ".hermes/skills/work-research/SKILL.md"}
       ]
     },
     {
@@ -921,10 +922,11 @@
       ]
     },
     {
-      "id": "codex-lab-mcp-context7",
-      "source": "config/codex/resource-lab/mcp-context7.toml",
+      "id": "documentation-lookup-skill",
+      "source": "config/workflow/skills/documentation-lookup/SKILL.md",
       "targets": [
-        {"agent": "codex", "path": ".codex/maisternia/fragments/mcp-context7.toml"}
+        {"agent": "codex", "path": ".codex/skills/documentation-lookup/SKILL.md"},
+        {"agent": "claude", "path": ".claude/skills/documentation-lookup/SKILL.md"}
       ]
     },
     {

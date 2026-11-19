@@ -28,6 +28,18 @@ Inspect existing repository patterns first. Use current primary documentation
 when external behavior matters. Compare two to four real options when meaningful
 choice exists.
 
+For public documentation, inspect local interfaces and installed dependency versions
+first. Use native web search, then read version-matched primary sources such as
+official documentation, tagged source, declarations, release notes, and maintainer
+issues. Treat search snippets as leads and cite the original evidence used.
+Keep code and private documents in authorized local or project search; send only
+public queries to external services. If native search is unavailable, use an
+already authorized integration or fetch known official URLs. Use an authorized
+browser for pages that need rendering, and report unavailable capabilities.
+Do not silently install services or accept account costs. Exa and Tavily remain
+optional experiments unless equal verified quality with lower total tokens is
+demonstrated, including source reads, synthesis, retries, and fallback work.
+
 Evaluate:
 
 - scope and complexity;

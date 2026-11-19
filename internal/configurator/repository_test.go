@@ -282,6 +282,47 @@ func TestRepositoryCodexWorkflowsAvoidLegacyCommandDirectory(t *testing.T) {
 	}
 }
 
+func TestRepositoryRendersSourceFirstDocumentationWithoutContext7(t *testing.T) {
+	t.Parallel()
+
+	repoRoot, manifest := loadRepositoryManifest(t)
+	output := t.TempDir()
+	if err := Render(repoRoot, output, manifest, "all"); err != nil {
+		t.Fatal(err)
+	}
+	for _, resource := range manifest.Resources {
+		if strings.Contains(strings.ToLower(resource.ID+resource.Source), "context7") {
+			t.Errorf("retired documentation resource remains: %s", resource.ID)
+		}
+		for _, target := range resource.Targets {
+			if strings.Contains(strings.ToLower(target.Path), "context7") {
+				t.Errorf("retired documentation target remains: %s", target.Path)
+			}
+			if strings.Contains(strings.ToLower(readRenderedFile(t, output, target.Path)), "context7") {
+				t.Errorf("rendered resource %s still contains Context7 configuration or instructions", target.Path)
+			}
+		}
+	}
+	for _, relative := range []string{
+		".codex/skills/documentation-lookup/SKILL.md",
+		".claude/skills/documentation-lookup/SKILL.md",
+		".codex/skills/work-research/SKILL.md",
+		".claude/commands/work-research.md",
+		".config/agy/prompts/work-research.md",
+		".hermes/skills/work-research/SKILL.md",
+	} {
+		content := readRenderedFile(t, output, relative)
+		for _, required := range []string{
+			"native web search", "primary sources", "installed dependency versions",
+			"private", "unavailable", "total tokens",
+		} {
+			if !strings.Contains(content, required) {
+				t.Errorf("%s lacks documentation policy %q", relative, required)
+			}
+		}
+	}
+}
+
 func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testing.T) {
 	t.Parallel()
 
@@ -312,8 +353,6 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 	}
 	codexMCP := readRenderedFile(t, output, ".codex/maisternia/fragments/developer-context.toml")
 	for _, snippet := range []string{
-		`url = "https://mcp.context7.com/mcp"`,
-		`enabled_tools = ["resolve-library-id", "query-docs"]`,
 		`command = "gitnexus"`,
 		`GITNEXUS_MCP_READ_ONLY = "1"`,
 		`GITNEXUS_MCP_ALLOWED_REPOS`,
@@ -323,7 +362,7 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 			t.Errorf("Codex developer-context fragment missing %q", snippet)
 		}
 	}
-	for _, forbidden := range []string{"@upstash/context7-mcp", `"*"`, "rename", "cypher"} {
+	for _, forbidden := range []string{"context7", `"*"`, "rename", "cypher"} {
 		if strings.Contains(codexMCP, forbidden) {
 			t.Errorf("Codex developer-context fragment contains forbidden value %q", forbidden)
 		}
@@ -331,7 +370,6 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 
 	claudeMCP := readRenderedFile(t, output, ".claude/maisternia/fragments/developer-context.mcp.json")
 	for _, snippet := range []string{
-		`"url": "https://mcp.context7.com/mcp"`,
 		`"command": "gitnexus"`,
 		`"GITNEXUS_MCP_READ_ONLY": "1"`,
 		`"GITNEXUS_MCP_ALLOWED_REPOS": "${GITNEXUS_MCP_ALLOWED_REPOS}"`,
@@ -343,8 +381,6 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 
 	claudePermissions := readRenderedFile(t, output, ".claude/settings.json")
 	for _, permission := range []string{
-		"mcp__context7__resolve-library-id",
-		"mcp__context7__query-docs",
 		"mcp__gitnexus__query",
 		"mcp__gitnexus__context",
 		"mcp__gitnexus__impact",
@@ -354,7 +390,7 @@ func TestRepositoryRendersNarrowDeveloperContextAndGoReleaserFragments(t *testin
 			t.Errorf("Claude developer-context permissions missing %q", permission)
 		}
 	}
-	for _, forbidden := range []string{"mcp__context7__*", "mcp__gitnexus__*", "bypassPermissions"} {
+	for _, forbidden := range []string{"context7", "mcp__gitnexus__*", "bypassPermissions"} {
 		if strings.Contains(claudePermissions, forbidden) {
 			t.Errorf("Claude developer-context permissions contain forbidden value %q", forbidden)
 		}

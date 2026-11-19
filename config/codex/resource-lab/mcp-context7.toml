@@ -1,7 +1,0 @@
-# Reviewable MCP fragment. AgentnykMaisternia does not merge this into config.toml yet.
-# Copy or merge it only after reviewing the command and package version.
-
-[mcp_servers.context7]
-command = "npx"
-args = ["-y", "@upstash/context7-mcp@3.2.3"]
-startup_timeout_sec = 120
