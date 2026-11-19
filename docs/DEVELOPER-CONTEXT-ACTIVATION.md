@@ -1,9 +1,9 @@
 # Project-scoped code and Markdown search
 
 This guide activates GitNexus for code and QMD for local Markdown in one
-repository. Context7 remains the hosted source for current public library
-documentation. This setup does not send private repository documents to
-Context7.
+repository. For public library documentation, inspect installed versions, use
+native web search, and read the original documentation or tagged source.
+Keep private repository documents in local project search.
 
 ## Prepare the tools
 
@@ -63,9 +63,11 @@ Antigravity: `.codex/config.toml`, `.mcp.json`, `.agents/mcp_config.json`, and
 index. Existing files cause a conflict; review and merge them manually. The
 command never overwrites them. For one provider, select `--target codex`,
 `claude`, or `antigravity`. `--target hermes` only displays the manual recipe.
-The `developer-context` preset separately stages Context7 MCP fragments and
-Claude permissions; review its plan if you use that hosted documentation layer.
-This command does not change an existing Context7 registration.
+The `developer-context` preset separately installs the public documentation
+lookup skill, GitNexus review fragments, and exact Claude permissions. It does
+not register an external documentation search service. See
+[Documentation search migration](DOCUMENTATION-SEARCH.md#existing-installations)
+to remove retired registrations from an older installation.
 
 The generated paths are machine-specific. Keep these files out of commits,
 including the active provider configs. Check `git status` before committing.

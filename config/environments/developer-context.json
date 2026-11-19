@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "developer-context",
   "name": "Developer Context",
-  "description": "Pinned local tooling for the developer-context provider fragments. Context7 uses its hosted MCP endpoint and needs no local installer.",
+  "description": "Pinned local GitNexus tooling for the developer-context provider fragments. Public documentation lookup uses the harness's native web search and primary-source reading.",
   "requirements": [
     {
       "id": "gitnexus",

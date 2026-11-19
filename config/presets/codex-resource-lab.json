@@ -2,10 +2,10 @@
   "schema_version": 1,
   "id": "codex-resource-lab",
   "name": "Codex Resource Lab",
-  "description": "Safe mixed-resource bundle for inspecting and testing MCP references, prompts, skills, hooks, and settings without replacing global config.toml.",
+  "description": "Safe mixed-resource bundle for inspecting and testing prompts, skills, hooks, and settings without replacing global config.toml.",
   "pipelines": [],
   "contents": {
-    "mcp_refs": ["codex-lab-mcp-context7"],
+    "mcp_refs": [],
     "commands": [],
     "prompts": ["codex-lab-prompt-plan"],
     "skills": ["codex-lab-skill-status"],

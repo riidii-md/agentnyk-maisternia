@@ -127,9 +127,10 @@ The repository starts with:
 - `herdr-worktrees`: opt-in `/herdr-add` and `/herdr-regroup` commands for
   exact named Herdr sessions, with native same-repository grouping and explicit
   independent clone-backed named groups;
-- `codex-resource-lab`: a safe Codex-only example with one MCP reference,
-  prompt, skill, hook, and settings resource;
-- `developer-context`: Context7 and read-only, repository-bounded GitNexus
+- `codex-resource-lab`: a safe Codex-only example with a prompt, skill, hook,
+  and settings resource;
+- `developer-context`: source-first public documentation lookup and read-only,
+  repository-bounded GitNexus
   configuration with exact Claude Code permissions merged into active settings
   and reviewable MCP fragments for Claude Code and Codex;
 - `project-docs-qmd`: pinned local QMD for Markdown documentation with inert
@@ -272,8 +273,12 @@ and Antigravity ground repository and Jira identity and provide only a concise
 AI feature phrase, producing `Repository / JIRA-ID (feature)` labels without
 using branch names.
 
-The developer-context resources use Context7's hosted MCP endpoint and approve
-only `resolve-library-id` and `query-docs`. GitNexus is pinned to `1.6.12`, runs
+The developer-context documentation skill inspects installed dependency versions,
+uses native web search, and reads version-matched primary sources. The research
+workflow carries the same policy for all four providers. Exa and Tavily remain
+optional experiments; neither is registered by a preset. See
+[Documentation search](DOCUMENTATION-SEARCH.md) for migration and trial results.
+GitNexus is pinned to `1.6.12`, runs
 with `GITNEXUS_MCP_READ_ONLY=1`, omits raw Cypher and mutation tools, and
 approves each remaining tool by exact name. Before activation, set
 `GITNEXUS_MCP_ALLOWED_REPOS` to a comma-separated allowlist of canonical indexed

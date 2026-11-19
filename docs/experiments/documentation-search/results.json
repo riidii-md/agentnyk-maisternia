@@ -1,0 +1,423 @@
+{
+  "schema_version": 1,
+  "cases_sha256": "18cd8c839a33db1ae8a1ddc41000070b9b9b6281326b9b0be338abe33de1ea96",
+  "date": "2026-11-19",
+  "experiment_kind": "unmetered retrieval pilot",
+  "fresh_model_contexts": false,
+  "same_coordinator_session": true,
+  "harness": "Codex; native web tool and isolated HTTP MCP probes",
+  "model_id": null,
+  "reasoning_effort": null,
+  "retrieved_context_tokens": null,
+  "tool_definition_tokens": null,
+  "total_end_to_end_tokens": null,
+  "token_measurement_status": "Unavailable: no per-lane model usage or tokenizer instrumentation. Bytes are transport storage measurements only, not tokens.",
+  "adoption_decision": "Keep native web search plus primary-source reading as default; no token-efficiency win established.",
+  "lanes": {
+    "native": {
+      "cases": [
+        {
+          "id": "bubbletea-key",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1455,
+            "status": "content",
+            "transport_payload_bytes": 14649
+          },
+          "read": {
+            "latency_ms": 1560,
+            "status": "content",
+            "transport_payload_bytes": 11079
+          },
+          "search_and_read_latency_ms": 3015
+        },
+        {
+          "id": "zod-migration",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1547,
+            "status": "content",
+            "transport_payload_bytes": 16438
+          },
+          "read": {
+            "latency_ms": 1498,
+            "status": "content",
+            "transport_payload_bytes": 13725
+          },
+          "search_and_read_latency_ms": 3045
+        },
+        {
+          "id": "mdmaid-validation",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1946,
+            "status": "content",
+            "transport_payload_bytes": 17239
+          },
+          "read": {
+            "latency_ms": 1414,
+            "status": "fetch_failed_cache_miss",
+            "transport_payload_bytes": 220
+          },
+          "search_and_read_latency_ms": 3360
+        },
+        {
+          "id": "node-abort",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1520,
+            "status": "content",
+            "transport_payload_bytes": 14968
+          },
+          "read": {
+            "latency_ms": 1996,
+            "status": "content",
+            "transport_payload_bytes": 12350
+          },
+          "search_and_read_latency_ms": 3516
+        },
+        {
+          "id": "go-synctest",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1503,
+            "status": "content",
+            "transport_payload_bytes": 13757
+          },
+          "read": {
+            "latency_ms": 1551,
+            "status": "content",
+            "transport_payload_bytes": 15378
+          },
+          "search_and_read_latency_ms": 3054
+        },
+        {
+          "id": "excalidraw-initialdata",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1332,
+            "status": "content",
+            "transport_payload_bytes": 15348
+          },
+          "read": {
+            "latency_ms": 2359,
+            "status": "content",
+            "transport_payload_bytes": 4440
+          },
+          "search_and_read_latency_ms": 3691
+        }
+      ],
+      "measured_retrieval_calls": 12,
+      "measured_retrieval_latency_ms": 19681,
+      "retrieved_context_tokens": null,
+      "tool_definition_tokens": null,
+      "total_end_to_end_tokens": null,
+      "observed_account_charge_usd": null,
+      "charge_status": "No billing ledger available; native subscription cost not apportioned."
+    },
+    "exa": {
+      "cases": [
+        {
+          "id": "bubbletea-key",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 504,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 13913
+          },
+          "read": {
+            "latency_ms": 387,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 13150
+          },
+          "search_and_read_latency_ms": 891
+        },
+        {
+          "id": "zod-migration",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 342,
+            "http_status": 200,
+            "status": "free_mcp_rate_limit",
+            "transport_payload_bytes": 435
+          },
+          "read": {
+            "latency_ms": 354,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 12743
+          },
+          "search_and_read_latency_ms": 696
+        },
+        {
+          "id": "mdmaid-validation",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 621,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 11205
+          },
+          "read": {
+            "latency_ms": 2519,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 12644
+          },
+          "search_and_read_latency_ms": 3140
+        },
+        {
+          "id": "node-abort",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 536,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 13725
+          },
+          "read": {
+            "latency_ms": 7869,
+            "http_status": 200,
+            "status": "crawl_timeout",
+            "transport_payload_bytes": 251
+          },
+          "search_and_read_latency_ms": 8405
+        },
+        {
+          "id": "go-synctest",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 514,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 13710
+          },
+          "read": {
+            "latency_ms": 338,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 12451
+          },
+          "search_and_read_latency_ms": 852
+        },
+        {
+          "id": "excalidraw-initialdata",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 730,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 14730
+          },
+          "read": {
+            "latency_ms": 7179,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 2659
+          },
+          "search_and_read_latency_ms": 7909
+        }
+      ],
+      "measured_retrieval_calls": 12,
+      "measured_retrieval_latency_ms": 21893,
+      "retrieved_context_tokens": null,
+      "tool_definition_tokens": null,
+      "total_end_to_end_tokens": null,
+      "observed_account_charge_usd": null,
+      "charge_status": "Official free keyless access; no account, API token, purchase, or bonus-credit submission used.",
+      "server_info": {
+        "name": "exa-search-server",
+        "title": "Exa",
+        "version": "3.5.1",
+        "description": "Exa web search, page fetching and research-agent tools for AI agents over MCP.",
+        "websiteUrl": "https://exa.ai",
+        "icons": [
+          {
+            "src": "https://exa.ai/images/logo/exa-logomark-blue.svg",
+            "mimeType": "image/svg+xml",
+            "sizes": [
+              "any"
+            ]
+          },
+          {
+            "src": "https://exa.ai/images/favicon-32x32.png",
+            "mimeType": "image/png",
+            "sizes": [
+              "32x32"
+            ]
+          }
+        ]
+      },
+      "setup_initialize_ms": 401,
+      "setup_tools_list_ms": 296,
+      "tools_list_transport_payload_bytes": 2488,
+      "trial_initialize_ms": 277,
+      "tracked_setup_calls": 3,
+      "setup_scope": "Explicit experiment MCP configuration; endpoint handshakes and tool calls through temporary HTTP client; no persistent harness registration."
+    },
+    "tavily": {
+      "cases": [
+        {
+          "id": "bubbletea-key",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 624,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2814
+          },
+          "read": {
+            "latency_ms": 527,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2814
+          },
+          "search_and_read_latency_ms": 1151
+        },
+        {
+          "id": "zod-migration",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 1426,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 15605
+          },
+          "read": {
+            "latency_ms": 466,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "search_and_read_latency_ms": 1892
+        },
+        {
+          "id": "mdmaid-validation",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 494,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "read": {
+            "latency_ms": 559,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "search_and_read_latency_ms": 1053
+        },
+        {
+          "id": "node-abort",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 490,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "read": {
+            "latency_ms": 527,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2814
+          },
+          "search_and_read_latency_ms": 1017
+        },
+        {
+          "id": "go-synctest",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 524,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "read": {
+            "latency_ms": 522,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "search_and_read_latency_ms": 1046
+        },
+        {
+          "id": "excalidraw-initialdata",
+          "calls": 2,
+          "retrieved_context_tokens": null,
+          "total_end_to_end_tokens": null,
+          "search": {
+            "latency_ms": 522,
+            "http_status": 200,
+            "status": "monthly_cap_reached_bonus_eligible",
+            "transport_payload_bytes": 2812
+          },
+          "read": {
+            "latency_ms": 595,
+            "http_status": 200,
+            "status": "content",
+            "transport_payload_bytes": 4964,
+            "reported_usage": {
+              "credits": 0
+            }
+          },
+          "search_and_read_latency_ms": 1117
+        }
+      ],
+      "measured_retrieval_calls": 12,
+      "measured_retrieval_latency_ms": 7276,
+      "retrieved_context_tokens": null,
+      "tool_definition_tokens": null,
+      "total_end_to_end_tokens": null,
+      "observed_account_charge_usd": null,
+      "charge_status": "Official free keyless access; no account, API token, purchase, or bonus-credit submission used.",
+      "server_info": {
+        "name": "tavily-mcp",
+        "version": "4.1.5"
+      },
+      "setup_initialize_ms": 569,
+      "setup_tools_list_ms": 575,
+      "tools_list_transport_payload_bytes": 12889,
+      "trial_initialize_ms": 566,
+      "tracked_setup_calls": 3,
+      "setup_scope": "Explicit experiment MCP configuration; endpoint handshakes and tool calls through temporary HTTP client; no persistent harness registration."
+    }
+  }
+}

@@ -1,8 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs",
       "mcp__gitnexus__query",
       "mcp__gitnexus__context",
       "mcp__gitnexus__impact",
